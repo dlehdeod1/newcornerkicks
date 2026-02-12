@@ -52,8 +52,15 @@ export const authApi = {
 
 // Sessions API
 export const sessionsApi = {
-  list: (status?: string) =>
-    api(`/sessions${status ? `?status=${status}` : ''}`),
+  list: (options?: { status?: string; limit?: number } | string) => {
+    if (typeof options === 'string') {
+      return api(`/sessions?status=${options}`)
+    }
+    const params = new URLSearchParams()
+    if (options?.status) params.set('status', options.status)
+    if (options?.limit) params.set('limit', String(options.limit))
+    return api(`/sessions${params.toString() ? `?${params}` : ''}`)
+  },
 
   get: (id: number) =>
     api(`/sessions/${id}`),
