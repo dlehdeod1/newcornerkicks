@@ -293,3 +293,21 @@ function calculateOverall(player: any): number {
   ]
   return stats.reduce((a, b) => a + b, 0) / stats.length
 }
+
+function StatCard({ label, value, icon, color }: { label: string; value: number | string; icon: string; color?: string }) {
+  const colorClasses: Record<string, string> = {
+    red: 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400',
+    blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
+    green: 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400',
+    default: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
+  }
+  const bgClass = colorClasses[color || 'default']
+
+  return (
+    <div className={cn('rounded-2xl p-4 text-center', bgClass)}>
+      <div className="text-2xl mb-1">{icon}</div>
+      <p className="text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
+      <p className="text-sm opacity-80">{label}</p>
+    </div>
+  )
+}
