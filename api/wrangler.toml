@@ -1,0 +1,12 @@
+name = "cornerkicks-api"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+[vars]
+JWT_SECRET = "change-this-in-production"
+# GEMINI_API_KEY는 wrangler secret put 으로 설정하세요
+
+[[d1_databases]]
+binding = "DB"
+database_name = "conerkicks-db"
+database_id = "7108af93-707b-46cf-8a70-9be933810001"
