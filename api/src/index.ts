@@ -23,7 +23,11 @@ const app = new Hono<{ Bindings: Env }>()
 // 미들웨어
 app.use('*', logger())
 app.use('*', cors({
-  origin: ['http://localhost:3000', 'https://cornerkicks.vercel.app'],
+  origin: [
+    'http://localhost:3000',
+    'https://cornerkicks.vercel.app',
+    'https://cornerkicks.pages.dev'
+  ],
   credentials: true,
 }))
 
