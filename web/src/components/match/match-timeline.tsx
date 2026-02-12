@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn'
 
 interface MatchEvent {
   id: number
-  event_type: 'GOAL' | 'ASSIST' | 'BLOCK'
+  event_type: 'GOAL' | 'ASSIST' | 'BLOCK' | 'DEFENSE'
   player_id: number
   player_name: string
   team_id: number
@@ -42,18 +42,21 @@ const eventIcons = {
   GOAL: Goal,
   ASSIST: Users,
   BLOCK: Shield,
+  DEFENSE: Shield,
 }
 
 const eventColors = {
   GOAL: 'text-red-500 bg-red-100 dark:bg-red-500/20',
   ASSIST: 'text-blue-500 bg-blue-100 dark:bg-blue-500/20',
   BLOCK: 'text-green-500 bg-green-100 dark:bg-green-500/20',
+  DEFENSE: 'text-green-500 bg-green-100 dark:bg-green-500/20',
 }
 
 const eventLabels = {
   GOAL: '골',
   ASSIST: '어시스트',
   BLOCK: '수비',
+  DEFENSE: '수비',
 }
 
 export function MatchTimeline({ match, teams, events, className }: MatchTimelineProps) {
