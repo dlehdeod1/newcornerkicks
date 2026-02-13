@@ -23,11 +23,25 @@ const app = new Hono<{ Bindings: Env }>()
 // 미들웨어
 app.use('*', logger())
 app.use('*', cors({
-  origin: [
-    'http://localhost:3000',
-    'https://cornerkicks.vercel.app',
-    'https://cornerkicks.pages.dev'
-  ],
+  origin: (origin) => {
+    // 허용된 도메인 패턴
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://cornerkicks.vercel.app',
+      'https://cornerkicks.pages.dev',
+      /\.pages\.dev$/,  // 모든 pages.dev 서브도메인
+      /\.workers\.dev$/,  // 모든 workers.dev 서브도메인
+    ]
+
+    if (!origin) return true // 서버 to 서버 요청
+
+    for (const allowed of allowedOrigins) {
+      if (typeof allowed === 'string' && origin === allowed) return origin
+      if (allowed instanceof RegExp && allowed.test(origin)) return origin
+    }
+
+    return null
+  },
   credentials: true,
 }))
 

@@ -91,7 +91,7 @@ export default function HomePage() {
                   <ChevronRight className="w-5 h-5" />
                 </Link>
                 <Link
-                  href="/me"
+                  href="/profile"
                   className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-2xl font-semibold text-slate-700 dark:text-white border border-slate-200 dark:border-slate-700 transition-all shadow-sm"
                 >
                   내 기록 보기
