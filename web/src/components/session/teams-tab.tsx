@@ -425,7 +425,7 @@ function TeamCard({
                   <div className="h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-slate-500 dark:bg-slate-400 rounded-full"
-                      style={{ width: `${(parseFloat(analysis.avgOverall) / 10) * 100}%` }}
+                      style={{ width: `${parseFloat(analysis.avgOverall)}%` }}
                     />
                   </div>
                 </div>
@@ -437,7 +437,7 @@ function TeamCard({
                   <div className="h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-red-500 rounded-full"
-                      style={{ width: `${(parseFloat(analysis.avgAttack) / 10) * 100}%` }}
+                      style={{ width: `${parseFloat(analysis.avgAttack)}%` }}
                     />
                   </div>
                 </div>
@@ -449,7 +449,7 @@ function TeamCard({
                   <div className="h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-blue-500 rounded-full"
-                      style={{ width: `${(parseFloat(analysis.avgDefense) / 10) * 100}%` }}
+                      style={{ width: `${parseFloat(analysis.avgDefense)}%` }}
                     />
                   </div>
                 </div>

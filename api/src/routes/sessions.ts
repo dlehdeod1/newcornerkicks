@@ -1061,38 +1061,68 @@ sessionsRoutes.post('/:id/ai-analysis', async (c) => {
 
   // Gemini API 호출
   try {
-    const prompt = `당신은 풋살 전술 분석가입니다. 아래 팀 구성을 분석해주세요.
+    // 총 인원 수 계산
+    const totalPlayers = teamsWithStats.reduce((sum, team) => sum + team.members.length, 0)
 
-${teamsWithStats.map(team => `
-## ${team.name} (${team.color === 'yellow' ? '노랑' : team.color === 'orange' ? '주황' : '하양'} 조끼)
-- 평균 종합: ${team.avgOverall}점
-- 평균 공격: ${team.avgAttack}점
-- 평균 수비: ${team.avgDefense}점
-- 선수: ${team.members.map((m: any) => `${m.name}(종합:${m.overall}, 공격:${m.attack}, 수비:${m.defense}${m.isGuest ? ', 용병' : ''})`).join(', ')}
-`).join('\n')}
+    // 경기 형식 결정
+    let matchFormat = ''
+    if (totalPlayers >= 18) {
+      matchFormat = '6:6 순환 경기 (3팀)'
+    } else if (totalPlayers >= 15) {
+      matchFormat = '5:5 또는 6:6 순환 경기 (3팀, 키퍼 지원 가능)'
+    } else if (totalPlayers >= 12) {
+      matchFormat = '6:6 경기'
+    } else if (totalPlayers >= 10) {
+      matchFormat = '5:5 경기'
+    } else {
+      matchFormat = '소규모 경기'
+    }
 
-각 팀에 대해 다음을 분석해주세요:
-1. 팀 유형 (공격형/수비형/밸런스형)
-2. 핵심 선수와 그 이유
-3. 전략 제안 (2-3문장)
-4. 주의해야 할 상대팀
+    const prompt = `당신은 10년 경력의 풋살 전문 감독입니다. 아래 팀 구성을 분석하고 실전에서 바로 적용 가능한 구체적인 전술을 제안해주세요.
 
-JSON 형식으로 응답해주세요:
+## 경기 규칙
+- 경기 형식: ${matchFormat}
+- 선수 교체 없음 (풀타임 뛰어야 함)
+- 3팀 순환전일 경우 한 팀이 쉬는 동안 체력 회복
+- 능력치는 0~100점 기준 (70점 이상이면 상위권, 80점 이상이면 최상위권)
+
+## 팀별 전력 분석
+${teamsWithStats.map(team => {
+  const regularMembers = team.members.filter((m: any) => !m.isGuest)
+  const guestMembers = team.members.filter((m: any) => m.isGuest)
+  const regularList = regularMembers.map((m: any) => m.name + '(종합:' + m.overall + ', 공격:' + m.attack + ', 수비:' + m.defense + ')').join(', ') || '없음'
+  const guestList = guestMembers.map((m: any) => m.name).join(', ') || '없음'
+  const colorName = team.color === 'yellow' ? '노랑' : team.color === 'orange' ? '주황' : '하양'
+  return '### ' + team.name + ' (' + colorName + ' 조끼)\n' +
+    '- 인원: ' + team.members.length + '명 (정규 ' + regularMembers.length + '명, 용병 ' + guestMembers.length + '명)\n' +
+    '- 팀 평균 - 종합: ' + team.avgOverall + '점 / 공격: ' + team.avgAttack + '점 / 수비: ' + team.avgDefense + '점\n' +
+    '- 정규 선수 상세: ' + regularList + '\n' +
+    '- 용병: ' + guestList + ' (능력치 미상, 변수 요소)'
+}).join('\n\n')}
+
+## 분석 요청사항
+1. **핵심 선수**: 정규 선수 중 가장 임팩트 있는 선수 1명과 그 이유
+2. **팀 스타일**: 공격/수비/밸런스 중 하나와 구체적 근거
+3. **추천 전술**: 해당 팀의 장점을 살리는 구체적인 공격/수비 전술
+4. **주의 상대**: 가장 경계해야 할 상대팀과 그 이유
+5. **승리 키포인트**: 이 팀이 우승하려면 반드시 해야 할 것
+
+JSON 형식으로만 응답 (다른 텍스트 없이):
 {
   "teams": [
     {
       "name": "팀명",
-      "type": "팀유형",
-      "keyPlayer": "핵심선수명",
-      "keyPlayerReason": "핵심선수 선정 이유",
-      "strategy": "전략 제안",
-      "watchOut": "주의해야 할 상대팀명"
+      "type": "공격형/수비형/밸런스형",
+      "keyPlayer": "선수명",
+      "keyPlayerReason": "핵심 선수 선정 이유 (구체적으로, 30자)",
+      "strategy": "추천 전술 (구체적인 플레이 방식, 80자)",
+      "watchOut": "주의해야 할 상대팀명과 이유 (40자)"
     }
   ]
 }`
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
