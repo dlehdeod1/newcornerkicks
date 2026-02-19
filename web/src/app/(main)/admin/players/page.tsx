@@ -36,8 +36,8 @@ export default function AdminPlayersPage() {
   }
 
   const { data, isLoading } = useQuery({
-    queryKey: ['players'],
-    queryFn: () => playersApi.list(token),
+    queryKey: ['players', 'all'],
+    queryFn: () => playersApi.list(token, { all: true }),
   })
 
   const approveMutation = useMutation({
@@ -47,6 +47,17 @@ export default function AdminPlayersPage() {
     },
     onError: (error: any) => {
       alert(error.message || '승인 중 오류가 발생했습니다.')
+    },
+  })
+
+  const toggleGuestMutation = useMutation({
+    mutationFn: ({ id, isGuest }: { id: number; isGuest: boolean }) =>
+      playersApi.update(id, { isGuest: isGuest ? 1 : 0 }, token!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['players'] })
+    },
+    onError: (error: any) => {
+      alert(error.message || '변경 중 오류가 발생했습니다.')
     },
   })
 
@@ -68,14 +79,15 @@ export default function AdminPlayersPage() {
       if (filter === 'pending' && p.link_status !== 'PENDING') return false
       if (filter === 'linked' && p.link_status !== 'ACTIVE') return false
       if (filter === 'unlinked' && p.link_status !== null) return false
+      if (filter === 'guest' && !p.is_guest) return false
       if (search && !p.name?.toLowerCase().includes(search.toLowerCase()) &&
           !p.nickname?.toLowerCase().includes(search.toLowerCase())) return false
       return true
     })
-    .sort((a: any, b: any) => a.name.localeCompare(b.name))
 
   const pendingCount = players.filter((p: any) => p.link_status === 'PENDING').length
   const linkedCount = players.filter((p: any) => p.link_status === 'ACTIVE').length
+  const guestCount = players.filter((p: any) => p.is_guest).length
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -136,7 +148,7 @@ export default function AdminPlayersPage() {
           />
         </div>
         <div className="flex gap-2">
-          {(['all', 'pending', 'linked', 'unlinked'] as const).map((f) => (
+          {(['all', 'pending', 'linked', 'unlinked', 'guest'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -151,6 +163,7 @@ export default function AdminPlayersPage() {
               {f === 'pending' && '승인 대기'}
               {f === 'linked' && '연동 완료'}
               {f === 'unlinked' && '미연동'}
+              {f === 'guest' && `용병 (${guestCount})`}
             </button>
           ))}
         </div>
@@ -177,6 +190,7 @@ export default function AdminPlayersPage() {
                 <th className="px-4 py-3 text-center text-sm font-medium text-slate-500">출석</th>
                 <th className="px-4 py-3 text-center text-sm font-medium text-slate-500">골</th>
                 <th className="px-4 py-3 text-center text-sm font-medium text-slate-500">도움</th>
+                <th className="px-4 py-3 text-center text-sm font-medium text-slate-500">용병</th>
                 <th className="px-4 py-3 text-center text-sm font-medium text-slate-500">연동 상태</th>
                 <th className="px-4 py-3 text-center text-sm font-medium text-slate-500">작업</th>
               </tr>
@@ -207,6 +221,20 @@ export default function AdminPlayersPage() {
                   </td>
                   <td className="px-4 py-3 text-center text-sm text-slate-600 dark:text-slate-400">
                     {player.total_assists || 0}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      onClick={() => toggleGuestMutation.mutate({ id: player.id, isGuest: !player.is_guest })}
+                      disabled={toggleGuestMutation.isPending}
+                      className={cn(
+                        'px-2 py-1 rounded-lg text-xs font-medium transition-colors',
+                        player.is_guest
+                          ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-200'
+                          : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-slate-200'
+                      )}
+                    >
+                      {player.is_guest ? '용병 ✓' : '—'}
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-center">
                     {player.link_status === 'ACTIVE' ? (

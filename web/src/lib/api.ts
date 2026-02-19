@@ -83,11 +83,14 @@ export const sessionsApi = {
 
 // Players API
 export const playersApi = {
-  list: (token?: string | null) =>
-    api('/players', token ? { token } : {}),
+  list: (token?: string | null, options?: { all?: boolean }) =>
+    api(`/players${options?.all ? '?all=1' : ''}`, token ? { token } : {}),
 
   get: (id: number) =>
     api(`/players/${id}`),
+
+  update: (id: number, data: any, token: string) =>
+    api(`/players/${id}`, { method: 'PUT', body: data, token }),
 
   rate: (id: number, ratings: any, token: string) =>
     api(`/players/${id}/ratings`, { method: 'POST', body: ratings, token }),

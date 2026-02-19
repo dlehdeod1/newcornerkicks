@@ -8,6 +8,7 @@ const playersRoutes = new Hono<{ Bindings: Env }>()
 // 선수 목록 조회
 playersRoutes.get('/', optionalAuthMiddleware, async (c) => {
   const userId = (c as any).userId
+  const includeGuests = c.req.query('all') === '1'
 
   const players = await c.env.DB.prepare(`
     SELECT p.*,
@@ -17,8 +18,8 @@ playersRoutes.get('/', optionalAuthMiddleware, async (c) => {
            (SELECT SUM(blocks) FROM player_match_stats WHERE player_id = p.id) as total_blocks,
            (SELECT COUNT(*) FROM player_ratings WHERE player_id = p.id) as rating_count
     FROM players p
-    WHERE p.is_guest = 0
-    ORDER BY p.name
+    ${includeGuests ? '' : 'WHERE p.is_guest = 0'}
+    ORDER BY p.is_guest ASC, p.name ASC
   `).all()
 
   // 로그인된 사용자가 있으면 각 선수에 대한 평가 여부 및 내 평가 점수 확인
@@ -156,7 +157,7 @@ playersRoutes.put('/:id', authMiddleware('ADMIN'), async (c) => {
   const allowedFields = [
     'name', 'nickname', 'birth_year', 'height_cm', 'weight_kg', 'photo_url',
     'shooting', 'offball_run', 'ball_keeping', 'passing', 'linkup',
-    'intercept', 'marking', 'stamina', 'speed', 'physical', 'notes'
+    'intercept', 'marking', 'stamina', 'speed', 'physical', 'notes', 'is_guest'
   ]
 
   const updates: string[] = []
