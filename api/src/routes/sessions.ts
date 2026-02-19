@@ -76,7 +76,8 @@ sessionsRoutes.get('/:id', async (c) => {
   const matchesWithEvents = await Promise.all(
     matches.results.map(async (match: any) => {
       const events = await c.env.DB.prepare(`
-        SELECT me.*, p.name as player_name, a.name as assister_name
+        SELECT me.*, p.name as player_name, p.is_guest as player_is_guest,
+               a.name as assister_name, a.is_guest as assister_is_guest
         FROM match_events me
         LEFT JOIN players p ON me.player_id = p.id
         LEFT JOIN players a ON me.assister_id = a.id

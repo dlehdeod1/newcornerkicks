@@ -241,7 +241,7 @@ function RecentSessionHighlight({ session }: { session: any }) {
   completedMatches.forEach((match: any) => {
     const events = match.events || []
     events.forEach((event: any) => {
-      if (!event.player_id || event.guest_name) return
+      if (!event.player_id || event.guest_name || event.player_is_guest) return
 
       if (!playerStats.has(event.player_id)) {
         playerStats.set(event.player_id, {
@@ -260,7 +260,7 @@ function RecentSessionHighlight({ session }: { session: any }) {
       }
 
       // 어시스트
-      if (event.assister_id && event.event_type === 'GOAL' && !event.guest_assister) {
+      if (event.assister_id && event.event_type === 'GOAL' && !event.assister_is_guest) {
         if (!playerStats.has(event.assister_id)) {
           playerStats.set(event.assister_id, {
             name: event.assister_name,
