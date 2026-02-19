@@ -41,8 +41,8 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
 
     const events = query.data.events || []
     events.forEach((event: any) => {
-      // 용병은 제외 (player_id가 없거나 guest_name이 있으면 용병)
-      if (!event.player_id || event.guest_name) return
+      // 용병은 제외 (player_id가 없거나 guest_name이 있거나 is_guest인 경우)
+      if (!event.player_id || event.guest_name || event.player_is_guest) return
 
       if (!playerStats.has(event.player_id)) {
         playerStats.set(event.player_id, {
@@ -66,7 +66,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
       }
 
       // 어시스트 (용병 제외)
-      if (event.assister_id && event.event_type === 'GOAL') {
+      if (event.assister_id && !event.assister_is_guest && event.event_type === 'GOAL') {
         if (!playerStats.has(event.assister_id)) {
           playerStats.set(event.assister_id, {
             id: event.assister_id,
