@@ -27,13 +27,16 @@ meRoutes.get('/stats', authMiddleware(), async (c) => {
 
     const playerId = player.id
 
-    // 가장 최근 완료된 세션 조회
+    // 플레이어가 실제 기록이 있는 가장 최근 완료된 세션 조회
     const recentSession = await c.env.DB.prepare(`
-      SELECT id, session_date, title FROM sessions
-      WHERE status IN ('closed', 'completed')
-      ORDER BY session_date DESC
+      SELECT DISTINCT s.id, s.session_date, s.title FROM sessions s
+      JOIN matches m ON m.session_id = s.id
+      JOIN match_events me ON me.match_id = m.id
+      WHERE s.status IN ('closed', 'completed')
+        AND (me.player_id = ? OR (me.assister_id = ? AND me.event_type = 'GOAL'))
+      ORDER BY s.session_date DESC
       LIMIT 1
-    `).first()
+    `).bind(playerId, playerId).first()
 
     if (!recentSession) {
       return c.json({
