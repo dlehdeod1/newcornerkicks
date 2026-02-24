@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -8,9 +8,19 @@ import { Input } from '@/components/ui/input'
 import { useAuthStore } from '@/stores/auth'
 import { authApi } from '@/lib/api'
 
+// useSearchParams는 Suspense 안에서만 사용 가능
+function NoticeFromParams({ onNotice }: { onNotice: (msg: string) => void }) {
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    if (searchParams.get('reason') === 'expired') {
+      onNotice('세션이 만료되었습니다. 다시 로그인해주세요.')
+    }
+  }, [searchParams, onNotice])
+  return null
+}
+
 export default function LoginPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const login = useAuthStore((s) => s.login)
 
   const [email, setEmail] = useState('')
@@ -18,12 +28,6 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [notice, setNotice] = useState('')
-
-  useEffect(() => {
-    if (searchParams.get('reason') === 'expired') {
-      setNotice('세션이 만료되었습니다. 다시 로그인해주세요.')
-    }
-  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,6 +47,10 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 px-4">
+      <Suspense>
+        <NoticeFromParams onNotice={setNotice} />
+      </Suspense>
+
       {/* 배경 효과 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
