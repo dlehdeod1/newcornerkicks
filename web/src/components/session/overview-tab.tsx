@@ -29,9 +29,10 @@ export function OverviewTab({ session, attendance, teams, onRefetch }: Props) {
     setLoading(true)
     try {
       const attendees = attendance.map((a: any) => ({
-        playerId: a.player_id,
-        name: a.name,
-        isGuest: false,
+        playerId: a.player_id ?? null,
+        name: a.display_name || a.name || a.guest_name,
+        guestName: a.guest_name || null,
+        isGuest: !a.player_id,
       }))
 
       await sessionsApi.createTeams(session.id, attendees, token!)
