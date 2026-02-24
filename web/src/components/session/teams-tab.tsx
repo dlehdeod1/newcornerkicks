@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Users, ArrowLeftRight, Check, X, Sparkles, ChevronDown, ChevronUp, Palette, Wand2 } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Users, ArrowLeftRight, Check, X, Sparkles, ChevronDown, ChevronUp, Palette, Wand2, Pencil } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import { cn } from '@/lib/cn'
 import { useAuthStore } from '@/stores/auth'
@@ -288,9 +288,41 @@ function TeamCard({
 }) {
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [showAnalysis, setShowAnalysis] = useState(true)
+  const [editingName, setEditingName] = useState(false)
+  const [nameValue, setNameValue] = useState(team.name)
+  const nameInputRef = useRef<HTMLInputElement>(null)
   const mappedColor = colorMapping[team.vest_color] || 'yellow'
   const colors = teamColors[mappedColor] || teamColors.yellow
   const isDropTarget = selectedMember && selectedMember.fromTeamId !== team.id
+
+  useEffect(() => {
+    if (editingName) nameInputRef.current?.focus()
+  }, [editingName])
+
+  const handleNameSave = async () => {
+    const trimmed = nameValue.trim()
+    if (!trimmed || trimmed === team.name) {
+      setNameValue(team.name)
+      setEditingName(false)
+      return
+    }
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
+      const token = useAuthStore.getState().token
+      await fetch(`${API_URL}/teams/${team.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ name: trimmed }),
+      })
+    } catch (err) {
+      setNameValue(team.name)
+    } finally {
+      setEditingName(false)
+    }
+  }
 
   return (
     <div
@@ -313,8 +345,43 @@ function TeamCard({
           {/* 조끼색 표시 */}
           <span className="text-2xl shrink-0">{colors.emoji}</span>
 
-          <h3 className="text-lg font-bold truncate">{team.name}</h3>
-          <span className={cn('px-2 py-0.5 text-[10px] font-bold rounded', colors.badge)}>
+          {editingName && isAdmin ? (
+            <input
+              ref={nameInputRef}
+              value={nameValue}
+              onChange={(e) => setNameValue(e.target.value)}
+              onBlur={handleNameSave}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleNameSave()
+                if (e.key === 'Escape') { setNameValue(team.name); setEditingName(false) }
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="text-lg font-bold bg-white/60 dark:bg-slate-700/60 border border-current rounded px-1 w-28 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          ) : (
+            <h3
+              className={cn(
+                'text-lg font-bold truncate',
+                isAdmin && editMode && 'cursor-pointer hover:underline'
+              )}
+              onClick={(e) => {
+                if (isAdmin && editMode) { e.stopPropagation(); setEditingName(true) }
+              }}
+              title={isAdmin && editMode ? '클릭해서 이름 변경' : undefined}
+            >
+              {nameValue}
+            </h3>
+          )}
+          {isAdmin && editMode && !editingName && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setEditingName(true) }}
+              className="p-0.5 opacity-50 hover:opacity-100 transition-opacity shrink-0"
+              title="팀 이름 편집"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <span className={cn('px-2 py-0.5 text-[10px] font-bold rounded shrink-0', colors.badge)}>
             {colors.name}
           </span>
         </div>
