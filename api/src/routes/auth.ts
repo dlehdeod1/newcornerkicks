@@ -57,7 +57,7 @@ authRoutes.post('/login', async (c) => {
       role: user.role,
     })
       .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('7d')
+      .setExpirationTime('30d')
       .sign(secret)
 
     // 연동된 선수 정보 조회

@@ -26,6 +26,10 @@ export async function api<T = any>(endpoint: string, options: ApiOptions = {}): 
   const data = await res.json()
 
   if (!res.ok) {
+    if (res.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('cornerkicks-auth')
+      window.location.href = '/login?reason=expired'
+    }
     throw new Error(data.error || '요청에 실패했습니다.')
   }
 

@@ -205,7 +205,6 @@ sessionsRoutes.post('/:id/parse', authMiddleware('ADMIN'), async (c) => {
   })
 
   const attendees: { name: string; playerId: number | null; isGuest: boolean }[] = []
-  const guestCounts = new Map<string, number>()
 
   result.names.forEach((name) => {
     const player = playerMap.get(name)
@@ -217,22 +216,13 @@ sessionsRoutes.post('/:id/parse', authMiddleware('ADMIN'), async (c) => {
         isGuest: false,
       })
     } else {
-      // 용병 처리
-      const isGuest = name.length > 2 || name.includes('용병')
-      if (isGuest) {
-        attendees.push({
-          name,
-          playerId: null,
-          isGuest: true,
-        })
-      } else {
-        // 새로운 선수일 수 있음
-        attendees.push({
-          name,
-          playerId: null,
-          isGuest: false,
-        })
-      }
+      // "용병" 포함된 이름은 용병, 그 외 미등록 선수
+      const isGuest = name.includes('용병')
+      attendees.push({
+        name,
+        playerId: null,
+        isGuest,
+      })
     }
   })
 
@@ -634,8 +624,7 @@ async function createMatchSchedule(db: D1Database, sessionId: number, teamIds: n
 // 카카오톡 파싱 헬퍼
 function parseKakaoVote(lines: string[]): { date: string | null; names: string[] } {
   let date: string | null = null
-  const names: string[] = []
-  const excludeKeywords = ['대기', '불참', '미정', '취소', '명']
+  const rawNames: string[] = []
 
   for (const line of lines) {
     // 날짜 추출 (예: 2/11(수))
@@ -647,24 +636,29 @@ function parseKakaoVote(lines: string[]): { date: string | null; names: string[]
       date = `${year}-${month}-${day}`
     }
 
-    // 이름 추출 (공백으로 분리)
+    // 정확히 2글자인 단어만 이름으로 파싱 (날짜·인원수 등 자동 제외됨)
     const words = line.split(/\s+/).filter(Boolean)
     for (const word of words) {
-      // 숫자만 있으면 스킵 (12명 같은 거)
-      if (/^\d+$/.test(word)) continue
-      // 숫자+명 스킵
-      if (/^\d+명$/.test(word)) continue
-      // 날짜 스킵
-      if (/^\d+\/\d+/.test(word)) continue
-      // 요일 스킵
-      if (/^\([월화수목금토일]\)$/.test(word)) continue
-      // 제외 키워드
-      if (excludeKeywords.some(k => word.includes(k))) continue
-      // 1글자 스킵
-      if (word.length < 2) continue
-
-      names.push(word)
+      if (word.length !== 2) continue
+      if (/\d/.test(word)) continue  // 숫자 포함 스킵
+      rawNames.push(word)
     }
+  }
+
+  // 중복 이름 처리: 상훈→상훈, 상훈→상훈용병, 상훈→상훈용병2 ...
+  const names: string[] = []
+  const seenCounts = new Map<string, number>()
+
+  for (const name of rawNames) {
+    const seen = seenCounts.get(name) || 0
+    if (seen === 0) {
+      names.push(name)
+    } else if (seen === 1) {
+      names.push(`${name}용병`)
+    } else {
+      names.push(`${name}용병${seen}`)
+    }
+    seenCounts.set(name, seen + 1)
   }
 
   return { date, names }

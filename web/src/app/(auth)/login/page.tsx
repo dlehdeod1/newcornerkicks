@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,12 +10,20 @@ import { authApi } from '@/lib/api'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const login = useAuthStore((s) => s.login)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [notice, setNotice] = useState('')
+
+  useEffect(() => {
+    if (searchParams.get('reason') === 'expired') {
+      setNotice('세션이 만료되었습니다. 다시 로그인해주세요.')
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,6 +64,12 @@ export default function LoginPage() {
         {/* 로그인 폼 */}
         <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl dark:shadow-2xl">
           <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">로그인</h2>
+
+          {notice && (
+            <div className="mb-6 p-4 bg-yellow-100 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 rounded-xl">
+              <p className="text-sm text-yellow-700 dark:text-yellow-400">{notice}</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <Input
