@@ -160,7 +160,7 @@ export default function SessionDetailPage() {
         />
       )}
       {activeTab === 'teams' && hasTeams && (
-        <TeamsTab teams={teams} sessionId={sessionId} onRefetch={refetch} />
+        <TeamsTab teams={teams} sessionId={sessionId} attendance={attendance} onRefetch={refetch} />
       )}
       {activeTab === 'scoreboard' && hasTeams && (
         <ScoreboardTab

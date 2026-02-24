@@ -1,15 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { Users, ArrowLeftRight, Check, X, Sparkles, ChevronDown, ChevronUp, Palette } from 'lucide-react'
+import { Users, ArrowLeftRight, Check, X, Sparkles, ChevronDown, ChevronUp, Palette, Wand2 } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import { cn } from '@/lib/cn'
 import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/components/ui/button'
+import { sessionsApi } from '@/lib/api'
 
 interface Props {
   teams: any[]
   sessionId: number
+  attendance: any[]
   onRefetch: () => void
 }
 
@@ -68,12 +70,13 @@ const colorMapping: Record<string, string> = {
   white: 'white',
 }
 
-export function TeamsTab({ teams, sessionId, onRefetch }: Props) {
-  const { isAdmin } = useAuthStore()
+export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
+  const { isAdmin, token } = useAuthStore()
   const [editMode, setEditMode] = useState(false)
   const [selectedMember, setSelectedMember] = useState<{ member: any; fromTeamId: number } | null>(null)
   const [aiAnalysis, setAiAnalysis] = useState<Map<string, TeamAnalysis>>(new Map())
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isReforming, setIsReforming] = useState(false)
 
   const handleMemberClick = (member: any, teamId: number) => {
     if (!editMode) return
@@ -130,6 +133,27 @@ export function TeamsTab({ teams, sessionId, onRefetch }: Props) {
     }
   }
 
+  const handleReformTeams = async () => {
+    if (!window.confirm('팀을 다시 AI 편성하시겠습니까?\n기존 팀과 경기 기록이 초기화됩니다.')) return
+
+    setIsReforming(true)
+    try {
+      const attendees = (attendance || []).map((a: any) => ({
+        playerId: a.player_id ?? null,
+        name: a.display_name || a.name || a.guest_name,
+        guestName: a.guest_name || null,
+        isGuest: !a.player_id,
+      }))
+      await sessionsApi.createTeams(sessionId, attendees, token!)
+      setAiAnalysis(new Map())
+      onRefetch()
+    } catch (err: any) {
+      alert(err.message || '팀 재편성에 실패했습니다.')
+    } finally {
+      setIsReforming(false)
+    }
+  }
+
   const handleAiAnalysis = async () => {
     setIsAnalyzing(true)
     try {
@@ -164,7 +188,7 @@ export function TeamsTab({ teams, sessionId, onRefetch }: Props) {
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {editMode ? '선수를 클릭하고 이동할 팀을 클릭하세요' : ''}
           </p>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
@@ -175,26 +199,37 @@ export function TeamsTab({ teams, sessionId, onRefetch }: Props) {
               {aiAnalysis.size > 0 ? 'AI 재분석' : 'AI 분석'}
             </Button>
             {isAdmin && (
-              <Button
-                variant={editMode ? 'primary' : 'outline'}
-                size="sm"
-                onClick={() => {
-                  setEditMode(!editMode)
-                  setSelectedMember(null)
-                }}
-              >
-                {editMode ? (
-                  <>
-                    <Check className="w-4 h-4 mr-1.5" />
-                    완료
-                  </>
-                ) : (
-                  <>
-                    <ArrowLeftRight className="w-4 h-4 mr-1.5" />
-                    팀 편집
-                  </>
-                )}
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReformTeams}
+                  loading={isReforming}
+                >
+                  <Wand2 className="w-4 h-4 mr-1.5" />
+                  AI 재편성
+                </Button>
+                <Button
+                  variant={editMode ? 'primary' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    setEditMode(!editMode)
+                    setSelectedMember(null)
+                  }}
+                >
+                  {editMode ? (
+                    <>
+                      <Check className="w-4 h-4 mr-1.5" />
+                      완료
+                    </>
+                  ) : (
+                    <>
+                      <ArrowLeftRight className="w-4 h-4 mr-1.5" />
+                      팀 편집
+                    </>
+                  )}
+                </Button>
+              </>
             )}
           </div>
         </div>
