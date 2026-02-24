@@ -110,4 +110,29 @@ teamsRoutes.put('/:teamId', optionalAuthMiddleware, async (c) => {
   }
 })
 
+// 팀 멤버 순서 변경
+teamsRoutes.put('/:teamId/reorder', optionalAuthMiddleware, async (c) => {
+  try {
+    const teamId = c.req.param('teamId')
+    const body = await c.req.json()
+
+    const schema = z.object({
+      memberIds: z.array(z.number()),
+    })
+
+    const { memberIds } = schema.parse(body)
+
+    for (let i = 0; i < memberIds.length; i++) {
+      await c.env.DB.prepare(
+        'UPDATE team_members SET order_index = ? WHERE id = ? AND team_id = ?'
+      ).bind(i, memberIds[i], teamId).run()
+    }
+
+    return c.json({ message: '순서가 변경되었습니다.' })
+  } catch (err: any) {
+    console.error('Reorder members error:', err)
+    return c.json({ error: err.message }, 500)
+  }
+})
+
 export { teamsRoutes }

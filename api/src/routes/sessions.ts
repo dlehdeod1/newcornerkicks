@@ -51,6 +51,7 @@ sessionsRoutes.get('/:id', async (c) => {
         FROM team_members tm
         LEFT JOIN players p ON tm.player_id = p.id
         WHERE tm.team_id = ?
+        ORDER BY tm.order_index ASC, tm.id ASC
       `).bind(team.id).all()
 
       return {

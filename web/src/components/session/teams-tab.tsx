@@ -245,6 +245,7 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
             selectedMember={selectedMember}
             onMemberClick={handleMemberClick}
             onChangeColor={handleChangeColor}
+            onRefetch={onRefetch}
             isAdmin={isAdmin}
             analysis={aiAnalysis.get(team.name)}
           />
@@ -275,6 +276,7 @@ function TeamCard({
   selectedMember,
   onMemberClick,
   onChangeColor,
+  onRefetch,
   isAdmin,
   analysis,
 }: {
@@ -283,6 +285,7 @@ function TeamCard({
   selectedMember: { member: any; fromTeamId: number } | null
   onMemberClick: (member: any, teamId: number) => void
   onChangeColor: (teamId: number, newColor: string) => void
+  onRefetch: () => void
   isAdmin: boolean
   analysis?: TeamAnalysis
 }) {
@@ -290,10 +293,37 @@ function TeamCard({
   const [showAnalysis, setShowAnalysis] = useState(true)
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState(team.name)
+  const [members, setMembers] = useState<any[]>(team.members || [])
   const nameInputRef = useRef<HTMLInputElement>(null)
   const mappedColor = colorMapping[team.vest_color] || 'yellow'
   const colors = teamColors[mappedColor] || teamColors.yellow
   const isDropTarget = selectedMember && selectedMember.fromTeamId !== team.id
+
+  useEffect(() => {
+    setMembers(team.members || [])
+  }, [team.members])
+
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
+    const newMembers = [...members]
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= newMembers.length) return
+    ;[newMembers[index], newMembers[targetIndex]] = [newMembers[targetIndex], newMembers[index]]
+    setMembers(newMembers)
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
+      const token = useAuthStore.getState().token
+      await fetch(`${API_URL}/teams/${team.id}/reorder`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ memberIds: newMembers.map((m: any) => m.id) }),
+      })
+    } catch (err) {
+      setMembers(team.members || [])
+    }
+  }
 
   useEffect(() => {
     if (editingName) nameInputRef.current?.focus()
@@ -447,38 +477,74 @@ function TeamCard({
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-sm opacity-75">
           <Users className="w-4 h-4" />
-          <span>{team.members?.length || 0}명</span>
+          <span>{members.length}명</span>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {team.members?.map((member: any) => {
-            const isSelected = selectedMember?.member.id === member.id && selectedMember?.fromTeamId === team.id
-            const isGuest = !member.player_id
-
-            return (
-              <button
-                key={member.id}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onMemberClick(member, team.id)
-                }}
-                disabled={!editMode}
-                className={cn(
-                  'px-2.5 py-1 text-sm rounded-lg transition-all',
-                  editMode && 'cursor-pointer hover:scale-105 active:scale-95',
-                  !editMode && 'cursor-default',
-                  isSelected
-                    ? 'bg-blue-500 text-white ring-2 ring-blue-300'
-                    : isGuest
-                    ? 'bg-amber-200/80 dark:bg-amber-500/30 text-amber-800 dark:text-amber-300'
-                    : 'bg-black/10 dark:bg-white/15'
-                )}
-              >
-                {member.name || member.guest_name}
-                {member.name === team.key_player && ' ⭐'}
-              </button>
-            )
-          })}
-        </div>
+        {/* 편집 모드: 순서 변경 리스트 */}
+        {editMode && isAdmin ? (
+          <div className="flex flex-col gap-1">
+            {members.map((member: any, index: number) => {
+              const isSelected = selectedMember?.member.id === member.id && selectedMember?.fromTeamId === team.id
+              const isGuest = !member.player_id
+              return (
+                <div key={member.id} className="flex items-center gap-1.5">
+                  {/* 순서 버튼 */}
+                  <div className="flex flex-col gap-0.5 shrink-0">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleMove(index, 'up') }}
+                      disabled={index === 0}
+                      className="p-0.5 rounded opacity-50 hover:opacity-100 disabled:opacity-20 hover:bg-black/10 dark:hover:bg-white/10 transition-all"
+                    >
+                      <ChevronUp className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleMove(index, 'down') }}
+                      disabled={index === members.length - 1}
+                      className="p-0.5 rounded opacity-50 hover:opacity-100 disabled:opacity-20 hover:bg-black/10 dark:hover:bg-white/10 transition-all"
+                    >
+                      <ChevronDown className="w-3 h-3" />
+                    </button>
+                  </div>
+                  {/* 선수 버튼 */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onMemberClick(member, team.id) }}
+                    className={cn(
+                      'flex-1 text-left px-2.5 py-1 text-sm rounded-lg transition-all cursor-pointer hover:scale-[1.02] active:scale-95',
+                      isSelected
+                        ? 'bg-blue-500 text-white ring-2 ring-blue-300'
+                        : isGuest
+                        ? 'bg-amber-200/80 dark:bg-amber-500/30 text-amber-800 dark:text-amber-300'
+                        : 'bg-black/10 dark:bg-white/15'
+                    )}
+                  >
+                    {member.name || member.guest_name}
+                    {(member.name || member.guest_name) === team.key_player && ' ⭐'}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          /* 일반 모드: 기존 태그 형태 */
+          <div className="flex flex-wrap gap-1.5">
+            {members.map((member: any) => {
+              const isGuest = !member.player_id
+              return (
+                <span
+                  key={member.id}
+                  className={cn(
+                    'px-2.5 py-1 text-sm rounded-lg',
+                    isGuest
+                      ? 'bg-amber-200/80 dark:bg-amber-500/30 text-amber-800 dark:text-amber-300'
+                      : 'bg-black/10 dark:bg-white/15'
+                  )}
+                >
+                  {member.name || member.guest_name}
+                  {(member.name || member.guest_name) === team.key_player && ' ⭐'}
+                </span>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* 키플레이어 (분석 없을 때만) */}
