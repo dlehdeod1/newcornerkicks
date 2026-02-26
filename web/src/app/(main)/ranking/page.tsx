@@ -229,6 +229,14 @@ export default function RankingPage() {
                       onSort={handleSort}
                       color="orange"
                     />
+                    <SortableHeader
+                      label="승률"
+                      sortKey="winRate"
+                      currentSort={sortBy}
+                      sortOrder={sortOrder}
+                      onSort={handleSort}
+                      color="emerald"
+                    />
                     <th className="px-4 py-4 w-12"></th>
                   </tr>
                 </thead>
@@ -309,6 +317,9 @@ function Podium({ topThree, sortBy }: { topThree: any[]; sortBy: SortKey }) {
     }
     if (sortBy === 'attackPoints') {
       return (player.goals || 0) + (player.assists || 0)
+    }
+    if (sortBy === 'winRate') {
+      return player.attendance > 0 ? `${((player.rank1 || 0) / player.attendance * 100).toFixed(0)}%` : '-'
     }
     return player[sortBy] || 0
   }
@@ -446,6 +457,9 @@ function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy
       </td>
       <td className={cn('px-4 py-4 text-center text-lg', getCellClass('rank3'))}>
         {player.rank3 || 0}
+      </td>
+      <td className={cn('px-4 py-4 text-center text-lg', getCellClass('winRate'))}>
+        {player.attendance > 0 ? `${((player.rank1 || 0) / player.attendance * 100).toFixed(0)}%` : '-'}
       </td>
       <td className="px-4 py-4">
         <Link href={`/ranking/${player.id}`}>
