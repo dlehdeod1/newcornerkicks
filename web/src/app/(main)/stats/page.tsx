@@ -19,10 +19,13 @@ import {
 } from 'lucide-react'
 import { rankingsApi, settlementsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import { useAuthStore } from '@/stores/auth'
 
 export default function StatsPage() {
   const currentYear = new Date().getFullYear()
   const [selectedYear, setSelectedYear] = useState(currentYear)
+  const { player } = useAuthStore()
+  const myName = player?.name || null
 
   const { data: rankingsData, isLoading: rankingsLoading } = useQuery({
     queryKey: ['rankings', selectedYear],
@@ -199,6 +202,7 @@ export default function StatsPage() {
                   }))}
                   emptyMessage="어시스트 데이터가 부족합니다"
                   accentColor="amber"
+                  myName={myName}
                 />
 
                 {/* 베스트 파트너 */}
@@ -213,6 +217,7 @@ export default function StatsPage() {
                   }))}
                   emptyMessage="데이터가 부족합니다"
                   accentColor="rose"
+                  myName={myName}
                 />
 
                 {/* 최악의 궁합 */}
@@ -227,6 +232,7 @@ export default function StatsPage() {
                   }))}
                   emptyMessage="데이터가 부족합니다"
                   accentColor="blue"
+                  myName={myName}
                 />
 
                 {/* 천적 관계 */}
@@ -241,6 +247,7 @@ export default function StatsPage() {
                   }))}
                   emptyMessage="데이터가 부족합니다"
                   accentColor="purple"
+                  myName={myName}
                 />
               </div>
             </div>
@@ -433,6 +440,25 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
   )
 }
 
+function highlightMyName(label: string, myName: string | null) {
+  if (!myName || !label.includes(myName)) return <span>{label}</span>
+  const parts = label.split(myName)
+  return (
+    <>
+      {parts.map((part, i) => (
+        <span key={i}>
+          {part}
+          {i < parts.length - 1 && (
+            <span className="font-bold text-emerald-600 dark:text-emerald-400 underline underline-offset-2">
+              {myName}
+            </span>
+          )}
+        </span>
+      ))}
+    </>
+  )
+}
+
 function FunStatCard({
   title,
   description,
@@ -440,6 +466,7 @@ function FunStatCard({
   items,
   emptyMessage,
   accentColor,
+  myName,
 }: {
   title: string
   description?: string
@@ -447,6 +474,7 @@ function FunStatCard({
   items: { label: string; value: string; highlight: boolean }[]
   emptyMessage: string
   accentColor: 'amber' | 'rose' | 'blue' | 'purple'
+  myName?: string | null
 }) {
   const accentClasses = {
     amber: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10',
@@ -471,30 +499,42 @@ function FunStatCard({
           <p className="text-center text-slate-500 dark:text-slate-400 py-4 text-sm">{emptyMessage}</p>
         ) : (
           <div className="space-y-2">
-            {items.map((item, index) => (
-              <div key={index} className={cn(
-                'flex items-center justify-between px-3 py-2 rounded-xl',
-                index === 0 ? accentClasses[accentColor] : 'bg-slate-50 dark:bg-slate-800/50'
-              )}>
-                <div className="flex items-center gap-2">
+            {items.map((item, index) => {
+              const isMe = myName ? item.label.includes(myName) : false
+              return (
+                <div key={index} className={cn(
+                  'flex items-center justify-between px-3 py-2 rounded-xl ring-1 ring-transparent transition-colors',
+                  isMe
+                    ? 'ring-emerald-400 dark:ring-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+                    : index === 0
+                      ? accentClasses[accentColor]
+                      : 'bg-slate-50 dark:bg-slate-800/50'
+                )}>
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      'text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center',
+                      isMe
+                        ? 'bg-emerald-200 dark:bg-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                        : index === 0
+                          ? 'bg-white/60 dark:bg-black/20'
+                          : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+                    )}>
+                      {index + 1}
+                    </span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white">
+                      {highlightMyName(item.label, myName ?? null)}
+                    </span>
+                    {isMe && <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">← 나</span>}
+                  </div>
                   <span className={cn(
-                    'text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center',
-                    index === 0 ? 'bg-white/60 dark:bg-black/20' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+                    'text-sm font-bold',
+                    isMe ? 'text-emerald-600 dark:text-emerald-400' : index === 0 ? '' : 'text-slate-600 dark:text-slate-300'
                   )}>
-                    {index + 1}
-                  </span>
-                  <span className="text-sm font-medium text-slate-900 dark:text-white">
-                    {item.label}
+                    {item.value}
                   </span>
                 </div>
-                <span className={cn(
-                  'text-sm font-bold',
-                  index === 0 ? '' : 'text-slate-600 dark:text-slate-300'
-                )}>
-                  {item.value}
-                </span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
