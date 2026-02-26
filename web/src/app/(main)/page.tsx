@@ -16,17 +16,22 @@ export default function HomePage() {
     enabled: !!token && !!player?.id,
   })
 
-  // 최근 세션 조회 (closed 또는 completed 상태)
+  // 최근 세션 조회 (closed 또는 completed 상태 중 가장 최근)
   const { data: sessionsData, isLoading: sessionsLoading } = useQuery({
     queryKey: ['sessions', 'recent', 'highlight'],
     queryFn: async () => {
-      // closed 상태 먼저 조회
-      const closedSessions = await sessionsApi.list({ limit: 1, status: 'closed' })
-      if (closedSessions?.sessions?.length > 0) {
-        return closedSessions
-      }
-      // 없으면 completed 상태 조회
-      return sessionsApi.list({ limit: 1, status: 'completed' })
+      // closed와 completed 모두 조회해서 가장 최근 세션 반환
+      const [closedSessions, completedSessions] = await Promise.all([
+        sessionsApi.list({ limit: 1, status: 'closed' }),
+        sessionsApi.list({ limit: 1, status: 'completed' }),
+      ])
+      const closed = closedSessions?.sessions?.[0]
+      const completed = completedSessions?.sessions?.[0]
+      if (!closed && !completed) return { sessions: [] }
+      if (!closed) return completedSessions
+      if (!completed) return closedSessions
+      // 둘 다 있으면 날짜 비교해서 최신 반환
+      return closed.session_date >= completed.session_date ? closedSessions : completedSessions
     },
   })
 

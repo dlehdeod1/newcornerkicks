@@ -159,6 +159,9 @@ export const rankingsApi = {
 
   hallOfFame: () =>
     api('/rankings/hall-of-fame'),
+
+  funStats: (year?: number) =>
+    api(`/rankings/fun-stats${year ? `?year=${year}` : ''}`),
 }
 
 // Notifications API (알림)

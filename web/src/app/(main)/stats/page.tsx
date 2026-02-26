@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
-  BarChart3,
   TrendingUp,
   Target,
   Shield,
@@ -13,6 +12,10 @@ import {
   Flame,
   Trophy,
   Star,
+  Heart,
+  Swords,
+  Handshake,
+  Zap,
 } from 'lucide-react'
 import { rankingsApi, settlementsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
@@ -31,8 +34,14 @@ export default function StatsPage() {
     queryFn: () => settlementsApi.summary(selectedYear),
   })
 
+  const { data: funStatsData, isLoading: funStatsLoading } = useQuery({
+    queryKey: ['fun-stats', selectedYear],
+    queryFn: () => rankingsApi.funStats(selectedYear),
+  })
+
   const rankings = rankingsData?.data || {}
   const summary = settlementData?.summary || {}
+  const funStats = funStatsData || {}
 
   const isLoading = rankingsLoading || settlementLoading
 
@@ -170,45 +179,68 @@ export default function StatsPage() {
             />
           </div>
 
-          {/* 득점 분포 차트 (간단 바) */}
-          <div className="mt-8 bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
-            <h3 className="font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-blue-500" />
-              득점 분포
-            </h3>
+          {/* 재미 통계 */}
+          {!funStatsLoading && (
+            <div className="mt-8 space-y-4">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Zap className="w-5 h-5 text-amber-500" />
+                재미 통계
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 최고의 듀오 */}
+                <FunStatCard
+                  title="⚡ 최고의 골+어시 듀오"
+                  icon={<Handshake className="w-5 h-5 text-amber-500" />}
+                  items={(funStats.goalDuos || []).map((d: any) => ({
+                    label: `${d.scorer} → ${d.assister}`,
+                    value: `${d.combo_count}번`,
+                    highlight: d.combo_count >= 3,
+                  }))}
+                  emptyMessage="어시스트 데이터가 부족합니다"
+                  accentColor="amber"
+                />
 
-            {(rankings.goalRanking || []).length === 0 ? (
-              <p className="text-center text-slate-500 py-8">득점 데이터가 없습니다</p>
-            ) : (
-              <div className="space-y-3">
-                {(rankings.goalRanking || []).slice(0, 10).map((player: any, index: number) => {
-                  const maxGoals = Math.max(...(rankings.goalRanking || []).map((p: any) => p.goals || 0))
-                  const percentage = ((player.goals || 0) / maxGoals) * 100
+                {/* 베스트 파트너 */}
+                <FunStatCard
+                  title="🤝 베스트 파트너 (승률)"
+                  icon={<Heart className="w-5 h-5 text-rose-500" />}
+                  items={(funStats.bestPartners || []).map((d: any) => ({
+                    label: `${d.player1} & ${d.player2}`,
+                    value: `${d.win_rate}% (${d.games_together}경기)`,
+                    highlight: d.win_rate >= 70,
+                  }))}
+                  emptyMessage="데이터가 부족합니다"
+                  accentColor="rose"
+                />
 
-                  return (
-                    <div key={player.id} className="flex items-center gap-4">
-                      <span className="w-6 text-sm text-slate-500 dark:text-slate-400">
-                        {index + 1}
-                      </span>
-                      <span className="w-20 text-sm font-medium text-slate-900 dark:text-white truncate">
-                        {player.name}
-                      </span>
-                      <div className="flex-1 h-6 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-end pr-2 transition-all duration-500"
-                          style={{ width: `${Math.max(percentage, 10)}%` }}
-                        >
-                          <span className="text-xs font-bold text-white">
-                            {player.goals}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+                {/* 단짝 콤비 */}
+                <FunStatCard
+                  title="👯 단짝 콤비 (동반 출전)"
+                  icon={<Users className="w-5 h-5 text-blue-500" />}
+                  items={(funStats.mostTogether || []).map((d: any) => ({
+                    label: `${d.player1} & ${d.player2}`,
+                    value: `${d.games_together}경기`,
+                    highlight: false,
+                  }))}
+                  emptyMessage="데이터가 부족합니다"
+                  accentColor="blue"
+                />
+
+                {/* 천적 관계 */}
+                <FunStatCard
+                  title="⚔️ 천적 관계"
+                  icon={<Swords className="w-5 h-5 text-purple-500" />}
+                  items={(funStats.rivals || []).map((d: any) => ({
+                    label: `${d.scorer} vs ${d.opponent}`,
+                    value: `${d.goals_against}골 헌납`,
+                    highlight: d.goals_against >= 4,
+                  }))}
+                  emptyMessage="데이터가 부족합니다"
+                  accentColor="purple"
+                />
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* 시즌 요약 - 카테고리별 */}
           <div className="mt-8 space-y-6">
@@ -393,6 +425,68 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 text-center">
       <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{label}</p>
       <p className="text-lg font-bold text-slate-900 dark:text-white">{value}</p>
+    </div>
+  )
+}
+
+function FunStatCard({
+  title,
+  icon,
+  items,
+  emptyMessage,
+  accentColor,
+}: {
+  title: string
+  icon: React.ReactNode
+  items: { label: string; value: string; highlight: boolean }[]
+  emptyMessage: string
+  accentColor: 'amber' | 'rose' | 'blue' | 'purple'
+}) {
+  const accentClasses = {
+    amber: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10',
+    rose: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10',
+    blue: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10',
+    purple: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10',
+  }
+
+  return (
+    <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
+      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+        {icon}
+        <h3 className="font-semibold text-slate-900 dark:text-white">{title}</h3>
+      </div>
+      <div className="p-4">
+        {items.length === 0 ? (
+          <p className="text-center text-slate-500 dark:text-slate-400 py-4 text-sm">{emptyMessage}</p>
+        ) : (
+          <div className="space-y-2">
+            {items.map((item, index) => (
+              <div key={index} className={cn(
+                'flex items-center justify-between px-3 py-2 rounded-xl',
+                index === 0 ? accentClasses[accentColor] : 'bg-slate-50 dark:bg-slate-800/50'
+              )}>
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    'text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center',
+                    index === 0 ? 'bg-white/60 dark:bg-black/20' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+                  )}>
+                    {index + 1}
+                  </span>
+                  <span className="text-sm font-medium text-slate-900 dark:text-white">
+                    {item.label}
+                  </span>
+                </div>
+                <span className={cn(
+                  'text-sm font-bold',
+                  index === 0 ? '' : 'text-slate-600 dark:text-slate-300'
+                )}>
+                  {item.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

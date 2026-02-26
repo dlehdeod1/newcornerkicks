@@ -198,19 +198,42 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
       // 세션 우승률 = 세션 우승 횟수 / 출석 횟수
       const winRate = player.attendance > 0 ? ((sessionWins / player.attendance) * 100).toFixed(1) : '0.0'
 
-      // 1등, 2등, 3등 횟수 (정산 기록 기준 - team_settlements.rank)
+      // 1등, 2등, 3등 횟수 (경기 승점 기준 - 세션 내 팀 순위)
       const placementResults = await c.env.DB.prepare(`
+        WITH team_standings AS (
+          SELECT
+            t.session_id,
+            t.id as team_id,
+            SUM(CASE
+              WHEN (t.id = m.team1_id AND m.team1_score > m.team2_score) OR
+                   (t.id = m.team2_id AND m.team2_score > m.team1_score)
+              THEN 3
+              WHEN m.team1_score = m.team2_score THEN 1
+              ELSE 0
+            END) as points,
+            SUM(CASE
+              WHEN t.id = m.team1_id THEN m.team1_score
+              ELSE m.team2_score
+            END) as goals_for
+          FROM teams t
+          JOIN matches m ON t.id = m.team1_id OR t.id = m.team2_id
+          JOIN sessions s ON t.session_id = s.id
+          WHERE s.session_date BETWEEN ? AND ? AND m.status = 'completed'
+          GROUP BY t.session_id, t.id
+        ),
+        ranked_teams AS (
+          SELECT session_id, team_id,
+            RANK() OVER (PARTITION BY session_id ORDER BY points DESC, goals_for DESC) as team_rank
+          FROM team_standings
+        )
         SELECT
-          SUM(CASE WHEN ts.rank = 1 THEN 1 ELSE 0 END) as rank1,
-          SUM(CASE WHEN ts.rank = 2 THEN 1 ELSE 0 END) as rank2,
-          SUM(CASE WHEN ts.rank = 3 THEN 1 ELSE 0 END) as rank3
-        FROM team_members tm
-        JOIN team_settlements ts ON tm.team_id = ts.team_id
-        JOIN settlements sett ON ts.settlement_id = sett.id
-        JOIN sessions s ON sett.session_id = s.id
+          SUM(CASE WHEN rt.team_rank = 1 THEN 1 ELSE 0 END) as rank1,
+          SUM(CASE WHEN rt.team_rank = 2 THEN 1 ELSE 0 END) as rank2,
+          SUM(CASE WHEN rt.team_rank = 3 THEN 1 ELSE 0 END) as rank3
+        FROM ranked_teams rt
+        JOIN team_members tm ON rt.team_id = tm.team_id
         WHERE tm.player_id = ?
-          AND s.session_date BETWEEN ? AND ?
-      `).bind(player.id, yearStart, yearEnd).first()
+      `).bind(yearStart, yearEnd, player.id).first()
 
       // MVP 횟수 조회 (세션 MVP 투표 결과)
       const mvpCountResult = await c.env.DB.prepare(`
@@ -506,6 +529,125 @@ rankingsRoutes.get('/hall-of-fame', async (c) => {
   }
 
   return c.json({ hallOfFame })
+})
+
+// 재미 통계: 최고의 듀오, 베스트 파트너, 동반 출전 등
+rankingsRoutes.get('/fun-stats', async (c) => {
+  const year = Number(c.req.query('year')) || new Date().getFullYear()
+  const yearStart = `${year}-01-01`
+  const yearEnd = `${year}-12-31`
+
+  // 1. 최고의 골+어시 듀오
+  const goalDuos = await c.env.DB.prepare(`
+    SELECT
+      p1.name as scorer,
+      p2.name as assister,
+      COUNT(*) as combo_count
+    FROM match_events me
+    JOIN players p1 ON me.player_id = p1.id
+    JOIN players p2 ON me.assister_id = p2.id
+    JOIN matches m ON me.match_id = m.id
+    JOIN sessions s ON m.session_id = s.id
+    WHERE me.event_type = 'GOAL' AND me.assister_id IS NOT NULL
+      AND p1.is_guest = 0 AND p2.is_guest = 0
+      AND s.session_date BETWEEN ? AND ?
+    GROUP BY me.player_id, me.assister_id
+    ORDER BY combo_count DESC
+    LIMIT 5
+  `).bind(yearStart, yearEnd).all()
+
+  // 2. 베스트 파트너: 같은 팀에서 승률 높은 콤비 (최소 6경기)
+  const bestPartners = await c.env.DB.prepare(`
+    WITH player_matches AS (
+      SELECT tm.player_id, tm.team_id, m.id as match_id,
+        CASE WHEN (tm.team_id = m.team1_id AND m.team1_score > m.team2_score) OR
+                  (tm.team_id = m.team2_id AND m.team2_score > m.team1_score)
+        THEN 1 ELSE 0 END as won
+      FROM team_members tm
+      JOIN matches m ON tm.team_id = m.team1_id OR tm.team_id = m.team2_id
+      JOIN sessions s ON m.session_id = s.id
+      WHERE m.status = 'completed' AND s.session_date BETWEEN ? AND ?
+    )
+    SELECT
+      p1.name as player1,
+      p2.name as player2,
+      COUNT(*) as games_together,
+      SUM(pm1.won) as wins_together,
+      ROUND(SUM(pm1.won) * 100.0 / COUNT(*), 1) as win_rate
+    FROM player_matches pm1
+    JOIN player_matches pm2 ON pm1.team_id = pm2.team_id AND pm1.match_id = pm2.match_id AND pm1.player_id < pm2.player_id
+    JOIN players p1 ON pm1.player_id = p1.id
+    JOIN players p2 ON pm2.player_id = p2.id
+    WHERE p1.is_guest = 0 AND p2.is_guest = 0
+    GROUP BY pm1.player_id, pm2.player_id
+    HAVING games_together >= 6
+    ORDER BY win_rate DESC, games_together DESC
+    LIMIT 5
+  `).bind(yearStart, yearEnd).all()
+
+  // 3. 단짝 콤비: 같은 팀에서 가장 많이 함께 뛴 조합
+  const mostTogether = await c.env.DB.prepare(`
+    WITH player_matches AS (
+      SELECT tm.player_id, tm.team_id, m.id as match_id
+      FROM team_members tm
+      JOIN matches m ON tm.team_id = m.team1_id OR tm.team_id = m.team2_id
+      JOIN sessions s ON m.session_id = s.id
+      WHERE m.status = 'completed' AND s.session_date BETWEEN ? AND ?
+    )
+    SELECT
+      p1.name as player1,
+      p2.name as player2,
+      COUNT(*) as games_together
+    FROM player_matches pm1
+    JOIN player_matches pm2 ON pm1.team_id = pm2.team_id AND pm1.match_id = pm2.match_id AND pm1.player_id < pm2.player_id
+    JOIN players p1 ON pm1.player_id = p1.id
+    JOIN players p2 ON pm2.player_id = p2.id
+    WHERE p1.is_guest = 0 AND p2.is_guest = 0
+    GROUP BY pm1.player_id, pm2.player_id
+    ORDER BY games_together DESC
+    LIMIT 5
+  `).bind(yearStart, yearEnd).all()
+
+  // 4. 천적 관계: 상대팀에서 만났을 때 한 선수의 골이 많은 조합
+  const rivals = await c.env.DB.prepare(`
+    WITH match_players AS (
+      SELECT
+        tm.player_id,
+        tm.team_id,
+        m.id as match_id,
+        m.session_id,
+        CASE WHEN tm.team_id = m.team1_id THEN m.team2_id ELSE m.team1_id END as opp_team_id
+      FROM team_members tm
+      JOIN matches m ON tm.team_id = m.team1_id OR tm.team_id = m.team2_id
+      JOIN sessions s ON m.session_id = s.id
+      WHERE m.status = 'completed' AND s.session_date BETWEEN ? AND ?
+    )
+    SELECT
+      p_scorer.name as scorer,
+      p_opponent.name as opponent,
+      COUNT(*) as goals_against,
+      COUNT(DISTINCT mp_scorer.match_id) as matches_faced
+    FROM match_events me
+    JOIN matches m ON me.match_id = m.id
+    JOIN match_players mp_scorer ON mp_scorer.player_id = me.player_id AND mp_scorer.match_id = m.id
+    JOIN match_players mp_opponent ON mp_opponent.opp_team_id = mp_scorer.team_id AND mp_opponent.match_id = m.id
+    JOIN players p_scorer ON me.player_id = p_scorer.id
+    JOIN players p_opponent ON mp_opponent.player_id = p_opponent.id
+    WHERE me.event_type = 'GOAL'
+      AND p_scorer.is_guest = 0 AND p_opponent.is_guest = 0
+      AND me.player_id != mp_opponent.player_id
+    GROUP BY me.player_id, mp_opponent.player_id
+    HAVING goals_against >= 2
+    ORDER BY goals_against DESC, matches_faced ASC
+    LIMIT 5
+  `).bind(yearStart, yearEnd).all()
+
+  return c.json({
+    goalDuos: goalDuos.results,
+    bestPartners: bestPartners.results,
+    mostTogether: mostTogether.results,
+    rivals: rivals.results,
+  })
 })
 
 export { rankingsRoutes }
