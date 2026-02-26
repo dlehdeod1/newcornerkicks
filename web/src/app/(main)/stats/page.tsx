@@ -129,6 +129,7 @@ export default function StatsPage() {
               valueKey="mvpCount"
               valueLabel="회"
               emptyMessage="MVP 데이터가 없습니다"
+              myName={myName}
             />
 
             {/* 득점 랭킹 */}
@@ -139,6 +140,7 @@ export default function StatsPage() {
               valueKey="goals"
               valueLabel="골"
               emptyMessage="득점 데이터가 없습니다"
+              myName={myName}
             />
 
             {/* 어시스트 랭킹 */}
@@ -149,6 +151,7 @@ export default function StatsPage() {
               valueKey="assists"
               valueLabel="도움"
               emptyMessage="어시스트 데이터가 없습니다"
+              myName={myName}
             />
 
             {/* 수비 랭킹 */}
@@ -159,6 +162,7 @@ export default function StatsPage() {
               valueKey="defenses"
               valueLabel="수비"
               emptyMessage="수비 데이터가 없습니다"
+              myName={myName}
             />
 
             {/* 출석 랭킹 */}
@@ -169,6 +173,7 @@ export default function StatsPage() {
               valueKey="attendance"
               valueLabel="회"
               emptyMessage="출석 데이터가 없습니다"
+              myName={myName}
             />
 
             {/* 우승률 랭킹 */}
@@ -179,6 +184,7 @@ export default function StatsPage() {
               valueKey="winRate"
               valueLabel="%"
               emptyMessage="우승률 데이터가 없습니다"
+              myName={myName}
             />
           </div>
 
@@ -381,6 +387,7 @@ function RankingCard({
   valueKey,
   valueLabel,
   emptyMessage,
+  myName,
 }: {
   title: string
   icon: React.ReactNode
@@ -388,6 +395,7 @@ function RankingCard({
   valueKey: string
   valueLabel: string
   emptyMessage: string
+  myName?: string | null
 }) {
   return (
     <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
@@ -403,26 +411,42 @@ function RankingCard({
           </p>
         ) : (
           <div className="space-y-3">
-            {items.map((item: any, index: number) => (
-              <div key={item.id} className="flex items-center gap-3">
+            {items.map((item: any, index: number) => {
+              const itemName = item.name || item.player_name
+              const isMe = myName ? itemName === myName : false
+              return (
+              <div key={item.id} className={cn(
+                'flex items-center gap-3 px-2 py-1 rounded-xl transition-colors',
+                isMe && 'bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-400 dark:ring-emerald-500'
+              )}>
                 <span className={cn(
                   'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold',
-                  index === 0 && 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
-                  index === 1 && 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
-                  index === 2 && 'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400',
-                  index > 2 && 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                  isMe
+                    ? 'bg-emerald-200 dark:bg-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                    : index === 0 && 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
+                  !isMe && index === 1 && 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
+                  !isMe && index === 2 && 'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400',
+                  !isMe && index > 2 && 'bg-slate-100 dark:bg-slate-800 text-slate-500'
                 )}>
                   {index + 1}
                 </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
-                    {item.name || item.player_name}
+                <div className="flex-1 min-w-0 flex items-center gap-1">
+                  <p className={cn(
+                    'text-sm font-medium truncate',
+                    isMe ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-900 dark:text-white'
+                  )}>
+                    {itemName}
                   </p>
+                  {isMe && <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold shrink-0">← 나</span>}
                 </div>
-                <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                <span className={cn(
+                  'text-sm font-bold shrink-0',
+                  isMe ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'
+                )}>
                   {item[valueKey]}{valueLabel}
                 </span>
               </div>
+              )
             ))}
           </div>
         )}
