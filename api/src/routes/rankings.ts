@@ -537,11 +537,11 @@ rankingsRoutes.get('/fun-stats', async (c) => {
   const yearStart = `${year}-01-01`
   const yearEnd = `${year}-12-31`
 
-  // 1. 최고의 골+어시 듀오
+  // 1. 최고의 골+어시 듀오 (양방향 합산: A→B + B→A)
   const goalDuos = await c.env.DB.prepare(`
     SELECT
-      p1.name as scorer,
-      p2.name as assister,
+      CASE WHEN me.player_id < me.assister_id THEN p1.name ELSE p2.name END as player1,
+      CASE WHEN me.player_id < me.assister_id THEN p2.name ELSE p1.name END as player2,
       COUNT(*) as combo_count
     FROM match_events me
     JOIN players p1 ON me.player_id = p1.id
@@ -551,7 +551,9 @@ rankingsRoutes.get('/fun-stats', async (c) => {
     WHERE me.event_type = 'GOAL' AND me.assister_id IS NOT NULL
       AND p1.is_guest = 0 AND p2.is_guest = 0
       AND s.session_date BETWEEN ? AND ?
-    GROUP BY me.player_id, me.assister_id
+    GROUP BY
+      CASE WHEN me.player_id < me.assister_id THEN me.player_id ELSE me.assister_id END,
+      CASE WHEN me.player_id < me.assister_id THEN me.assister_id ELSE me.player_id END
     ORDER BY combo_count DESC
     LIMIT 5
   `).bind(yearStart, yearEnd).all()
@@ -585,10 +587,13 @@ rankingsRoutes.get('/fun-stats', async (c) => {
     LIMIT 5
   `).bind(yearStart, yearEnd).all()
 
-  // 3. 단짝 콤비: 같은 팀에서 가장 많이 함께 뛴 조합
-  const mostTogether = await c.env.DB.prepare(`
+  // 3. 최악의 궁합: 같은 팀에서 승률이 낮은 콤비 (최소 6경기)
+  const worstPartners = await c.env.DB.prepare(`
     WITH player_matches AS (
-      SELECT tm.player_id, tm.team_id, m.id as match_id
+      SELECT tm.player_id, tm.team_id, m.id as match_id,
+        CASE WHEN (tm.team_id = m.team1_id AND m.team1_score > m.team2_score) OR
+                  (tm.team_id = m.team2_id AND m.team2_score > m.team1_score)
+        THEN 1 ELSE 0 END as won
       FROM team_members tm
       JOIN matches m ON tm.team_id = m.team1_id OR tm.team_id = m.team2_id
       JOIN sessions s ON m.session_id = s.id
@@ -597,14 +602,17 @@ rankingsRoutes.get('/fun-stats', async (c) => {
     SELECT
       p1.name as player1,
       p2.name as player2,
-      COUNT(*) as games_together
+      COUNT(*) as games_together,
+      SUM(pm1.won) as wins_together,
+      ROUND(SUM(pm1.won) * 100.0 / COUNT(*), 1) as win_rate
     FROM player_matches pm1
     JOIN player_matches pm2 ON pm1.team_id = pm2.team_id AND pm1.match_id = pm2.match_id AND pm1.player_id < pm2.player_id
     JOIN players p1 ON pm1.player_id = p1.id
     JOIN players p2 ON pm2.player_id = p2.id
     WHERE p1.is_guest = 0 AND p2.is_guest = 0
     GROUP BY pm1.player_id, pm2.player_id
-    ORDER BY games_together DESC
+    HAVING games_together >= 6
+    ORDER BY win_rate ASC, games_together DESC
     LIMIT 5
   `).bind(yearStart, yearEnd).all()
 
@@ -645,7 +653,7 @@ rankingsRoutes.get('/fun-stats', async (c) => {
   return c.json({
     goalDuos: goalDuos.results,
     bestPartners: bestPartners.results,
-    mostTogether: mostTogether.results,
+    worstPartners: worstPartners.results,
     rivals: rivals.results,
   })
 })

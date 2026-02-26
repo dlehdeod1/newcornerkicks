@@ -190,10 +190,11 @@ export default function StatsPage() {
                 {/* 최고의 듀오 */}
                 <FunStatCard
                   title="⚡ 최고의 골+어시 듀오"
+                  description="서로 골·어시스트 주고받은 횟수 합산"
                   icon={<Handshake className="w-5 h-5 text-amber-500" />}
                   items={(funStats.goalDuos || []).map((d: any) => ({
-                    label: `${d.scorer} → ${d.assister}`,
-                    value: `${d.combo_count}번`,
+                    label: `${d.player1} & ${d.player2}`,
+                    value: `${d.combo_count}회 콤비`,
                     highlight: d.combo_count >= 3,
                   }))}
                   emptyMessage="어시스트 데이터가 부족합니다"
@@ -202,24 +203,26 @@ export default function StatsPage() {
 
                 {/* 베스트 파트너 */}
                 <FunStatCard
-                  title="🤝 베스트 파트너 (승률)"
+                  title="🤝 베스트 파트너"
+                  description="같은 팀에서 승률이 높은 조합 (최소 6경기)"
                   icon={<Heart className="w-5 h-5 text-rose-500" />}
                   items={(funStats.bestPartners || []).map((d: any) => ({
                     label: `${d.player1} & ${d.player2}`,
-                    value: `${d.win_rate}% (${d.games_together}경기)`,
+                    value: `승률 ${d.win_rate}% (${d.games_together}경기)`,
                     highlight: d.win_rate >= 70,
                   }))}
                   emptyMessage="데이터가 부족합니다"
                   accentColor="rose"
                 />
 
-                {/* 단짝 콤비 */}
+                {/* 최악의 궁합 */}
                 <FunStatCard
-                  title="👯 단짝 콤비 (동반 출전)"
-                  icon={<Users className="w-5 h-5 text-blue-500" />}
-                  items={(funStats.mostTogether || []).map((d: any) => ({
+                  title="💀 최악의 궁합"
+                  description="같은 팀에서 승률이 낮은 조합 (최소 6경기)"
+                  icon={<Users className="w-5 h-5 text-slate-500" />}
+                  items={(funStats.worstPartners || []).map((d: any) => ({
                     label: `${d.player1} & ${d.player2}`,
-                    value: `${d.games_together}경기`,
+                    value: `승률 ${d.win_rate}% (${d.games_together}경기)`,
                     highlight: false,
                   }))}
                   emptyMessage="데이터가 부족합니다"
@@ -229,11 +232,12 @@ export default function StatsPage() {
                 {/* 천적 관계 */}
                 <FunStatCard
                   title="⚔️ 천적 관계"
+                  description="상대팀에서 만났을 때 골을 많이 넣은 선수"
                   icon={<Swords className="w-5 h-5 text-purple-500" />}
                   items={(funStats.rivals || []).map((d: any) => ({
-                    label: `${d.scorer} vs ${d.opponent}`,
-                    value: `${d.goals_against}골 헌납`,
-                    highlight: d.goals_against >= 4,
+                    label: `${d.scorer}이 ${d.opponent} 상대로`,
+                    value: `${d.goals_against}골 (${d.matches_faced}경기)`,
+                    highlight: d.goals_against >= 5,
                   }))}
                   emptyMessage="데이터가 부족합니다"
                   accentColor="purple"
@@ -431,12 +435,14 @@ function SummaryItem({ label, value }: { label: string; value: string }) {
 
 function FunStatCard({
   title,
+  description,
   icon,
   items,
   emptyMessage,
   accentColor,
 }: {
   title: string
+  description?: string
   icon: React.ReactNode
   items: { label: string; value: string; highlight: boolean }[]
   emptyMessage: string
@@ -451,9 +457,14 @@ function FunStatCard({
 
   return (
     <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
-      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
-        {icon}
-        <h3 className="font-semibold text-slate-900 dark:text-white">{title}</h3>
+      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-2">
+          {icon}
+          <h3 className="font-semibold text-slate-900 dark:text-white">{title}</h3>
+        </div>
+        {description && (
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{description}</p>
+        )}
       </div>
       <div className="p-4">
         {items.length === 0 ? (
