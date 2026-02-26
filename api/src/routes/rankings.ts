@@ -465,10 +465,17 @@ rankingsRoutes.get('/hall-of-fame', async (c) => {
 
     if (qualified.length === 0) continue
 
+    // 공격포인트(득점+도움) 계산
+    const qualifiedWithAP = qualified.map((p: any) => ({
+      ...p,
+      attackPoints: (p.goals || 0) + (p.assists || 0),
+    }))
+
     // 각 부문 1등 찾기
     const categories = [
       { key: 'goals', name: '득점왕', icon: '⚽' },
       { key: 'assists', name: '도움왕', icon: '🅰️' },
+      { key: 'attackPoints', name: '공격포인트왕', icon: '⚡' },
       { key: 'defenses', name: '수비왕', icon: '🛡️' },
       { key: 'mvpScore', name: 'MVP', icon: '🏆' },
       { key: 'winRate', name: '승률왕', icon: '📈' },
@@ -478,7 +485,7 @@ rankingsRoutes.get('/hall-of-fame', async (c) => {
     const yearHonors = []
 
     for (const cat of categories) {
-      const sorted = [...qualified].sort((a, b) => b[cat.key] - a[cat.key])
+      const sorted = [...qualifiedWithAP].sort((a, b) => b[cat.key] - a[cat.key])
       if (sorted.length > 0 && sorted[0][cat.key] > 0) {
         yearHonors.push({
           category: cat.name,

@@ -264,10 +264,10 @@ matchesRoutes.post('/:id/events', optionalAuthMiddleware, async (c) => {
 
     const data = schema.parse(body)
 
-    // 이벤트 생성 (created_at 컬럼 없을 수 있어서 간단하게)
+    // 이벤트 생성
     const result = await c.env.DB.prepare(`
-      INSERT INTO match_events (match_id, player_id, guest_name, team_id, event_type, assister_id, event_time)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO match_events (match_id, player_id, guest_name, team_id, event_type, assister_id, event_time, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, unixepoch())
     `).bind(
       matchId,
       data.playerId,
