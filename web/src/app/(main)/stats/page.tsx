@@ -535,7 +535,7 @@ function RankingCard({
                 </span>
               </div>
               )
-            ))}
+            })}
           </div>
         )}
       </div>
