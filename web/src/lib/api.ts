@@ -162,6 +162,9 @@ export const rankingsApi = {
 
   funStats: (year?: number) =>
     api(`/rankings/fun-stats${year ? `?year=${year}` : ''}`),
+
+  myStats: (playerId: number, year?: number) =>
+    api(`/rankings/my-stats?playerId=${playerId}${year ? `&year=${year}` : ''}`),
 }
 
 // Notifications API (알림)

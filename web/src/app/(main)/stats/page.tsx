@@ -16,6 +16,7 @@ import {
   Swords,
   Handshake,
   Zap,
+  User,
 } from 'lucide-react'
 import { rankingsApi, settlementsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
@@ -42,9 +43,16 @@ export default function StatsPage() {
     queryFn: () => rankingsApi.funStats(selectedYear),
   })
 
+  const { data: myStatsData, isLoading: myStatsLoading } = useQuery({
+    queryKey: ['my-stats', selectedYear, player?.id],
+    queryFn: () => rankingsApi.myStats(player!.id, selectedYear),
+    enabled: !!player,
+  })
+
   const rankings = rankingsData?.data || {}
   const summary = settlementData?.summary || {}
   const funStats = funStatsData || {}
+  const myStats = myStatsData || null
 
   const isLoading = rankingsLoading || settlementLoading
 
@@ -256,6 +264,86 @@ export default function StatsPage() {
                   myName={myName}
                 />
               </div>
+            </div>
+          )}
+
+          {/* 내 개인 통계 - 선수 연동 시에만 표시 */}
+          {player && (
+            <div className="mt-8 space-y-4">
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <User className="w-5 h-5 text-emerald-500" />
+                  {player.name}의 개인 통계
+                </h2>
+                <span className="text-xs bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-semibold">
+                  나만의 통계
+                </span>
+              </div>
+
+              {myStatsLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 animate-pulse border border-slate-200 dark:border-slate-800/50">
+                      <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-40 mb-4" />
+                      <div className="space-y-2">
+                        {[1, 2, 3].map((j) => (
+                          <div key={j} className="h-9 bg-slate-100 dark:bg-slate-800 rounded-xl" />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* 함께할 때 잘 이기는 팀원 */}
+                  <MyStatCard
+                    title="🏆 함께하면 최강 팀원"
+                    description="같은 팀일 때 승률이 높은 팀원 (최소 3경기)"
+                    items={(myStats?.teammates || []).map((d: any) => ({
+                      label: d.teammate,
+                      value: `승률 ${d.win_rate}% (${d.games_together}경기)`,
+                    }))}
+                    emptyMessage="아직 데이터가 부족합니다 (최소 3경기 필요)"
+                    accentColor="emerald"
+                  />
+
+                  {/* 함께하면 망하는 팀원 */}
+                  <MyStatCard
+                    title="💀 함께하면 망하는 팀원"
+                    description="같은 팀일 때 승률이 낮은 팀원 (최소 3경기)"
+                    items={(myStats?.worstTeammates || []).map((d: any) => ({
+                      label: d.teammate,
+                      value: `승률 ${d.win_rate}% (${d.games_together}경기)`,
+                    }))}
+                    emptyMessage="아직 데이터가 부족합니다"
+                    accentColor="red"
+                  />
+
+                  {/* 나한테 어시스트 많이 해준 선수 */}
+                  <MyStatCard
+                    title="🅰️ 나한테 어시스트 많이 해준 선수"
+                    description="내 골을 도와준 고마운 팀원"
+                    items={(myStats?.assistedToMe || []).map((d: any) => ({
+                      label: d.assister,
+                      value: `${d.assist_count}회`,
+                    }))}
+                    emptyMessage="아직 어시스트 데이터가 없습니다"
+                    accentColor="blue"
+                  />
+
+                  {/* 내가 어시스트 많이 해준 선수 */}
+                  <MyStatCard
+                    title="⚡ 내가 어시스트 많이 해준 선수"
+                    description="내 패스로 골을 넣은 선수"
+                    items={(myStats?.myAssists || []).map((d: any) => ({
+                      label: d.scorer,
+                      value: `${d.assist_count}회`,
+                    }))}
+                    emptyMessage="아직 어시스트 데이터가 없습니다"
+                    accentColor="amber"
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -480,6 +568,86 @@ function highlightMyName(label: string, myName: string | null) {
         </span>
       ))}
     </>
+  )
+}
+
+function MyStatCard({
+  title,
+  description,
+  items,
+  emptyMessage,
+  accentColor,
+}: {
+  title: string
+  description?: string
+  items: { label: string; value: string }[]
+  emptyMessage: string
+  accentColor: 'emerald' | 'red' | 'blue' | 'amber'
+}) {
+  const accentClasses = {
+    emerald: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/15',
+    red: 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-500/15',
+    blue: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/15',
+    amber: 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15',
+  }
+
+  const medalClasses = [
+    'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
+    'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
+    'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400',
+  ]
+
+  return (
+    <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
+      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+        <h3 className="font-semibold text-slate-900 dark:text-white">{title}</h3>
+        {description && (
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{description}</p>
+        )}
+      </div>
+      <div className="p-4">
+        {items.length === 0 ? (
+          <p className="text-center text-slate-500 dark:text-slate-400 py-4 text-sm">{emptyMessage}</p>
+        ) : (
+          <div className="space-y-2">
+            {items.map((item, index) => (
+              <div
+                key={index}
+                className={cn(
+                  'flex items-center justify-between px-3 py-2.5 rounded-xl',
+                  index === 0 ? accentClasses[accentColor] : 'bg-slate-50 dark:bg-slate-800/50'
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className={cn(
+                    'text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0',
+                    index === 0
+                      ? 'bg-white/60 dark:bg-black/20'
+                      : index < 3
+                        ? medalClasses[index]
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+                  )}>
+                    {index + 1}
+                  </span>
+                  <span className={cn(
+                    'text-sm font-semibold',
+                    index === 0 ? '' : 'text-slate-900 dark:text-white'
+                  )}>
+                    {item.label}
+                  </span>
+                </div>
+                <span className={cn(
+                  'text-sm font-bold shrink-0',
+                  index === 0 ? '' : 'text-slate-500 dark:text-slate-400'
+                )}>
+                  {item.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 

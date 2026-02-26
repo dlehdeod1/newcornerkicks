@@ -658,4 +658,109 @@ rankingsRoutes.get('/fun-stats', async (c) => {
   })
 })
 
+// 개인화 재미 통계: 나를 기준으로 한 팀원 궁합, 어시스트 주고받기
+rankingsRoutes.get('/my-stats', async (c) => {
+  const year = Number(c.req.query('year')) || new Date().getFullYear()
+  const playerId = Number(c.req.query('playerId'))
+
+  if (!playerId) {
+    return c.json({ error: 'playerId is required' }, 400)
+  }
+
+  const yearStart = `${year}-01-01`
+  const yearEnd = `${year}-12-31`
+
+  // 1. 함께할 때 승률이 높은 팀원 (최소 3경기)
+  const teammates = await c.env.DB.prepare(`
+    WITH player_matches AS (
+      SELECT tm.player_id, tm.team_id, m.id as match_id,
+        CASE WHEN (tm.team_id = m.team1_id AND m.team1_score > m.team2_score) OR
+                  (tm.team_id = m.team2_id AND m.team2_score > m.team1_score)
+        THEN 1 ELSE 0 END as won
+      FROM team_members tm
+      JOIN matches m ON tm.team_id = m.team1_id OR tm.team_id = m.team2_id
+      JOIN sessions s ON m.session_id = s.id
+      WHERE m.status = 'completed' AND s.session_date BETWEEN ? AND ?
+    )
+    SELECT
+      p2.name as teammate,
+      COUNT(*) as games_together,
+      SUM(pm1.won) as wins_together,
+      ROUND(SUM(pm1.won) * 100.0 / COUNT(*), 1) as win_rate
+    FROM player_matches pm1
+    JOIN player_matches pm2 ON pm1.team_id = pm2.team_id AND pm1.match_id = pm2.match_id AND pm2.player_id != pm1.player_id
+    JOIN players p2 ON pm2.player_id = p2.id
+    WHERE pm1.player_id = ? AND p2.is_guest = 0
+    GROUP BY pm2.player_id
+    HAVING games_together >= 3
+    ORDER BY win_rate DESC, games_together DESC
+    LIMIT 5
+  `).bind(yearStart, yearEnd, playerId).all()
+
+  // 2. 나한테 어시스트 많이 해준 선수
+  const assistedToMe = await c.env.DB.prepare(`
+    SELECT p.name as assister, COUNT(*) as assist_count
+    FROM match_events me
+    JOIN players p ON me.assister_id = p.id
+    JOIN matches m ON me.match_id = m.id
+    JOIN sessions s ON m.session_id = s.id
+    WHERE me.player_id = ? AND me.assister_id IS NOT NULL
+      AND me.event_type = 'GOAL'
+      AND p.is_guest = 0
+      AND s.session_date BETWEEN ? AND ?
+    GROUP BY me.assister_id
+    ORDER BY assist_count DESC
+    LIMIT 5
+  `).bind(playerId, yearStart, yearEnd).all()
+
+  // 3. 내가 어시스트 많이 해준 선수
+  const myAssists = await c.env.DB.prepare(`
+    SELECT p.name as scorer, COUNT(*) as assist_count
+    FROM match_events me
+    JOIN players p ON me.player_id = p.id
+    JOIN matches m ON me.match_id = m.id
+    JOIN sessions s ON m.session_id = s.id
+    WHERE me.assister_id = ? AND me.event_type = 'GOAL'
+      AND p.is_guest = 0
+      AND s.session_date BETWEEN ? AND ?
+    GROUP BY me.player_id
+    ORDER BY assist_count DESC
+    LIMIT 5
+  `).bind(playerId, yearStart, yearEnd).all()
+
+  // 4. 함께할 때 승률이 낮은 팀원 (최소 3경기)
+  const worstTeammates = await c.env.DB.prepare(`
+    WITH player_matches AS (
+      SELECT tm.player_id, tm.team_id, m.id as match_id,
+        CASE WHEN (tm.team_id = m.team1_id AND m.team1_score > m.team2_score) OR
+                  (tm.team_id = m.team2_id AND m.team2_score > m.team1_score)
+        THEN 1 ELSE 0 END as won
+      FROM team_members tm
+      JOIN matches m ON tm.team_id = m.team1_id OR tm.team_id = m.team2_id
+      JOIN sessions s ON m.session_id = s.id
+      WHERE m.status = 'completed' AND s.session_date BETWEEN ? AND ?
+    )
+    SELECT
+      p2.name as teammate,
+      COUNT(*) as games_together,
+      SUM(pm1.won) as wins_together,
+      ROUND(SUM(pm1.won) * 100.0 / COUNT(*), 1) as win_rate
+    FROM player_matches pm1
+    JOIN player_matches pm2 ON pm1.team_id = pm2.team_id AND pm1.match_id = pm2.match_id AND pm2.player_id != pm1.player_id
+    JOIN players p2 ON pm2.player_id = p2.id
+    WHERE pm1.player_id = ? AND p2.is_guest = 0
+    GROUP BY pm2.player_id
+    HAVING games_together >= 3
+    ORDER BY win_rate ASC, games_together DESC
+    LIMIT 5
+  `).bind(yearStart, yearEnd, playerId).all()
+
+  return c.json({
+    teammates: teammates.results,
+    assistedToMe: assistedToMe.results,
+    myAssists: myAssists.results,
+    worstTeammates: worstTeammates.results,
+  })
+})
+
 export { rankingsRoutes }
