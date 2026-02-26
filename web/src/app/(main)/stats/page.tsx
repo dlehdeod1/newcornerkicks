@@ -25,7 +25,7 @@ import { useAuthStore } from '@/stores/auth'
 export default function StatsPage() {
   const currentYear = new Date().getFullYear()
   const [selectedYear, setSelectedYear] = useState(currentYear)
-  const { player } = useAuthStore()
+  const { player, isLoggedIn } = useAuthStore()
   const myName = player?.name || null
 
   const { data: rankingsData, isLoading: rankingsLoading } = useQuery({
@@ -267,20 +267,20 @@ export default function StatsPage() {
             </div>
           )}
 
-          {/* 내 개인 통계 - 선수 연동 시에만 표시 */}
-          {player && (
+          {/* 내 개인 통계 - 로그인 시 표시 */}
+          {isLoggedIn && (
             <div className="mt-8 space-y-4">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <User className="w-5 h-5 text-emerald-500" />
-                  {player.name}의 개인 통계
+                  {player ? `${player.name}의 개인 통계` : '내 개인 통계'}
                 </h2>
                 <span className="text-xs bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-semibold">
                   나만의 통계
                 </span>
               </div>
 
-              {myStatsLoading ? (
+              {!player || myStatsLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[1, 2, 3, 4].map((i) => (
                     <div key={i} className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 animate-pulse border border-slate-200 dark:border-slate-800/50">
