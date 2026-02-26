@@ -7,7 +7,7 @@ import { Trophy, Target, Handshake, Shield, ChevronDown, Search, ChevronRight, C
 import { rankingsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
-type SortKey = 'mvpCount' | 'goals' | 'assists' | 'defenses' | 'games' | 'rank1' | 'rank2' | 'rank3' | 'ppm' | 'winRate'
+type SortKey = 'mvpCount' | 'goals' | 'assists' | 'attackPoints' | 'defenses' | 'games' | 'rank1' | 'rank2' | 'rank3' | 'ppm' | 'winRate'
 type SortOrder = 'asc' | 'desc'
 
 export default function RankingPage() {
@@ -35,6 +35,9 @@ export default function RankingPage() {
     if (sortBy === 'ppm') {
       aVal = a.games > 0 ? a.goals / a.games : 0
       bVal = b.games > 0 ? b.goals / b.games : 0
+    } else if (sortBy === 'attackPoints') {
+      aVal = (a.goals || 0) + (a.assists || 0)
+      bVal = (b.goals || 0) + (b.assists || 0)
     } else {
       aVal = a[sortBy] || 0
       bVal = b[sortBy] || 0
@@ -60,6 +63,7 @@ export default function RankingPage() {
       mvpCount: 'MVP',
       goals: '득점',
       assists: '도움',
+      attackPoints: '공격포인트',
       defenses: '수비',
       games: '경기수',
       rank1: '1등',
@@ -169,6 +173,14 @@ export default function RankingPage() {
                       color="blue"
                     />
                     <SortableHeader
+                      label="공격P"
+                      sortKey="attackPoints"
+                      currentSort={sortBy}
+                      sortOrder={sortOrder}
+                      onSort={handleSort}
+                      color="rose"
+                    />
+                    <SortableHeader
                       label="수비"
                       sortKey="defenses"
                       currentSort={sortBy}
@@ -266,6 +278,7 @@ function SortableHeader({
     slate: 'text-slate-600 dark:text-slate-400',
     yellow: 'text-yellow-600 dark:text-yellow-400',
     orange: 'text-orange-600 dark:text-orange-400',
+    rose: 'text-rose-600 dark:text-rose-400',
   }
 
   return (
@@ -293,6 +306,9 @@ function Podium({ topThree, sortBy }: { topThree: any[]; sortBy: SortKey }) {
   const getValue = (player: any) => {
     if (sortBy === 'ppm') {
       return player.games > 0 ? (player.goals / player.games).toFixed(2) : '0.00'
+    }
+    if (sortBy === 'attackPoints') {
+      return (player.goals || 0) + (player.assists || 0)
     }
     return player[sortBy] || 0
   }
@@ -365,6 +381,7 @@ function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy
       mvpCount: 'text-emerald-600 dark:text-emerald-400 font-bold',
       goals: 'text-amber-600 dark:text-amber-400 font-bold',
       assists: 'text-blue-600 dark:text-blue-400 font-bold',
+      attackPoints: 'text-rose-600 dark:text-rose-400 font-bold',
       defenses: 'text-purple-600 dark:text-purple-400 font-bold',
       games: 'text-slate-700 dark:text-slate-300 font-bold',
       rank1: 'text-yellow-600 dark:text-yellow-400 font-bold',
@@ -378,6 +395,7 @@ function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy
 
   // PPM 계산 (goals per game)
   const ppm = player.games > 0 ? (player.goals / player.games).toFixed(2) : '0.00'
+  const attackPoints = (player.goals || 0) + (player.assists || 0)
 
   return (
     <tr className={cn(
@@ -407,6 +425,9 @@ function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy
       </td>
       <td className={cn('px-4 py-4 text-center text-lg', getCellClass('assists'))}>
         {player.assists || 0}
+      </td>
+      <td className={cn('px-4 py-4 text-center text-lg', getCellClass('attackPoints'))}>
+        {attackPoints}
       </td>
       <td className={cn('px-4 py-4 text-center text-lg', getCellClass('defenses'))}>
         {player.defenses || 0}

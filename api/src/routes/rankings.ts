@@ -198,17 +198,17 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
       // 세션 우승률 = 세션 우승 횟수 / 출석 횟수
       const winRate = player.attendance > 0 ? ((sessionWins / player.attendance) * 100).toFixed(1) : '0.0'
 
-      // 1등, 2등, 3등 횟수 (팀 순위 기준)
+      // 1등, 2등, 3등 횟수 (정산 기록 기준 - team_settlements.rank)
       const placementResults = await c.env.DB.prepare(`
         SELECT
-          SUM(CASE WHEN t.rank = 1 THEN 1 ELSE 0 END) as rank1,
-          SUM(CASE WHEN t.rank = 2 THEN 1 ELSE 0 END) as rank2,
-          SUM(CASE WHEN t.rank = 3 THEN 1 ELSE 0 END) as rank3
+          SUM(CASE WHEN ts.rank = 1 THEN 1 ELSE 0 END) as rank1,
+          SUM(CASE WHEN ts.rank = 2 THEN 1 ELSE 0 END) as rank2,
+          SUM(CASE WHEN ts.rank = 3 THEN 1 ELSE 0 END) as rank3
         FROM team_members tm
-        JOIN teams t ON tm.team_id = t.id
-        JOIN sessions s ON t.session_id = s.id
+        JOIN team_settlements ts ON tm.team_id = ts.team_id
+        JOIN settlements sett ON ts.settlement_id = sett.id
+        JOIN sessions s ON sett.session_id = s.id
         WHERE tm.player_id = ?
-          AND t.rank IS NOT NULL
           AND s.session_date BETWEEN ? AND ?
       `).bind(player.id, yearStart, yearEnd).first()
 
@@ -465,10 +465,17 @@ rankingsRoutes.get('/hall-of-fame', async (c) => {
 
     if (qualified.length === 0) continue
 
+    // 공격포인트(득점+도움) 계산
+    const qualifiedWithAP = qualified.map((p: any) => ({
+      ...p,
+      attackPoints: (p.goals || 0) + (p.assists || 0),
+    }))
+
     // 각 부문 1등 찾기
     const categories = [
       { key: 'goals', name: '득점왕', icon: '⚽' },
       { key: 'assists', name: '도움왕', icon: '🅰️' },
+      { key: 'attackPoints', name: '공격포인트왕', icon: '⚡' },
       { key: 'defenses', name: '수비왕', icon: '🛡️' },
       { key: 'mvpScore', name: 'MVP', icon: '🏆' },
       { key: 'winRate', name: '승률왕', icon: '📈' },
@@ -478,7 +485,7 @@ rankingsRoutes.get('/hall-of-fame', async (c) => {
     const yearHonors = []
 
     for (const cat of categories) {
-      const sorted = [...qualified].sort((a, b) => b[cat.key] - a[cat.key])
+      const sorted = [...qualifiedWithAP].sort((a, b) => b[cat.key] - a[cat.key])
       if (sorted.length > 0 && sorted[0][cat.key] > 0) {
         yearHonors.push({
           category: cat.name,

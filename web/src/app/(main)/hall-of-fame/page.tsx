@@ -2,13 +2,14 @@
 
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { Trophy, Crown, Star, Target, Handshake, Shield, Award, TrendingUp, Calendar, Medal } from 'lucide-react'
+import { Trophy, Crown, Star, Target, Handshake, Shield, Award, TrendingUp, Calendar, Medal, Zap } from 'lucide-react'
 import { rankingsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
 const categoryIcons: Record<string, any> = {
   '득점왕': Target,
   '도움왕': Handshake,
+  '공격포인트왕': Zap,
   '수비왕': Shield,
   'MVP': Trophy,
   '승률왕': TrendingUp,
@@ -18,6 +19,7 @@ const categoryIcons: Record<string, any> = {
 const categoryColors: Record<string, string> = {
   '득점왕': 'from-red-500 to-orange-500',
   '도움왕': 'from-blue-500 to-cyan-500',
+  '공격포인트왕': 'from-rose-500 to-pink-500',
   '수비왕': 'from-green-500 to-emerald-500',
   'MVP': 'from-amber-500 to-yellow-500',
   '승률왕': 'from-purple-500 to-pink-500',
@@ -154,7 +156,8 @@ export default function HallOfFamePage() {
                           <span className="text-sm text-slate-500 dark:text-slate-400">
                             {honor.category === '승률왕' ? '%' :
                              honor.category === '출석왕' ? '세션' :
-                             honor.category === 'MVP' ? 'pts' : ''}
+                             honor.category === 'MVP' ? 'pts' :
+                             honor.category === '공격포인트왕' ? 'pts' : ''}
                           </span>
                         </div>
                       </div>
