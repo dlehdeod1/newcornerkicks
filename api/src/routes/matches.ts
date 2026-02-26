@@ -256,7 +256,7 @@ matchesRoutes.post('/:id/events', optionalAuthMiddleware, async (c) => {
     const schema = z.object({
       eventType: z.enum(['GOAL', 'DEFENSE']),
       playerId: z.number().nullable(),
-      guestName: z.string().optional(),
+      guestName: z.string().nullable().optional(),
       teamId: z.number(),
       assisterId: z.number().nullable().optional(),
       eventTime: z.number().optional(),
