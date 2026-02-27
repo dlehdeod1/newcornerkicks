@@ -38,8 +38,8 @@ export async function api<T = any>(endpoint: string, options: ApiOptions = {}): 
 
 // Auth API
 export const authApi = {
-  login: (email: string, password: string) =>
-    api('/auth/login', { method: 'POST', body: { email, password } }),
+  login: (identifier: string, password: string) =>
+    api('/auth/login', { method: 'POST', body: { identifier, password } }),
 
   register: (email: string, username: string, password: string, playerCode?: string) =>
     api('/auth/register', { method: 'POST', body: { email, username, password, playerCode } }),
@@ -56,8 +56,8 @@ export const authApi = {
   findEmail: (playerName: string) =>
     api('/auth/find-email', { method: 'POST', body: { playerName } }),
 
-  resetPassword: (email: string, playerName: string, newPassword: string) =>
-    api('/auth/reset-password', { method: 'POST', body: { email, playerName, newPassword } }),
+  resetPassword: (username: string, playerName: string, newPassword: string) =>
+    api('/auth/reset-password', { method: 'POST', body: { username, playerName, newPassword } }),
 }
 
 // Sessions API

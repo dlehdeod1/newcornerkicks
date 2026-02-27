@@ -23,7 +23,7 @@ export default function LoginPage() {
   const router = useRouter()
   const login = useAuthStore((s) => s.login)
 
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -35,7 +35,7 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const data = await authApi.login(email, password)
+      const data = await authApi.login(identifier, password)
       login(data.token, data.user, data.player)
       router.push('/')
     } catch (err: any) {
@@ -81,12 +81,12 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <Input
-              id="email"
-              type="email"
-              label="이메일"
-              placeholder="email@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="identifier"
+              type="text"
+              label="이메일 또는 아이디"
+              placeholder="이메일 또는 아이디 입력"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               required
             />
 

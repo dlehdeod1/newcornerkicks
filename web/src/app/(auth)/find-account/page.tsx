@@ -13,12 +13,12 @@ export default function FindAccountPage() {
 
   // 아이디 찾기
   const [findIdPlayerName, setFindIdPlayerName] = useState('')
-  const [findIdResult, setFindIdResult] = useState('')
+  const [findIdResult, setFindIdResult] = useState<{ username: string; email: string } | null>(null)
   const [findIdError, setFindIdError] = useState('')
   const [findIdLoading, setFindIdLoading] = useState(false)
 
   // 비밀번호 찾기
-  const [resetEmail, setResetEmail] = useState('')
+  const [resetUsername, setResetUsername] = useState('')
   const [resetPlayerName, setResetPlayerName] = useState('')
   const [resetPassword, setResetPassword] = useState('')
   const [resetPasswordConfirm, setResetPasswordConfirm] = useState('')
@@ -29,11 +29,11 @@ export default function FindAccountPage() {
   const handleFindId = async (e: React.FormEvent) => {
     e.preventDefault()
     setFindIdError('')
-    setFindIdResult('')
+    setFindIdResult(null)
     setFindIdLoading(true)
     try {
       const data = await authApi.findEmail(findIdPlayerName)
-      setFindIdResult(data.email)
+      setFindIdResult({ username: data.username, email: data.email })
     } catch (err: any) {
       setFindIdError(err.message || '아이디 찾기에 실패했습니다.')
     } finally {
@@ -53,7 +53,7 @@ export default function FindAccountPage() {
 
     setResetLoading(true)
     try {
-      const data = await authApi.resetPassword(resetEmail, resetPlayerName, resetPassword)
+      const data = await authApi.resetPassword(resetUsername, resetPlayerName, resetPassword)
       setResetResult(data.message)
     } catch (err: any) {
       setResetError(err.message || '비밀번호 재설정에 실패했습니다.')
@@ -111,7 +111,7 @@ export default function FindAccountPage() {
           {tab === 'find-id' && (
             <form onSubmit={handleFindId} className="space-y-5">
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                연동된 선수 이름을 입력하면 가입한 이메일을 확인할 수 있습니다.
+                연동된 선수 이름을 입력하면 가입한 아이디를 확인할 수 있습니다.
               </p>
 
               <Input
@@ -131,13 +131,25 @@ export default function FindAccountPage() {
               )}
 
               {findIdResult && (
-                <div className="p-4 bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
-                  <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
-                    가입한 이메일
-                  </p>
-                  <p className="text-base font-bold text-emerald-800 dark:text-emerald-300 mt-1">
-                    {findIdResult}
-                  </p>
+                <div className="p-4 bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl space-y-2">
+                  <div>
+                    <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+                      가입한 아이디
+                    </p>
+                    <p className="text-base font-bold text-emerald-800 dark:text-emerald-300 mt-0.5">
+                      {findIdResult.username}
+                    </p>
+                  </div>
+                  {findIdResult.email && !findIdResult.email.includes('noemail') && (
+                    <div>
+                      <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+                        가입한 이메일
+                      </p>
+                      <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-0.5">
+                        {findIdResult.email}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -151,16 +163,16 @@ export default function FindAccountPage() {
           {tab === 'find-pw' && (
             <form onSubmit={handleResetPassword} className="space-y-5">
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                가입한 이메일과 연동된 선수 이름을 입력하면 비밀번호를 재설정할 수 있습니다.
+                가입한 아이디와 연동된 선수 이름을 입력하면 비밀번호를 재설정할 수 있습니다.
               </p>
 
               <Input
-                id="reset-email"
-                type="email"
-                label="이메일"
-                placeholder="가입 시 등록한 이메일"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
+                id="reset-username"
+                type="text"
+                label="아이디"
+                placeholder="가입 시 등록한 아이디"
+                value={resetUsername}
+                onChange={(e) => setResetUsername(e.target.value)}
                 required
               />
 

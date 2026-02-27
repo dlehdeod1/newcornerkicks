@@ -5,9 +5,9 @@ import type { Env } from '../index'
 
 const authRoutes = new Hono<{ Bindings: Env }>()
 
-// 로그인 스키마
+// 로그인 스키마 (이메일 또는 username 허용)
 const loginSchema = z.object({
-  email: z.string().email(),
+  identifier: z.string().min(1), // 이메일 또는 username(아이디)
   password: z.string().min(4),
 })
 
@@ -23,14 +23,16 @@ const registerSchema = z.object({
 authRoutes.post('/login', async (c) => {
   try {
     const body = await c.req.json()
-    console.log('Login attempt:', body.email)
+    // email 필드로 보내도 identifier로 처리 (하위 호환)
+    const parsed = { identifier: body.identifier ?? body.email, password: body.password }
+    console.log('Login attempt:', parsed.identifier)
 
-    const { email, password } = loginSchema.parse(body)
+    const { identifier, password } = loginSchema.parse(parsed)
 
-    // 유저 조회
+    // 유저 조회 (이메일 또는 username 둘 다 허용)
     const user = await c.env.DB.prepare(
-      'SELECT * FROM users WHERE email = ?'
-    ).bind(email).first<{
+      'SELECT * FROM users WHERE email = ? OR username = ?'
+    ).bind(identifier, identifier).first<{
       id: string
       email: string
       username: string
@@ -39,14 +41,14 @@ authRoutes.post('/login', async (c) => {
     }>()
 
     if (!user) {
-      console.log('User not found:', email)
-      return c.json({ error: '이메일 또는 비밀번호가 올바르지 않습니다.' }, 401)
+      console.log('User not found:', identifier)
+      return c.json({ error: '아이디(이메일) 또는 비밀번호가 올바르지 않습니다.' }, 401)
     }
 
     // 비밀번호 확인 (간단한 비교 - 실제로는 bcrypt 사용)
     if (user.password !== password) {
-      console.log('Password mismatch for:', email)
-      return c.json({ error: '이메일 또는 비밀번호가 올바르지 않습니다.' }, 401)
+      console.log('Password mismatch for:', identifier)
+      return c.json({ error: '아이디(이메일) 또는 비밀번호가 올바르지 않습니다.' }, 401)
     }
 
     // JWT 생성
@@ -279,30 +281,30 @@ authRoutes.post('/find-email', async (c) => {
     }
 
     const row = await c.env.DB.prepare(
-      `SELECT u.email FROM users u
+      `SELECT u.username, u.email FROM users u
        INNER JOIN players p ON p.user_id = u.id
        WHERE p.name = ?
        LIMIT 1`
-    ).bind(playerName).first<{ email: string }>()
+    ).bind(playerName).first<{ username: string; email: string }>()
 
     if (!row) {
       return c.json({ error: '해당 선수 이름으로 연동된 계정이 없습니다.' }, 404)
     }
 
-    return c.json({ email: row.email })
+    return c.json({ username: row.username, email: row.email })
   } catch (error) {
     console.error('Find email error:', error)
     throw error
   }
 })
 
-// 비밀번호 재설정 - 이메일 + 선수 이름 둘 다 일치해야 함
+// 비밀번호 재설정 - 아이디(username) + 선수 이름 둘 다 일치해야 함
 authRoutes.post('/reset-password', async (c) => {
   try {
-    const { email, playerName, newPassword } = await c.req.json()
+    const { username, playerName, newPassword } = await c.req.json()
 
-    if (!email || !playerName || !newPassword) {
-      return c.json({ error: '이메일, 선수 이름, 새 비밀번호를 모두 입력해주세요.' }, 400)
+    if (!username || !playerName || !newPassword) {
+      return c.json({ error: '아이디, 선수 이름, 새 비밀번호를 모두 입력해주세요.' }, 400)
     }
 
     if (newPassword.length < 4) {
@@ -312,12 +314,12 @@ authRoutes.post('/reset-password', async (c) => {
     const row = await c.env.DB.prepare(
       `SELECT u.id FROM users u
        INNER JOIN players p ON p.user_id = u.id
-       WHERE u.email = ? AND p.name = ?
+       WHERE u.username = ? AND p.name = ?
        LIMIT 1`
-    ).bind(email, playerName).first<{ id: string }>()
+    ).bind(username, playerName).first<{ id: string }>()
 
     if (!row) {
-      return c.json({ error: '이메일과 선수 이름이 일치하는 계정이 없습니다.' }, 404)
+      return c.json({ error: '아이디와 선수 이름이 일치하는 계정이 없습니다.' }, 404)
     }
 
     const now = Math.floor(Date.now() / 1000)
