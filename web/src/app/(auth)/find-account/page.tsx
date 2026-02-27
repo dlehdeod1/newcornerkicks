@@ -33,7 +33,7 @@ export default function FindAccountPage() {
     setFindIdLoading(true)
     try {
       const data = await authApi.findEmail(findIdPlayerName)
-      setFindIdResult(data.maskedEmail)
+      setFindIdResult(data.email)
     } catch (err: any) {
       setFindIdError(err.message || '아이디 찾기에 실패했습니다.')
     } finally {
@@ -133,7 +133,7 @@ export default function FindAccountPage() {
               {findIdResult && (
                 <div className="p-4 bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
                   <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">
-                    등록된 이메일
+                    가입한 이메일
                   </p>
                   <p className="text-base font-bold text-emerald-800 dark:text-emerald-300 mt-1">
                     {findIdResult}

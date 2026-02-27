@@ -289,11 +289,7 @@ authRoutes.post('/find-email', async (c) => {
       return c.json({ error: '해당 선수 이름으로 연동된 계정이 없습니다.' }, 404)
     }
 
-    // 이메일 마스킹: abc@example.com → a**@example.com
-    const [local, domain] = row.email.split('@')
-    const masked = local[0] + '*'.repeat(Math.max(local.length - 1, 2)) + '@' + domain
-
-    return c.json({ maskedEmail: masked })
+    return c.json({ email: row.email })
   } catch (error) {
     console.error('Find email error:', error)
     throw error
