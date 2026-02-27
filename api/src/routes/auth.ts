@@ -72,7 +72,7 @@ authRoutes.post('/login', async (c) => {
       console.log('No linked player for user:', user.id)
     }
 
-    console.log('Login successful:', email)
+    console.log('Login successful:', identifier)
 
     return c.json({
       token,
