@@ -12,14 +12,14 @@ export default function FindAccountPage() {
   const [tab, setTab] = useState<Tab>('find-id')
 
   // 아이디 찾기
-  const [findIdUsername, setFindIdUsername] = useState('')
+  const [findIdPlayerName, setFindIdPlayerName] = useState('')
   const [findIdResult, setFindIdResult] = useState('')
   const [findIdError, setFindIdError] = useState('')
   const [findIdLoading, setFindIdLoading] = useState(false)
 
   // 비밀번호 찾기
   const [resetEmail, setResetEmail] = useState('')
-  const [resetUsername, setResetUsername] = useState('')
+  const [resetPlayerName, setResetPlayerName] = useState('')
   const [resetPassword, setResetPassword] = useState('')
   const [resetPasswordConfirm, setResetPasswordConfirm] = useState('')
   const [resetResult, setResetResult] = useState('')
@@ -32,7 +32,7 @@ export default function FindAccountPage() {
     setFindIdResult('')
     setFindIdLoading(true)
     try {
-      const data = await authApi.findEmail(findIdUsername)
+      const data = await authApi.findEmail(findIdPlayerName)
       setFindIdResult(data.maskedEmail)
     } catch (err: any) {
       setFindIdError(err.message || '아이디 찾기에 실패했습니다.')
@@ -53,7 +53,7 @@ export default function FindAccountPage() {
 
     setResetLoading(true)
     try {
-      const data = await authApi.resetPassword(resetEmail, resetUsername, resetPassword)
+      const data = await authApi.resetPassword(resetEmail, resetPlayerName, resetPassword)
       setResetResult(data.message)
     } catch (err: any) {
       setResetError(err.message || '비밀번호 재설정에 실패했습니다.')
@@ -111,16 +111,16 @@ export default function FindAccountPage() {
           {tab === 'find-id' && (
             <form onSubmit={handleFindId} className="space-y-5">
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                가입 시 등록한 이름을 입력하면 이메일을 확인할 수 있습니다.
+                연동된 선수 이름을 입력하면 가입한 이메일을 확인할 수 있습니다.
               </p>
 
               <Input
-                id="find-id-username"
+                id="find-id-player-name"
                 type="text"
-                label="이름"
-                placeholder="가입 시 등록한 이름"
-                value={findIdUsername}
-                onChange={(e) => setFindIdUsername(e.target.value)}
+                label="선수 이름"
+                placeholder="예: 홍길동"
+                value={findIdPlayerName}
+                onChange={(e) => setFindIdPlayerName(e.target.value)}
                 required
               />
 
@@ -151,7 +151,7 @@ export default function FindAccountPage() {
           {tab === 'find-pw' && (
             <form onSubmit={handleResetPassword} className="space-y-5">
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                가입한 이메일과 이름을 입력하면 비밀번호를 재설정할 수 있습니다.
+                가입한 이메일과 연동된 선수 이름을 입력하면 비밀번호를 재설정할 수 있습니다.
               </p>
 
               <Input
@@ -165,12 +165,12 @@ export default function FindAccountPage() {
               />
 
               <Input
-                id="reset-username"
+                id="reset-player-name"
                 type="text"
-                label="이름"
-                placeholder="가입 시 등록한 이름"
-                value={resetUsername}
-                onChange={(e) => setResetUsername(e.target.value)}
+                label="선수 이름"
+                placeholder="예: 홍길동"
+                value={resetPlayerName}
+                onChange={(e) => setResetPlayerName(e.target.value)}
                 required
               />
 

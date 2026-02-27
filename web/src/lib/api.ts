@@ -53,11 +53,11 @@ export const authApi = {
   changePassword: (oldPassword: string, newPassword: string, token: string) =>
     api('/auth/password', { method: 'PUT', body: { oldPassword, newPassword }, token }),
 
-  findEmail: (username: string) =>
-    api('/auth/find-email', { method: 'POST', body: { username } }),
+  findEmail: (playerName: string) =>
+    api('/auth/find-email', { method: 'POST', body: { playerName } }),
 
-  resetPassword: (email: string, username: string, newPassword: string) =>
-    api('/auth/reset-password', { method: 'POST', body: { email, username, newPassword } }),
+  resetPassword: (email: string, playerName: string, newPassword: string) =>
+    api('/auth/reset-password', { method: 'POST', body: { email, playerName, newPassword } }),
 }
 
 // Sessions API
