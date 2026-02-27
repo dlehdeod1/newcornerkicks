@@ -7,13 +7,12 @@ import {
   Users,
   Plus,
   Search,
-  ChevronRight,
-  CheckCircle,
   AlertCircle,
   UserCheck,
   UserX,
-  Shield,
   RefreshCw,
+  KeyRound,
+  X,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { playersApi, adminApi } from '@/lib/api'
@@ -24,6 +23,7 @@ export default function AdminPlayersPage() {
   const [filter, setFilter] = useState<string>('all')
   const { isAdmin, isLoggedIn, token } = useAuthStore()
   const queryClient = useQueryClient()
+  const [resetModal, setResetModal] = useState<{ playerName: string; tempPassword: string } | null>(null)
 
   if (!isLoggedIn || !isAdmin) {
     return (
@@ -58,6 +58,17 @@ export default function AdminPlayersPage() {
     },
     onError: (error: any) => {
       alert(error.message || '변경 중 오류가 발생했습니다.')
+    },
+  })
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: (playerId: number) => adminApi.resetPlayerPassword(playerId, token!),
+    onSuccess: (data, playerId) => {
+      const player = players.find((p: any) => p.id === playerId)
+      setResetModal({ playerName: player?.name || '', tempPassword: data.tempPassword })
+    },
+    onError: (error: any) => {
+      alert(error.message || '비밀번호 초기화 중 오류가 발생했습니다.')
     },
   })
 
@@ -169,6 +180,48 @@ export default function AdminPlayersPage() {
         </div>
       </div>
 
+      {/* 비밀번호 초기화 결과 모달 */}
+      {resetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-sm border border-slate-200 dark:border-slate-700 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-orange-500" />
+                비밀번호 초기화 완료
+              </h3>
+              <button
+                onClick={() => setResetModal(null)}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+              <span className="font-semibold text-slate-900 dark:text-white">{resetModal.playerName}</span>의
+              임시 비밀번호가 생성되었습니다. 본인에게 직접 전달해주세요.
+            </p>
+            <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-4 text-center mb-4">
+              <p className="text-xs text-slate-500 mb-1">임시 비밀번호</p>
+              <p className="text-2xl font-mono font-bold text-orange-600 dark:text-orange-400 tracking-widest">
+                {resetModal.tempPassword}
+              </p>
+            </div>
+            <p className="text-xs text-slate-400 dark:text-slate-500 text-center mb-4">
+              로그인 후 비밀번호를 변경하도록 안내해주세요.
+            </p>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(resetModal.tempPassword)
+                alert('클립보드에 복사되었습니다.')
+              }}
+              className="w-full py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-sm font-medium transition-colors"
+            >
+              복사하기
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 선수 목록 */}
       {isLoading ? (
         <div className="space-y-3">
@@ -255,22 +308,38 @@ export default function AdminPlayersPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    {player.link_status === 'PENDING' ? (
-                      <button
-                        onClick={() => approveMutation.mutate(player.id)}
-                        disabled={approveMutation.isPending}
-                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg transition-colors"
-                      >
-                        승인
-                      </button>
-                    ) : (
-                      <Link
-                        href={`/abilities/${player.id}`}
-                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
-                      >
-                        상세
-                      </Link>
-                    )}
+                    <div className="flex items-center justify-center gap-2">
+                      {player.link_status === 'PENDING' ? (
+                        <button
+                          onClick={() => approveMutation.mutate(player.id)}
+                          disabled={approveMutation.isPending}
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg transition-colors"
+                        >
+                          승인
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/abilities/${player.id}`}
+                          className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
+                        >
+                          상세
+                        </Link>
+                      )}
+                      {player.link_status === 'ACTIVE' && (
+                        <button
+                          onClick={() => {
+                            if (confirm(`${player.name}의 비밀번호를 초기화하시겠습니까?`)) {
+                              resetPasswordMutation.mutate(player.id)
+                            }
+                          }}
+                          disabled={resetPasswordMutation.isPending}
+                          title="비밀번호 초기화"
+                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-orange-100 dark:hover:bg-orange-500/20 text-slate-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                        >
+                          <KeyRound className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
