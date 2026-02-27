@@ -47,7 +47,7 @@ export const authApi = {
   me: (token: string) =>
     api('/auth/me', { token }),
 
-  updateProfile: (data: { username?: string; nickname?: string }, token: string) =>
+  updateProfile: (data: { username?: string; nickname?: string; email?: string; heightCm?: number | null; weightKg?: number | null; phone?: string; birthYear?: number | null }, token: string) =>
     api('/auth/profile', { method: 'PUT', body: data, token }),
 
   changePassword: (oldPassword: string, newPassword: string, token: string) =>

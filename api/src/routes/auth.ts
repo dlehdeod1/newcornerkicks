@@ -205,7 +205,7 @@ authRoutes.put('/profile', async (c) => {
     const { payload } = await jose.jwtVerify(token, secret)
 
     const body = await c.req.json()
-    const { username, nickname } = body
+    const { username, nickname, email, heightCm, weightKg, phone, birthYear } = body
     const now = Math.floor(Date.now() / 1000)
 
     // 유저명 업데이트
@@ -215,11 +215,38 @@ authRoutes.put('/profile', async (c) => {
       ).bind(username, now, payload.userId).run()
     }
 
-    // 닉네임 업데이트 (연동된 선수가 있는 경우)
-    if (nickname !== undefined) {
+    // 이메일 업데이트 (중복 확인)
+    if (email) {
+      const existing = await c.env.DB.prepare(
+        'SELECT id FROM users WHERE email = ? AND id != ?'
+      ).bind(email, payload.userId).first()
+      if (existing) {
+        return c.json({ error: '이미 사용 중인 이메일입니다.' }, 400)
+      }
       await c.env.DB.prepare(
-        'UPDATE players SET nickname = ?, updated_at = ? WHERE user_id = ?'
-      ).bind(nickname, now, payload.userId).run()
+        'UPDATE users SET email = ?, updated_at = ? WHERE id = ?'
+      ).bind(email, now, payload.userId).run()
+    }
+
+    // 닉네임, 키, 몸무게 업데이트 (연동된 선수가 있는 경우)
+    const playerUpdates: string[] = []
+    const playerVals: any[] = []
+    if (nickname !== undefined) { playerUpdates.push('nickname = ?'); playerVals.push(nickname) }
+    if (heightCm !== undefined) { playerUpdates.push('height_cm = ?'); playerVals.push(Number(heightCm)) }
+    if (weightKg !== undefined) { playerUpdates.push('weight_kg = ?'); playerVals.push(Number(weightKg)) }
+    if (birthYear !== undefined) { playerUpdates.push('birth_year = ?'); playerVals.push(Number(birthYear)) }
+    if (playerUpdates.length > 0) {
+      playerVals.push(now, payload.userId)
+      await c.env.DB.prepare(
+        `UPDATE players SET ${playerUpdates.join(', ')}, updated_at = ? WHERE user_id = ?`
+      ).bind(...playerVals).run()
+    }
+
+    // 전화번호 업데이트 (profiles 테이블)
+    if (phone !== undefined) {
+      await c.env.DB.prepare(
+        'UPDATE profiles SET phone = ?, updated_at = ? WHERE user_id = ?'
+      ).bind(phone, now, payload.userId).run()
     }
 
     return c.json({ message: '프로필이 업데이트되었습니다.' })

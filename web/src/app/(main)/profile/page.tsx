@@ -37,6 +37,11 @@ export default function ProfilePage() {
 
   // 프로필 수정 폼
   const [nickname, setNickname] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [editHeightCm, setEditHeightCm] = useState('')
+  const [editWeightKg, setEditWeightKg] = useState('')
+  const [editPhone, setEditPhone] = useState('')
+  const [editBirthYear, setEditBirthYear] = useState('')
 
   // 비밀번호 변경 폼
   const [oldPassword, setOldPassword] = useState('')
@@ -69,13 +74,38 @@ export default function ProfilePage() {
     }
   }, [player])
 
+  const openEditModal = async () => {
+    setEditEmail(user?.email || '')
+    setNickname(player?.nickname || '')
+    // 선수 상세 정보 불러오기
+    try {
+      const me = await authApi.me(token!)
+      if (me.player) {
+        setEditHeightCm(me.player.height_cm ? String(me.player.height_cm) : '')
+        setEditWeightKg(me.player.weight_kg ? String(me.player.weight_kg) : '')
+        setEditBirthYear(me.player.birth_year ? String(me.player.birth_year) : '')
+      }
+      if (me.profile) {
+        setEditPhone(me.profile.phone || '')
+      }
+    } catch {}
+    setIsEditing(true)
+  }
+
   const handleSaveProfile = async () => {
     setLoading(true)
     setError('')
     setSuccess('')
 
     try {
-      const data = await authApi.updateProfile({ nickname }, token!)
+      const updateData: any = { nickname }
+      if (editEmail && editEmail !== user?.email) updateData.email = editEmail
+      if (editHeightCm) updateData.heightCm = Number(editHeightCm)
+      if (editWeightKg) updateData.weightKg = Number(editWeightKg)
+      if (editPhone !== undefined) updateData.phone = editPhone
+      if (editBirthYear) updateData.birthYear = Number(editBirthYear)
+
+      await authApi.updateProfile(updateData, token!)
       if (player) {
         setPlayer({ ...player, nickname })
       }
@@ -197,7 +227,7 @@ export default function ProfilePage() {
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => setIsEditing(true)}
+                onClick={openEditModal}
               >
                 <Edit3 className="w-4 h-4" />
                 프로필 수정
@@ -351,13 +381,72 @@ export default function ProfilePage() {
             </div>
 
             <div className="p-6 space-y-4">
-              <Input
-                id="nickname"
-                label="닉네임"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                placeholder="닉네임을 입력하세요"
-              />
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                변경할 항목만 입력하세요. 빈 칸은 기존 값이 유지됩니다.
+              </p>
+
+              <div className="space-y-3">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">계정 정보</p>
+                <Input
+                  id="editEmail"
+                  type="email"
+                  label="이메일"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  placeholder="이메일 주소"
+                />
+                <Input
+                  id="nickname"
+                  label="닉네임"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="닉네임을 입력하세요"
+                />
+              </div>
+
+              {player && (
+                <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-700">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">신체 정보</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      id="editHeightCm"
+                      type="number"
+                      label="키 (cm)"
+                      value={editHeightCm}
+                      onChange={(e) => setEditHeightCm(e.target.value)}
+                      placeholder="예: 175"
+                    />
+                    <Input
+                      id="editWeightKg"
+                      type="number"
+                      label="몸무게 (kg)"
+                      value={editWeightKg}
+                      onChange={(e) => setEditWeightKg(e.target.value)}
+                      placeholder="예: 70"
+                    />
+                  </div>
+                  <Input
+                    id="editBirthYear"
+                    type="number"
+                    label="출생연도"
+                    value={editBirthYear}
+                    onChange={(e) => setEditBirthYear(e.target.value)}
+                    placeholder="예: 1990"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-700">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">연락처</p>
+                <Input
+                  id="editPhone"
+                  type="tel"
+                  label="전화번호"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="예: 010-1234-5678"
+                />
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 p-6 border-t border-slate-200 dark:border-slate-700">
