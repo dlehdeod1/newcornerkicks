@@ -270,4 +270,64 @@ authRoutes.put('/password', async (c) => {
   }
 })
 
+// 아이디(이메일) 찾기
+authRoutes.post('/find-email', async (c) => {
+  try {
+    const { username } = await c.req.json()
+    if (!username) {
+      return c.json({ error: '이름을 입력해주세요.' }, 400)
+    }
+
+    const user = await c.env.DB.prepare(
+      'SELECT email FROM users WHERE username = ?'
+    ).bind(username).first<{ email: string }>()
+
+    if (!user) {
+      return c.json({ error: '해당 이름으로 등록된 계정이 없습니다.' }, 404)
+    }
+
+    // 이메일 마스킹: abc@example.com → a**@example.com
+    const [local, domain] = user.email.split('@')
+    const masked = local[0] + '*'.repeat(Math.max(local.length - 1, 2)) + '@' + domain
+
+    return c.json({ maskedEmail: masked })
+  } catch (error) {
+    console.error('Find email error:', error)
+    throw error
+  }
+})
+
+// 비밀번호 재설정 (이메일 + 이름 둘 다 일치해야 함)
+authRoutes.post('/reset-password', async (c) => {
+  try {
+    const { email, username, newPassword } = await c.req.json()
+
+    if (!email || !username || !newPassword) {
+      return c.json({ error: '이메일, 이름, 새 비밀번호를 모두 입력해주세요.' }, 400)
+    }
+
+    if (newPassword.length < 4) {
+      return c.json({ error: '비밀번호는 4자 이상이어야 합니다.' }, 400)
+    }
+
+    const user = await c.env.DB.prepare(
+      'SELECT id FROM users WHERE email = ? AND username = ?'
+    ).bind(email, username).first<{ id: string }>()
+
+    if (!user) {
+      return c.json({ error: '이메일과 이름이 일치하는 계정이 없습니다.' }, 404)
+    }
+
+    const now = Math.floor(Date.now() / 1000)
+    await c.env.DB.prepare(
+      'UPDATE users SET password = ?, updated_at = ? WHERE id = ?'
+    ).bind(newPassword, now, user.id).run()
+
+    return c.json({ message: '비밀번호가 재설정되었습니다.' })
+  } catch (error) {
+    console.error('Reset password error:', error)
+    throw error
+  }
+})
+
 export { authRoutes }
