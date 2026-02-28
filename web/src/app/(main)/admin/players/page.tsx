@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import {
@@ -28,8 +28,8 @@ export default function AdminPlayersPage() {
   const [resetModal, setResetModal] = useState<{ playerName: string; tempPassword: string } | null>(null)
   const [relinkModal, setRelinkModal] = useState<{ playerId: number; playerName: string; currentUserId: string | null } | null>(null)
   const [userSearch, setUserSearch] = useState('')
-  const [userSearchResults, setUserSearchResults] = useState<any[]>([])
-  const [isSearching, setIsSearching] = useState(false)
+  const [allUsers, setAllUsers] = useState<any[]>([])
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false)
 
   if (!isLoggedIn || !isAdmin) {
     return (
@@ -104,19 +104,36 @@ export default function AdminPlayersPage() {
     },
   })
 
-  const handleUserSearch = async (q: string) => {
-    setUserSearch(q)
-    if (q.length < 1) { setUserSearchResults([]); return }
-    setIsSearching(true)
+  // 모달 열릴 때 전체 유저 목록 로드
+  const loadAllUsers = useCallback(async () => {
+    if (!token) return
+    setIsLoadingUsers(true)
     try {
-      const res = await adminApi.searchUsers(q, token!)
-      setUserSearchResults(res.users || [])
+      const res = await adminApi.searchUsers('', token)
+      setAllUsers(res.users || [])
     } catch {
-      setUserSearchResults([])
+      setAllUsers([])
     } finally {
-      setIsSearching(false)
+      setIsLoadingUsers(false)
     }
-  }
+  }, [token])
+
+  useEffect(() => {
+    if (relinkModal) {
+      setUserSearch('')
+      loadAllUsers()
+    }
+  }, [relinkModal, loadAllUsers])
+
+  // 클라이언트 사이드 필터링
+  const filteredUsers = userSearch.trim().length === 0
+    ? allUsers
+    : allUsers.filter((u: any) =>
+        u.username?.toLowerCase().includes(userSearch.toLowerCase()) ||
+        u.email?.toLowerCase().includes(userSearch.toLowerCase())
+      )
+
+  const unlinkedUserCount = allUsers.filter((u: any) => !u.is_linked).length
 
   const players = data?.players || []
 
@@ -274,9 +291,13 @@ export default function AdminPlayersPage() {
               </button>
             </div>
 
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-              연동할 계정을 username 또는 이메일로 검색하세요.
-            </p>
+            {/* 미연동 계정 수 안내 */}
+            {!isLoadingUsers && allUsers.length > 0 && (
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
+                전체 <span className="font-semibold text-slate-700 dark:text-slate-300">{allUsers.length}</span>개 계정 중{' '}
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">{unlinkedUserCount}개</span>가 미연동 상태입니다.
+              </p>
+            )}
 
             <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -284,19 +305,19 @@ export default function AdminPlayersPage() {
                 type="text"
                 placeholder="username 또는 이메일 검색..."
                 value={userSearch}
-                onChange={(e) => handleUserSearch(e.target.value)}
+                onChange={(e) => setUserSearch(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm"
                 autoFocus
               />
             </div>
 
-            {isSearching && (
-              <p className="text-sm text-slate-400 text-center py-3">검색 중...</p>
-            )}
-
-            {userSearchResults.length > 0 && (
-              <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden mb-4">
-                {userSearchResults.map((user: any) => (
+            {isLoadingUsers ? (
+              <div className="space-y-2 mb-4">
+                {[1,2,3].map(i => <div key={i} className="h-12 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />)}
+              </div>
+            ) : filteredUsers.length > 0 ? (
+              <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden mb-4 max-h-64 overflow-y-auto">
+                {filteredUsers.map((user: any) => (
                   <button
                     key={user.id}
                     onClick={() => {
@@ -311,17 +332,19 @@ export default function AdminPlayersPage() {
                       <p className="text-sm font-medium text-slate-900 dark:text-white">@{user.username}</p>
                       <p className="text-xs text-slate-500">{user.email}</p>
                     </div>
-                    {user.player_name && (
-                      <span className="text-xs bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
+                    {user.player_name ? (
+                      <span className="text-xs bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full shrink-0">
                         {user.player_name} 연동중
+                      </span>
+                    ) : (
+                      <span className="text-xs bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full shrink-0">
+                        미연동
                       </span>
                     )}
                   </button>
                 ))}
               </div>
-            )}
-
-            {userSearch.length > 0 && !isSearching && userSearchResults.length === 0 && (
+            ) : (
               <p className="text-sm text-slate-400 text-center py-3 mb-4">검색 결과가 없습니다.</p>
             )}
 

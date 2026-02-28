@@ -186,21 +186,21 @@ playersRoutes.put('/:id', authMiddleware('ADMIN'), async (c) => {
   return c.json({ message: '선수 정보가 수정되었습니다.' })
 })
 
-// 유저 검색 (관리자) - 연동 변경용
+// 유저 목록/검색 (관리자) - 연동 변경용
+// q 없으면 전체 목록(미연동 우선), q 있으면 필터링
 playersRoutes.get('/admin/search-users', authMiddleware('ADMIN'), async (c) => {
   const q = c.req.query('q') || ''
-  if (q.length < 1) {
-    return c.json({ users: [] })
-  }
 
   const users = await c.env.DB.prepare(`
     SELECT u.id, u.email, u.username,
-           p.id as player_id, p.name as player_name
+           p.id as player_id, p.name as player_name,
+           CASE WHEN p.id IS NULL THEN 0 ELSE 1 END as is_linked
     FROM users u
     LEFT JOIN players p ON p.user_id = u.id
-    WHERE u.username LIKE ? OR u.email LIKE ?
-    LIMIT 10
-  `).bind(`%${q}%`, `%${q}%`).all()
+    ${q.length > 0 ? 'WHERE u.username LIKE ? OR u.email LIKE ?' : ''}
+    ORDER BY is_linked ASC, u.username ASC
+    LIMIT 100
+  `).bind(...(q.length > 0 ? [`%${q}%`, `%${q}%`] : [])).all()
 
   return c.json({ users: users.results })
 })
