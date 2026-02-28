@@ -15,6 +15,8 @@ import {
   X,
   Link2,
   Link2Off,
+  Trash2,
+  ShieldAlert,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { playersApi, adminApi } from '@/lib/api'
@@ -31,20 +33,15 @@ export default function AdminPlayersPage() {
   const [allUsers, setAllUsers] = useState<any[]>([])
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
 
-  if (!isLoggedIn || !isAdmin) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">접근 권한이 없습니다</h2>
-        <Link href="/" className="text-emerald-600 hover:underline">홈으로 돌아가기</Link>
-      </div>
-    )
-  }
-
+  // ✅ 모든 hooks는 조건부 return 전에 선언해야 합니다 (React Rules of Hooks)
   const { data, isLoading } = useQuery({
     queryKey: ['players', 'all'],
     queryFn: () => playersApi.list(token, { all: true }),
+    enabled: !!(isLoggedIn && isAdmin),
   })
+
+  // onSuccess에서 players를 참조하므로 useMutation 전에 선언
+  const players = data?.players || []
 
   const approveMutation = useMutation({
     mutationFn: (playerId: number) => playersApi.approveLink(playerId, token!),
@@ -104,6 +101,18 @@ export default function AdminPlayersPage() {
     },
   })
 
+  const deletePlayerMutation = useMutation({
+    mutationFn: (playerId: number) => playersApi.delete(playerId, token!),
+    onSuccess: (_, playerId) => {
+      const player = players.find((p: any) => p.id === playerId)
+      queryClient.invalidateQueries({ queryKey: ['players'] })
+      alert(`"${player?.name || '선수'}"이(가) 삭제되었습니다.`)
+    },
+    onError: (error: any) => {
+      alert(error.message || '삭제 중 오류가 발생했습니다.')
+    },
+  })
+
   // 모달 열릴 때 전체 유저 목록 로드
   const loadAllUsers = useCallback(async () => {
     if (!token) return
@@ -135,14 +144,14 @@ export default function AdminPlayersPage() {
 
   const unlinkedUserCount = allUsers.filter((u: any) => !u.is_linked).length
 
-  const players = data?.players || []
-
   const filteredPlayers = players
     .filter((p: any) => {
       if (filter === 'pending' && p.link_status !== 'PENDING') return false
       if (filter === 'linked' && p.link_status !== 'ACTIVE') return false
-      if (filter === 'unlinked' && p.link_status !== null) return false
+      // ✅ 버그 수정: null 또는 'UNLINKED' 모두 미연동으로 처리
+      if (filter === 'unlinked' && p.link_status !== null && p.link_status !== 'UNLINKED') return false
       if (filter === 'guest' && !p.is_guest) return false
+      if (filter === 'dummy' && !p.user_email?.includes('@noemail.conerkicks.com')) return false
       if (search && !p.name?.toLowerCase().includes(search.toLowerCase()) &&
           !p.nickname?.toLowerCase().includes(search.toLowerCase())) return false
       return true
@@ -151,6 +160,18 @@ export default function AdminPlayersPage() {
   const pendingCount = players.filter((p: any) => p.link_status === 'PENDING').length
   const linkedCount = players.filter((p: any) => p.link_status === 'ACTIVE').length
   const guestCount = players.filter((p: any) => p.is_guest).length
+  const dummyCount = players.filter((p: any) => p.user_email?.includes('@noemail.conerkicks.com')).length
+
+  // ✅ 조건부 return은 모든 hooks 선언 이후에 위치
+  if (!isLoggedIn || !isAdmin) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">접근 권한이 없습니다</h2>
+        <Link href="/" className="text-emerald-600 hover:underline">홈으로 돌아가기</Link>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -163,18 +184,25 @@ export default function AdminPlayersPage() {
           </h1>
           <p className="text-slate-500 mt-1">선수 등록 및 연동 승인</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Link
+            href="/admin/users"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors text-sm"
+          >
+            <Users className="w-4 h-4" />
+            계정 관리
+          </Link>
           <button
             onClick={() => recalculateMutation.mutate()}
             disabled={recalculateMutation.isPending}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm"
           >
             <RefreshCw className={cn('w-4 h-4', recalculateMutation.isPending && 'animate-spin')} />
             능력치 재계산
           </button>
           <Link
             href="/admin/players/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
           >
             <Plus className="w-4 h-4" />
             선수 등록
@@ -183,7 +211,7 @@ export default function AdminPlayersPage() {
       </div>
 
       {/* 통계 카드 */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <div className="bg-white dark:bg-slate-900/50 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
           <p className="text-2xl font-bold text-slate-900 dark:text-white">{players.length}</p>
           <p className="text-sm text-slate-500">전체 선수</p>
@@ -196,6 +224,12 @@ export default function AdminPlayersPage() {
           <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{pendingCount}</p>
           <p className="text-sm text-amber-600 dark:text-amber-400">승인 대기</p>
         </div>
+        {dummyCount > 0 && (
+          <div className="bg-purple-50 dark:bg-purple-500/10 rounded-xl p-4 border border-purple-200 dark:border-purple-500/30">
+            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{dummyCount}</p>
+            <p className="text-sm text-purple-600 dark:text-purple-400">더미 연동</p>
+          </div>
+        )}
       </div>
 
       {/* 필터 */}
@@ -210,8 +244,8 @@ export default function AdminPlayersPage() {
             className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg"
           />
         </div>
-        <div className="flex gap-2">
-          {(['all', 'pending', 'linked', 'unlinked', 'guest'] as const).map((f) => (
+        <div className="flex gap-2 flex-wrap">
+          {(['all', 'pending', 'linked', 'unlinked', 'guest', 'dummy'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -223,14 +257,27 @@ export default function AdminPlayersPage() {
               )}
             >
               {f === 'all' && '전체'}
-              {f === 'pending' && '승인 대기'}
+              {f === 'pending' && `승인 대기${pendingCount > 0 ? ` (${pendingCount})` : ''}`}
               {f === 'linked' && '연동 완료'}
               {f === 'unlinked' && '미연동'}
               {f === 'guest' && `용병 (${guestCount})`}
+              {f === 'dummy' && `더미 연동${dummyCount > 0 ? ` (${dummyCount})` : ''}`}
             </button>
           ))}
         </div>
       </div>
+
+      {/* 더미 연동 안내 */}
+      {dummyCount > 0 && filter !== 'dummy' && (
+        <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 rounded-xl flex items-center gap-2 text-sm text-purple-700 dark:text-purple-300">
+          <ShieldAlert className="w-4 h-4 shrink-0" />
+          <span>
+            <strong>{dummyCount}명</strong>의 선수가 더미 계정(noemail)에 연동되어 있습니다.
+            실제 계정으로 연동 변경이 필요할 수 있습니다.{' '}
+            <button onClick={() => setFilter('dummy')} className="underline font-medium">확인하기</button>
+          </span>
+        </div>
+      )}
 
       {/* 비밀번호 초기화 결과 모달 */}
       {resetModal && (
@@ -393,106 +440,133 @@ export default function AdminPlayersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredPlayers.map((player: any) => (
-                <tr key={player.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                          {player.name.charAt(0)}
-                        </span>
+              {filteredPlayers.map((player: any) => {
+                const isDummy = player.user_email?.includes('@noemail.conerkicks.com')
+                return (
+                  <tr key={player.id} className={cn(
+                    'hover:bg-slate-50 dark:hover:bg-slate-800/50',
+                    isDummy && 'bg-purple-50/30 dark:bg-purple-500/5'
+                  )}>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                            {player.name.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-900 dark:text-white">{player.name}</p>
+                          {player.nickname && (
+                            <p className="text-xs text-slate-500">{player.nickname}</p>
+                          )}
+                          {isDummy && (
+                            <p className="text-xs text-purple-500 dark:text-purple-400 font-medium">더미 계정 연동</p>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-slate-900 dark:text-white">{player.name}</p>
-                        {player.nickname && (
-                          <p className="text-xs text-slate-500">{player.nickname}</p>
+                    </td>
+                    <td className="px-4 py-3 text-center text-sm text-slate-600 dark:text-slate-400">
+                      {player.total_attendance || 0}
+                    </td>
+                    <td className="px-4 py-3 text-center text-sm text-slate-600 dark:text-slate-400">
+                      {player.total_goals || 0}
+                    </td>
+                    <td className="px-4 py-3 text-center text-sm text-slate-600 dark:text-slate-400">
+                      {player.total_assists || 0}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => toggleGuestMutation.mutate({ id: player.id, isGuest: !player.is_guest })}
+                        disabled={toggleGuestMutation.isPending}
+                        className={cn(
+                          'px-2 py-1 rounded-lg text-xs font-medium transition-colors',
+                          player.is_guest
+                            ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-200'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-slate-200'
                         )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm text-slate-600 dark:text-slate-400">
-                    {player.total_attendance || 0}
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm text-slate-600 dark:text-slate-400">
-                    {player.total_goals || 0}
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm text-slate-600 dark:text-slate-400">
-                    {player.total_assists || 0}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => toggleGuestMutation.mutate({ id: player.id, isGuest: !player.is_guest })}
-                      disabled={toggleGuestMutation.isPending}
-                      className={cn(
-                        'px-2 py-1 rounded-lg text-xs font-medium transition-colors',
-                        player.is_guest
-                          ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-200'
-                          : 'bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-slate-200'
-                      )}
-                    >
-                      {player.is_guest ? '용병 ✓' : '—'}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => setRelinkModal({ playerId: player.id, playerName: player.name, currentUserId: player.user_id || null })}
-                      title="연동 변경"
-                      className="group inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors hover:ring-2 hover:ring-blue-400"
-                    >
-                      {player.link_status === 'ACTIVE' ? (
-                        <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-1 rounded-lg">
-                          <UserCheck className="w-3 h-3" />
-                          연동됨
-                        </span>
-                      ) : player.link_status === 'PENDING' ? (
-                        <span className="inline-flex items-center gap-1 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2 py-1 rounded-lg">
-                          <AlertCircle className="w-3 h-3" />
-                          대기중
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-700 text-slate-500 px-2 py-1 rounded-lg">
-                          <UserX className="w-3 h-3" />
-                          미연동
-                        </span>
-                      )}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      {player.link_status === 'PENDING' ? (
-                        <button
-                          onClick={() => approveMutation.mutate(player.id)}
-                          disabled={approveMutation.isPending}
-                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg transition-colors"
-                        >
-                          승인
-                        </button>
-                      ) : (
-                        <Link
-                          href={`/abilities/${player.id}`}
-                          className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
-                        >
-                          상세
-                        </Link>
-                      )}
-                      {player.link_status === 'ACTIVE' && (
+                      >
+                        {player.is_guest ? '용병 ✓' : '—'}
+                      </button>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => setRelinkModal({ playerId: player.id, playerName: player.name, currentUserId: player.user_id || null })}
+                        title="연동 변경"
+                        className="group inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors hover:ring-2 hover:ring-blue-400"
+                      >
+                        {player.link_status === 'ACTIVE' ? (
+                          <span className={cn(
+                            "inline-flex items-center gap-1 px-2 py-1 rounded-lg",
+                            isDummy
+                              ? "bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400"
+                              : "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                          )}>
+                            {isDummy ? <ShieldAlert className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
+                            {isDummy ? '더미연동' : '연동됨'}
+                          </span>
+                        ) : player.link_status === 'PENDING' ? (
+                          <span className="inline-flex items-center gap-1 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2 py-1 rounded-lg">
+                            <AlertCircle className="w-3 h-3" />
+                            대기중
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-700 text-slate-500 px-2 py-1 rounded-lg">
+                            <UserX className="w-3 h-3" />
+                            미연동
+                          </span>
+                        )}
+                      </button>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        {player.link_status === 'PENDING' ? (
+                          <button
+                            onClick={() => approveMutation.mutate(player.id)}
+                            disabled={approveMutation.isPending}
+                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg transition-colors"
+                          >
+                            승인
+                          </button>
+                        ) : (
+                          <Link
+                            href={`/abilities/${player.id}`}
+                            className="text-blue-600 dark:text-blue-400 hover:underline text-sm px-1"
+                          >
+                            상세
+                          </Link>
+                        )}
+                        {player.link_status === 'ACTIVE' && (
+                          <button
+                            onClick={() => {
+                              if (confirm(`${player.name}의 비밀번호를 초기화하시겠습니까?`)) {
+                                resetPasswordMutation.mutate(player.id)
+                              }
+                            }}
+                            disabled={resetPasswordMutation.isPending}
+                            title="비밀번호 초기화"
+                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-orange-100 dark:hover:bg-orange-500/20 text-slate-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                          >
+                            <KeyRound className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {/* 선수 삭제 버튼 */}
                         <button
                           onClick={() => {
-                            if (confirm(`${player.name}의 비밀번호를 초기화하시겠습니까?`)) {
-                              resetPasswordMutation.mutate(player.id)
+                            if (confirm(`"${player.name}" 선수를 삭제하시겠습니까?\n\n이 선수의 모든 기록(출석, 통계, 평가, 배지)이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`)) {
+                              deletePlayerMutation.mutate(player.id)
                             }
                           }}
-                          disabled={resetPasswordMutation.isPending}
-                          title="비밀번호 초기화"
-                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-orange-100 dark:hover:bg-orange-500/20 text-slate-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                          disabled={deletePlayerMutation.isPending}
+                          title="선수 삭제"
+                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-red-100 dark:hover:bg-red-500/20 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                         >
-                          <KeyRound className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

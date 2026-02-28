@@ -225,6 +225,10 @@ export const adminApi = {
   // 선수 연동 변경 (userId: null이면 해제)
   relinkPlayer: (playerId: number, userId: string | null, token: string) =>
     api(`/players/${playerId}/relink`, { method: 'POST', body: { userId }, token }),
+
+  // 유저 계정 삭제
+  deleteUser: (userId: string, token: string) =>
+    api(`/players/admin/users/${userId}`, { method: 'DELETE', token }),
 }
 
 // Teams API

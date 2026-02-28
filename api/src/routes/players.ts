@@ -12,12 +12,14 @@ playersRoutes.get('/', optionalAuthMiddleware, async (c) => {
 
   const players = await c.env.DB.prepare(`
     SELECT p.*,
+           u.email as user_email,
            (SELECT COUNT(*) FROM attendance WHERE player_id = p.id) as total_attendance,
            (SELECT SUM(goals) FROM player_match_stats WHERE player_id = p.id) as total_goals,
            (SELECT SUM(assists) FROM player_match_stats WHERE player_id = p.id) as total_assists,
            (SELECT SUM(blocks) FROM player_match_stats WHERE player_id = p.id) as total_blocks,
            (SELECT COUNT(*) FROM player_ratings WHERE player_id = p.id) as rating_count
     FROM players p
+    LEFT JOIN users u ON p.user_id = u.id
     ${includeGuests ? '' : 'WHERE p.is_guest = 0'}
     ORDER BY p.is_guest ASC, p.name ASC
   `).all()
@@ -192,17 +194,52 @@ playersRoutes.get('/admin/search-users', authMiddleware('ADMIN'), async (c) => {
   const q = c.req.query('q') || ''
 
   const users = await c.env.DB.prepare(`
-    SELECT u.id, u.email, u.username,
+    SELECT u.id, u.email, u.username, u.role, u.created_at,
            p.id as player_id, p.name as player_name,
            CASE WHEN p.id IS NULL THEN 0 ELSE 1 END as is_linked
     FROM users u
     LEFT JOIN players p ON p.user_id = u.id
     ${q.length > 0 ? 'WHERE u.username LIKE ? OR u.email LIKE ?' : ''}
     ORDER BY is_linked ASC, u.username ASC
-    LIMIT 100
+    LIMIT 200
   `).bind(...(q.length > 0 ? [`%${q}%`, `%${q}%`] : [])).all()
 
   return c.json({ users: users.results })
+})
+
+// 유저 계정 삭제 (관리자)
+playersRoutes.delete('/admin/users/:userId', authMiddleware('ADMIN'), async (c) => {
+  const userId = c.req.param('userId')
+
+  const user = await c.env.DB.prepare(
+    'SELECT id, email, username, role FROM users WHERE id = ?'
+  ).bind(userId).first()
+
+  if (!user) {
+    return c.json({ error: '사용자를 찾을 수 없습니다.' }, 404)
+  }
+
+  if ((user as any).role === 'ADMIN') {
+    return c.json({ error: '관리자 계정은 삭제할 수 없습니다.' }, 400)
+  }
+
+  const now = Math.floor(Date.now() / 1000)
+
+  // 연동된 선수 해제
+  await c.env.DB.prepare(
+    `UPDATE players SET user_id = NULL, link_status = 'UNLINKED', updated_at = ? WHERE user_id = ?`
+  ).bind(now, userId).run()
+
+  // 이 유저의 능력치 평가 삭제
+  await c.env.DB.prepare('DELETE FROM player_ratings WHERE rater_user_id = ?').bind(userId).run()
+
+  // 알림 삭제
+  await c.env.DB.prepare('DELETE FROM notifications WHERE user_id = ?').bind(userId).run()
+
+  // 유저 삭제
+  await c.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId).run()
+
+  return c.json({ message: `계정 @${(user as any).username}이(가) 삭제되었습니다.` })
 })
 
 // 선수-유저 연동 변경 (관리자)
