@@ -85,7 +85,7 @@ export default function AdminPlayersPage() {
       queryClient.invalidateQueries({ queryKey: ['players'] })
       setRelinkModal(null)
       setUserSearch('')
-      setUserSearchResults([])
+      setAllUsers([])
       alert(userId ? '연동이 변경되었습니다.' : '연동이 해제되었습니다.')
     },
     onError: (error: any) => {
@@ -284,7 +284,7 @@ export default function AdminPlayersPage() {
                 연동 변경 — {relinkModal.playerName}
               </h3>
               <button
-                onClick={() => { setRelinkModal(null); setUserSearch(''); setUserSearchResults([]) }}
+                onClick={() => { setRelinkModal(null); setUserSearch(''); setAllUsers([]) }}
                 className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
               >
                 <X className="w-5 h-5" />
