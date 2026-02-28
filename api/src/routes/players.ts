@@ -518,7 +518,15 @@ playersRoutes.delete('/:id', authMiddleware('ADMIN'), async (c) => {
     c.env.DB.prepare('DELETE FROM player_badges WHERE player_id = ?').bind(id),
     c.env.DB.prepare('DELETE FROM player_match_stats WHERE player_id = ?').bind(id),
     c.env.DB.prepare('DELETE FROM attendance WHERE player_id = ?').bind(id),
-    c.env.DB.prepare('DELETE FROM team_players WHERE player_id = ?').bind(id),
+    c.env.DB.prepare('DELETE FROM team_members WHERE player_id = ?').bind(id),       // team_players → team_members
+    c.env.DB.prepare('DELETE FROM match_events WHERE player_id = ?').bind(id),
+    c.env.DB.prepare('DELETE FROM match_events WHERE assister_id = ?').bind(id),
+    c.env.DB.prepare('DELETE FROM session_mvp WHERE player_id = ?').bind(id),
+    c.env.DB.prepare('DELETE FROM player_settlements WHERE player_id = ?').bind(id),
+    c.env.DB.prepare('DELETE FROM player_preferences WHERE player_id = ?').bind(id),
+    c.env.DB.prepare('DELETE FROM player_preferences WHERE target_player_id = ?').bind(id),
+    c.env.DB.prepare('DELETE FROM stat_changes WHERE player_id = ?').bind(id),
+    c.env.DB.prepare('DELETE FROM chemistry_edges WHERE player_a_id = ? OR player_b_id = ?').bind(id, id),
     c.env.DB.prepare('DELETE FROM players WHERE id = ?').bind(id),
   ])
 
