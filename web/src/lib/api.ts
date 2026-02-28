@@ -217,6 +217,14 @@ export const adminApi = {
   // 전체 선수 능력치 재계산
   recalculateAllStats: (token: string) =>
     api('/players/recalculate-all', { method: 'POST', token }),
+
+  // 유저 검색 (연동 변경용)
+  searchUsers: (q: string, token: string) =>
+    api(`/players/admin/search-users?q=${encodeURIComponent(q)}`, { token }),
+
+  // 선수 연동 변경 (userId: null이면 해제)
+  relinkPlayer: (playerId: number, userId: string | null, token: string) =>
+    api(`/players/${playerId}/relink`, { method: 'POST', body: { userId }, token }),
 }
 
 // Teams API

@@ -186,6 +186,65 @@ playersRoutes.put('/:id', authMiddleware('ADMIN'), async (c) => {
   return c.json({ message: '선수 정보가 수정되었습니다.' })
 })
 
+// 유저 검색 (관리자) - 연동 변경용
+playersRoutes.get('/admin/search-users', authMiddleware('ADMIN'), async (c) => {
+  const q = c.req.query('q') || ''
+  if (q.length < 1) {
+    return c.json({ users: [] })
+  }
+
+  const users = await c.env.DB.prepare(`
+    SELECT u.id, u.email, u.username,
+           p.id as player_id, p.name as player_name
+    FROM users u
+    LEFT JOIN players p ON p.user_id = u.id
+    WHERE u.username LIKE ? OR u.email LIKE ?
+    LIMIT 10
+  `).bind(`%${q}%`, `%${q}%`).all()
+
+  return c.json({ users: users.results })
+})
+
+// 선수-유저 연동 변경 (관리자)
+playersRoutes.post('/:id/relink', authMiddleware('ADMIN'), async (c) => {
+  const id = c.req.param('id')
+  const body = await c.req.json()
+  const { userId } = body // null이면 연동 해제
+  const now = Math.floor(Date.now() / 1000)
+
+  const player = await c.env.DB.prepare(
+    'SELECT id, name, user_id FROM players WHERE id = ?'
+  ).bind(id).first()
+
+  if (!player) {
+    return c.json({ error: '선수를 찾을 수 없습니다.' }, 404)
+  }
+
+  if (userId) {
+    // 해당 유저가 이미 다른 선수에 연동되어 있는지 확인
+    const conflict = await c.env.DB.prepare(
+      'SELECT id, name FROM players WHERE user_id = ? AND id != ?'
+    ).bind(userId, id).first()
+
+    if (conflict) {
+      return c.json({ error: `이 계정은 이미 "${(conflict as any).name}" 선수에 연동되어 있습니다.` }, 400)
+    }
+
+    await c.env.DB.prepare(
+      `UPDATE players SET user_id = ?, link_status = 'ACTIVE', updated_at = ? WHERE id = ?`
+    ).bind(userId, now, id).run()
+
+    return c.json({ message: '연동이 변경되었습니다.' })
+  } else {
+    // 연동 해제
+    await c.env.DB.prepare(
+      `UPDATE players SET user_id = NULL, link_status = 'UNLINKED', updated_at = ? WHERE id = ?`
+    ).bind(now, id).run()
+
+    return c.json({ message: '연동이 해제되었습니다.' })
+  }
+})
+
 // 선수-유저 연동 승인 (관리자)
 playersRoutes.post('/:id/approve-link', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')

@@ -13,6 +13,8 @@ import {
   RefreshCw,
   KeyRound,
   X,
+  Link2,
+  Link2Off,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { playersApi, adminApi } from '@/lib/api'
@@ -24,6 +26,10 @@ export default function AdminPlayersPage() {
   const { isAdmin, isLoggedIn, token } = useAuthStore()
   const queryClient = useQueryClient()
   const [resetModal, setResetModal] = useState<{ playerName: string; tempPassword: string } | null>(null)
+  const [relinkModal, setRelinkModal] = useState<{ playerId: number; playerName: string; currentUserId: string | null } | null>(null)
+  const [userSearch, setUserSearch] = useState('')
+  const [userSearchResults, setUserSearchResults] = useState<any[]>([])
+  const [isSearching, setIsSearching] = useState(false)
 
   if (!isLoggedIn || !isAdmin) {
     return (
@@ -72,6 +78,21 @@ export default function AdminPlayersPage() {
     },
   })
 
+  const relinkMutation = useMutation({
+    mutationFn: ({ playerId, userId }: { playerId: number; userId: string | null }) =>
+      adminApi.relinkPlayer(playerId, userId, token!),
+    onSuccess: (_, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: ['players'] })
+      setRelinkModal(null)
+      setUserSearch('')
+      setUserSearchResults([])
+      alert(userId ? '연동이 변경되었습니다.' : '연동이 해제되었습니다.')
+    },
+    onError: (error: any) => {
+      alert(error.message || '연동 변경 중 오류가 발생했습니다.')
+    },
+  })
+
   const recalculateMutation = useMutation({
     mutationFn: () => adminApi.recalculateAllStats(token!),
     onSuccess: (data) => {
@@ -82,6 +103,20 @@ export default function AdminPlayersPage() {
       alert(error.message || '재계산 중 오류가 발생했습니다.')
     },
   })
+
+  const handleUserSearch = async (q: string) => {
+    setUserSearch(q)
+    if (q.length < 1) { setUserSearchResults([]); return }
+    setIsSearching(true)
+    try {
+      const res = await adminApi.searchUsers(q, token!)
+      setUserSearchResults(res.users || [])
+    } catch {
+      setUserSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
 
   const players = data?.players || []
 
@@ -222,6 +257,92 @@ export default function AdminPlayersPage() {
         </div>
       )}
 
+      {/* 연동 변경 모달 */}
+      {relinkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md border border-slate-200 dark:border-slate-700 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Link2 className="w-5 h-5 text-blue-500" />
+                연동 변경 — {relinkModal.playerName}
+              </h3>
+              <button
+                onClick={() => { setRelinkModal(null); setUserSearch(''); setUserSearchResults([]) }}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+              연동할 계정을 username 또는 이메일로 검색하세요.
+            </p>
+
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="username 또는 이메일 검색..."
+                value={userSearch}
+                onChange={(e) => handleUserSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm"
+                autoFocus
+              />
+            </div>
+
+            {isSearching && (
+              <p className="text-sm text-slate-400 text-center py-3">검색 중...</p>
+            )}
+
+            {userSearchResults.length > 0 && (
+              <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden mb-4">
+                {userSearchResults.map((user: any) => (
+                  <button
+                    key={user.id}
+                    onClick={() => {
+                      if (confirm(`"${relinkModal.playerName}" 선수를 @${user.username}(${user.email}) 계정으로 연동하시겠습니까?${user.player_name ? `\n\n⚠️ 이 계정은 현재 "${user.player_name}" 선수에 연동되어 있습니다.` : ''}`)) {
+                        relinkMutation.mutate({ playerId: relinkModal.playerId, userId: user.id })
+                      }
+                    }}
+                    disabled={relinkMutation.isPending}
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-500/10 border-b border-slate-100 dark:border-slate-800 last:border-0 transition-colors text-left"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">@{user.username}</p>
+                      <p className="text-xs text-slate-500">{user.email}</p>
+                    </div>
+                    {user.player_name && (
+                      <span className="text-xs bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
+                        {user.player_name} 연동중
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {userSearch.length > 0 && !isSearching && userSearchResults.length === 0 && (
+              <p className="text-sm text-slate-400 text-center py-3 mb-4">검색 결과가 없습니다.</p>
+            )}
+
+            {relinkModal.currentUserId && (
+              <button
+                onClick={() => {
+                  if (confirm(`"${relinkModal.playerName}" 선수의 연동을 해제하시겠습니까?`)) {
+                    relinkMutation.mutate({ playerId: relinkModal.playerId, userId: null })
+                  }
+                }}
+                disabled={relinkMutation.isPending}
+                className="w-full flex items-center justify-center gap-2 py-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl text-sm font-medium transition-colors"
+              >
+                <Link2Off className="w-4 h-4" />
+                연동 해제
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 선수 목록 */}
       {isLoading ? (
         <div className="space-y-3">
@@ -290,22 +411,28 @@ export default function AdminPlayersPage() {
                     </button>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    {player.link_status === 'ACTIVE' ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-medium">
-                        <UserCheck className="w-3 h-3" />
-                        연동됨
-                      </span>
-                    ) : player.link_status === 'PENDING' ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-lg text-xs font-medium">
-                        <AlertCircle className="w-3 h-3" />
-                        대기중
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-500 rounded-lg text-xs font-medium">
-                        <UserX className="w-3 h-3" />
-                        미연동
-                      </span>
-                    )}
+                    <button
+                      onClick={() => setRelinkModal({ playerId: player.id, playerName: player.name, currentUserId: player.user_id || null })}
+                      title="연동 변경"
+                      className="group inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors hover:ring-2 hover:ring-blue-400"
+                    >
+                      {player.link_status === 'ACTIVE' ? (
+                        <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-1 rounded-lg">
+                          <UserCheck className="w-3 h-3" />
+                          연동됨
+                        </span>
+                      ) : player.link_status === 'PENDING' ? (
+                        <span className="inline-flex items-center gap-1 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 px-2 py-1 rounded-lg">
+                          <AlertCircle className="w-3 h-3" />
+                          대기중
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-700 text-slate-500 px-2 py-1 rounded-lg">
+                          <UserX className="w-3 h-3" />
+                          미연동
+                        </span>
+                      )}
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
