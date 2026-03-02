@@ -964,7 +964,69 @@ sessionsRoutes.post('/:id/mvp-result', authMiddleware('ADMIN'), async (c) => {
 // ===== AI 팀 분석 API =====
 
 // AI 팀 분석 (Gemini)
-sessionsRoutes.post('/:id/ai-analysis', async (c) => {
+// AI 분석 결과 조회 (모든 사용자)
+sessionsRoutes.get('/:id/ai-analysis', async (c) => {
+  const id = c.req.param('id')
+
+  // 팀 조회 (저장된 분석 결과 포함)
+  const teams = await c.env.DB.prepare(
+    'SELECT * FROM teams WHERE session_id = ? ORDER BY id'
+  ).bind(id).all()
+
+  if (!teams.results || teams.results.length === 0) {
+    return c.json({ analysis: [], hasAnalysis: false })
+  }
+
+  // 멤버 정보와 능력치도 함께 조회
+  const teamsWithMembers = await Promise.all(
+    teams.results.map(async (team: any) => {
+      const members = await c.env.DB.prepare(`
+        SELECT tm.*, p.name, p.nickname, p.shooting, p.offball_run, p.ball_keeping,
+               p.passing, p.linkup, p.intercept, p.marking, p.stamina, p.speed, p.physical
+        FROM team_members tm
+        LEFT JOIN players p ON tm.player_id = p.id
+        WHERE tm.team_id = ?
+      `).bind(team.id).all()
+
+      const membersWithOverall = members.results.map((m: any) => {
+        if (m.player_id) {
+          const overall = calculateOverall(m)
+          const role = calculateRole(m)
+          return { name: m.name || m.nickname, overall: overall.toFixed(1), attack: role.attack.toFixed(1), defense: role.defense.toFixed(1), isGuest: false }
+        }
+        return { name: m.guest_name, overall: '5.0', attack: '5.0', defense: '5.0', isGuest: true }
+      })
+
+      const avgOverall = membersWithOverall.length > 0 ? membersWithOverall.reduce((sum: number, m: any) => sum + parseFloat(m.overall), 0) / membersWithOverall.length : 0
+      const avgAttack = membersWithOverall.length > 0 ? membersWithOverall.reduce((sum: number, m: any) => sum + parseFloat(m.attack), 0) / membersWithOverall.length : 0
+      const avgDefense = membersWithOverall.length > 0 ? membersWithOverall.reduce((sum: number, m: any) => sum + parseFloat(m.defense), 0) / membersWithOverall.length : 0
+
+      // score_stats JSON 파싱
+      let scoreStats: any = null
+      try { scoreStats = team.score_stats ? JSON.parse(team.score_stats) : null } catch { }
+
+      return {
+        teamName: team.name,
+        color: team.vest_color,
+        type: scoreStats?.type || team.type || '밸런스형',
+        avgOverall: avgOverall.toFixed(1),
+        avgAttack: avgAttack.toFixed(1),
+        avgDefense: avgDefense.toFixed(1),
+        keyPlayer: scoreStats?.keyPlayer || team.key_player || null,
+        keyPlayerReason: scoreStats?.keyPlayerReason || team.key_player_reason || null,
+        aiStrategy: scoreStats?.aiStrategy || team.strategy || null,
+        watchOut: scoreStats?.watchOut || null,
+      }
+    })
+  )
+
+  const hasAnalysis = teamsWithMembers.some(t => t.aiStrategy || t.watchOut)
+
+  return c.json({ analysis: teamsWithMembers, hasAnalysis })
+})
+
+// AI 팀 분석 실행 (관리자 전용 - Gemini API 비용 발생)
+sessionsRoutes.post('/:id/ai-analysis', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')
 
   // 팀 조회
@@ -1041,7 +1103,7 @@ sessionsRoutes.post('/:id/ai-analysis', async (c) => {
         color: team.color,
         type: parseFloat(team.avgAttack) > parseFloat(team.avgDefense) + 0.5 ? '공격형'
           : parseFloat(team.avgDefense) > parseFloat(team.avgAttack) + 0.5 ? '수비형'
-          : '밸런스형',
+            : '밸런스형',
         avgOverall: team.avgOverall,
         avgAttack: team.avgAttack,
         avgDefense: team.avgDefense,
@@ -1084,17 +1146,17 @@ sessionsRoutes.post('/:id/ai-analysis', async (c) => {
 
 ## 팀별 전력 분석
 ${teamsWithStats.map(team => {
-  const regularMembers = team.members.filter((m: any) => !m.isGuest)
-  const guestMembers = team.members.filter((m: any) => m.isGuest)
-  const regularList = regularMembers.map((m: any) => m.name + '(종합:' + m.overall + ', 공격:' + m.attack + ', 수비:' + m.defense + ')').join(', ') || '없음'
-  const guestList = guestMembers.map((m: any) => m.name).join(', ') || '없음'
-  const colorName = team.color === 'yellow' ? '노랑' : team.color === 'orange' ? '주황' : '하양'
-  return '### ' + team.name + ' (' + colorName + ' 조끼)\n' +
-    '- 인원: ' + team.members.length + '명 (정규 ' + regularMembers.length + '명, 용병 ' + guestMembers.length + '명)\n' +
-    '- 팀 평균 - 종합: ' + team.avgOverall + '점 / 공격: ' + team.avgAttack + '점 / 수비: ' + team.avgDefense + '점\n' +
-    '- 정규 선수 상세: ' + regularList + '\n' +
-    '- 용병: ' + guestList + ' (능력치 미상, 변수 요소)'
-}).join('\n\n')}
+      const regularMembers = team.members.filter((m: any) => !m.isGuest)
+      const guestMembers = team.members.filter((m: any) => m.isGuest)
+      const regularList = regularMembers.map((m: any) => m.name + '(종합:' + m.overall + ', 공격:' + m.attack + ', 수비:' + m.defense + ')').join(', ') || '없음'
+      const guestList = guestMembers.map((m: any) => m.name).join(', ') || '없음'
+      const colorName = team.color === 'yellow' ? '노랑' : team.color === 'orange' ? '주황' : '하양'
+      return '### ' + team.name + ' (' + colorName + ' 조끼)\n' +
+        '- 인원: ' + team.members.length + '명 (정규 ' + regularMembers.length + '명, 용병 ' + guestMembers.length + '명)\n' +
+        '- 팀 평균 - 종합: ' + team.avgOverall + '점 / 공격: ' + team.avgAttack + '점 / 수비: ' + team.avgDefense + '점\n' +
+        '- 정규 선수 상세: ' + regularList + '\n' +
+        '- 용병: ' + guestList + ' (능력치 미상, 변수 요소)'
+    }).join('\n\n')}
 
 ## 분석 요청사항
 1. **핵심 선수**: 정규 선수 중 가장 임팩트 있는 선수 1명과 그 이유
@@ -1118,7 +1180,7 @@ JSON 형식으로만 응답 (다른 텍스트 없이):
 }`
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1133,7 +1195,9 @@ JSON 형식으로만 응답 (다른 텍스트 없이):
     )
 
     if (!response.ok) {
-      throw new Error('Gemini API 호출 실패')
+      const errorBody = await response.text()
+      console.error('Gemini API error:', response.status, errorBody)
+      throw new Error(`Gemini API 호출 실패: ${response.status}`)
     }
 
     const geminiResult = await response.json() as any
@@ -1151,15 +1215,16 @@ JSON 형식으로만 응답 (다른 텍스트 없이):
       }
     }
 
-    // 결과 조합
-    const analysis = teamsWithStats.map((team, index) => {
+    // 결과 조합 + DB 저장
+    const analysis = await Promise.all(teamsWithStats.map(async (team, index) => {
       const aiTeam = aiAnalysis?.teams?.find((t: any) => t.name === team.name) || aiAnalysis?.teams?.[index]
+      const teamType = aiTeam?.type || (parseFloat(team.avgAttack) > parseFloat(team.avgDefense) + 0.5 ? '공격형'
+        : parseFloat(team.avgDefense) > parseFloat(team.avgAttack) + 0.5 ? '수비형' : '밸런스형')
 
-      return {
+      const result = {
         teamName: team.name,
         color: team.color,
-        type: aiTeam?.type || (parseFloat(team.avgAttack) > parseFloat(team.avgDefense) + 0.5 ? '공격형'
-          : parseFloat(team.avgDefense) > parseFloat(team.avgAttack) + 0.5 ? '수비형' : '밸런스형'),
+        type: teamType,
         avgOverall: team.avgOverall,
         avgAttack: team.avgAttack,
         avgDefense: team.avgDefense,
@@ -1169,7 +1234,36 @@ JSON 형식으로만 응답 (다른 텍스트 없이):
         aiStrategy: aiTeam?.strategy || null,
         watchOut: aiTeam?.watchOut || null,
       }
-    })
+
+      // DB에 저장 (teams 테이블 업데이트)
+      const teamRecord = teams.results[index] as any
+      if (teamRecord) {
+        const scoreStats = JSON.stringify({
+          type: teamType,
+          keyPlayer: result.keyPlayer,
+          keyPlayerReason: result.keyPlayerReason,
+          aiStrategy: result.aiStrategy,
+          watchOut: result.watchOut,
+          avgOverall: result.avgOverall,
+          avgAttack: result.avgAttack,
+          avgDefense: result.avgDefense,
+          analyzedAt: Math.floor(Date.now() / 1000),
+        })
+        await c.env.DB.prepare(`
+          UPDATE teams SET type = ?, strategy = ?, key_player = ?, key_player_reason = ?, score_stats = ?
+          WHERE id = ?
+        `).bind(
+          teamType,
+          result.aiStrategy,
+          result.keyPlayer,
+          result.keyPlayerReason,
+          scoreStats,
+          teamRecord.id
+        ).run()
+      }
+
+      return result
+    }))
 
     return c.json({ analysis, isAiGenerated: true })
   } catch (err) {
@@ -1182,7 +1276,7 @@ JSON 형식으로만 응답 (다른 텍스트 없이):
         color: team.color,
         type: parseFloat(team.avgAttack) > parseFloat(team.avgDefense) + 0.5 ? '공격형'
           : parseFloat(team.avgDefense) > parseFloat(team.avgAttack) + 0.5 ? '수비형'
-          : '밸런스형',
+            : '밸런스형',
         avgOverall: team.avgOverall,
         avgAttack: team.avgAttack,
         avgDefense: team.avgDefense,

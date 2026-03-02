@@ -78,6 +78,29 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isReforming, setIsReforming] = useState(false)
 
+  // 페이지 로드 시 DB에 저장된 AI 분석 결과 자동 로드
+  useEffect(() => {
+    const loadSavedAnalysis = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
+        const response = await fetch(`${API_URL}/sessions/${sessionId}/ai-analysis`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.hasAnalysis && data.analysis?.length > 0) {
+            const analysisMap = new Map<string, TeamAnalysis>()
+            data.analysis.forEach((analysis: TeamAnalysis) => {
+              analysisMap.set(analysis.teamName, analysis)
+            })
+            setAiAnalysis(analysisMap)
+          }
+        }
+      } catch (err) {
+        console.error('Load saved analysis error:', err)
+      }
+    }
+    if (teams.length > 0) loadSavedAnalysis()
+  }, [sessionId, teams.length])
+
   const handleMemberClick = (member: any, teamId: number) => {
     if (!editMode) return
 
@@ -161,20 +184,27 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
 
       const response = await fetch(`${API_URL}/sessions/${sessionId}/ai-analysis`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        // 팀별로 분석 결과를 Map에 저장 (팀 이름으로 매핑)
-        const analysisMap = new Map<string, TeamAnalysis>()
-        data.analysis?.forEach((analysis: TeamAnalysis) => {
-          analysisMap.set(analysis.teamName, analysis)
-        })
-        setAiAnalysis(analysisMap)
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: '알 수 없는 오류' }))
+        throw new Error(err.error || `분석 실패 (${response.status})`)
       }
-    } catch (err) {
+
+      const data = await response.json()
+      // 팀별로 분석 결과를 Map에 저장 (팀 이름으로 매핑)
+      const analysisMap = new Map<string, TeamAnalysis>()
+      data.analysis?.forEach((analysis: TeamAnalysis) => {
+        analysisMap.set(analysis.teamName, analysis)
+      })
+      setAiAnalysis(analysisMap)
+    } catch (err: any) {
       console.error('AI analysis error:', err)
+      alert(err.message || 'AI 분석에 실패했습니다.')
     } finally {
       setIsAnalyzing(false)
     }
@@ -189,17 +219,17 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
             {editMode ? '선수를 클릭하고 이동할 팀을 클릭하세요' : ''}
           </p>
           <div className="flex gap-2 flex-wrap">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleAiAnalysis}
-              loading={isAnalyzing}
-            >
-              <Sparkles className="w-4 h-4 mr-1.5" />
-              {aiAnalysis.size > 0 ? 'AI 재분석' : 'AI 분석'}
-            </Button>
             {isAdmin && (
               <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAiAnalysis}
+                  loading={isAnalyzing}
+                >
+                  <Sparkles className="w-4 h-4 mr-1.5" />
+                  {aiAnalysis.size > 0 ? 'AI 재분석' : 'AI 분석'}
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -234,8 +264,6 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
           </div>
         </div>
       )}
-
-      {/* 팀 카드들 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {teams.map((team: any) => (
           <TeamCard
@@ -253,20 +281,22 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
       </div>
 
       {/* 선택된 멤버 표시 */}
-      {selectedMember && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-50">
-          <span className="text-sm font-medium">
-            {selectedMember.member.name || selectedMember.member.guest_name} 선택됨
-          </span>
-          <button
-            onClick={() => setSelectedMember(null)}
-            className="p-1 hover:bg-blue-500 rounded-full"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-    </div>
+      {
+        selectedMember && (
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 z-50">
+            <span className="text-sm font-medium">
+              {selectedMember.member.name || selectedMember.member.guest_name} 선택됨
+            </span>
+            <button
+              onClick={() => setSelectedMember(null)}
+              className="p-1 hover:bg-blue-500 rounded-full"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )
+      }
+    </div >
   )
 }
 
@@ -307,7 +337,7 @@ function TeamCard({
     const newMembers = [...members]
     const targetIndex = direction === 'up' ? index - 1 : index + 1
     if (targetIndex < 0 || targetIndex >= newMembers.length) return
-    ;[newMembers[index], newMembers[targetIndex]] = [newMembers[targetIndex], newMembers[index]]
+      ;[newMembers[index], newMembers[targetIndex]] = [newMembers[targetIndex], newMembers[index]]
     setMembers(newMembers)
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
@@ -512,8 +542,8 @@ function TeamCard({
                       isSelected
                         ? 'bg-blue-500 text-white ring-2 ring-blue-300'
                         : isGuest
-                        ? 'bg-amber-200/80 dark:bg-amber-500/30 text-amber-800 dark:text-amber-300'
-                        : 'bg-black/10 dark:bg-white/15'
+                          ? 'bg-amber-200/80 dark:bg-amber-500/30 text-amber-800 dark:text-amber-300'
+                          : 'bg-black/10 dark:bg-white/15'
                     )}
                   >
                     {member.name || member.guest_name}
