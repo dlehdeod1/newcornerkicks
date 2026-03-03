@@ -1202,17 +1202,22 @@ JSON 형식으로만 응답 (다른 텍스트 없이):
 
     const geminiResult = await response.json() as any
     const textContent = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    console.log('Gemini raw response:', textContent.substring(0, 500))
 
-    // JSON 파싱
-    const jsonMatch = textContent.match(/\{[\s\S]*\}/)
+    // JSON 파싱 (코드블록 마크다운 제거)
+    let cleanedText = textContent.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/)
     let aiAnalysis = null
 
     if (jsonMatch) {
       try {
         aiAnalysis = JSON.parse(jsonMatch[0])
-      } catch {
-        console.error('JSON parse error:', textContent)
+        console.log('Parsed AI analysis:', JSON.stringify(aiAnalysis).substring(0, 500))
+      } catch (parseErr) {
+        console.error('JSON parse error:', parseErr, 'Raw text:', textContent.substring(0, 300))
       }
+    } else {
+      console.error('No JSON found in Gemini response:', textContent.substring(0, 300))
     }
 
     // 결과 조합 + DB 저장

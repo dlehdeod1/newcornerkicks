@@ -196,9 +196,15 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
       }
 
       const data = await response.json()
+      console.log('AI Analysis API response:', JSON.stringify(data, null, 2))
       // 팀별로 분석 결과를 Map에 저장 (팀 이름으로 매핑)
       const analysisMap = new Map<string, TeamAnalysis>()
       data.analysis?.forEach((analysis: TeamAnalysis) => {
+        console.log(`Team "${analysis.teamName}" analysis:`, {
+          keyPlayer: analysis.keyPlayer,
+          aiStrategy: analysis.aiStrategy,
+          watchOut: analysis.watchOut,
+        })
         analysisMap.set(analysis.teamName, analysis)
       })
       setAiAnalysis(analysisMap)
