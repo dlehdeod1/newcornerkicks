@@ -491,27 +491,41 @@ sessionsRoutes.post('/:id/teams', authMiddleware('ADMIN'), async (c) => {
 sessionsRoutes.delete('/:id/teams', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')
 
-  // 기존 팀 조회
-  const existingTeams = await c.env.DB.prepare(
-    'SELECT id FROM teams WHERE session_id = ?'
-  ).bind(id).all()
+  try {
+    // 기존 팀 조회
+    const existingTeams = await c.env.DB.prepare(
+      'SELECT id FROM teams WHERE session_id = ?'
+    ).bind(id).all()
 
-  if (!existingTeams.results || existingTeams.results.length === 0) {
-    return c.json({ error: '해체할 팀이 없습니다.' }, 400)
+    if (!existingTeams.results || existingTeams.results.length === 0) {
+      return c.json({ error: '해체할 팀이 없습니다.' }, 400)
+    }
+
+    // 경기 이벤트 삭제 (match_events → matches 외래키)
+    const matches = await c.env.DB.prepare(
+      'SELECT id FROM matches WHERE session_id = ?'
+    ).bind(id).all()
+
+    for (const match of (matches.results || [])) {
+      await c.env.DB.prepare('DELETE FROM match_events WHERE match_id = ?').bind((match as any).id).run()
+    }
+
+    // 경기 일정 삭제
+    await c.env.DB.prepare('DELETE FROM matches WHERE session_id = ?').bind(id).run()
+
+    // 팀 멤버 삭제
+    for (const team of existingTeams.results) {
+      await c.env.DB.prepare('DELETE FROM team_members WHERE team_id = ?').bind((team as any).id).run()
+    }
+
+    // 팀 삭제
+    await c.env.DB.prepare('DELETE FROM teams WHERE session_id = ?').bind(id).run()
+
+    return c.json({ message: '팀 편성이 해체되었습니다.' })
+  } catch (err: any) {
+    console.error('Disband teams error:', err)
+    return c.json({ error: `팀 해체 실패: ${err?.message || String(err)}` }, 500)
   }
-
-  // 팀 멤버 삭제
-  for (const team of existingTeams.results) {
-    await c.env.DB.prepare('DELETE FROM team_members WHERE team_id = ?').bind((team as any).id).run()
-  }
-
-  // 팀 삭제
-  await c.env.DB.prepare('DELETE FROM teams WHERE session_id = ?').bind(id).run()
-
-  // 경기 일정 삭제
-  await c.env.DB.prepare('DELETE FROM matches WHERE session_id = ?').bind(id).run()
-
-  return c.json({ message: '팀 편성이 해체되었습니다.' })
 })
 
 // 수동 팀 생성 (카카오톡 파싱 결과)
