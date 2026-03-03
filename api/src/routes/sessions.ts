@@ -367,124 +367,143 @@ function balanceTeams(players: any[], teamCount: number): any[][] {
 // 팀 편성 (AI 밸런싱)
 sessionsRoutes.post('/:id/teams', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')
-  const body = await c.req.json()
-  const { attendees } = body
 
-  const playerAttendees = attendees.filter((a: any) => a.playerId)
-  const guestAttendees = attendees.filter((a: any) => !a.playerId)
+  try {
+    const body = await c.req.json()
+    const { attendees } = body
 
-  const playerCount = playerAttendees.length + guestAttendees.length
-  const teamCount = playerCount >= 15 ? 3 : 2
+    const playerAttendees = attendees.filter((a: any) => a.playerId)
+    const guestAttendees = attendees.filter((a: any) => !a.playerId)
 
-  // 기존 팀 삭제
-  const existingTeams = await c.env.DB.prepare(
-    'SELECT id FROM teams WHERE session_id = ?'
-  ).bind(id).all()
+    const playerCount = playerAttendees.length + guestAttendees.length
+    const teamCount = playerCount >= 15 ? 3 : 2
 
-  for (const team of existingTeams.results) {
-    await c.env.DB.prepare('DELETE FROM team_members WHERE team_id = ?').bind((team as any).id).run()
-    await c.env.DB.prepare('DELETE FROM teams WHERE id = ?').bind((team as any).id).run()
-  }
+    // 기존 팀 삭제 (외래 키 순서: match_events → matches → team_members → teams)
+    const existingTeams = await c.env.DB.prepare(
+      'SELECT id FROM teams WHERE session_id = ?'
+    ).bind(id).all()
 
-  // 선수 능력치 조회
-  const playerIds = playerAttendees.map((a: any) => a.playerId)
-  let playersWithStats: any[] = []
+    // 경기 이벤트 삭제
+    const existingMatches = await c.env.DB.prepare(
+      'SELECT id FROM matches WHERE session_id = ?'
+    ).bind(id).all()
 
-  if (playerIds.length > 0) {
-    const placeholders = playerIds.map(() => '?').join(',')
-    const playersResult = await c.env.DB.prepare(`
-      SELECT * FROM players WHERE id IN (${placeholders})
-    `).bind(...playerIds).all()
-    playersWithStats = playersResult.results as any[]
-  }
-
-  // 용병은 기본 능력치(5)로 설정
-  const guestsWithStats = guestAttendees.map((g: any) => ({
-    id: null,
-    guestName: g.guestName || g.name,
-    isGuest: true,
-    shooting: 5, offball_run: 5, ball_keeping: 5, passing: 5, linkup: 5,
-    intercept: 5, marking: 5, stamina: 5, speed: 5, physical: 5,
-  }))
-
-  // 모든 참가자 합치기
-  const allPlayers = [...playersWithStats, ...guestsWithStats]
-
-  // AI 밸런싱으로 팀 구성
-  const balancedTeams = balanceTeams(allPlayers, teamCount)
-
-  // 팀 생성 및 멤버 배치
-  const teamNames = ['A팀', 'B팀', 'C팀']
-  const teamColors = ['yellow', 'orange', 'white']  // 조끼색: 노랑, 주황, 하양
-  const teamEmojis = ['🟡', '🟠', '⚪']
-  const teamIds: number[] = []
-  const teamSummaries: any[] = []
-
-  for (let i = 0; i < teamCount; i++) {
-    const teamPlayers = balancedTeams[i]
-    const avgOverall = teamPlayers.length > 0
-      ? teamPlayers.reduce((sum, p) => sum + calculateOverall(p), 0) / teamPlayers.length
-      : 0
-
-    // 팀 타입 결정
-    const avgAttack = teamPlayers.reduce((sum, p) => sum + calculateRole(p).attack, 0) / (teamPlayers.length || 1)
-    const avgDefense = teamPlayers.reduce((sum, p) => sum + calculateRole(p).defense, 0) / (teamPlayers.length || 1)
-    const teamType = avgAttack > avgDefense + 0.5 ? '공격형' : avgDefense > avgAttack + 0.5 ? '수비형' : '밸런스형'
-
-    // 키플레이어 (가장 높은 능력치)
-    const keyPlayer = teamPlayers.reduce((best, p) =>
-      calculateOverall(p) > calculateOverall(best) ? p : best, teamPlayers[0])
-
-    const result = await c.env.DB.prepare(`
-      INSERT INTO teams (session_id, name, vest_color, emoji, type, key_player, key_player_reason)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).bind(
-      id,
-      teamNames[i],
-      teamColors[i],
-      teamEmojis[i],
-      teamType,
-      keyPlayer?.name || keyPlayer?.guestName || null,
-      keyPlayer ? `종합 ${calculateOverall(keyPlayer).toFixed(1)}점` : null
-    ).run()
-
-    const teamId = result.meta.last_row_id as number
-    teamIds.push(teamId)
-
-    // 팀 멤버 추가
-    for (const player of teamPlayers) {
-      if (player.isGuest) {
-        await c.env.DB.prepare(`
-          INSERT INTO team_members (team_id, guest_name)
-          VALUES (?, ?)
-        `).bind(teamId, player.guestName).run()
-      } else {
-        await c.env.DB.prepare(`
-          INSERT INTO team_members (team_id, player_id)
-          VALUES (?, ?)
-        `).bind(teamId, player.id).run()
-      }
+    for (const match of (existingMatches.results || [])) {
+      await c.env.DB.prepare('DELETE FROM match_events WHERE match_id = ?').bind((match as any).id).run()
     }
 
-    teamSummaries.push({
-      name: teamNames[i],
-      type: teamType,
-      avgOverall: avgOverall.toFixed(1),
-      playerCount: teamPlayers.length,
-      keyPlayer: keyPlayer?.name || keyPlayer?.guestName,
+    // 경기 삭제
+    await c.env.DB.prepare('DELETE FROM matches WHERE session_id = ?').bind(id).run()
+
+    // 팀 멤버 및 팀 삭제
+    for (const team of existingTeams.results) {
+      await c.env.DB.prepare('DELETE FROM team_members WHERE team_id = ?').bind((team as any).id).run()
+      await c.env.DB.prepare('DELETE FROM teams WHERE id = ?').bind((team as any).id).run()
+    }
+
+    // 선수 능력치 조회
+    const playerIds = playerAttendees.map((a: any) => a.playerId)
+    let playersWithStats: any[] = []
+
+    if (playerIds.length > 0) {
+      const placeholders = playerIds.map(() => '?').join(',')
+      const playersResult = await c.env.DB.prepare(`
+        SELECT * FROM players WHERE id IN (${placeholders})
+      `).bind(...playerIds).all()
+      playersWithStats = playersResult.results as any[]
+    }
+
+    // 용병은 기본 능력치(5)로 설정
+    const guestsWithStats = guestAttendees.map((g: any) => ({
+      id: null,
+      guestName: g.guestName || g.name,
+      isGuest: true,
+      shooting: 5, offball_run: 5, ball_keeping: 5, passing: 5, linkup: 5,
+      intercept: 5, marking: 5, stamina: 5, speed: 5, physical: 5,
+    }))
+
+    // 모든 참가자 합치기
+    const allPlayers = [...playersWithStats, ...guestsWithStats]
+
+    // AI 밸런싱으로 팀 구성
+    const balancedTeams = balanceTeams(allPlayers, teamCount)
+
+    // 팀 생성 및 멤버 배치
+    const teamNames = ['A팀', 'B팀', 'C팀']
+    const teamColors = ['yellow', 'orange', 'white']  // 조끼색: 노랑, 주황, 하양
+    const teamEmojis = ['🟡', '🟠', '⚪']
+    const teamIds: number[] = []
+    const teamSummaries: any[] = []
+
+    for (let i = 0; i < teamCount; i++) {
+      const teamPlayers = balancedTeams[i]
+      const avgOverall = teamPlayers.length > 0
+        ? teamPlayers.reduce((sum, p) => sum + calculateOverall(p), 0) / teamPlayers.length
+        : 0
+
+      // 팀 타입 결정
+      const avgAttack = teamPlayers.reduce((sum, p) => sum + calculateRole(p).attack, 0) / (teamPlayers.length || 1)
+      const avgDefense = teamPlayers.reduce((sum, p) => sum + calculateRole(p).defense, 0) / (teamPlayers.length || 1)
+      const teamType = avgAttack > avgDefense + 0.5 ? '공격형' : avgDefense > avgAttack + 0.5 ? '수비형' : '밸런스형'
+
+      // 키플레이어 (가장 높은 능력치)
+      const keyPlayer = teamPlayers.reduce((best, p) =>
+        calculateOverall(p) > calculateOverall(best) ? p : best, teamPlayers[0])
+
+      const result = await c.env.DB.prepare(`
+        INSERT INTO teams (session_id, name, vest_color, emoji, type, key_player, key_player_reason)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        id,
+        teamNames[i],
+        teamColors[i],
+        teamEmojis[i],
+        teamType,
+        keyPlayer?.name || keyPlayer?.guestName || null,
+        keyPlayer ? `종합 ${calculateOverall(keyPlayer).toFixed(1)}점` : null
+      ).run()
+
+      const teamId = result.meta.last_row_id as number
+      teamIds.push(teamId)
+
+      // 팀 멤버 추가
+      for (const player of teamPlayers) {
+        if (player.isGuest) {
+          await c.env.DB.prepare(`
+            INSERT INTO team_members (team_id, guest_name)
+            VALUES (?, ?)
+          `).bind(teamId, player.guestName).run()
+        } else {
+          await c.env.DB.prepare(`
+            INSERT INTO team_members (team_id, player_id)
+            VALUES (?, ?)
+          `).bind(teamId, player.id).run()
+        }
+      }
+
+      teamSummaries.push({
+        name: teamNames[i],
+        type: teamType,
+        avgOverall: avgOverall.toFixed(1),
+        playerCount: teamPlayers.length,
+        keyPlayer: keyPlayer?.name || keyPlayer?.guestName,
+      })
+    }
+
+    // 경기 일정 생성
+    await createMatchSchedule(c.env.DB, Number(id), teamIds)
+
+    return c.json({
+      message: '🤖 AI 팀 편성이 완료되었습니다!',
+      teamCount,
+      teamIds,
+      teams: teamSummaries,
+      balanceScore: calculateBalanceScore(balancedTeams),
     })
+  } catch (err: any) {
+    console.error('Create teams error:', err)
+    return c.json({ error: `팀 편성 실패: ${err?.message || String(err)}` }, 500)
   }
-
-  // 경기 일정 생성
-  await createMatchSchedule(c.env.DB, Number(id), teamIds)
-
-  return c.json({
-    message: '🤖 AI 팀 편성이 완료되었습니다!',
-    teamCount,
-    teamIds,
-    teams: teamSummaries,
-    balanceScore: calculateBalanceScore(balancedTeams),
-  })
 })
 
 // 팀 편성 해체 (관리자)

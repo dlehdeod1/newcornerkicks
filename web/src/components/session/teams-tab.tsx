@@ -158,6 +158,7 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
   }
 
   const handleReformTeams = async () => {
+    console.log('handleReformTeams called!', { attendance, token, sessionId })
     if (!window.confirm('팀을 다시 AI 편성하시겠습니까?\n기존 팀과 경기 기록이 초기화됩니다.')) return
 
     setIsReforming(true)
@@ -168,10 +169,22 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
         guestName: a.guest_name || null,
         isGuest: !a.player_id,
       }))
-      await sessionsApi.createTeams(sessionId, attendees, token!)
+      console.log('Reform teams - attendees:', attendees)
+      if (!token) {
+        alert('로그인이 필요합니다.')
+        setIsReforming(false)
+        return
+      }
+      if (attendees.length === 0) {
+        alert('참석자가 없어 팀을 편성할 수 없습니다.')
+        setIsReforming(false)
+        return
+      }
+      await sessionsApi.createTeams(sessionId, attendees, token)
       setAiAnalysis(new Map())
       onRefetch()
     } catch (err: any) {
+      console.error('Reform teams error:', err)
       alert(err.message || '팀 재편성에 실패했습니다.')
     } finally {
       setIsReforming(false)
