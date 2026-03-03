@@ -197,6 +197,13 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
 
       const data = await response.json()
       console.log('AI Analysis API response:', JSON.stringify(data, null, 2))
+
+      // 에러가 있으면 표시
+      if (data.error) {
+        console.warn('AI Analysis error from server:', data.error)
+        alert(`AI 분석 오류: ${data.error}`)
+      }
+
       // 팀별로 분석 결과를 Map에 저장 (팀 이름으로 매핑)
       const analysisMap = new Map<string, TeamAnalysis>()
       data.analysis?.forEach((analysis: TeamAnalysis) => {

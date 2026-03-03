@@ -230,6 +230,12 @@ playersRoutes.delete('/admin/users/:userId', authMiddleware('ADMIN'), async (c) 
     `UPDATE players SET user_id = NULL, link_status = 'UNLINKED', updated_at = ? WHERE user_id = ?`
   ).bind(now, userId).run()
 
+  // FK 제약 있는 테이블부터 삭제 (foreign_keys = ON 이므로 순서 중요)
+  await c.env.DB.prepare('DELETE FROM profiles WHERE user_id = ?').bind(userId).run()
+  await c.env.DB.prepare('DELETE FROM abilities WHERE user_id = ?').bind(userId).run()
+  await c.env.DB.prepare('DELETE FROM ability_logs WHERE user_id = ?').bind(userId).run()
+  await c.env.DB.prepare('DELETE FROM session_mvp_votes WHERE voter_user_id = ?').bind(userId).run()
+
   // 이 유저의 능력치 평가 삭제
   await c.env.DB.prepare('DELETE FROM player_ratings WHERE rater_user_id = ?').bind(userId).run()
 

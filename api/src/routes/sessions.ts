@@ -1271,10 +1271,11 @@ JSON 형식으로만 응답 (다른 텍스트 없이):
     }))
 
     return c.json({ analysis, isAiGenerated: true })
-  } catch (err) {
-    console.error('AI analysis error:', err)
+  } catch (err: any) {
+    const errorMsg = err?.message || String(err)
+    console.error('AI analysis error:', errorMsg)
 
-    // 에러 시 기본 분석 반환
+    // 에러 시 에러 메시지 포함하여 기본 분석 반환
     return c.json({
       analysis: teamsWithStats.map(team => ({
         teamName: team.name,
@@ -1292,6 +1293,7 @@ JSON 형식으로만 응답 (다른 텍스트 없이):
         )?.name || null,
       })),
       isAiGenerated: false,
+      error: `Gemini API 실패: ${errorMsg}`,
     })
   }
 })
