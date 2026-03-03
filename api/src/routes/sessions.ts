@@ -487,6 +487,33 @@ sessionsRoutes.post('/:id/teams', authMiddleware('ADMIN'), async (c) => {
   })
 })
 
+// 팀 편성 해체 (관리자)
+sessionsRoutes.delete('/:id/teams', authMiddleware('ADMIN'), async (c) => {
+  const id = c.req.param('id')
+
+  // 기존 팀 조회
+  const existingTeams = await c.env.DB.prepare(
+    'SELECT id FROM teams WHERE session_id = ?'
+  ).bind(id).all()
+
+  if (!existingTeams.results || existingTeams.results.length === 0) {
+    return c.json({ error: '해체할 팀이 없습니다.' }, 400)
+  }
+
+  // 팀 멤버 삭제
+  for (const team of existingTeams.results) {
+    await c.env.DB.prepare('DELETE FROM team_members WHERE team_id = ?').bind((team as any).id).run()
+  }
+
+  // 팀 삭제
+  await c.env.DB.prepare('DELETE FROM teams WHERE session_id = ?').bind(id).run()
+
+  // 경기 일정 삭제
+  await c.env.DB.prepare('DELETE FROM matches WHERE session_id = ?').bind(id).run()
+
+  return c.json({ message: '팀 편성이 해체되었습니다.' })
+})
+
 // 수동 팀 생성 (카카오톡 파싱 결과)
 sessionsRoutes.post('/:id/teams/manual', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Users, ArrowLeftRight, Check, X, Sparkles, ChevronDown, ChevronUp, Palette, Wand2, Pencil } from 'lucide-react'
+import { Users, ArrowLeftRight, Check, X, Sparkles, ChevronDown, ChevronUp, Palette, Wand2, Pencil, Trash2 } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import { cn } from '@/lib/cn'
 import { useAuthStore } from '@/stores/auth'
@@ -77,6 +77,7 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
   const [aiAnalysis, setAiAnalysis] = useState<Map<string, TeamAnalysis>>(new Map())
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isReforming, setIsReforming] = useState(false)
+  const [isDisbanding, setIsDisbanding] = useState(false)
 
   // 페이지 로드 시 DB에 저장된 AI 분석 결과 자동 로드
   useEffect(() => {
@@ -223,6 +224,34 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
     }
   }
 
+  const handleDisbandTeams = async () => {
+    if (!window.confirm('팀 편성을 해체하시겠습니까?\n팀, 경기 일정이 모두 삭제됩니다.\n(참석자 명단은 유지됩니다)')) return
+
+    setIsDisbanding(true)
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
+      const response = await fetch(`${API_URL}/sessions/${sessionId}/teams`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      })
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: '알 수 없는 오류' }))
+        throw new Error(err.error || `해체 실패 (${response.status})`)
+      }
+
+      setAiAnalysis(new Map())
+      onRefetch()
+    } catch (err: any) {
+      alert(err.message || '팀 해체에 실패했습니다.')
+    } finally {
+      setIsDisbanding(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       {/* 컨트롤 패널 */}
@@ -271,6 +300,16 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
                       팀 편집
                     </>
                   )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDisbandTeams}
+                  loading={isDisbanding}
+                  className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-500/10"
+                >
+                  <Trash2 className="w-4 h-4 mr-1.5" />
+                  팀 해체
                 </Button>
               </>
             )}
