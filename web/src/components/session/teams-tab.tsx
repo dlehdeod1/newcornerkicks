@@ -225,6 +225,7 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
   }
 
   const handleDisbandTeams = async () => {
+    console.log('handleDisbandTeams called!')
     if (!window.confirm('팀 편성을 해체하시겠습니까?\n팀, 경기 일정이 모두 삭제됩니다.\n(참석자 명단은 유지됩니다)')) return
 
     setIsDisbanding(true)
