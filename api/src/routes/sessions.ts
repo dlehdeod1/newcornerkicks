@@ -1188,7 +1188,7 @@ JSON 형식으로만 응답 (다른 텍스트 없이):
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 8192,
           },
         }),
       }
@@ -1214,15 +1214,34 @@ JSON 형식으로만 응답 (다른 텍스트 없이):
         aiAnalysis = JSON.parse(jsonMatch[0])
         console.log('Parsed AI analysis:', JSON.stringify(aiAnalysis).substring(0, 500))
       } catch (parseErr) {
-        console.error('JSON parse error:', parseErr, 'Raw text:', textContent.substring(0, 300))
+        console.error('JSON parse error, attempting truncated JSON fix:', parseErr)
+        // truncated JSON 복구 시도: 잘린 JSON의 열린 괄호를 닫아줌
+        try {
+          let truncated = jsonMatch[0]
+          // 문자열이 열려있으면 닫기
+          const quoteCount = (truncated.match(/(?<!\\)"/g) || []).length
+          if (quoteCount % 2 !== 0) truncated += '"'
+          // 열린 배열/객체 닫기
+          const openBrackets = (truncated.match(/\[/g) || []).length - (truncated.match(/\]/g) || []).length
+          const openBraces = (truncated.match(/\{/g) || []).length - (truncated.match(/\}/g) || []).length
+          for (let i = 0; i < openBrackets; i++) truncated += ']'
+          for (let i = 0; i < openBraces; i++) truncated += '}'
+          aiAnalysis = JSON.parse(truncated)
+          console.log('Truncated JSON recovery succeeded')
+        } catch (retryErr) {
+          console.error('Truncated JSON recovery also failed:', retryErr)
+        }
       }
     } else {
       console.error('No JSON found in Gemini response:', textContent.substring(0, 300))
     }
 
+    // Gemini가 배열로 직접 반환할 수도 있음 (teams 없이)
+    let teamsArray = aiAnalysis?.teams || (Array.isArray(aiAnalysis) ? aiAnalysis : null)
+
     // 결과 조합 + DB 저장
     const analysis = await Promise.all(teamsWithStats.map(async (team, index) => {
-      const aiTeam = aiAnalysis?.teams?.find((t: any) => t.name === team.name) || aiAnalysis?.teams?.[index]
+      const aiTeam = teamsArray?.find((t: any) => t.name === team.name) || teamsArray?.[index]
       const teamType = aiTeam?.type || (parseFloat(team.avgAttack) > parseFloat(team.avgDefense) + 0.5 ? '공격형'
         : parseFloat(team.avgDefense) > parseFloat(team.avgAttack) + 0.5 ? '수비형' : '밸런스형')
 
