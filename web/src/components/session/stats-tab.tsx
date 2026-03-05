@@ -224,7 +224,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
     })
     lines.push('')
     lines.push('국민은행 801301-01-610282 박재형')
-    lines.push('추운데 고생하셨습니다!!!')
+    lines.push('오늘도 고생하셨습니다!!!')
     try {
       await navigator.clipboard.writeText(lines.join('\n'))
       setCopied(true)
