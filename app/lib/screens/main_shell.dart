@@ -1,21 +1,35 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
+import 'sessions_screen.dart';
+import 'ranking_screen.dart';
+import 'profile_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
+  static final navigatorKey = GlobalKey<_MainShellState>();
+
   @override
   State<MainShell> createState() => _MainShellState();
+
+  static void switchTab(BuildContext context, int index) {
+    final state = context.findAncestorStateOfType<_MainShellState>();
+    state?._switchTab(index);
+  }
 }
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
+  void _switchTab(int index) {
+    setState(() => _currentIndex = index);
+  }
+
   final _screens = [
     const HomeScreen(),
-    const _PlaceholderScreen(title: '세션', icon: Icons.calendar_today),
-    const _PlaceholderScreen(title: '랭킹', icon: Icons.emoji_events),
-    const _PlaceholderScreen(title: '프로필', icon: Icons.person),
+    const SessionsScreen(),
+    const RankingScreen(),
+    const ProfileScreen(),
   ];
 
   @override
@@ -84,31 +98,5 @@ class _MainShellState extends State<MainShell> {
   }
 }
 
-class _PlaceholderScreen extends StatelessWidget {
-  final String title;
-  final IconData icon;
 
-  const _PlaceholderScreen({required this.title, required this.icon});
 
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 48, color: Colors.white24),
-          const SizedBox(height: 16),
-          Text(
-            '$title 화면',
-            style: const TextStyle(fontSize: 18, color: Colors.white38),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '준비 중입니다',
-            style: TextStyle(fontSize: 14, color: Colors.white.withAlpha(64)),
-          ),
-        ],
-      ),
-    );
-  }
-}

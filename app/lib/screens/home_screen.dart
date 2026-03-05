@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
+import 'main_shell.dart';
+import 'session_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -159,8 +161,8 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSpacing: 12,
               childAspectRatio: 1.6,
               children: [
-                _QuickMenu(icon: Icons.calendar_today, title: '경기 결과', subtitle: '지난 매치 확인', color: const Color(0xFF34d399), onTap: () {}),
-                _QuickMenu(icon: Icons.emoji_events, title: '랭킹', subtitle: '시즌 순위', color: const Color(0xFFf59e0b), onTap: () {}),
+                _QuickMenu(icon: Icons.calendar_today, title: '경기 결과', subtitle: '지난 매치 확인', color: const Color(0xFF34d399), onTap: () => MainShell.switchTab(context, 1)),
+                _QuickMenu(icon: Icons.emoji_events, title: '랭킹', subtitle: '시즌 순위', color: const Color(0xFFf59e0b), onTap: () => MainShell.switchTab(context, 2)),
                 _QuickMenu(icon: Icons.star, title: '능력치 평가', subtitle: '팀원 능력치', color: const Color(0xFF3b82f6), onTap: () {}),
                 _QuickMenu(icon: Icons.workspace_premium, title: '명예의 전당', subtitle: '시즌 챔피언', color: const Color(0xFF8b5cf6), onTap: () {}),
               ],
@@ -183,19 +185,36 @@ class _HomeScreenState extends State<HomeScreen> {
               child: _loading
                   ? const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator(color: Color(0xFF34d399))))
                   : _recentSession != null
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _recentSession!['title'] ?? '정기 풋살',
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _recentSession!['session_date'] ?? '',
-                              style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(153)),
-                            ),
-                          ],
+                      ? GestureDetector(
+                          onTap: () {
+                            if (_recentSession!['id'] != null) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: _recentSession!['id'])),
+                              );
+                            }
+                          },
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _recentSession!['title'] ?? '정기 풋살',
+                                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _recentSession!['session_date'] ?? '',
+                                      style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(153)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.chevron_right, color: Colors.white.withAlpha(64), size: 20),
+                            ],
+                          ),
                         )
                       : Text(
                           '완료된 세션이 없습니다.',

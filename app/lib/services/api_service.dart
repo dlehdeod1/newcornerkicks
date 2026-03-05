@@ -87,6 +87,15 @@ class ApiService {
 
   // Matches
   Future<dynamic> getMatch(int id) => request('/matches/$id');
+
+  Future<dynamic> addMatchEvent(int matchId, Map<String, dynamic> event, String token) =>
+      request('/matches/$matchId/events', method: 'POST', body: event, token: token);
+
+  Future<dynamic> deleteMatchEvent(int matchId, int eventId, String token) =>
+      request('/matches/$matchId/events/$eventId', method: 'DELETE', token: token);
+
+  Future<dynamic> updateMatch(int matchId, Map<String, dynamic> data, String token) =>
+      request('/matches/$matchId', method: 'PUT', body: data, token: token);
 }
 
 class ApiException implements Exception {

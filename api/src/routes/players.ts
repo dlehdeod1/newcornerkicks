@@ -362,8 +362,8 @@ playersRoutes.post('/:id/ratings', optionalAuthMiddleware, async (c) => {
 
   // 모든 능력치가 0이면 저장하지 않음
   const allZero = data.shooting === 0 && data.offballRun === 0 && data.ballKeeping === 0 &&
-                  data.passing === 0 && data.linkup === 0 && data.intercept === 0 &&
-                  data.marking === 0 && data.stamina === 0 && data.speed === 0 && data.physical === 0
+    data.passing === 0 && data.linkup === 0 && data.intercept === 0 &&
+    data.marking === 0 && data.stamina === 0 && data.speed === 0 && data.physical === 0
   if (allZero) {
     return c.json({ error: '모든 능력치가 0일 수 없습니다. 최소 1점 이상 평가해주세요.' }, 400)
   }
@@ -377,7 +377,7 @@ playersRoutes.post('/:id/ratings', optionalAuthMiddleware, async (c) => {
   // overall도 0~100 기준으로 평균 계산
   const overall = Math.round(
     (data.shooting + data.offballRun + data.ballKeeping + data.passing + data.linkup +
-     data.intercept + data.marking + data.stamina + data.speed + data.physical) / 10
+      data.intercept + data.marking + data.stamina + data.speed + data.physical) / 10
   ) // 10개 항목 평균이므로 0~100 범위 유지
 
   if (existing) {
@@ -426,7 +426,7 @@ async function updatePlayerStats(db: D1Database, playerId: number) {
   if (ratings.results.length === 0) return
 
   const stats = ['shooting', 'offball_run', 'ball_keeping', 'passing', 'linkup',
-                 'intercept', 'marking', 'stamina', 'speed', 'physical']
+    'intercept', 'marking', 'stamina', 'speed', 'physical']
 
   // 0점 평가 필터링 (모든 스탯이 0이거나 null인 경우 제외)
   const validRatings = (ratings.results as any[]).filter(rating => {
@@ -547,5 +547,115 @@ function generatePlayerCode(): string {
 function generateTempPassword(): string {
   return Math.random().toString(36).substring(2, 10)
 }
+
+// 선수 기록 로그 조회 (세션별 이벤트)
+playersRoutes.get('/:id/event-logs', async (c) => {
+  const id = c.req.param('id')
+  const year = Number(c.req.query('year')) || new Date().getFullYear()
+  const yearStart = `${year}-01-01`
+  const yearEnd = `${year}-12-31`
+
+  // 골/어시스트 이벤트
+  const goalEvents = await c.env.DB.prepare(`
+    SELECT me.id, me.event_type, me.event_time, m.match_no,
+           s.session_date, s.id as session_id, s.title,
+           t1.name as team1_name, t2.name as team2_name,
+           m.team1_score, m.team2_score,
+           pa.name as assister_name
+    FROM match_events me
+    JOIN matches m ON me.match_id = m.id
+    JOIN sessions s ON m.session_id = s.id
+    JOIN teams t1 ON m.team1_id = t1.id
+    JOIN teams t2 ON m.team2_id = t2.id
+    LEFT JOIN players pa ON me.assister_id = pa.id
+    WHERE me.player_id = ? AND me.event_type = 'GOAL'
+      AND s.session_date BETWEEN ? AND ?
+    ORDER BY s.session_date DESC, m.match_no ASC
+  `).bind(id, yearStart, yearEnd).all()
+
+  // 어시스트 (내가 어시스트한 경우)
+  const assistEvents = await c.env.DB.prepare(`
+    SELECT me.id, 'ASSIST' as event_type, me.event_time, m.match_no,
+           s.session_date, s.id as session_id, s.title,
+           t1.name as team1_name, t2.name as team2_name,
+           m.team1_score, m.team2_score,
+           ps.name as scorer_name
+    FROM match_events me
+    JOIN matches m ON me.match_id = m.id
+    JOIN sessions s ON m.session_id = s.id
+    JOIN teams t1 ON m.team1_id = t1.id
+    JOIN teams t2 ON m.team2_id = t2.id
+    JOIN players ps ON me.player_id = ps.id
+    WHERE me.assister_id = ? AND me.event_type = 'GOAL'
+      AND s.session_date BETWEEN ? AND ?
+    ORDER BY s.session_date DESC, m.match_no ASC
+  `).bind(id, yearStart, yearEnd).all()
+
+  // 수비 이벤트
+  const defenseEvents = await c.env.DB.prepare(`
+    SELECT me.id, me.event_type, me.event_time, m.match_no,
+           s.session_date, s.id as session_id, s.title,
+           t1.name as team1_name, t2.name as team2_name,
+           m.team1_score, m.team2_score
+    FROM match_events me
+    JOIN matches m ON me.match_id = m.id
+    JOIN sessions s ON m.session_id = s.id
+    JOIN teams t1 ON m.team1_id = t1.id
+    JOIN teams t2 ON m.team2_id = t2.id
+    WHERE me.player_id = ? AND me.event_type = 'DEFENSE'
+      AND s.session_date BETWEEN ? AND ?
+    ORDER BY s.session_date DESC, m.match_no ASC
+  `).bind(id, yearStart, yearEnd).all()
+
+  // MVP 기록
+  const mvpRecords = await c.env.DB.prepare(`
+    SELECT smr.session_id, s.session_date, s.title, smr.decided_at
+    FROM session_mvp_results smr
+    JOIN sessions s ON smr.session_id = s.id
+    WHERE smr.player_id = ?
+      AND s.session_date BETWEEN ? AND ?
+    ORDER BY s.session_date DESC
+  `).bind(id, yearStart, yearEnd).all()
+
+  // 1등/2등/3등 기록
+  const placementRecords = await c.env.DB.prepare(`
+    WITH team_standings AS (
+      SELECT
+        t.session_id,
+        t.id as team_id,
+        t.name as team_name,
+        SUM(CASE
+          WHEN (t.id = m.team1_id AND m.team1_score > m.team2_score) OR
+               (t.id = m.team2_id AND m.team2_score > m.team1_score)
+          THEN 3
+          WHEN m.team1_score = m.team2_score THEN 1
+          ELSE 0
+        END) as points
+      FROM teams t
+      JOIN matches m ON t.id = m.team1_id OR t.id = m.team2_id
+      JOIN sessions s ON t.session_id = s.id
+      WHERE s.session_date BETWEEN ? AND ? AND m.status = 'completed'
+      GROUP BY t.session_id, t.id
+    ),
+    ranked AS (
+      SELECT *, RANK() OVER (PARTITION BY session_id ORDER BY points DESC) as team_rank
+      FROM team_standings
+    )
+    SELECT r.session_id, r.team_rank, r.team_name, r.points, s.session_date, s.title
+    FROM ranked r
+    JOIN team_members tm ON r.team_id = tm.team_id
+    JOIN sessions s ON r.session_id = s.id
+    WHERE tm.player_id = ?
+    ORDER BY s.session_date DESC
+  `).bind(yearStart, yearEnd, id).all()
+
+  return c.json({
+    goals: goalEvents.results,
+    assists: assistEvents.results,
+    defenses: defenseEvents.results,
+    mvpRecords: mvpRecords.results,
+    placements: placementRecords.results,
+  })
+})
 
 export { playersRoutes }

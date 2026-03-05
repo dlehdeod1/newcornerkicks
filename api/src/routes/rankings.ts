@@ -97,6 +97,29 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
   const yearStart = `${year}-01-01`
   const yearEnd = `${year}-12-31`
 
+  // ─── MVP 전체 재계산 (현재 DB 데이터 기준) ───
+  try {
+    // 기존 MVP 기록 전부 삭제 (해당 연도)
+    await c.env.DB.prepare(`
+      DELETE FROM session_mvp_results WHERE session_id IN (
+        SELECT id FROM sessions WHERE session_date BETWEEN ? AND ?
+      )
+    `).bind(yearStart, yearEnd).run()
+
+    // 완료/마감된 세션 전부 재계산
+    const allSessions = await c.env.DB.prepare(`
+      SELECT s.id FROM sessions s
+      WHERE s.status IN ('completed', 'closed')
+        AND s.session_date BETWEEN ? AND ?
+    `).bind(yearStart, yearEnd).all()
+
+    for (const session of allSessions.results as any[]) {
+      await autoBackfillMvp(c.env.DB, session.id, yearStart, yearEnd)
+    }
+  } catch (err) {
+    console.error('MVP recalculation error (ignored):', err)
+  }
+
   // 선수별 통계 집계
   const rankings = await c.env.DB.prepare(`
     SELECT
@@ -762,5 +785,72 @@ rankingsRoutes.get('/my-stats', async (c) => {
     worstTeammates: worstTeammates.results,
   })
 })
+
+// 개별 세션 MVP 자동 산정 헬퍼
+async function autoBackfillMvp(db: D1Database, sessionId: number, yearStart: string, yearEnd: string) {
+  const teams = await db.prepare(`SELECT id FROM teams WHERE session_id = ?`).bind(sessionId).all()
+  const teamIds = (teams.results as any[]).map(t => t.id)
+  if (teamIds.length === 0) return
+
+  const matches = await db.prepare(`SELECT * FROM matches WHERE session_id = ? AND status = 'completed'`).bind(sessionId).all()
+  if (matches.results.length === 0) return
+
+  // 팀별 승점 계산
+  const teamStandings = new Map<number, { points: number; goalsFor: number; members: number[] }>()
+  for (const teamId of teamIds) {
+    const members = await db.prepare(`SELECT player_id FROM team_members WHERE team_id = ? AND player_id IS NOT NULL`).bind(teamId).all()
+    teamStandings.set(teamId, { points: 0, goalsFor: 0, members: (members.results as any[]).map(m => m.player_id) })
+  }
+
+  for (const match of matches.results as any[]) {
+    const team1 = teamStandings.get(match.team1_id)
+    const team2 = teamStandings.get(match.team2_id)
+    if (team1 && team2) {
+      team1.goalsFor += match.team1_score || 0
+      team2.goalsFor += match.team2_score || 0
+      if (match.team1_score > match.team2_score) { team1.points += 3 }
+      else if (match.team1_score < match.team2_score) { team2.points += 3 }
+      else { team1.points += 1; team2.points += 1 }
+    }
+  }
+
+  const sortedTeams = Array.from(teamStandings.entries()).sort((a, b) => b[1].points - a[1].points || b[1].goalsFor - a[1].goalsFor)
+  const winningTeamMembers = new Set(sortedTeams[0]?.[1]?.members || [])
+
+  // 선수별 MVP 점수 계산
+  const playerStats = new Map<number, { id: number; name: string; mvpScore: number }>()
+
+  for (const match of matches.results as any[]) {
+    const events = await db.prepare(`SELECT * FROM match_events WHERE match_id = ?`).bind(match.id).all()
+    for (const event of events.results as any[]) {
+      if (!event.player_id || event.guest_name) continue
+      if (!playerStats.has(event.player_id)) {
+        const player = await db.prepare(`SELECT name FROM players WHERE id = ?`).bind(event.player_id).first()
+        playerStats.set(event.player_id, { id: event.player_id, name: (player as any)?.name || 'Unknown', mvpScore: 0 })
+      }
+      const stats = playerStats.get(event.player_id)!
+      if (event.event_type === 'GOAL') stats.mvpScore += 2
+      else if (event.event_type === 'DEFENSE') stats.mvpScore += 0.5
+
+      if (event.assister_id && event.event_type === 'GOAL' && !event.assister_guest_name) {
+        if (!playerStats.has(event.assister_id)) {
+          const assister = await db.prepare(`SELECT name FROM players WHERE id = ?`).bind(event.assister_id).first()
+          playerStats.set(event.assister_id, { id: event.assister_id, name: (assister as any)?.name || 'Unknown', mvpScore: 0 })
+        }
+        playerStats.get(event.assister_id)!.mvpScore += 1
+      }
+    }
+  }
+
+  // 우승팀 보너스
+  playerStats.forEach((stats, playerId) => {
+    if (winningTeamMembers.has(playerId)) stats.mvpScore += 1.5
+  })
+
+  const mvp = Array.from(playerStats.values()).sort((a, b) => b.mvpScore - a.mvpScore)[0]
+  if (mvp) {
+    await db.prepare(`INSERT INTO session_mvp_results (session_id, player_id, vote_count, decided_at) VALUES (?, ?, 0, ?)`).bind(sessionId, mvp.id, new Date().toISOString()).run()
+  }
+}
 
 export { rankingsRoutes }

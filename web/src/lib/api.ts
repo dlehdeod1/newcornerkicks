@@ -110,6 +110,9 @@ export const playersApi = {
 
   delete: (id: number, token: string) =>
     api(`/players/${id}`, { method: 'DELETE', token }),
+
+  eventLogs: (id: number, year?: number) =>
+    api(`/players/${id}/event-logs${year ? `?year=${year}` : ''}`),
 }
 
 // Matches API

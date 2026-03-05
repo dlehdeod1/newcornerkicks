@@ -12,9 +12,10 @@ interface Props {
   attendance?: any[]
   sessionStatus?: string
   teams?: any[]
+  sessionDate?: string
 }
 
-export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 'recruiting', teams = [] }: Props) {
+export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 'recruiting', teams = [], sessionDate }: Props) {
   const captureRef = useRef<HTMLDivElement>(null)
   const [copied, setCopied] = useState(false)
   const [capturing, setCapturing] = useState(false)
@@ -126,23 +127,10 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
   const winningTeamId = rankedTeams[0]?.id
   const winningTeamMembers = new Set(rankedTeams[0]?.standing?.members || [])
 
-  // 정산 계산
-  const baseFee = 10000
-  const totalPlayers = attendance.length
-  const totalPot = baseFee * totalPlayers
-  const teamCount = teams.length
-  // 정산: 1등 40%, 2등 25%, MVP 20%, 운영비 15%
-  const prizePct = teamCount >= 3 ? [0.4, 0.25] : [0.6]
-  const teamPrizes = rankedTeams.map((_: any, idx: number) => {
-    if (idx < prizePct.length) return Math.floor(totalPot * prizePct[idx])
-    return 0
-  })
-  const perPersonPrizes = rankedTeams.map((team: any, idx: number) => {
-    const memberCount = team.members?.length || 1
-    const teamPrize = teamPrizes[idx] || 0
-    const share = teamPrize > 0 ? Math.floor(teamPrize / memberCount) : 0
-    // 정산: base_fee에서 상금 차감한 인당 부담금
-    return baseFee - share
+  // 정산 계산 (고정 회비)
+  const fixedFees = [6500, 7000, 7500]
+  const perPersonPrizes = rankedTeams.map((_: any, idx: number) => {
+    return fixedFees[idx] ?? 7500
   })
 
   // 우승팀 멤버에게 1.5점 보너스
@@ -204,12 +192,12 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
   // 텍스트 복사 함수
   const handleCopyText = async () => {
     const lines: string[] = []
-    const today = new Date()
-    const dateStr = `${String(today.getFullYear()).slice(2)}년 ${today.getMonth() + 1}월 ${today.getDate()}일`
+    const sd = sessionDate ? new Date(sessionDate) : new Date()
+    const dateStr = `${String(sd.getFullYear()).slice(2)}년 ${sd.getMonth() + 1}월 ${sd.getDate()}일`
     lines.push(`${dateStr} 코너킥스 축구`)
     lines.push('')
     rankedTeams.forEach((team: any, idx: number) => {
-      const memberNames = (team.members || []).map((m: any) => m.player_name || m.guest_name || '').filter(Boolean).join(' ')
+      const memberNames = (team.members || []).map((m: any) => m.name || m.player_name || m.guest_name || '').filter(Boolean).join(' ')
       const fee = perPersonPrizes[idx]
       lines.push(`${team.name} ${fee > 0 ? fee.toLocaleString() + '원' : '무료'}`)
       lines.push(memberNames)
@@ -265,7 +253,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
       )}
 
       {/* 이미지 캡처 영역 - 공유 카드 */}
-      <div ref={captureRef} className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+      <div ref={captureRef} className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', position: 'absolute', left: '-9999px' }}>
         <div className="p-5">
           {/* 헤더 */}
           <div className="flex items-center justify-between mb-5">
@@ -280,7 +268,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
             </div>
             <div className="text-right">
               <p className="text-white font-bold text-xs">
-                {new Date().getFullYear().toString().slice(2)}년 {new Date().getMonth() + 1}월 {new Date().getDate()}일
+                {(() => { const sd = sessionDate ? new Date(sessionDate) : new Date(); return `${sd.getFullYear().toString().slice(2)}년 ${sd.getMonth() + 1}월 ${sd.getDate()}일` })()}
               </p>
               <p className="text-slate-400 text-xs">경기 결과</p>
             </div>
@@ -291,7 +279,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
             {rankedTeams.map((team: any, idx: number) => {
               const colors = teamColors[idx] || teamColors[2]
               const s = team.standing
-              const memberNames = (team.members || []).map((m: any) => m.player_name || m.guest_name || '').filter(Boolean)
+              const memberNames = (team.members || []).map((m: any) => m.name || m.player_name || m.guest_name || '').filter(Boolean)
               const fee = perPersonPrizes[idx]
               const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'
 

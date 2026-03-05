@@ -75,8 +75,8 @@ export default function SessionDetailPage() {
                 session.status === 'recruiting'
                   ? 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400'
                   : session.status === 'completed'
-                  ? 'bg-slate-100 dark:bg-slate-500/20 text-slate-600 dark:text-slate-400'
-                  : 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                    ? 'bg-slate-100 dark:bg-slate-500/20 text-slate-600 dark:text-slate-400'
+                    : 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400'
               )}
             >
               {session.status === 'recruiting' ? '모집중' : session.status === 'completed' ? '완료' : '마감'}
@@ -139,8 +139,8 @@ export default function SessionDetailPage() {
                 activeTab === tab.id
                   ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
                   : tab.disabled
-                  ? 'border-transparent text-slate-400 dark:text-slate-600 cursor-not-allowed'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-600'
+                    ? 'border-transparent text-slate-400 dark:text-slate-600 cursor-not-allowed'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-600'
               )}
             >
               <tab.icon className="w-4 h-4" />
@@ -177,8 +177,9 @@ export default function SessionDetailPage() {
           attendance={attendance}
           sessionStatus={session.status}
           teams={teams}
+          sessionDate={session.session_date}
         />
       )}
-          </div>
+    </div>
   )
 }
