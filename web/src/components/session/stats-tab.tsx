@@ -90,11 +90,11 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
     })
   })
 
-  // 팀 순위 계산 (승점 기준)
-  const teamStandings = new Map<number, { points: number; goalsFor: number; members: number[] }>()
+  // 팀 순위 계산 (승점 기준) + 승무패 집계
+  const teamStandings = new Map<number, { points: number; goalsFor: number; wins: number; draws: number; losses: number; members: number[] }>()
 
   teams.forEach((team: any) => {
-    teamStandings.set(team.id, { points: 0, goalsFor: 0, members: team.members?.map((m: any) => m.player_id) || [] })
+    teamStandings.set(team.id, { points: 0, goalsFor: 0, wins: 0, draws: 0, losses: 0, members: team.members?.map((m: any) => m.player_id) || [] })
   })
 
   completedMatches.forEach((match: any) => {
@@ -102,27 +102,48 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
     const team2 = teamStandings.get(match.team2_id)
 
     if (team1 && team2) {
-      // 득점
       team1.goalsFor += match.team1_score || 0
       team2.goalsFor += match.team2_score || 0
 
-      // 승점
       if (match.team1_score > match.team2_score) {
-        team1.points += 3
+        team1.points += 3; team1.wins++; team2.losses++
       } else if (match.team1_score < match.team2_score) {
-        team2.points += 3
+        team2.points += 3; team2.wins++; team1.losses++
       } else {
-        team1.points += 1
-        team2.points += 1
+        team1.points += 1; team2.points += 1; team1.draws++; team2.draws++
       }
     }
   })
 
-  // 우승팀 찾기 (승점 > 득점 순)
-  const sortedTeams = Array.from(teamStandings.entries())
-    .sort((a, b) => b[1].points - a[1].points || b[1].goalsFor - a[1].goalsFor)
-  const winningTeamId = sortedTeams[0]?.[0]
-  const winningTeamMembers = new Set(sortedTeams[0]?.[1]?.members || [])
+  // 팀 순위 정렬
+  const rankedTeams = teams
+    .map((team: any) => ({
+      ...team,
+      standing: teamStandings.get(team.id) || { points: 0, goalsFor: 0, wins: 0, draws: 0, losses: 0, members: [] }
+    }))
+    .sort((a: any, b: any) => b.standing.points - a.standing.points || b.standing.goalsFor - a.standing.goalsFor)
+
+  const winningTeamId = rankedTeams[0]?.id
+  const winningTeamMembers = new Set(rankedTeams[0]?.standing?.members || [])
+
+  // 정산 계산
+  const baseFee = 10000
+  const totalPlayers = attendance.length
+  const totalPot = baseFee * totalPlayers
+  const teamCount = teams.length
+  // 정산: 1등 40%, 2등 25%, MVP 20%, 운영비 15%
+  const prizePct = teamCount >= 3 ? [0.4, 0.25] : [0.6]
+  const teamPrizes = rankedTeams.map((_: any, idx: number) => {
+    if (idx < prizePct.length) return Math.floor(totalPot * prizePct[idx])
+    return 0
+  })
+  const perPersonPrizes = rankedTeams.map((team: any, idx: number) => {
+    const memberCount = team.members?.length || 1
+    const teamPrize = teamPrizes[idx] || 0
+    const share = teamPrize > 0 ? Math.floor(teamPrize / memberCount) : 0
+    // 정산: base_fee에서 상금 차감한 인당 부담금
+    return baseFee - share
+  })
 
   // 우승팀 멤버에게 1.5점 보너스
   playerStats.forEach((stats, playerId) => {
@@ -145,6 +166,9 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
   const topAssister = [...sortedStats].sort((a, b) => b.assists - a.assists)[0]
   const topDefender = [...sortedStats].sort((a, b) => b.defenses - a.defenses)[0]
   const mvp = normalizedStats[0]
+
+  // MVP 상위 3명
+  const top3Mvp = normalizedStats.slice(0, 3)
 
   if (isLoading) {
     return (
@@ -180,18 +204,27 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
   // 텍스트 복사 함수
   const handleCopyText = async () => {
     const lines: string[] = []
-    lines.push(`⚽ 코너킥스 세션 결과`)
-    lines.push(`━━━━━━━━━━━━━━━━━━━━`)
-    if (mvp) lines.push(`🏆 MVP: ${mvp.name} (${mvp.normalizedScore.toFixed(1)}점)`)
-    if (topScorer && topScorer.goals > 0) lines.push(`⚽ 득점왕: ${topScorer.name} (${topScorer.goals}골)`)
-    if (topAssister && topAssister.assists > 0) lines.push(`🅰️ 도움왕: ${topAssister.name} (${topAssister.assists}도움)`)
-    if (topDefender && topDefender.defenses > 0) lines.push(`🛡️ 수비왕: ${topDefender.name} (${topDefender.defenses}수비)`)
+    const today = new Date()
+    const dateStr = `${String(today.getFullYear()).slice(2)}년 ${today.getMonth() + 1}월 ${today.getDate()}일`
+    lines.push(`${dateStr} 코너킥스 축구`)
     lines.push('')
-    lines.push(`📊 전체 기록`)
-    lines.push(`━━━━━━━━━━━━━━━━━━━━`)
-    normalizedStats.forEach((p, idx) => {
-      lines.push(`${idx + 1}. ${p.name} | ${p.goals}골 ${p.assists}도움 ${p.defenses}수비 | MVP ${p.normalizedScore.toFixed(1)}점`)
+    rankedTeams.forEach((team: any, idx: number) => {
+      const memberNames = (team.members || []).map((m: any) => m.player_name || m.guest_name || '').filter(Boolean).join(' ')
+      const fee = perPersonPrizes[idx]
+      lines.push(`${team.name} ${fee > 0 ? fee.toLocaleString() + '원' : '무료'}`)
+      lines.push(memberNames)
     })
+    lines.push('')
+    top3Mvp.forEach((p, idx) => {
+      const medal = idx === 0 ? '🏆' : idx === 1 ? '🥈' : '🥉'
+      const details = []
+      if (p.goals > 0) details.push(`${p.goals}골`)
+      if (p.assists > 0) details.push(`${p.assists}도움`)
+      lines.push(`${medal} MVP${idx + 1}: ${p.name} - ${details.join(' ') || '우승팀'}`)
+    })
+    lines.push('')
+    lines.push('국민은행 801301-01-610282 박재형')
+    lines.push('추운데 고생하셨습니다!!!')
     try {
       await navigator.clipboard.writeText(lines.join('\n'))
       setCopied(true)
@@ -200,6 +233,13 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
       console.error('복사 실패:', err)
     }
   }
+
+  // 팀 카드 색상
+  const teamColors = [
+    { border: 'border-amber-400', bg: 'bg-amber-500/10', text: 'text-amber-400', badge: 'from-amber-400 to-yellow-500', priceBg: 'bg-amber-400 text-slate-900' },
+    { border: 'border-slate-400', bg: 'bg-slate-500/10', text: 'text-slate-300', badge: 'from-slate-400 to-slate-500', priceBg: 'bg-slate-400 text-slate-900' },
+    { border: 'border-purple-400', bg: 'bg-purple-500/10', text: 'text-purple-300', badge: 'from-purple-400 to-purple-500', priceBg: 'bg-purple-400 text-white' },
+  ]
 
   return (
     <div className="space-y-6">
@@ -224,8 +264,98 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
         </div>
       )}
 
-      {/* MVP 투표 */}
-      <div ref={captureRef} className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-1">
+      {/* 이미지 캡처 영역 - 공유 카드 */}
+      <div ref={captureRef} className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+        <div className="p-5">
+          {/* 헤더 */}
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
+                <span className="text-white text-lg">⚽</span>
+              </div>
+              <div>
+                <p className="text-white font-bold text-sm">CornerKicks</p>
+                <p className="text-slate-400 text-xs">풋살 동호회</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-white font-bold text-xs">
+                {new Date().getFullYear().toString().slice(2)}년 {new Date().getMonth() + 1}월 {new Date().getDate()}일
+              </p>
+              <p className="text-slate-400 text-xs">경기 결과</p>
+            </div>
+          </div>
+
+          {/* 팀 카드 */}
+          <div className="space-y-3">
+            {rankedTeams.map((team: any, idx: number) => {
+              const colors = teamColors[idx] || teamColors[2]
+              const s = team.standing
+              const memberNames = (team.members || []).map((m: any) => m.player_name || m.guest_name || '').filter(Boolean)
+              const fee = perPersonPrizes[idx]
+              const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'
+
+              return (
+                <div key={team.id} className={`border ${colors.border} ${colors.bg} rounded-xl p-3 ${idx === 0 ? 'ring-1 ring-amber-400/30' : ''}`}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-8 h-8 bg-gradient-to-br ${colors.badge} rounded-lg flex items-center justify-center`}>
+                        <span className="text-sm">{medal}</span>
+                      </div>
+                      <span className="text-white font-bold text-sm">{team.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-white font-bold text-base">{s.points}<span className="text-xs text-slate-400">점</span></p>
+                      <p className="text-slate-400 text-xs">{s.wins}승 {s.draws}무 {s.losses}패</p>
+                    </div>
+                  </div>
+                  <div className="flex items-end justify-between">
+                    <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+                      {memberNames.map((name: string, i: number) => (
+                        <span key={i} className="text-slate-300 text-xs">{name}</span>
+                      ))}
+                    </div>
+                    <span className={`${colors.priceBg} px-2 py-0.5 rounded text-xs font-bold shrink-0 ml-2`}>
+                      {fee > 0 ? `${fee.toLocaleString()}원` : '무료'}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* MVP 상위 3명 */}
+          {top3Mvp.length > 0 && (
+            <div className="mt-4 bg-slate-800/50 rounded-xl p-3">
+              {top3Mvp.map((p, idx) => {
+                const medal = idx === 0 ? '🏆' : idx === 1 ? '🥈' : '🥉'
+                const details = []
+                if (p.goals > 0) details.push(`${p.goals}골`)
+                if (p.assists > 0) details.push(`${p.assists}도움`)
+                return (
+                  <div key={p.id} className={`flex items-center gap-2 ${idx > 0 ? 'mt-1.5' : ''}`}>
+                    <span className="text-sm">{medal}</span>
+                    <span className={`font-bold text-sm ${idx === 0 ? 'text-amber-400' : 'text-slate-300'}`}>
+                      MVP{idx === 0 ? '' : idx + 1}: {p.name}
+                    </span>
+                    <span className="text-slate-400 text-xs">- {details.join(' ') || '우승팀'}</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* 푸터 */}
+          <div className="mt-4 flex items-center justify-center gap-2 text-slate-500 text-xs">
+            <span>코너킥스 풋살 동호회</span>
+            <span>🔥</span>
+            <span>매주 경기 진행</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 기존 하이라이트 + 테이블 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           {/* 하이라이트 */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
