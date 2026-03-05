@@ -27,13 +27,14 @@ app.use('*', cors({
     // 허용된 도메인 패턴
     const allowedOrigins = [
       'http://localhost:3000',
+      /^http:\/\/localhost:\d+$/,  // 모든 localhost 포트 (Flutter 웹 개발용)
       'https://cornerkicks.vercel.app',
       'https://cornerkicks.pages.dev',
       /\.pages\.dev$/,  // 모든 pages.dev 서브도메인
       /\.workers\.dev$/,  // 모든 workers.dev 서브도메인
     ]
 
-    if (!origin) return true // 서버 to 서버 요청
+    if (!origin) return '*' // 서버 to 서버 요청
 
     for (const allowed of allowedOrigins) {
       if (typeof allowed === 'string' && origin === allowed) return origin
