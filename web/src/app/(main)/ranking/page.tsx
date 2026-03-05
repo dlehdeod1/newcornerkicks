@@ -80,10 +80,10 @@ export default function RankingPage() {
       {/* 헤더 */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
             선수 / 랭킹
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2 text-lg">
+          <p className="text-slate-600 dark:text-slate-400 mt-1 text-sm">
             {selectedYear}년 시즌 • {getSortLabel()} 순
           </p>
         </div>
@@ -97,7 +97,7 @@ export default function RankingPage() {
               placeholder="선수 검색..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-52 pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-base text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-52 pl-11 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
@@ -106,7 +106,7 @@ export default function RankingPage() {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="appearance-none px-4 py-3 pr-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-base text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              className="appearance-none px-4 py-2 pr-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
             >
               {[2026, 2025, 2024].map((year) => (
                 <option key={year} value={year}>
@@ -139,10 +139,10 @@ export default function RankingPage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20">
-                    <th className="px-4 py-4 text-left text-sm font-semibold text-slate-600 dark:text-slate-400 w-16 sticky left-0 z-30 bg-slate-50 dark:bg-slate-800">
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 w-12 sticky left-0 z-30 bg-slate-50 dark:bg-slate-800">
                       #
                     </th>
-                    <th className="px-4 py-4 text-left text-sm font-semibold text-slate-600 dark:text-slate-400 min-w-[140px] sticky left-16 z-30 bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                    <th className="px-3 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 min-w-[120px] sticky left-12 z-30 bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                       선수
                     </th>
                     <SortableHeader
@@ -380,10 +380,10 @@ function Podium({ topThree, sortBy }: { topThree: any[]; sortBy: SortKey }) {
 
 function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy: SortKey }) {
   const getRankBadge = () => {
-    if (rank === 1) return <span className="text-2xl">🥇</span>
-    if (rank === 2) return <span className="text-2xl">🥈</span>
-    if (rank === 3) return <span className="text-2xl">🥉</span>
-    return <span className="text-lg font-bold text-slate-400 dark:text-slate-500">{rank}</span>
+    if (rank === 1) return <span className="text-base">🥇</span>
+    if (rank === 2) return <span className="text-base">🥈</span>
+    if (rank === 3) return <span className="text-base">🥉</span>
+    return <span className="text-sm font-bold text-slate-400 dark:text-slate-500">{rank}</span>
   }
 
   const getCellClass = (key: SortKey) => {
@@ -414,57 +414,57 @@ function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy
       rank <= 3 && 'bg-amber-50/50 dark:bg-amber-900/10'
     )}>
       <td className={cn(
-        'px-4 py-4 text-center sticky left-0 z-10',
+        'px-3 py-3 text-center sticky left-0 z-10',
         rank <= 3 ? 'bg-amber-50 dark:bg-slate-900' : 'bg-white dark:bg-slate-900'
       )}>{getRankBadge()}</td>
       <td className={cn(
-        'px-4 py-4 sticky left-16 z-10 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]',
+        'px-3 py-3 sticky left-12 z-10 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]',
         rank <= 3 ? 'bg-amber-50 dark:bg-slate-900' : 'bg-white dark:bg-slate-900'
       )}>
-        <Link href={`/ranking/${player.id}`} className="flex items-center gap-3 group">
-          <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700">
+        <Link href={`/ranking/${player.id}`} className="flex items-center gap-2 group">
+          <div className="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700 shrink-0">
             {player.photo_url ? (
-              <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover rounded-xl" />
+              <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover rounded-lg" />
             ) : (
-              <span className="text-lg font-bold text-slate-500 dark:text-slate-400">{player.name?.charAt(0)}</span>
+              <span className="text-sm font-bold text-slate-500 dark:text-slate-400">{player.name?.charAt(0)}</span>
             )}
           </div>
-          <span className="text-lg font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+          <span className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
             {player.name}
           </span>
         </Link>
       </td>
-      <td className={cn('px-4 py-4 text-center text-lg', getCellClass('mvpCount'))}>
+      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('mvpCount'))}>
         {player.mvpCount || 0}
       </td>
-      <td className={cn('px-4 py-4 text-center text-lg', getCellClass('goals'))}>
+      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('goals'))}>
         {player.goals || 0}
       </td>
-      <td className={cn('px-4 py-4 text-center text-lg', getCellClass('assists'))}>
+      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('assists'))}>
         {player.assists || 0}
       </td>
-      <td className={cn('px-4 py-4 text-center text-lg', getCellClass('attackPoints'))}>
+      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('attackPoints'))}>
         {attackPoints}
       </td>
-      <td className={cn('px-4 py-4 text-center text-lg', getCellClass('defenses'))}>
+      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('defenses'))}>
         {player.defenses || 0}
       </td>
-      <td className={cn('px-4 py-4 text-center text-lg', getCellClass('games'))}>
+      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('games'))}>
         {player.games || 0}
       </td>
-      <td className={cn('px-4 py-4 text-center text-lg', getCellClass('ppm'))}>
+      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('ppm'))}>
         {ppm}
       </td>
-      <td className={cn('px-4 py-4 text-center text-lg', getCellClass('rank1'))}>
+      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('rank1'))}>
         {player.rank1 || 0}
       </td>
-      <td className={cn('px-4 py-4 text-center text-lg', getCellClass('rank2'))}>
+      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('rank2'))}>
         {player.rank2 || 0}
       </td>
-      <td className={cn('px-4 py-4 text-center text-lg', getCellClass('rank3'))}>
+      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('rank3'))}>
         {player.rank3 || 0}
       </td>
-      <td className={cn('px-4 py-4 text-center text-lg', getCellClass('winRate'))}>
+      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('winRate'))}>
         {player.attendance > 0 ? `${((player.rank1 || 0) / player.attendance * 100).toFixed(0)}%` : '-'}
       </td>
       <td className="px-4 py-4">
