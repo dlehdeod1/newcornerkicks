@@ -135,14 +135,14 @@ export default function RankingPage() {
           {/* 테이블 */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
             {/* 테이블 헤더 */}
-            <div className="overflow-x-auto">
+            <div className="overflow-auto max-h-[70vh]">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                    <th className="px-4 py-4 text-left text-sm font-semibold text-slate-600 dark:text-slate-400 w-16">
+                  <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20">
+                    <th className="px-4 py-4 text-left text-sm font-semibold text-slate-600 dark:text-slate-400 w-16 sticky left-0 z-30 bg-slate-50 dark:bg-slate-800">
                       #
                     </th>
-                    <th className="px-4 py-4 text-left text-sm font-semibold text-slate-600 dark:text-slate-400 min-w-[140px]">
+                    <th className="px-4 py-4 text-left text-sm font-semibold text-slate-600 dark:text-slate-400 min-w-[140px] sticky left-16 z-30 bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                       선수
                     </th>
                     <SortableHeader
@@ -367,8 +367,8 @@ function Podium({ topThree, sortBy }: { topThree: any[]; sortBy: SortKey }) {
             'w-24 rounded-t-xl flex items-center justify-center transition-colors',
             height,
             rank === 1 ? 'bg-gradient-to-t from-amber-500 to-yellow-400' :
-            rank === 2 ? 'bg-gradient-to-t from-slate-400 to-slate-300' :
-            'bg-gradient-to-t from-amber-700 to-amber-600'
+              rank === 2 ? 'bg-gradient-to-t from-slate-400 to-slate-300' :
+                'bg-gradient-to-t from-amber-700 to-amber-600'
           )}>
             <span className="text-3xl font-bold text-white/90">{rank}</span>
           </div>
@@ -413,8 +413,14 @@ function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy
       'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors',
       rank <= 3 && 'bg-amber-50/50 dark:bg-amber-900/10'
     )}>
-      <td className="px-4 py-4 text-center">{getRankBadge()}</td>
-      <td className="px-4 py-4">
+      <td className={cn(
+        'px-4 py-4 text-center sticky left-0 z-10',
+        rank <= 3 ? 'bg-amber-50 dark:bg-slate-900' : 'bg-white dark:bg-slate-900'
+      )}>{getRankBadge()}</td>
+      <td className={cn(
+        'px-4 py-4 sticky left-16 z-10 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]',
+        rank <= 3 ? 'bg-amber-50 dark:bg-slate-900' : 'bg-white dark:bg-slate-900'
+      )}>
         <Link href={`/ranking/${player.id}`} className="flex items-center gap-3 group">
           <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700">
             {player.photo_url ? (

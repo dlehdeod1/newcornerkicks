@@ -1,8 +1,10 @@
 'use client'
 
+import { useRef, useState } from 'react'
 import { useQueries } from '@tanstack/react-query'
-import { Trophy, Target, Shield, Award, Crown, Sparkles } from 'lucide-react'
+import { Trophy, Target, Shield, Award, Crown, Sparkles, Camera, Copy, Check, Download } from 'lucide-react'
 import { matchesApi } from '@/lib/api'
+import html2canvas from 'html2canvas'
 
 interface Props {
   sessionId: number
@@ -13,6 +15,10 @@ interface Props {
 }
 
 export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 'recruiting', teams = [] }: Props) {
+  const captureRef = useRef<HTMLDivElement>(null)
+  const [copied, setCopied] = useState(false)
+  const [capturing, setCapturing] = useState(false)
+
   // 전체 경기 이벤트 수집
   const completedMatches = matches.filter((m: any) => m.status === 'completed')
 
@@ -149,14 +155,81 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
     )
   }
 
+  // 이미지 캡처 함수
+  const handleCaptureImage = async () => {
+    if (!captureRef.current || capturing) return
+    setCapturing(true)
+    try {
+      const canvas = await html2canvas(captureRef.current, {
+        backgroundColor: '#0f172a',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      })
+      const link = document.createElement('a')
+      link.download = `코너킥스_결과_${new Date().toISOString().slice(0, 10)}.png`
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+    } catch (err) {
+      console.error('이미지 캡처 실패:', err)
+    } finally {
+      setCapturing(false)
+    }
+  }
+
+  // 텍스트 복사 함수
+  const handleCopyText = async () => {
+    const lines: string[] = []
+    lines.push(`⚽ 코너킥스 세션 결과`)
+    lines.push(`━━━━━━━━━━━━━━━━━━━━`)
+    if (mvp) lines.push(`🏆 MVP: ${mvp.name} (${mvp.normalizedScore.toFixed(1)}점)`)
+    if (topScorer && topScorer.goals > 0) lines.push(`⚽ 득점왕: ${topScorer.name} (${topScorer.goals}골)`)
+    if (topAssister && topAssister.assists > 0) lines.push(`🅰️ 도움왕: ${topAssister.name} (${topAssister.assists}도움)`)
+    if (topDefender && topDefender.defenses > 0) lines.push(`🛡️ 수비왕: ${topDefender.name} (${topDefender.defenses}수비)`)
+    lines.push('')
+    lines.push(`📊 전체 기록`)
+    lines.push(`━━━━━━━━━━━━━━━━━━━━`)
+    normalizedStats.forEach((p, idx) => {
+      lines.push(`${idx + 1}. ${p.name} | ${p.goals}골 ${p.assists}도움 ${p.defenses}수비 | MVP ${p.normalizedScore.toFixed(1)}점`)
+    })
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'))
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('복사 실패:', err)
+    }
+  }
+
   return (
     <div className="space-y-6">
+      {/* 공유 버튼 */}
+      {normalizedStats.length > 0 && (
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={handleCopyText}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+          >
+            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+            {copied ? '복사됨!' : '텍스트 복사'}
+          </button>
+          <button
+            onClick={handleCaptureImage}
+            disabled={capturing}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors disabled:opacity-50"
+          >
+            <Download className="w-4 h-4" />
+            {capturing ? '캡처 중...' : '이미지 저장'}
+          </button>
+        </div>
+      )}
+
       {/* MVP 투표 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div ref={captureRef} className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-1">
         <div className="lg:col-span-2">
           {/* 하이라이트 */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <HighlightCard
+            <HighlightCard
               icon={<Award className="w-6 h-6 text-yellow-500 dark:text-yellow-400" />}
               title="MVP"
               player={mvp?.name}
@@ -177,7 +250,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
               value={topAssister ? `${topAssister.assists}도움` : '-'}
               color="blue"
             />
-        <HighlightCard
+            <HighlightCard
               icon={<Shield className="w-6 h-6 text-purple-500 dark:text-purple-400" />}
               title="수비왕"
               player={topDefender?.name}
@@ -187,47 +260,47 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
           </div>
 
           {/* 전체 스탯 테이블 */}
-      <div className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="font-semibold text-slate-900 dark:text-white">세션 기록</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
-                <th className="px-4 py-3 text-left">#</th>
-                <th className="px-4 py-3 text-left">선수</th>
-                <th className="px-4 py-3 text-center">골</th>
-                <th className="px-4 py-3 text-center">도움</th>
-                <th className="px-4 py-3 text-center">수비</th>
-                <th className="px-4 py-3 text-center">MVP점수</th>
-              </tr>
-            </thead>
-            <tbody>
-              {normalizedStats.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
-                    완료된 경기가 없습니다.
-                  </td>
-                </tr>
-              ) : (
-                normalizedStats.map((player, idx) => (
-                  <tr key={player.id} className="border-b border-slate-100 dark:border-slate-700/50">
-                    <td className="px-4 py-3 text-slate-500">{idx + 1}</td>
-                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-white max-w-[120px] truncate">{player.name}</td>
-                    <td className="px-4 py-3 text-center text-green-600 dark:text-green-400">{player.goals}</td>
-                    <td className="px-4 py-3 text-center text-blue-600 dark:text-blue-400">{player.assists}</td>
-                    <td className="px-4 py-3 text-center text-purple-600 dark:text-purple-400">{player.defenses}</td>
-                    <td className="px-4 py-3 text-center font-semibold text-yellow-600 dark:text-yellow-400">
-                      {player.normalizedScore.toFixed(1)}
-                    </td>
+          <div className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+              <h3 className="font-semibold text-slate-900 dark:text-white">세션 기록</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
+                    <th className="px-4 py-3 text-left">#</th>
+                    <th className="px-4 py-3 text-left">선수</th>
+                    <th className="px-4 py-3 text-center">골</th>
+                    <th className="px-4 py-3 text-center">도움</th>
+                    <th className="px-4 py-3 text-center">수비</th>
+                    <th className="px-4 py-3 text-center">MVP점수</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {normalizedStats.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                        완료된 경기가 없습니다.
+                      </td>
+                    </tr>
+                  ) : (
+                    normalizedStats.map((player, idx) => (
+                      <tr key={player.id} className="border-b border-slate-100 dark:border-slate-700/50">
+                        <td className="px-4 py-3 text-slate-500">{idx + 1}</td>
+                        <td className="px-4 py-3 font-medium text-slate-900 dark:text-white max-w-[120px] truncate">{player.name}</td>
+                        <td className="px-4 py-3 text-center text-green-600 dark:text-green-400">{player.goals}</td>
+                        <td className="px-4 py-3 text-center text-blue-600 dark:text-blue-400">{player.assists}</td>
+                        <td className="px-4 py-3 text-center text-purple-600 dark:text-purple-400">{player.defenses}</td>
+                        <td className="px-4 py-3 text-center font-semibold text-yellow-600 dark:text-yellow-400">
+                          {player.normalizedScore.toFixed(1)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
         </div>
 
         {/* MVP 점수 사이드바 (기록 기반) */}
