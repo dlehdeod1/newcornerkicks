@@ -11,12 +11,13 @@ import { cn } from '@/lib/cn'
 import { CreateSessionModal } from '@/components/session/create-session-modal'
 
 export default function SessionsPage() {
-  const { isAdmin } = useAuthStore()
+  const { isAdmin, token } = useAuthStore()
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['sessions'],
-    queryFn: () => sessionsApi.list(),
+    queryKey: ['sessions', token],
+    queryFn: () => sessionsApi.list(undefined, token ?? undefined),
+    enabled: !!token,
   })
 
   const sessions = data?.sessions || []

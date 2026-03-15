@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthStore } from '@/stores/auth'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
@@ -11,6 +13,7 @@ type SortKey = 'mvpCount' | 'goals' | 'assists' | 'attackPoints' | 'defenses' | 
 type SortOrder = 'asc' | 'desc'
 
 export default function RankingPage() {
+  const { token } = useAuthStore()
   const currentYear = new Date().getFullYear()
   const [selectedYear, setSelectedYear] = useState(currentYear)
   const [sortBy, setSortBy] = useState<SortKey>('mvpCount')
@@ -18,8 +21,9 @@ export default function RankingPage() {
   const [search, setSearch] = useState('')
 
   const { data, isLoading } = useQuery({
-    queryKey: ['rankings', selectedYear],
-    queryFn: () => rankingsApi.get(selectedYear),
+    queryKey: ['rankings', selectedYear, token],
+    queryFn: () => rankingsApi.get(selectedYear, token ?? undefined),
+    enabled: !!token,
   })
 
   const rankings = data?.data?.rankings || []

@@ -18,12 +18,12 @@ export default function HomePage() {
 
   // 최근 세션 조회 (closed 또는 completed 상태 중 가장 최근)
   const { data: sessionsData, isLoading: sessionsLoading } = useQuery({
-    queryKey: ['sessions', 'recent', 'highlight'],
+    queryKey: ['sessions', 'recent', 'highlight', token],
     queryFn: async () => {
       // closed와 completed 모두 조회해서 가장 최근 세션 반환
       const [closedSessions, completedSessions] = await Promise.all([
-        sessionsApi.list({ limit: 1, status: 'closed' }),
-        sessionsApi.list({ limit: 1, status: 'completed' }),
+        sessionsApi.list({ limit: 1, status: 'closed' }, token ?? undefined),
+        sessionsApi.list({ limit: 1, status: 'completed' }, token ?? undefined),
       ])
       const closed = closedSessions?.sessions?.[0]
       const completed = completedSessions?.sessions?.[0]

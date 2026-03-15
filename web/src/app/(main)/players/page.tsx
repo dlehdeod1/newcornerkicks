@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthStore } from '@/stores/auth'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
@@ -8,11 +10,13 @@ import { playersApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
 export default function PlayersPage() {
+  const { token } = useAuthStore()
   const [search, setSearch] = useState('')
 
   const { data, isLoading } = useQuery({
-    queryKey: ['players'],
-    queryFn: () => playersApi.list(),
+    queryKey: ['players', token],
+    queryFn: () => playersApi.list(token ?? undefined),
+    enabled: !!token,
   })
 
   const players = data?.players || []
