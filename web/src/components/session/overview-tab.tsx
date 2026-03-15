@@ -117,7 +117,7 @@ export function OverviewTab({ session, attendance, teams, onRefetch }: Props) {
                 key={a.id}
                 className="px-3 py-1.5 bg-slate-100 dark:bg-slate-700/50 rounded-lg text-sm text-slate-700 dark:text-white"
               >
-                {a.name || a.nickname}
+                {a.display_name || a.name || a.nickname || a.guest_name}
               </div>
             ))}
           </div>
