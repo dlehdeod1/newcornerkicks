@@ -15,10 +15,17 @@ rankingsRoutes.get('/', optionalAuthMiddleware, async (c) => {
     return c.json({ data: { rankings: [], totalPlayers: 0, totalGoals: 0, totalAssists: 0, totalDefenses: 0, totalSessions: 0, totalMatches: 0, avgGoalsPerMatch: 0, avgAttendancePerSession: 0, goalRanking: [], assistRanking: [], defenseRanking: [], attendanceRanking: [], winRateRanking: [], mvpRanking: [] }, updatedAt: null, updatedBy: null })
   }
 
-  // 캐시된 랭킹 데이터 (클럽별)
-  const cache = await c.env.DB.prepare(`
+  // 캐시된 랭킹 데이터 (클럽별) — 없으면 자동 계산
+  let cache = await c.env.DB.prepare(`
     SELECT * FROM rankings_cache WHERE year = ? AND club_id = ?
   `).bind(year, clubId).first()
+
+  if (!cache) {
+    await buildAndCacheRankings(c.env.DB, clubId, year, 'auto')
+    cache = await c.env.DB.prepare(`
+      SELECT * FROM rankings_cache WHERE year = ? AND club_id = ?
+    `).bind(year, clubId).first()
+  }
 
   let rankings: any[] = []
   if (cache) {
@@ -131,195 +138,12 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
     console.error('MVP recalculation error (ignored):', err)
   }
 
-  // 선수별 통계 집계 (해당 클럽 선수만)
-  const rankings = await c.env.DB.prepare(`
-    SELECT
-      p.id,
-      p.name,
-      COUNT(DISTINCT pms.match_id) as games,
-      COALESCE(SUM(pms.goals), 0) as goals,
-      COALESCE(SUM(pms.assists), 0) as assists,
-      COALESCE(SUM(pms.blocks), 0) as defenses,
-      (SELECT COUNT(*) FROM attendance a
-       JOIN sessions s ON a.session_id = s.id
-       WHERE a.player_id = p.id AND s.session_date BETWEEN ? AND ? AND s.club_id = ?) as attendance
-    FROM players p
-    LEFT JOIN player_match_stats pms ON p.id = pms.player_id
-    LEFT JOIN matches m ON pms.match_id = m.id
-    LEFT JOIN sessions s ON m.session_id = s.id
-    WHERE p.is_guest = 0
-      AND p.club_id = ?
-      AND (s.session_date IS NULL OR s.session_date BETWEEN ? AND ?)
-    GROUP BY p.id
-    ORDER BY goals DESC, assists DESC, defenses DESC
-  `).bind(yearStart, yearEnd, clubId, clubId, yearStart, yearEnd).all()
-
-  // 승/무/패 계산을 위한 추가 쿼리
-  const enrichedRankings = await Promise.all(
-    rankings.results.map(async (player: any) => {
-      // 승/무/패 계산 (team_members 기준 - 실제 참여 경기)
-      const matchResults = await c.env.DB.prepare(`
-        SELECT
-          COUNT(*) as total_games,
-          SUM(CASE
-            WHEN (tm.team_id = m.team1_id AND m.team1_score > m.team2_score) OR
-                 (tm.team_id = m.team2_id AND m.team2_score > m.team1_score)
-            THEN 1 ELSE 0 END) as wins,
-          SUM(CASE
-            WHEN m.team1_score = m.team2_score THEN 1 ELSE 0 END) as draws,
-          SUM(CASE
-            WHEN (tm.team_id = m.team1_id AND m.team1_score < m.team2_score) OR
-                 (tm.team_id = m.team2_id AND m.team2_score < m.team1_score)
-            THEN 1 ELSE 0 END) as losses
-        FROM team_members tm
-        JOIN matches m ON (tm.team_id = m.team1_id OR tm.team_id = m.team2_id)
-        JOIN sessions s ON m.session_id = s.id
-        WHERE tm.player_id = ?
-          AND m.status = 'completed'
-          AND s.session_date BETWEEN ? AND ?
-      `).bind(player.id, yearStart, yearEnd).first()
-
-      const totalGames = (matchResults?.total_games as number) || 0
-      const wins = (matchResults?.wins as number) || 0
-      const draws = (matchResults?.draws as number) || 0
-      const losses = (matchResults?.losses as number) || 0
-      const points = wins * 3 + draws * 1
-
-      // 세션별 우승 횟수 계산 (승점 1등 팀 소속 횟수)
-      const sessionWinsResult = await c.env.DB.prepare(`
-        WITH team_standings AS (
-          SELECT
-            t.session_id,
-            t.id as team_id,
-            SUM(CASE
-              WHEN (t.id = m.team1_id AND m.team1_score > m.team2_score) OR
-                   (t.id = m.team2_id AND m.team2_score > m.team1_score)
-              THEN 3
-              WHEN m.team1_score = m.team2_score THEN 1
-              ELSE 0
-            END) as points,
-            SUM(CASE
-              WHEN t.id = m.team1_id THEN m.team1_score
-              ELSE m.team2_score
-            END) as goals_for
-          FROM teams t
-          JOIN matches m ON t.id = m.team1_id OR t.id = m.team2_id
-          JOIN sessions s ON t.session_id = s.id
-          WHERE s.session_date BETWEEN ? AND ? AND m.status = 'completed'
-          GROUP BY t.session_id, t.id
-        ),
-        winning_teams AS (
-          SELECT ts.session_id, ts.team_id
-          FROM team_standings ts
-          WHERE (ts.session_id, ts.points, ts.goals_for) IN (
-            SELECT session_id, MAX(points), MAX(goals_for)
-            FROM team_standings
-            GROUP BY session_id
-          )
-        )
-        SELECT COUNT(*) as session_wins
-        FROM winning_teams wt
-        JOIN team_members tm ON wt.team_id = tm.team_id
-        WHERE tm.player_id = ?
-      `).bind(yearStart, yearEnd, player.id).first()
-      const sessionWins = (sessionWinsResult?.session_wins as number) || 0
-
-      // MVP 점수 계산 (골*2 + 어시*1 + 수비*0.5 + 우승*1.5)
-      const mvpScore = player.goals * 2 + player.assists * 1 + player.defenses * 0.5 + sessionWins * 1.5
-
-      // PPM (Points Per Match) - team_members 기준 게임 수 사용
-      const ppm = totalGames > 0 ? (points / totalGames).toFixed(2) : '0.00'
-
-      // 세션 우승률 = 세션 우승 횟수 / 출석 횟수
-      const winRate = player.attendance > 0 ? ((sessionWins / player.attendance) * 100).toFixed(1) : '0.0'
-
-      // 1등, 2등, 3등 횟수 (경기 승점 기준 - 세션 내 팀 순위)
-      const placementResults = await c.env.DB.prepare(`
-        WITH team_standings AS (
-          SELECT
-            t.session_id,
-            t.id as team_id,
-            SUM(CASE
-              WHEN (t.id = m.team1_id AND m.team1_score > m.team2_score) OR
-                   (t.id = m.team2_id AND m.team2_score > m.team1_score)
-              THEN 3
-              WHEN m.team1_score = m.team2_score THEN 1
-              ELSE 0
-            END) as points,
-            SUM(CASE
-              WHEN t.id = m.team1_id THEN m.team1_score
-              ELSE m.team2_score
-            END) as goals_for
-          FROM teams t
-          JOIN matches m ON t.id = m.team1_id OR t.id = m.team2_id
-          JOIN sessions s ON t.session_id = s.id
-          WHERE s.session_date BETWEEN ? AND ? AND m.status = 'completed'
-          GROUP BY t.session_id, t.id
-        ),
-        ranked_teams AS (
-          SELECT session_id, team_id,
-            RANK() OVER (PARTITION BY session_id ORDER BY points DESC, goals_for DESC) as team_rank
-          FROM team_standings
-        )
-        SELECT
-          SUM(CASE WHEN rt.team_rank = 1 THEN 1 ELSE 0 END) as rank1,
-          SUM(CASE WHEN rt.team_rank = 2 THEN 1 ELSE 0 END) as rank2,
-          SUM(CASE WHEN rt.team_rank = 3 THEN 1 ELSE 0 END) as rank3
-        FROM ranked_teams rt
-        JOIN team_members tm ON rt.team_id = tm.team_id
-        WHERE tm.player_id = ?
-      `).bind(yearStart, yearEnd, player.id).first()
-
-      // MVP 횟수 조회 (세션 MVP 투표 결과)
-      const mvpCountResult = await c.env.DB.prepare(`
-        SELECT COUNT(*) as mvp_count
-        FROM session_mvp_results smr
-        JOIN sessions s ON smr.session_id = s.id
-        WHERE smr.player_id = ?
-          AND s.session_date BETWEEN ? AND ?
-      `).bind(player.id, yearStart, yearEnd).first()
-      const mvpCount = (mvpCountResult?.mvp_count as number) || 0
-
-      return {
-        id: player.id,
-        name: player.name,
-        games: totalGames, // team_members 기준 실제 경기 수
-        goals: player.goals,
-        assists: player.assists,
-        defenses: player.defenses,
-        wins,
-        draws,
-        losses,
-        points,
-        ppm: parseFloat(ppm),
-        winRate: parseFloat(winRate),
-        attendance: player.attendance,
-        sessionWins, // 세션 우승 횟수
-        rank1: placementResults?.rank1 || 0,
-        rank2: placementResults?.rank2 || 0,
-        rank3: placementResults?.rank3 || 0,
-        mvpScore,
-        mvpCount, // MVP 횟수 추가
-      }
-    })
-  )
-
-  // 정렬 (MVP 점수 기준)
-  enrichedRankings.sort((a, b) => b.mvpScore - a.mvpScore)
-
-  // 캐시 저장 (클럽별 고유 id = club_id * 10000 + year)
-  const now = new Date().toISOString()
-  const cacheId = clubId * 10000 + year
-
-  await c.env.DB.prepare(`
-    INSERT OR REPLACE INTO rankings_cache (id, club_id, data, updated_at, updated_by, year)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).bind(cacheId, clubId, JSON.stringify(enrichedRankings), now, userId || 'admin', year).run()
+  const enrichedRankings = await buildAndCacheRankings(c.env.DB, clubId, year, userId || 'admin')
 
   return c.json({
     message: '랭킹이 갱신되었습니다.',
     rankings: enrichedRankings,
-    updatedAt: now,
+    updatedAt: new Date().toISOString(),
   })
 })
 
@@ -864,6 +688,111 @@ async function autoBackfillMvp(db: D1Database, sessionId: number, yearStart: str
   if (mvp) {
     await db.prepare(`INSERT INTO session_mvp_results (session_id, player_id, vote_count, decided_at) VALUES (?, ?, 0, ?)`).bind(sessionId, mvp.id, new Date().toISOString()).run()
   }
+}
+
+// 랭킹 통계 계산 + 캐시 저장 공통 함수
+async function buildAndCacheRankings(db: D1Database, clubId: number, year: number, updatedBy: string): Promise<any[]> {
+  const yearStart = `${year}-01-01`
+  const yearEnd = `${year}-12-31`
+
+  const rankings = await db.prepare(`
+    SELECT
+      p.id,
+      p.name,
+      COUNT(DISTINCT pms.match_id) as games,
+      COALESCE(SUM(pms.goals), 0) as goals,
+      COALESCE(SUM(pms.assists), 0) as assists,
+      COALESCE(SUM(pms.blocks), 0) as defenses,
+      (SELECT COUNT(*) FROM attendance a
+       JOIN sessions s ON a.session_id = s.id
+       WHERE a.player_id = p.id AND s.session_date BETWEEN ? AND ? AND s.club_id = ?) as attendance
+    FROM players p
+    LEFT JOIN player_match_stats pms ON p.id = pms.player_id
+    LEFT JOIN matches m ON pms.match_id = m.id
+    LEFT JOIN sessions s ON m.session_id = s.id
+    WHERE p.is_guest = 0
+      AND p.club_id = ?
+      AND (s.session_date IS NULL OR s.session_date BETWEEN ? AND ?)
+    GROUP BY p.id
+    ORDER BY goals DESC, assists DESC, defenses DESC
+  `).bind(yearStart, yearEnd, clubId, clubId, yearStart, yearEnd).all()
+
+  const enrichedRankings = await Promise.all(
+    rankings.results.map(async (player: any) => {
+      const matchResults = await db.prepare(`
+        SELECT
+          COUNT(*) as total_games,
+          SUM(CASE WHEN (tm.team_id = m.team1_id AND m.team1_score > m.team2_score) OR (tm.team_id = m.team2_id AND m.team2_score > m.team1_score) THEN 1 ELSE 0 END) as wins,
+          SUM(CASE WHEN m.team1_score = m.team2_score THEN 1 ELSE 0 END) as draws,
+          SUM(CASE WHEN (tm.team_id = m.team1_id AND m.team1_score < m.team2_score) OR (tm.team_id = m.team2_id AND m.team2_score < m.team1_score) THEN 1 ELSE 0 END) as losses
+        FROM team_members tm
+        JOIN matches m ON (tm.team_id = m.team1_id OR tm.team_id = m.team2_id)
+        JOIN sessions s ON m.session_id = s.id
+        WHERE tm.player_id = ? AND m.status = 'completed' AND s.session_date BETWEEN ? AND ?
+      `).bind(player.id, yearStart, yearEnd).first()
+
+      const totalGames = (matchResults?.total_games as number) || 0
+      const wins = (matchResults?.wins as number) || 0
+      const draws = (matchResults?.draws as number) || 0
+      const losses = (matchResults?.losses as number) || 0
+      const points = wins * 3 + draws
+
+      const sessionWinsResult = await db.prepare(`
+        WITH team_standings AS (
+          SELECT t.session_id, t.id as team_id,
+            SUM(CASE WHEN (t.id = m.team1_id AND m.team1_score > m.team2_score) OR (t.id = m.team2_id AND m.team2_score > m.team1_score) THEN 3 WHEN m.team1_score = m.team2_score THEN 1 ELSE 0 END) as points,
+            SUM(CASE WHEN t.id = m.team1_id THEN m.team1_score ELSE m.team2_score END) as goals_for
+          FROM teams t JOIN matches m ON t.id = m.team1_id OR t.id = m.team2_id JOIN sessions s ON t.session_id = s.id
+          WHERE s.session_date BETWEEN ? AND ? AND m.status = 'completed' GROUP BY t.session_id, t.id
+        ),
+        winning_teams AS (SELECT ts.session_id, ts.team_id FROM team_standings ts WHERE (ts.session_id, ts.points, ts.goals_for) IN (SELECT session_id, MAX(points), MAX(goals_for) FROM team_standings GROUP BY session_id))
+        SELECT COUNT(*) as session_wins FROM winning_teams wt JOIN team_members tm ON wt.team_id = tm.team_id WHERE tm.player_id = ?
+      `).bind(yearStart, yearEnd, player.id).first()
+      const sessionWins = (sessionWinsResult?.session_wins as number) || 0
+
+      const mvpScore = player.goals * 2 + player.assists * 1 + player.defenses * 0.5 + sessionWins * 1.5
+      const ppm = totalGames > 0 ? (points / totalGames).toFixed(2) : '0.00'
+      const winRate = player.attendance > 0 ? ((sessionWins / player.attendance) * 100).toFixed(1) : '0.0'
+
+      const placementResults = await db.prepare(`
+        WITH team_standings AS (
+          SELECT t.session_id, t.id as team_id,
+            SUM(CASE WHEN (t.id = m.team1_id AND m.team1_score > m.team2_score) OR (t.id = m.team2_id AND m.team2_score > m.team1_score) THEN 3 WHEN m.team1_score = m.team2_score THEN 1 ELSE 0 END) as points,
+            SUM(CASE WHEN t.id = m.team1_id THEN m.team1_score ELSE m.team2_score END) as goals_for
+          FROM teams t JOIN matches m ON t.id = m.team1_id OR t.id = m.team2_id JOIN sessions s ON t.session_id = s.id
+          WHERE s.session_date BETWEEN ? AND ? AND m.status = 'completed' GROUP BY t.session_id, t.id
+        ),
+        ranked_teams AS (SELECT session_id, team_id, RANK() OVER (PARTITION BY session_id ORDER BY points DESC, goals_for DESC) as team_rank FROM team_standings)
+        SELECT SUM(CASE WHEN rt.team_rank = 1 THEN 1 ELSE 0 END) as rank1, SUM(CASE WHEN rt.team_rank = 2 THEN 1 ELSE 0 END) as rank2, SUM(CASE WHEN rt.team_rank = 3 THEN 1 ELSE 0 END) as rank3
+        FROM ranked_teams rt JOIN team_members tm ON rt.team_id = tm.team_id WHERE tm.player_id = ?
+      `).bind(yearStart, yearEnd, player.id).first()
+
+      const mvpCountResult = await db.prepare(`
+        SELECT COUNT(*) as mvp_count FROM session_mvp_results smr JOIN sessions s ON smr.session_id = s.id
+        WHERE smr.player_id = ? AND s.session_date BETWEEN ? AND ?
+      `).bind(player.id, yearStart, yearEnd).first()
+      const mvpCount = (mvpCountResult?.mvp_count as number) || 0
+
+      return {
+        id: player.id, name: player.name,
+        games: totalGames, goals: player.goals, assists: player.assists, defenses: player.defenses,
+        wins, draws, losses, points,
+        ppm: parseFloat(ppm), winRate: parseFloat(winRate),
+        attendance: player.attendance, sessionWins,
+        rank1: placementResults?.rank1 || 0, rank2: placementResults?.rank2 || 0, rank3: placementResults?.rank3 || 0,
+        mvpScore, mvpCount,
+      }
+    })
+  )
+
+  enrichedRankings.sort((a, b) => b.mvpScore - a.mvpScore)
+
+  const now = new Date().toISOString()
+  const cacheId = clubId * 10000 + year
+  await db.prepare(`INSERT OR REPLACE INTO rankings_cache (id, club_id, data, updated_at, updated_by, year) VALUES (?, ?, ?, ?, ?, ?)`)
+    .bind(cacheId, clubId, JSON.stringify(enrichedRankings), now, updatedBy, year).run()
+
+  return enrichedRankings
 }
 
 export { rankingsRoutes }
