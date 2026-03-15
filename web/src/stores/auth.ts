@@ -19,8 +19,10 @@ interface Club {
   slug: string
   name: string
   enabledEvents: string[]
-  myRole: 'admin' | 'member'
+  myRole: 'owner' | 'admin' | 'member'
   seasonStartMonth?: number
+  isPro?: boolean
+  planType?: string
 }
 
 interface AuthState {

@@ -179,6 +179,21 @@ export const rankingsApi = {
     api(`/rankings/my-stats?playerId=${playerId}${year ? `&year=${year}` : ''}`, token ? { token } : {}),
 }
 
+// Subscriptions API
+export const subscriptionsApi = {
+  me: (token: string) =>
+    api('/subscriptions/me', { token }),
+
+  checkout: (token: string) =>
+    api('/subscriptions/checkout', { method: 'POST', token }),
+
+  billingAuth: (authKey: string, customerKey: string, billingCycle: 'monthly' | 'yearly', token: string) =>
+    api('/subscriptions/billing-auth', { method: 'POST', body: { authKey, customerKey, billingCycle }, token }),
+
+  cancel: (token: string) =>
+    api('/subscriptions/cancel', { method: 'POST', token }),
+}
+
 // Notifications API (알림)
 export const notificationsApi = {
   // 내 알림 목록
