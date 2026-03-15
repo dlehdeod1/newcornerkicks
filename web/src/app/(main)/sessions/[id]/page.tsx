@@ -21,13 +21,12 @@ type Tab = 'overview' | 'teams' | 'scoreboard' | 'stats'
 export default function SessionDetailPage() {
   const params = useParams()
   const sessionId = Number(params.id)
-  const { isAdmin } = useAuthStore()
+  const { isAdmin, token } = useAuthStore()
   const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['session', sessionId],
-    queryFn: () => sessionsApi.get(sessionId),
+    queryFn: () => sessionsApi.get(sessionId, token ?? undefined),
   })
 
   if (isLoading) {

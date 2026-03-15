@@ -72,8 +72,8 @@ export const sessionsApi = {
     return api(`/sessions${params.toString() ? `?${params}` : ''}`, token ? { token } : {})
   },
 
-  get: (id: number) =>
-    api(`/sessions/${id}`),
+  get: (id: number, token?: string) =>
+    api(`/sessions/${id}`, token ? { token } : {}),
 
   create: (data: { sessionDate: string; title?: string }, token: string) =>
     api('/sessions', { method: 'POST', body: data, token }),
