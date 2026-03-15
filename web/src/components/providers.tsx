@@ -9,7 +9,7 @@ import { authApi } from '@/lib/api'
 
 // 앱 시작 시 /auth/me를 호출해서 player 데이터를 최신으로 동기화
 function AuthSync() {
-  const { token, isLoggedIn, setPlayer, logout } = useAuthStore()
+  const { token, isLoggedIn, setPlayer, setClub, logout } = useAuthStore()
 
   useEffect(() => {
     if (!isLoggedIn || !token) return
@@ -23,12 +23,23 @@ function AuthSync() {
             nickname: data.player.nickname,
           })
         }
+        if (data.club) {
+          setClub({
+            id: data.club.id,
+            slug: data.club.slug,
+            name: data.club.name,
+            enabledEvents: data.club.enabledEvents ?? [],
+            myRole: data.club.myRole,
+            isPro: data.club.isPro,
+            planType: data.club.planType,
+            seasonStartMonth: data.club.seasonStartMonth ?? 1,
+          })
+        }
       })
       .catch(() => {
-        // 토큰 만료 등 인증 오류 시 자동 로그아웃
         logout()
       })
-  }, [isLoggedIn, token]) // 로그인 상태 변경 시 재실행
+  }, [isLoggedIn, token])
 
   return null
 }
