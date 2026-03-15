@@ -52,9 +52,9 @@ export function TeamParserModal({ sessionId, isOpen, onClose, onSave }: Props) {
 
   // 전체 선수 목록 조회
   const { data: playersData } = useQuery({
-    queryKey: ['players'],
-    queryFn: () => playersApi.list(),
-    enabled: isOpen,
+    queryKey: ['players', token],
+    queryFn: () => playersApi.list(token ?? undefined),
+    enabled: isOpen && !!token,
   })
 
   const players = playersData?.players || []
