@@ -259,6 +259,7 @@ matchesRoutes.post('/:id/events', optionalAuthMiddleware, async (c) => {
       guestName: z.string().nullable().optional(),
       teamId: z.number(),
       assisterId: z.number().nullable().optional(),
+      assisterGuestName: z.string().nullable().optional(),
       eventTime: z.number().optional(),
     })
 
@@ -266,8 +267,8 @@ matchesRoutes.post('/:id/events', optionalAuthMiddleware, async (c) => {
 
     // 이벤트 생성
     const result = await c.env.DB.prepare(`
-      INSERT INTO match_events (match_id, player_id, guest_name, team_id, event_type, assister_id, event_time, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, unixepoch())
+      INSERT INTO match_events (match_id, player_id, guest_name, team_id, event_type, assister_id, assister_guest_name, event_time, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, unixepoch())
     `).bind(
       matchId,
       data.playerId,
@@ -275,6 +276,7 @@ matchesRoutes.post('/:id/events', optionalAuthMiddleware, async (c) => {
       data.teamId,
       data.eventType,
       data.assisterId || null,
+      data.assisterGuestName || null,
       data.eventTime || null
     ).run()
 

@@ -107,6 +107,7 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
       guestName: assistMode.scorerGuestName,
       teamId: assistMode.teamId,
       assisterId: assister?.player_id || null,
+      assisterGuestName: assister?.guest_name || null,
       eventTime: timer,
     })
     setAssistMode(null)
@@ -413,8 +414,8 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
                               <Trash2 className="w-2.5 h-2.5" />
                             </button>
                           )}
-                          {event.assister_name && (
-                            <span className="text-[10px] text-slate-400">({shortName(event.assister_name)})</span>
+                          {(event.assister_name || event.assister_guest_name) && (
+                            <span className="text-[10px] text-slate-400">({shortName(event.assister_name || event.assister_guest_name)})</span>
                           )}
                           <span className="text-xs font-medium text-slate-900 dark:text-white">
                             {shortName(event.player_name || event.guest_name)}
@@ -447,8 +448,8 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
                           <span className="text-xs font-medium text-slate-900 dark:text-white">
                             {shortName(event.player_name || event.guest_name)}
                           </span>
-                          {event.assister_name && (
-                            <span className="text-[10px] text-slate-400">({shortName(event.assister_name)})</span>
+                          {(event.assister_name || event.assister_guest_name) && (
+                            <span className="text-[10px] text-slate-400">({shortName(event.assister_name || event.assister_guest_name)})</span>
                           )}
                           {isEditable && (
                             <button
