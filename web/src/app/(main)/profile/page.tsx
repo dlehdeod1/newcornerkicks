@@ -11,7 +11,6 @@ import {
   Trophy,
   Target,
   Handshake,
-  Calendar,
   Edit3,
   Save,
   X,
@@ -19,16 +18,18 @@ import {
   Star,
   Gamepad2,
   TrendingUp,
+  Crown,
+  Zap,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
-import { authApi, rankingsApi } from '@/lib/api'
+import { authApi, rankingsApi, subscriptionsApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/cn'
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { isLoggedIn, user, player, token, logout, setPlayer } = useAuthStore()
+  const { isLoggedIn, user, player, club, token, logout, setPlayer } = useAuthStore()
   const [isEditing, setIsEditing] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -49,6 +50,14 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('')
 
   const currentYear = new Date().getFullYear()
+  const isPro = club?.isPro
+  const [subInfo, setSubInfo] = useState<any>(null)
+
+  useEffect(() => {
+    if (token) {
+      subscriptionsApi.me(token).then((d: any) => setSubInfo(d)).catch(() => {})
+    }
+  }, [token])
 
   // 랭킹 데이터
   const { data: rankingsData } = useQuery({
@@ -342,23 +351,54 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* 능력치 요약 */}
-          {player && (
+          {/* 구독 현황 */}
+          {club && (
             <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  능력치
-                </h3>
-                <Link
-                  href={`/abilities/${player.id}`}
-                  className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 font-medium"
-                >
-                  상세 보기 →
-                </Link>
-              </div>
-              <p className="text-slate-500 text-sm">
-                능력치 페이지에서 상세 정보를 확인하세요.
-              </p>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <Crown className="w-5 h-5 text-emerald-500" />
+                플랜
+              </h3>
+              {isPro ? (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 rounded-full text-sm font-medium border border-emerald-300 dark:border-emerald-500/30">
+                        <Zap className="w-3.5 h-3.5" />
+                        {club.planType === 'developer' ? 'Developer' : 'PRO'}
+                      </span>
+                    </div>
+                    {subInfo?.subscription && club.planType !== 'developer' && (
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                        {subInfo.subscription.billingCycle === 'yearly' ? '연간' : '월간'} ·{' '}
+                        {subInfo.subscription.status === 'cancelled' ? '취소됨 · ' : ''}
+                        만료: {new Date(subInfo.subscription.expiresAt * 1000).toLocaleDateString('ko-KR')}
+                      </p>
+                    )}
+                  </div>
+                  {club.planType !== 'developer' && (
+                    <Link href="/upgrade" className="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+                      관리 →
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="inline-flex px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full text-sm font-medium">
+                      FREE
+                    </span>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                      AI 팀 편성, 다중 관리자 등 프리미엄 기능을 사용해보세요
+                    </p>
+                  </div>
+                  <Link
+                    href="/upgrade"
+                    className="ml-4 flex-shrink-0 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity"
+                  >
+                    업그레이드
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </div>

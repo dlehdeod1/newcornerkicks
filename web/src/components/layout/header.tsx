@@ -23,7 +23,8 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { theme, setTheme } = useTheme()
-  const { isLoggedIn, user, isAdmin, logout } = useAuthStore()
+  const { isLoggedIn, user, club, isAdmin, logout } = useAuthStore()
+  const isPro = club?.isPro
 
   useEffect(() => {
     setMounted(true)
@@ -76,6 +77,15 @@ export function Header() {
 
             {isLoggedIn ? (
               <div className="flex items-center gap-2">
+                {isLoggedIn && !isPro && club && (
+                  <Link
+                    href="/upgrade"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg border border-emerald-300 dark:border-emerald-500/30 hover:from-emerald-500/30 hover:to-teal-500/30 transition-all"
+                  >
+                    <Crown className="w-3 h-3" />
+                    PRO
+                  </Link>
+                )}
                 {isAdmin && (
                   <Link
                     href="/admin"
@@ -155,6 +165,18 @@ export function Header() {
             <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800/50">
               {isLoggedIn ? (
                 <div className="space-y-1">
+                  {!isPro && club && (
+                    <Link
+                      href="/upgrade"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl"
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center">
+                        <Crown className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="font-medium">PRO로 업그레이드</div>
+                    </Link>
+                  )}
                   {isAdmin && (
                     <Link
                       href="/admin"
