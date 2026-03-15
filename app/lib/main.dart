@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
+import 'screens/club_onboarding_screen.dart';
+import 'screens/club_selector_screen.dart';
 
 void main() {
   runApp(
@@ -30,7 +32,6 @@ class CornerKicksApp extends StatelessWidget {
           surface: const Color(0xFF1e293b),
         ),
         useMaterial3: true,
-        fontFamily: 'Pretendard',
       ),
       home: Consumer<AuthService>(
         builder: (context, auth, _) {
@@ -50,7 +51,18 @@ class CornerKicksApp extends StatelessWidget {
             );
           }
 
-          return auth.isLoggedIn ? const MainShell() : const LoginScreen();
+          if (!auth.isLoggedIn) return const LoginScreen();
+
+          // 클럽이 없으면 온보딩 (신규 가입자)
+          if (auth.clubs.isEmpty) return const ClubOnboardingScreen();
+
+          // 클럽이 여러 개인데 아직 활성 클럽을 고르지 않은 경우
+          // (hasClub이 false = _club이 null, 하지만 clubs는 있음)
+          if (!auth.hasClub && auth.clubs.isNotEmpty) {
+            return const ClubSelectorScreen();
+          }
+
+          return const MainShell();
         },
       ),
     );

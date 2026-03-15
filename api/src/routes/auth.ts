@@ -21,6 +21,37 @@ const registerSchema = z.object({
   inviteCode: z.string().optional(), // 클럽 초대 코드
 })
 
+// 유저의 전체 클럽 목록 + 클럽별 선수 정보 반환
+async function getUserClubs(db: any, userId: string) {
+  const memberships = await db.prepare(`
+    SELECT c.id as club_id, c.slug, c.name as club_name, c.enabled_events,
+           c.invite_code, c.plan_type, c.season_start_month, cm.role as club_role
+    FROM club_members cm
+    INNER JOIN clubs c ON c.id = cm.club_id
+    WHERE cm.user_id = ?
+    ORDER BY cm.joined_at ASC
+  `).bind(userId).all()
+
+  const clubs = await Promise.all((memberships.results as any[]).map(async (m: any) => {
+    const player = await db.prepare(
+      'SELECT id, name, nickname FROM players WHERE user_id = ? AND club_id = ? LIMIT 1'
+    ).bind(userId, m.club_id).first()
+    return {
+      id: m.club_id,
+      slug: m.slug,
+      name: m.club_name,
+      enabledEvents: JSON.parse(m.enabled_events ?? '["GOAL","SAVE"]'),
+      inviteCode: m.invite_code,
+      myRole: m.club_role,
+      planType: m.plan_type ?? 'free',
+      isPro: isClubPro(m.plan_type),
+      seasonStartMonth: m.season_start_month ?? 1,
+      player: player ? { id: player.id, name: player.name, nickname: player.nickname } : null,
+    }
+  }))
+  return clubs
+}
+
 // 로그인
 authRoutes.post('/login', async (c) => {
   try {
@@ -44,57 +75,29 @@ authRoutes.post('/login', async (c) => {
       return c.json({ error: '아이디(이메일) 또는 비밀번호가 올바르지 않습니다.' }, 401)
     }
 
-    // 클럽 멤버십 조회
-    const membership = await c.env.DB.prepare(`
-      SELECT c.id as club_id, c.slug, c.name as club_name,
-             c.enabled_events, c.plan_type, cm.role as club_role
-      FROM club_members cm
-      INNER JOIN clubs c ON c.id = cm.club_id
-      WHERE cm.user_id = ?
-      LIMIT 1
-    `).bind(user.id).first<{
-      club_id: number; slug: string; club_name: string;
-      enabled_events: string; plan_type: string; club_role: string
-    }>()
-
     // JWT 생성
     const secret = new TextEncoder().encode(c.env.JWT_SECRET || 'fallback-secret-key')
     const token = await new jose.SignJWT({
       userId: user.id,
       email: user.email,
       role: user.role,
-      clubId: membership?.club_id ?? null,
-      clubRole: membership?.club_role?.toLowerCase() ?? null,
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('30d')
       .sign(secret)
 
-    // 연동된 선수 정보 조회
-    let player: any = null
-    try {
-      player = await c.env.DB.prepare(
-        'SELECT id, name, nickname FROM players WHERE user_id = ?'
-      ).bind(user.id).first()
-    } catch {
-      // no linked player
-    }
+    // 전체 클럽 목록 조회
+    const clubs = await getUserClubs(c.env.DB, user.id)
 
     console.log('Login successful:', identifier)
 
     return c.json({
       token,
       user: { id: user.id, email: user.email, username: user.username, role: user.role },
-      player: player ? { id: player.id, name: player.name, nickname: player.nickname } : null,
-      club: membership ? {
-        id: membership.club_id,
-        slug: membership.slug,
-        name: membership.club_name,
-        enabledEvents: JSON.parse(membership.enabled_events ?? '["GOAL","SAVE"]'),
-        myRole: membership.club_role,
-        planType: membership.plan_type ?? 'free',
-        isPro: isClubPro(membership.plan_type),
-      } : null,
+      clubs,
+      // 하위 호환성 유지
+      player: clubs[0]?.player ?? null,
+      club: clubs[0] ?? null,
     })
   } catch (error) {
     console.error('Login error:', error)
@@ -209,34 +212,16 @@ authRoutes.get('/me', async (c) => {
       'SELECT * FROM profiles WHERE user_id = ?'
     ).bind((user as any).id).first()
 
-    const player = await c.env.DB.prepare(
-      'SELECT * FROM players WHERE user_id = ?'
-    ).bind((user as any).id).first()
-
-    const membership = await c.env.DB.prepare(`
-      SELECT c.id as club_id, c.slug, c.name as club_name,
-             c.enabled_events, c.invite_code, c.plan_type, c.season_start_month, cm.role as club_role
-      FROM club_members cm
-      INNER JOIN clubs c ON c.id = cm.club_id
-      WHERE cm.user_id = ?
-      LIMIT 1
-    `).bind((user as any).id).first<any>()
+    // 전체 클럽 목록 조회
+    const clubs = await getUserClubs(c.env.DB, (user as any).id)
 
     return c.json({
       user,
       profile,
-      player,
-      club: membership ? {
-        id: membership.club_id,
-        slug: membership.slug,
-        name: membership.club_name,
-        enabledEvents: JSON.parse(membership.enabled_events ?? '["GOAL","SAVE"]'),
-        inviteCode: membership.invite_code,
-        myRole: membership.club_role,
-        planType: membership.plan_type ?? 'free',
-        isPro: isClubPro(membership.plan_type),
-        seasonStartMonth: membership.season_start_month ?? 1,
-      } : null,
+      clubs,
+      // 하위 호환성 유지
+      player: clubs[0]?.player ?? null,
+      club: clubs[0] ?? null,
     })
   } catch {
     return c.json({ error: '유효하지 않은 토큰입니다.' }, 401)
@@ -445,26 +430,13 @@ authRoutes.post('/google', async (c) => {
       user = await db.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first<any>()
     }
 
-    // 클럽 멤버십 조회
-    const membership = await db.prepare(`
-      SELECT c.*, cm.role as my_role
-      FROM clubs c
-      INNER JOIN club_members cm ON c.id = cm.club_id
-      WHERE cm.user_id = ?
-    `).bind(user.id).first<any>()
-
-    // 연동된 선수 조회
-    const player = membership
-      ? await db.prepare('SELECT * FROM players WHERE user_id = ? AND club_id = ? LIMIT 1')
-          .bind(user.id, membership.id).first<any>()
-      : null
+    // 전체 클럽 목록 조회
+    const clubs = await getUserClubs(db, user.id)
 
     // JWT 생성
     const jwtPayload = {
       userId: user.id,
       role: user.role,
-      clubId: membership?.id ?? null,
-      clubRole: membership?.my_role?.toLowerCase() ?? null,
     }
     const secret = new TextEncoder().encode(c.env.JWT_SECRET || 'fallback-secret-key')
     const token = await new jose.SignJWT(jwtPayload)
@@ -475,17 +447,10 @@ authRoutes.post('/google', async (c) => {
     return c.json({
       token,
       user: { id: user.id, email: user.email, username: user.username, role: user.role },
-      player: player ?? null,
-      club: membership ? {
-        id: membership.id,
-        slug: membership.slug,
-        name: membership.name,
-        enabledEvents: JSON.parse(membership.enabled_events ?? '["GOAL","SAVE"]'),
-        myRole: membership.my_role,
-        planType: membership.plan_type ?? 'free',
-        isPro: isClubPro(membership.plan_type),
-        seasonStartMonth: membership.season_start_month ?? 1,
-      } : null,
+      clubs,
+      // 하위 호환성 유지
+      player: clubs[0]?.player ?? null,
+      club: clubs[0] ?? null,
     })
   } catch (e: any) {
     console.error('Google login error:', e)

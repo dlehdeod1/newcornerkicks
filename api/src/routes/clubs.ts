@@ -57,14 +57,6 @@ clubsRoutes.post('/', authMiddleware(), async (c) => {
       return c.json({ error: '이미 사용 중인 클럽 ID입니다.' }, 400)
     }
 
-    // 이미 클럽에 속해있는지 확인
-    const myMembership = await c.env.DB.prepare(
-      'SELECT id FROM club_members WHERE user_id = ?'
-    ).bind(userId).first()
-    if (myMembership) {
-      return c.json({ error: '이미 클럽에 속해 있습니다. 탈퇴 후 새 클럽을 만들 수 있습니다.' }, 400)
-    }
-
     // 6자리 초대 코드 생성 (대문자+숫자)
     const inviteCode = generateInviteCode()
     const now = Math.floor(Date.now() / 1000)
@@ -137,13 +129,22 @@ clubsRoutes.post('/join', authMiddleware(), async (c) => {
 // 내 클럽 정보 조회
 clubsRoutes.get('/me', authMiddleware(), async (c) => {
   const userId = (c as any).userId
+  const activeClubId = (c as any).clubId
 
-  const membership = await c.env.DB.prepare(`
-    SELECT c.*, cm.role as my_role
-    FROM clubs c
-    INNER JOIN club_members cm ON c.id = cm.club_id
-    WHERE cm.user_id = ?
-  `).bind(userId).first<any>()
+  let membership: any
+  if (activeClubId) {
+    membership = await c.env.DB.prepare(`
+      SELECT c.*, cm.role as my_role
+      FROM clubs c INNER JOIN club_members cm ON c.id = cm.club_id
+      WHERE cm.user_id = ? AND c.id = ?
+    `).bind(userId, activeClubId).first<any>()
+  } else {
+    membership = await c.env.DB.prepare(`
+      SELECT c.*, cm.role as my_role
+      FROM clubs c INNER JOIN club_members cm ON c.id = cm.club_id
+      WHERE cm.user_id = ?
+    `).bind(userId).first<any>()
+  }
 
   if (!membership) {
     return c.json({ club: null, message: '소속 클럽이 없습니다.' })
@@ -178,12 +179,22 @@ clubsRoutes.get('/me', authMiddleware(), async (c) => {
 // 클럽 설정 변경 (admin만)
 clubsRoutes.put('/me', authMiddleware(), async (c) => {
   const userId = (c as any).userId
+  const activeClubId = (c as any).clubId
 
-  const membership = await c.env.DB.prepare(`
-    SELECT c.id, cm.role FROM clubs c
-    INNER JOIN club_members cm ON c.id = cm.club_id
-    WHERE cm.user_id = ?
-  `).bind(userId).first<{ id: number; role: string }>()
+  let membership: { id: number; role: string } | null = null
+  if (activeClubId) {
+    membership = await c.env.DB.prepare(`
+      SELECT c.id, cm.role FROM clubs c
+      INNER JOIN club_members cm ON c.id = cm.club_id
+      WHERE cm.user_id = ? AND c.id = ?
+    `).bind(userId, activeClubId).first<{ id: number; role: string }>()
+  } else {
+    membership = await c.env.DB.prepare(`
+      SELECT c.id, cm.role FROM clubs c
+      INNER JOIN club_members cm ON c.id = cm.club_id
+      WHERE cm.user_id = ?
+    `).bind(userId).first<{ id: number; role: string }>()
+  }
 
   if (!membership) return c.json({ error: '소속 클럽이 없습니다.' }, 404)
   const role = membership.role.toLowerCase()

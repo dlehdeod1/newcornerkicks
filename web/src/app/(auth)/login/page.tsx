@@ -31,6 +31,16 @@ export default function LoginPage() {
 
   const [notice, setNotice] = useState('')
 
+  const navigateAfterLogin = (clubs: any[]) => {
+    if (clubs.length === 0) {
+      router.push('/club')
+    } else if (clubs.length === 1) {
+      router.push('/')
+    } else {
+      router.push('/clubs')
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -38,8 +48,9 @@ export default function LoginPage() {
 
     try {
       const data = await authApi.login(identifier, password)
-      login(data.token, data.user, data.player, data.club ?? null)
-      router.push('/')
+      const clubs = data.clubs ?? (data.club ? [data.club] : [])
+      login(data.token, data.user, clubs)
+      navigateAfterLogin(clubs)
     } catch (err: any) {
       setError(err.message || '로그인에 실패했습니다.')
     } finally {
@@ -56,8 +67,9 @@ export default function LoginPage() {
     setError('')
     try {
       const data = await authApi.googleLogin(idToken)
-      login(data.token, data.user, data.player, data.club ?? null)
-      router.push('/')
+      const clubs = data.clubs ?? (data.club ? [data.club] : [])
+      login(data.token, data.user, clubs)
+      navigateAfterLogin(clubs)
     } catch (err: any) {
       setError(err.message || 'Google 로그인에 실패했습니다.')
     }

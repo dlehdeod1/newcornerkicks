@@ -16,10 +16,20 @@ export function authMiddleware(requiredRole?: string) {
       const secret = new TextEncoder().encode(c.env.JWT_SECRET)
       const { payload } = await jose.jwtVerify(token, secret)
 
-      // DB에서 최신 클럽 멤버십 실시간 조회 (stale JWT 문제 방지)
-      const membership = await c.env.DB.prepare(
-        'SELECT club_id, role FROM club_members WHERE user_id = ? LIMIT 1'
-      ).bind(payload.userId).first<{ club_id: number; role: string }>()
+      // X-Club-Id 헤더로 활성 클럽 선택, 없으면 첫 번째 클럽
+      const requestedClubId = c.req.header('X-Club-Id')
+      let membership: { club_id: number; role: string } | null = null
+
+      if (requestedClubId && !isNaN(Number(requestedClubId))) {
+        membership = await c.env.DB.prepare(
+          'SELECT club_id, role FROM club_members WHERE user_id = ? AND club_id = ?'
+        ).bind(payload.userId, Number(requestedClubId)).first<{ club_id: number; role: string }>()
+      }
+      if (!membership) {
+        membership = await c.env.DB.prepare(
+          'SELECT club_id, role FROM club_members WHERE user_id = ? LIMIT 1'
+        ).bind(payload.userId).first<{ club_id: number; role: string }>()
+      }
 
       const clubId = membership?.club_id ?? null
       const clubRole = membership?.role?.toLowerCase() ?? null
@@ -58,10 +68,20 @@ export async function optionalAuthMiddleware(c: Context<{ Bindings: Env }>, next
       const secret = new TextEncoder().encode(c.env.JWT_SECRET)
       const { payload } = await jose.jwtVerify(token, secret)
 
-      // DB에서 최신 클럽 멤버십 실시간 조회 (stale JWT 문제 방지)
-      const membership = await c.env.DB.prepare(
-        'SELECT club_id, role FROM club_members WHERE user_id = ? LIMIT 1'
-      ).bind(payload.userId).first<{ club_id: number; role: string }>()
+      // X-Club-Id 헤더로 활성 클럽 선택, 없으면 첫 번째 클럽
+      const requestedClubId = c.req.header('X-Club-Id')
+      let membership: { club_id: number; role: string } | null = null
+
+      if (requestedClubId && !isNaN(Number(requestedClubId))) {
+        membership = await c.env.DB.prepare(
+          'SELECT club_id, role FROM club_members WHERE user_id = ? AND club_id = ?'
+        ).bind(payload.userId, Number(requestedClubId)).first<{ club_id: number; role: string }>()
+      }
+      if (!membership) {
+        membership = await c.env.DB.prepare(
+          'SELECT club_id, role FROM club_members WHERE user_id = ? LIMIT 1'
+        ).bind(payload.userId).first<{ club_id: number; role: string }>()
+      }
 
       ;(c as any).userId = payload.userId
       ;(c as any).userRole = payload.role

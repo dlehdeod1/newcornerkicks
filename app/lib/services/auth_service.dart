@@ -10,12 +10,15 @@ class AuthService extends ChangeNotifier {
   Map<String, dynamic>? _user;
   Map<String, dynamic>? _player;
   Map<String, dynamic>? _club;
+  List<Map<String, dynamic>> _clubs = [];
   bool _isLoading = true;
 
   String? get token => _token;
   Map<String, dynamic>? get user => _user;
   Map<String, dynamic>? get player => _player;
   Map<String, dynamic>? get club => _club;
+  Map<String, dynamic>? get activeClub => _club;
+  List<Map<String, dynamic>> get clubs => _clubs;
   bool get isLoggedIn => _token != null;
   bool get isLoading => _isLoading;
   bool get isAdmin => _user?['role'] == 'ADMIN' || _club?['myRole'] == 'admin' || _club?['myRole'] == 'owner';
@@ -30,16 +33,64 @@ class AuthService extends ChangeNotifier {
     return ['GOAL', 'SAVE'];
   }
 
+  /// clubs 응답에서 첫 번째 클럽(또는 저장된 activeClubId에 해당하는 클럽)을 활성 클럽으로 설정
+  void _initClubsFromData(List<dynamic> rawClubs, {int? preferredClubId}) {
+    _clubs = rawClubs.map((c) => Map<String, dynamic>.from(c as Map)).toList();
+
+    if (_clubs.isEmpty) {
+      _club = null;
+      _player = null;
+      ApiService().activeClubId = null;
+      return;
+    }
+
+    // preferredClubId로 찾기, 없으면 첫 번째 클럽
+    Map<String, dynamic>? chosen;
+    if (preferredClubId != null) {
+      try {
+        chosen = _clubs.firstWhere((c) => c['id'] == preferredClubId);
+      } catch (_) {}
+    }
+    chosen ??= _clubs.first;
+
+    _setActiveClubInternal(chosen);
+  }
+
+  void _setActiveClubInternal(Map<String, dynamic> clubData) {
+    _club = clubData;
+    final playerData = clubData['player'];
+    _player = playerData != null ? Map<String, dynamic>.from(playerData as Map) : null;
+    ApiService().activeClubId = clubData['id'] as int?;
+  }
+
+  void setActiveClub(Map<String, dynamic> clubData) {
+    _setActiveClubInternal(clubData);
+    // activeClubId를 SharedPreferences에 저장
+    SharedPreferences.getInstance().then((prefs) {
+      final id = clubData['id'];
+      if (id != null) prefs.setInt('activeClubId', id as int);
+    });
+    notifyListeners();
+  }
+
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('token');
+    final savedClubId = prefs.getInt('activeClubId');
 
     if (_token != null) {
       try {
         final data = await _api.me(_token!);
-        _user = data['user'];
-        _player = data['player'];
-        _club = data['club'];
+        _user = data['user'] != null ? Map<String, dynamic>.from(data['user'] as Map) : null;
+
+        final rawClubs = data['clubs'] as List<dynamic>?;
+        if (rawClubs != null && rawClubs.isNotEmpty) {
+          _initClubsFromData(rawClubs, preferredClubId: savedClubId);
+        } else if (data['club'] != null) {
+          // 하위 호환성
+          _clubs = [Map<String, dynamic>.from(data['club'] as Map)];
+          _setActiveClubInternal(_clubs.first);
+        }
       } catch (e) {
         _token = null;
         await prefs.remove('token');
@@ -54,12 +105,22 @@ class AuthService extends ChangeNotifier {
     try {
       final data = await _api.login(identifier, password);
       _token = data['token'];
-      _user = data['user'];
-      _player = data['player'];
-      _club = data['club'];
+      _user = data['user'] != null ? Map<String, dynamic>.from(data['user'] as Map) : null;
+
+      final rawClubs = data['clubs'] as List<dynamic>?;
+      if (rawClubs != null && rawClubs.isNotEmpty) {
+        _initClubsFromData(rawClubs);
+      } else if (data['club'] != null) {
+        _clubs = [Map<String, dynamic>.from(data['club'] as Map)];
+        _setActiveClubInternal(_clubs.first);
+      }
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', _token!);
+      if (_club != null) {
+        final id = _club!['id'];
+        if (id != null) await prefs.setInt('activeClubId', id as int);
+      }
 
       notifyListeners();
       return true;
@@ -72,8 +133,15 @@ class AuthService extends ChangeNotifier {
     if (_token == null) return;
     try {
       final data = await _api.me(_token!);
-      _club = data['club'];
-      _player = data['player'];
+      final rawClubs = data['clubs'] as List<dynamic>?;
+      final currentClubId = _club?['id'] as int?;
+
+      if (rawClubs != null && rawClubs.isNotEmpty) {
+        _initClubsFromData(rawClubs, preferredClubId: currentClubId);
+      } else if (data['club'] != null) {
+        _clubs = [Map<String, dynamic>.from(data['club'] as Map)];
+        _setActiveClubInternal(_clubs.first);
+      }
       notifyListeners();
     } catch (_) {}
   }
@@ -100,12 +168,22 @@ class AuthService extends ChangeNotifier {
 
       final data = await _api.loginWithGoogle(idToken);
       _token = data['token'];
-      _user = data['user'];
-      _player = data['player'];
-      _club = data['club'];
+      _user = data['user'] != null ? Map<String, dynamic>.from(data['user'] as Map) : null;
+
+      final rawClubs = data['clubs'] as List<dynamic>?;
+      if (rawClubs != null && rawClubs.isNotEmpty) {
+        _initClubsFromData(rawClubs);
+      } else if (data['club'] != null) {
+        _clubs = [Map<String, dynamic>.from(data['club'] as Map)];
+        _setActiveClubInternal(_clubs.first);
+      }
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', _token!);
+      if (_club != null) {
+        final id = _club!['id'];
+        if (id != null) await prefs.setInt('activeClubId', id as int);
+      }
 
       notifyListeners();
       return true;
@@ -120,9 +198,12 @@ class AuthService extends ChangeNotifier {
     _user = null;
     _player = null;
     _club = null;
+    _clubs = [];
+    ApiService().activeClubId = null;
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
+    await prefs.remove('activeClubId');
 
     notifyListeners();
   }
