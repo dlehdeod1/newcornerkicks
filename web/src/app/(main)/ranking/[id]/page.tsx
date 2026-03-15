@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthStore } from '@/stores/auth'
+
 export const runtime = 'edge'
 
 import { use, useState } from 'react'
@@ -12,6 +14,7 @@ import { cn } from '@/lib/cn'
 type LogTab = 'goals' | 'assists' | 'defenses' | 'mvp' | 'placements'
 
 export default function PlayerStatsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { token } = useAuthStore()
   const { id } = use(params)
   const currentYear = new Date().getFullYear()
   const [activeLogTab, setActiveLogTab] = useState<LogTab>('goals')
@@ -23,7 +26,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
 
   const { data: rankingsData } = useQuery({
     queryKey: ['rankings', currentYear],
-    queryFn: () => rankingsApi.get(currentYear),
+    queryFn: () => rankingsApi.get(currentYear, token ?? undefined),
   })
 
   const { data: logsData, isLoading: logsLoading } = useQuery({

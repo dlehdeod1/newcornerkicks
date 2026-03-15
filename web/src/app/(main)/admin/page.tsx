@@ -24,7 +24,7 @@ import { cn } from '@/lib/cn'
 
 export default function AdminDashboardPage() {
   const router = useRouter()
-  const { isAdmin, isLoggedIn } = useAuthStore()
+  const { isAdmin, isLoggedIn, token } = useAuthStore()
 
   // 권한 체크
   if (!isLoggedIn || !isAdmin) {
@@ -51,12 +51,12 @@ export default function AdminDashboardPage() {
 
   const { data: sessionsData } = useQuery({
     queryKey: ['sessions'],
-    queryFn: () => sessionsApi.list(),
+    queryFn: () => sessionsApi.list(undefined, token ?? undefined),
   })
 
   const { data: playersData } = useQuery({
     queryKey: ['players'],
-    queryFn: () => playersApi.list(),
+    queryFn: () => playersApi.list(token ?? undefined),
   })
 
   const sessions = sessionsData?.sessions || []

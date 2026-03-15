@@ -53,7 +53,7 @@ export default function ProfilePage() {
   // 랭킹 데이터
   const { data: rankingsData } = useQuery({
     queryKey: ['rankings', currentYear],
-    queryFn: () => rankingsApi.get(currentYear),
+    queryFn: () => rankingsApi.get(currentYear, token ?? undefined),
     enabled: !!player?.id,
   })
 

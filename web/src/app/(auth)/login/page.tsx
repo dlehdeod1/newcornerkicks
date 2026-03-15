@@ -36,7 +36,7 @@ export default function LoginPage() {
 
     try {
       const data = await authApi.login(identifier, password)
-      login(data.token, data.user, data.player)
+      login(data.token, data.user, data.player, data.club ?? null)
       router.push('/')
     } catch (err: any) {
       setError(err.message || '로그인에 실패했습니다.')

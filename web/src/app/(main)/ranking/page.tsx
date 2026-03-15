@@ -12,9 +12,17 @@ import { cn } from '@/lib/cn'
 type SortKey = 'mvpCount' | 'goals' | 'assists' | 'attackPoints' | 'defenses' | 'games' | 'rank1' | 'rank2' | 'rank3' | 'ppm' | 'winRate'
 type SortOrder = 'asc' | 'desc'
 
+function getCurrentSeasonYear(startMonth: number): number {
+  const now = new Date()
+  const m = now.getMonth() + 1
+  const y = now.getFullYear()
+  if (startMonth <= 1) return y
+  return m >= startMonth ? y : y - 1
+}
+
 export default function RankingPage() {
-  const { token } = useAuthStore()
-  const currentYear = new Date().getFullYear()
+  const { token, club } = useAuthStore()
+  const currentYear = getCurrentSeasonYear(club?.seasonStartMonth ?? 1)
   const [selectedYear, setSelectedYear] = useState(currentYear)
   const [sortBy, setSortBy] = useState<SortKey>('mvpCount')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')

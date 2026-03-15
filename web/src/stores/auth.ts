@@ -14,16 +14,27 @@ interface Player {
   nickname?: string
 }
 
+interface Club {
+  id: number
+  slug: string
+  name: string
+  enabledEvents: string[]
+  myRole: 'admin' | 'member'
+  seasonStartMonth?: number
+}
+
 interface AuthState {
   token: string | null
   user: User | null
   player: Player | null
+  club: Club | null
   isAdmin: boolean
   isLoggedIn: boolean
 
-  login: (token: string, user: User, player: Player | null) => void
+  login: (token: string, user: User, player: Player | null, club?: Club | null) => void
   logout: () => void
   setPlayer: (player: Player) => void
+  setClub: (club: Club) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -32,14 +43,16 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       user: null,
       player: null,
+      club: null,
       isAdmin: false,
       isLoggedIn: false,
 
-      login: (token, user, player) =>
+      login: (token, user, player, club = null) =>
         set({
           token,
           user,
           player,
+          club,
           isAdmin: user.role === 'ADMIN',
           isLoggedIn: true,
         }),
@@ -49,12 +62,16 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           user: null,
           player: null,
+          club: null,
           isAdmin: false,
           isLoggedIn: false,
         }),
 
       setPlayer: (player) =>
         set({ player }),
+
+      setClub: (club) =>
+        set({ club }),
     }),
     {
       name: 'cornerkicks-auth',

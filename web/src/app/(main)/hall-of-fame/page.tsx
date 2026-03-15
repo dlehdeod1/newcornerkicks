@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthStore } from '@/stores/auth'
+
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { Trophy, Crown, Star, Target, Handshake, Shield, Award, TrendingUp, Calendar, Medal, Zap } from 'lucide-react'
@@ -27,9 +29,10 @@ const categoryColors: Record<string, string> = {
 }
 
 export default function HallOfFamePage() {
+  const { token } = useAuthStore()
   const { data, isLoading } = useQuery({
     queryKey: ['hall-of-fame'],
-    queryFn: () => rankingsApi.hallOfFame(),
+    queryFn: () => rankingsApi.hallOfFame(token ?? undefined),
   })
 
   const hallOfFame = data?.hallOfFame || []

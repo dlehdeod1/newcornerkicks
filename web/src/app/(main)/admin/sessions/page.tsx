@@ -37,7 +37,7 @@ export default function AdminSessionsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['sessions'],
-    queryFn: () => sessionsApi.list(),
+    queryFn: () => sessionsApi.list(undefined, token ?? undefined),
   })
 
   const sessions = data?.sessions || []
