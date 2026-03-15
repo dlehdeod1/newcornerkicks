@@ -36,7 +36,7 @@ export default function AdminRankingsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['rankings', selectedYear],
-    queryFn: () => rankingsApi.get(selectedYear),
+    queryFn: () => rankingsApi.get(selectedYear, token ?? undefined),
   })
 
   const refreshMutation = useMutation({
