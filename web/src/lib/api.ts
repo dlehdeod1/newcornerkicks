@@ -157,8 +157,8 @@ export const settlementsApi = {
     api('/settlements/me', { token }),
 
   // 전체 정산 요약
-  summary: (year?: number) =>
-    api(`/settlements/summary${year ? `?year=${year}` : ''}`),
+  summary: (year?: number, token?: string) =>
+    api(`/settlements/summary${year ? `?year=${year}` : ''}`, token ? { token } : {}),
 }
 
 // Rankings API
@@ -172,11 +172,11 @@ export const rankingsApi = {
   hallOfFame: (token?: string) =>
     api('/rankings/hall-of-fame', token ? { token } : {}),
 
-  funStats: (year?: number) =>
-    api(`/rankings/fun-stats${year ? `?year=${year}` : ''}`),
+  funStats: (year?: number, token?: string) =>
+    api(`/rankings/fun-stats${year ? `?year=${year}` : ''}`, token ? { token } : {}),
 
-  myStats: (playerId: number, year?: number) =>
-    api(`/rankings/my-stats?playerId=${playerId}${year ? `&year=${year}` : ''}`),
+  myStats: (playerId: number, year?: number, token?: string) =>
+    api(`/rankings/my-stats?playerId=${playerId}${year ? `&year=${year}` : ''}`, token ? { token } : {}),
 }
 
 // Notifications API (알림)

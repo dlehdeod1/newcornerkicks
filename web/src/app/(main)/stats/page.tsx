@@ -25,27 +25,27 @@ import { useAuthStore } from '@/stores/auth'
 export default function StatsPage() {
   const currentYear = new Date().getFullYear()
   const [selectedYear, setSelectedYear] = useState(currentYear)
-  const { player, isLoggedIn } = useAuthStore()
+  const { player, isLoggedIn, token } = useAuthStore()
   const myName = player?.name || null
 
   const { data: rankingsData, isLoading: rankingsLoading } = useQuery({
-    queryKey: ['rankings', selectedYear],
-    queryFn: () => rankingsApi.get(selectedYear),
+    queryKey: ['rankings', selectedYear, token],
+    queryFn: () => rankingsApi.get(selectedYear, token ?? undefined),
   })
 
   const { data: settlementData, isLoading: settlementLoading } = useQuery({
-    queryKey: ['settlements-summary', selectedYear],
-    queryFn: () => settlementsApi.summary(selectedYear),
+    queryKey: ['settlements-summary', selectedYear, token],
+    queryFn: () => settlementsApi.summary(selectedYear, token ?? undefined),
   })
 
   const { data: funStatsData, isLoading: funStatsLoading } = useQuery({
-    queryKey: ['fun-stats', selectedYear],
-    queryFn: () => rankingsApi.funStats(selectedYear),
+    queryKey: ['fun-stats', selectedYear, token],
+    queryFn: () => rankingsApi.funStats(selectedYear, token ?? undefined),
   })
 
   const { data: myStatsData, isLoading: myStatsLoading } = useQuery({
     queryKey: ['my-stats', selectedYear, player?.id],
-    queryFn: () => rankingsApi.myStats(player!.id, selectedYear),
+    queryFn: () => rankingsApi.myStats(player!.id, selectedYear, token ?? undefined),
     enabled: !!player,
   })
 
