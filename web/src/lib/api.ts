@@ -58,6 +58,9 @@ export const authApi = {
 
   resetPassword: (username: string, playerName: string, newPassword: string) =>
     api('/auth/reset-password', { method: 'POST', body: { username, playerName, newPassword } }),
+
+  googleLogin: (idToken: string) =>
+    api('/auth/google', { method: 'POST', body: { idToken } }),
 }
 
 // Sessions API

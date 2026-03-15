@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { GoogleLogin } from '@react-oauth/google'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuthStore } from '@/stores/auth'
@@ -27,6 +28,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
   const [notice, setNotice] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,6 +44,22 @@ export default function LoginPage() {
       setError(err.message || '로그인에 실패했습니다.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    const idToken = credentialResponse.credential
+    if (!idToken) {
+      setError('Google 인증 정보를 받지 못했습니다.')
+      return
+    }
+    setError('')
+    try {
+      const data = await authApi.googleLogin(idToken)
+      login(data.token, data.user, data.player, data.club ?? null)
+      router.push('/')
+    } catch (err: any) {
+      setError(err.message || 'Google 로그인에 실패했습니다.')
     }
   }
 
@@ -110,6 +128,25 @@ export default function LoginPage() {
               로그인
             </Button>
           </form>
+
+          {/* 구분선 */}
+          <div className="mt-6 flex items-center gap-3">
+            <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+            <span className="text-xs text-slate-400">또는</span>
+            <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+          </div>
+
+          {/* Google 로그인 */}
+          <div className="mt-4 flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google 로그인에 실패했습니다.')}
+              text="signin_with"
+              shape="rectangular"
+              size="large"
+              width="368"
+            />
+          </div>
 
           <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 space-y-3 text-center">
             <p className="text-slate-500 text-sm">

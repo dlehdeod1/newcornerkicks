@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/stores/auth'
 import { authApi } from '@/lib/api'
@@ -46,11 +47,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   )
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-        <AuthSync />
-        {children}
-      </ThemeProvider>
-    </QueryClientProvider>
+    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <AuthSync />
+          {children}
+        </ThemeProvider>
+      </QueryClientProvider>
+    </GoogleOAuthProvider>
   )
 }
