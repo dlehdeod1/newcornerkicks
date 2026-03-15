@@ -16,14 +16,30 @@ export function authMiddleware(requiredRole?: string) {
       const secret = new TextEncoder().encode(c.env.JWT_SECRET)
       const { payload } = await jose.jwtVerify(token, secret)
 
-      // 역할 체크
-      if (requiredRole && payload.role !== requiredRole) {
+      // DB에서 최신 클럽 멤버십 실시간 조회 (stale JWT 문제 방지)
+      const membership = await c.env.DB.prepare(
+        'SELECT club_id, role FROM club_members WHERE user_id = ? LIMIT 1'
+      ).bind(payload.userId).first<{ club_id: number; role: string }>()
+
+      const clubId = membership?.club_id ?? null
+      const clubRole = membership?.role?.toLowerCase() ?? null
+
+      // 역할 체크: 시스템 ADMIN 또는 클럽 어드민 모두 허용
+      if (requiredRole === 'ADMIN') {
+        const isSystemAdmin = payload.role === 'ADMIN'
+        const isClubAdmin = clubRole === 'admin'
+        if (!isSystemAdmin && !isClubAdmin) {
+          return c.json({ error: '권한이 없습니다.' }, 403)
+        }
+      } else if (requiredRole && payload.role !== requiredRole) {
         return c.json({ error: '권한이 없습니다.' }, 403)
       }
 
       // Context에 유저 정보 저장
       ;(c as any).userId = payload.userId
       ;(c as any).userRole = payload.role
+      ;(c as any).clubId = clubId
+      ;(c as any).clubRole = clubRole
 
       await next()
     } catch (error) {
@@ -42,8 +58,15 @@ export async function optionalAuthMiddleware(c: Context<{ Bindings: Env }>, next
       const secret = new TextEncoder().encode(c.env.JWT_SECRET)
       const { payload } = await jose.jwtVerify(token, secret)
 
+      // DB에서 최신 클럽 멤버십 실시간 조회 (stale JWT 문제 방지)
+      const membership = await c.env.DB.prepare(
+        'SELECT club_id, role FROM club_members WHERE user_id = ? LIMIT 1'
+      ).bind(payload.userId).first<{ club_id: number; role: string }>()
+
       ;(c as any).userId = payload.userId
       ;(c as any).userRole = payload.role
+      ;(c as any).clubId = membership?.club_id ?? null
+      ;(c as any).clubRole = membership?.role?.toLowerCase() ?? null
     } catch {
       // 토큰 무효해도 그냥 진행
     }

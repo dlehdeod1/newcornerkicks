@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://cornerkicks-api.conerkicks.workers.dev'
 
 interface ApiOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -62,14 +62,14 @@ export const authApi = {
 
 // Sessions API
 export const sessionsApi = {
-  list: (options?: { status?: string; limit?: number } | string) => {
+  list: (options?: { status?: string; limit?: number } | string, token?: string) => {
     if (typeof options === 'string') {
-      return api(`/sessions?status=${options}`)
+      return api(`/sessions?status=${options}`, token ? { token } : {})
     }
     const params = new URLSearchParams()
     if (options?.status) params.set('status', options.status)
     if (options?.limit) params.set('limit', String(options.limit))
-    return api(`/sessions${params.toString() ? `?${params}` : ''}`)
+    return api(`/sessions${params.toString() ? `?${params}` : ''}`, token ? { token } : {})
   },
 
   get: (id: number) =>
@@ -160,14 +160,14 @@ export const settlementsApi = {
 
 // Rankings API
 export const rankingsApi = {
-  get: (year?: number) =>
-    api(`/rankings${year ? `?year=${year}` : ''}`),
+  get: (year?: number, token?: string) =>
+    api(`/rankings${year ? `?year=${year}` : ''}`, token ? { token } : {}),
 
   refresh: (year: number, token: string) =>
     api(`/rankings/refresh?year=${year}`, { method: 'POST', token }),
 
-  hallOfFame: () =>
-    api('/rankings/hall-of-fame'),
+  hallOfFame: (token?: string) =>
+    api('/rankings/hall-of-fame', token ? { token } : {}),
 
   funStats: (year?: number) =>
     api(`/rankings/fun-stats${year ? `?year=${year}` : ''}`),

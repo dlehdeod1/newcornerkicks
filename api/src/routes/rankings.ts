@@ -1,19 +1,24 @@
 import { Hono } from 'hono'
 import type { Env } from '../index'
-import { authMiddleware } from '../middleware/auth'
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth'
 
 const rankingsRoutes = new Hono<{ Bindings: Env }>()
 
 // 랭킹 조회 (캐시) + 통계 데이터 포함
-rankingsRoutes.get('/', async (c) => {
+rankingsRoutes.get('/', optionalAuthMiddleware, async (c) => {
   const year = Number(c.req.query('year')) || new Date().getFullYear()
   const yearStart = `${year}-01-01`
   const yearEnd = `${year}-12-31`
+  const clubId = (c as any).clubId
 
-  // 캐시된 랭킹 데이터
+  if (!clubId) {
+    return c.json({ data: { rankings: [], totalPlayers: 0, totalGoals: 0, totalAssists: 0, totalDefenses: 0, totalSessions: 0, totalMatches: 0, avgGoalsPerMatch: 0, avgAttendancePerSession: 0, goalRanking: [], assistRanking: [], defenseRanking: [], attendanceRanking: [], winRateRanking: [], mvpRanking: [] }, updatedAt: null, updatedBy: null })
+  }
+
+  // 캐시된 랭킹 데이터 (클럽별)
   const cache = await c.env.DB.prepare(`
-    SELECT * FROM rankings_cache WHERE year = ?
-  `).bind(year).first()
+    SELECT * FROM rankings_cache WHERE year = ? AND club_id = ?
+  `).bind(year, clubId).first()
 
   let rankings: any[] = []
   if (cache) {
@@ -28,15 +33,15 @@ rankingsRoutes.get('/', async (c) => {
 
   // 세션 수
   const sessionCount = await c.env.DB.prepare(`
-    SELECT COUNT(*) as count FROM sessions WHERE session_date BETWEEN ? AND ?
-  `).bind(yearStart, yearEnd).first()
+    SELECT COUNT(*) as count FROM sessions WHERE session_date BETWEEN ? AND ? AND (club_id = ? OR club_id IS NULL)
+  `).bind(yearStart, yearEnd, clubId ?? 0).first()
 
   // 경기 수
   const matchCount = await c.env.DB.prepare(`
     SELECT COUNT(*) as count FROM matches m
     JOIN sessions s ON m.session_id = s.id
-    WHERE s.session_date BETWEEN ? AND ?
-  `).bind(yearStart, yearEnd).first()
+    WHERE s.session_date BETWEEN ? AND ? AND (s.club_id = ? OR s.club_id IS NULL)
+  `).bind(yearStart, yearEnd, clubId ?? 0).first()
 
   // 세션당 평균 참석자 수 계산
   const avgAttendanceResult = await c.env.DB.prepare(`
@@ -92,6 +97,11 @@ rankingsRoutes.get('/', async (c) => {
 rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
   const year = Number(c.req.query('year')) || new Date().getFullYear()
   const userId = (c as any).userId
+  const clubId = (c as any).clubId
+
+  if (!clubId) {
+    return c.json({ error: '클럽이 없습니다.' }, 400)
+  }
 
   // 해당 연도 세션 조회
   const yearStart = `${year}-01-01`
@@ -99,19 +109,20 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
 
   // ─── MVP 전체 재계산 (현재 DB 데이터 기준) ───
   try {
-    // 기존 MVP 기록 전부 삭제 (해당 연도)
+    // 기존 MVP 기록 전부 삭제 (해당 연도, 해당 클럽 세션만)
     await c.env.DB.prepare(`
       DELETE FROM session_mvp_results WHERE session_id IN (
-        SELECT id FROM sessions WHERE session_date BETWEEN ? AND ?
+        SELECT id FROM sessions WHERE session_date BETWEEN ? AND ? AND club_id = ?
       )
-    `).bind(yearStart, yearEnd).run()
+    `).bind(yearStart, yearEnd, clubId).run()
 
-    // 완료/마감된 세션 전부 재계산
+    // 완료/마감된 세션 전부 재계산 (해당 클럽만)
     const allSessions = await c.env.DB.prepare(`
       SELECT s.id FROM sessions s
       WHERE s.status IN ('completed', 'closed')
         AND s.session_date BETWEEN ? AND ?
-    `).bind(yearStart, yearEnd).all()
+        AND s.club_id = ?
+    `).bind(yearStart, yearEnd, clubId).all()
 
     for (const session of allSessions.results as any[]) {
       await autoBackfillMvp(c.env.DB, session.id, yearStart, yearEnd)
@@ -120,7 +131,7 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
     console.error('MVP recalculation error (ignored):', err)
   }
 
-  // 선수별 통계 집계
+  // 선수별 통계 집계 (해당 클럽 선수만)
   const rankings = await c.env.DB.prepare(`
     SELECT
       p.id,
@@ -131,16 +142,17 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
       COALESCE(SUM(pms.blocks), 0) as defenses,
       (SELECT COUNT(*) FROM attendance a
        JOIN sessions s ON a.session_id = s.id
-       WHERE a.player_id = p.id AND s.session_date BETWEEN ? AND ?) as attendance
+       WHERE a.player_id = p.id AND s.session_date BETWEEN ? AND ? AND s.club_id = ?) as attendance
     FROM players p
     LEFT JOIN player_match_stats pms ON p.id = pms.player_id
     LEFT JOIN matches m ON pms.match_id = m.id
     LEFT JOIN sessions s ON m.session_id = s.id
     WHERE p.is_guest = 0
+      AND p.club_id = ?
       AND (s.session_date IS NULL OR s.session_date BETWEEN ? AND ?)
     GROUP BY p.id
     ORDER BY goals DESC, assists DESC, defenses DESC
-  `).bind(yearStart, yearEnd, yearStart, yearEnd).all()
+  `).bind(yearStart, yearEnd, clubId, clubId, yearStart, yearEnd).all()
 
   // 승/무/패 계산을 위한 추가 쿼리
   const enrichedRankings = await Promise.all(
@@ -295,13 +307,14 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
   // 정렬 (MVP 점수 기준)
   enrichedRankings.sort((a, b) => b.mvpScore - a.mvpScore)
 
-  // 캐시 저장
+  // 캐시 저장 (클럽별 고유 id = club_id * 10000 + year)
   const now = new Date().toISOString()
+  const cacheId = clubId * 10000 + year
 
   await c.env.DB.prepare(`
-    INSERT OR REPLACE INTO rankings_cache (id, data, updated_at, updated_by, year)
-    VALUES (?, ?, ?, ?, ?)
-  `).bind(year, JSON.stringify(enrichedRankings), now, userId || 'admin', year).run()
+    INSERT OR REPLACE INTO rankings_cache (id, club_id, data, updated_at, updated_by, year)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).bind(cacheId, clubId, JSON.stringify(enrichedRankings), now, userId || 'admin', year).run()
 
   return c.json({
     message: '랭킹이 갱신되었습니다.',
