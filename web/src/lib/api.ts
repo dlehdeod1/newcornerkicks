@@ -269,3 +269,12 @@ export const meApi = {
   getStats: (token: string) =>
     api('/me/stats', { token }),
 }
+
+// Clubs API
+export const clubsApi = {
+  me: (token: string) =>
+    api('/clubs/me', { token }),
+
+  regenerateInviteCode: (token: string) =>
+    api('/clubs/me/regenerate-invite-code', { method: 'POST', token }),
+}

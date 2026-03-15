@@ -23,6 +23,7 @@ interface Club {
   seasonStartMonth?: number
   isPro?: boolean
   planType?: string
+  inviteCode?: string
 }
 
 interface AuthState {

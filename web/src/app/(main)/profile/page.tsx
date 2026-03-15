@@ -20,6 +20,8 @@ import {
   TrendingUp,
   Crown,
   Zap,
+  Users,
+  ChevronRight,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { authApi, rankingsApi, subscriptionsApi } from '@/lib/api'
@@ -349,6 +351,26 @@ export default function ProfilePage() {
                 관리자에게 문의하여 선수 코드를 받아 연동하세요.
               </p>
             </div>
+          )}
+
+          {/* 내 클럽 바로가기 */}
+          {club && (
+            <Link
+              href="/club"
+              className="flex items-center gap-4 bg-white dark:bg-slate-900/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:border-emerald-300 dark:hover:border-emerald-500/40 transition-colors group"
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-xl flex-shrink-0 shadow-md shadow-emerald-500/20">
+                ⚽
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-slate-900 dark:text-white truncate">{club.name}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                  <Users className="w-3.5 h-3.5" />
+                  초대 코드 · 클럽 정보 보기
+                </p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors flex-shrink-0" />
+            </Link>
           )}
 
           {/* 구독 현황 */}

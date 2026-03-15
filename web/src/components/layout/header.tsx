@@ -11,6 +11,7 @@ import { NotificationDropdown } from './notification-dropdown'
 
 const navItems = [
   { href: '/', label: '홈' },
+  { href: '/club', label: '클럽' },
   { href: '/sessions', label: '일정' },
   { href: '/ranking', label: '선수/랭킹' },
   { href: '/abilities', label: '능력치' },
