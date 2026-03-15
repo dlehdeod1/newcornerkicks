@@ -201,7 +201,7 @@ authRoutes.get('/me', async (c) => {
     const { payload } = await jose.jwtVerify(token, secret)
 
     const user = await c.env.DB.prepare(
-      'SELECT id, email, username, role, created_at FROM users WHERE id = ?'
+      'SELECT id, email, username, role, google_id, created_at FROM users WHERE id = ?'
     ).bind(payload.userId).first()
 
     if (!user) {
@@ -216,13 +216,79 @@ authRoutes.get('/me', async (c) => {
     const clubs = await getUserClubs(c.env.DB, (user as any).id)
 
     return c.json({
-      user,
+      user: { ...(user as any), googleLinked: !!(user as any).google_id },
       profile,
       clubs,
       // 하위 호환성 유지
       player: clubs[0]?.player ?? null,
       club: clubs[0] ?? null,
     })
+  } catch {
+    return c.json({ error: '유효하지 않은 토큰입니다.' }, 401)
+  }
+})
+
+// ─── 구글 계정 연동 ───────────────────────────────────────────
+authRoutes.post('/link-google', async (c) => {
+  const authHeader = c.req.header('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) return c.json({ error: '인증이 필요합니다.' }, 401)
+
+  try {
+    const token = authHeader.slice(7)
+    const secret = new TextEncoder().encode(c.env.JWT_SECRET)
+    const { payload } = await jose.jwtVerify(token, secret)
+
+    const { idToken } = await c.req.json()
+    if (!idToken) return c.json({ error: 'idToken이 필요합니다.' }, 400)
+
+    // Google 토큰 검증
+    const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`)
+    if (!verifyRes.ok) return c.json({ error: '유효하지 않은 Google 토큰입니다.' }, 401)
+    const googleUser = await verifyRes.json() as any
+    const { sub: googleId, email: googleEmail } = googleUser
+
+    const db = c.env.DB
+    const now = Math.floor(Date.now() / 1000)
+
+    // 이미 다른 계정에 연동된 google_id인지 확인
+    const existing = await db.prepare(
+      'SELECT id FROM users WHERE google_id = ? AND id != ?'
+    ).bind(googleId, payload.userId).first()
+    if (existing) return c.json({ error: '이 구글 계정은 이미 다른 계정에 연동되어 있습니다.' }, 409)
+
+    await db.prepare('UPDATE users SET google_id = ?, updated_at = ? WHERE id = ?')
+      .bind(googleId, now, payload.userId).run()
+
+    return c.json({ message: `${googleEmail} 구글 계정이 연동되었습니다.`, googleEmail })
+  } catch {
+    return c.json({ error: '유효하지 않은 토큰입니다.' }, 401)
+  }
+})
+
+// ─── 구글 계정 연동 해제 ──────────────────────────────────────
+authRoutes.delete('/link-google', async (c) => {
+  const authHeader = c.req.header('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) return c.json({ error: '인증이 필요합니다.' }, 401)
+
+  try {
+    const token = authHeader.slice(7)
+    const secret = new TextEncoder().encode(c.env.JWT_SECRET)
+    const { payload } = await jose.jwtVerify(token, secret)
+
+    const db = c.env.DB
+
+    // 비밀번호 없는 계정(구글 전용)은 해제 불가
+    const user = await db.prepare('SELECT password FROM users WHERE id = ?')
+      .bind(payload.userId).first<{ password: string }>()
+    if (!user?.password) {
+      return c.json({ error: '비밀번호 로그인이 설정되지 않은 계정은 구글 연동을 해제할 수 없습니다.' }, 400)
+    }
+
+    const now = Math.floor(Date.now() / 1000)
+    await db.prepare('UPDATE users SET google_id = NULL, updated_at = ? WHERE id = ?')
+      .bind(now, payload.userId).run()
+
+    return c.json({ message: '구글 계정 연동이 해제되었습니다.' })
   } catch {
     return c.json({ error: '유효하지 않은 토큰입니다.' }, 401)
   }
@@ -409,8 +475,16 @@ authRoutes.post('/google', async (c) => {
     const now = Math.floor(Date.now() / 1000)
     const db = c.env.DB
 
-    // 기존 유저 찾기
-    let user = await db.prepare('SELECT * FROM users WHERE email = ?').bind(email).first<any>()
+    // 기존 유저 찾기: google_id 우선, 없으면 이메일로 조회
+    let user = await db.prepare('SELECT * FROM users WHERE google_id = ?').bind(googleId).first<any>()
+    if (!user) {
+      user = await db.prepare('SELECT * FROM users WHERE email = ?').bind(email).first<any>()
+      // 이메일로 찾은 경우 google_id 업데이트 (연동)
+      if (user && !user.google_id) {
+        await db.prepare('UPDATE users SET google_id = ?, updated_at = ? WHERE id = ?')
+          .bind(googleId, now, user.id).run()
+      }
+    }
 
     if (!user) {
       // 신규 가입: username 생성 (이메일 앞부분, 중복 시 숫자 붙임)
@@ -423,9 +497,9 @@ authRoutes.post('/google', async (c) => {
 
       const userId = crypto.randomUUID()
       await db.prepare(`
-        INSERT INTO users (id, email, username, password, role, created_at, updated_at)
-        VALUES (?, ?, ?, '', 'member', ?, ?)
-      `).bind(userId, email, username, now, now).run()
+        INSERT INTO users (id, email, username, password, google_id, role, created_at, updated_at)
+        VALUES (?, ?, ?, '', ?, 'member', ?, ?)
+      `).bind(userId, email, username, googleId, now, now).run()
 
       user = await db.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first<any>()
     }

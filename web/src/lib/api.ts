@@ -6,15 +6,32 @@ interface ApiOptions {
   token?: string
 }
 
+function getActiveClubId(): number | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const stored = localStorage.getItem('cornerkicks-auth')
+    if (stored) {
+      const data = JSON.parse(stored)
+      return data?.state?.club?.id ?? null
+    }
+  } catch {}
+  return null
+}
+
 export async function api<T = any>(endpoint: string, options: ApiOptions = {}): Promise<T> {
   const { method = 'GET', body, token } = options
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const activeClubId = getActiveClubId()
+  if (activeClubId) {
+    headers['X-Club-Id'] = String(activeClubId)
   }
 
   const res = await fetch(`${API_BASE}${endpoint}`, {
@@ -61,6 +78,12 @@ export const authApi = {
 
   googleLogin: (idToken: string) =>
     api('/auth/google', { method: 'POST', body: { idToken } }),
+
+  linkGoogle: (idToken: string, token: string) =>
+    api('/auth/link-google', { method: 'POST', body: { idToken }, token }),
+
+  unlinkGoogle: (token: string) =>
+    api('/auth/link-google', { method: 'DELETE', token }),
 }
 
 // Sessions API
@@ -277,4 +300,13 @@ export const clubsApi = {
 
   regenerateInviteCode: (token: string) =>
     api('/clubs/me/regenerate-invite-code', { method: 'POST', token }),
+
+  join: (inviteCode: string, token: string) =>
+    api('/clubs/join', { method: 'POST', body: { inviteCode }, token }),
+
+  create: (data: { slug: string; name: string; description?: string; enabledEvents?: string[] }, token: string) =>
+    api('/clubs', { method: 'POST', body: data, token }),
+
+  checkSlug: (slug: string) =>
+    api(`/clubs/check-slug?slug=${encodeURIComponent(slug)}`),
 }
