@@ -2,18 +2,21 @@ import { Hono } from 'hono'
 import type { Env } from '../index'
 import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth'
 
+import { getSeasonDateRange, getClubSeasonStartMonth } from '../utils/season'
+
 const rankingsRoutes = new Hono<{ Bindings: Env }>()
 
 // 랭킹 조회 (캐시) + 통계 데이터 포함
 rankingsRoutes.get('/', optionalAuthMiddleware, async (c) => {
   const year = Number(c.req.query('year')) || new Date().getFullYear()
-  const yearStart = `${year}-01-01`
-  const yearEnd = `${year}-12-31`
   const clubId = (c as any).clubId
 
   if (!clubId) {
     return c.json({ data: { rankings: [], totalPlayers: 0, totalGoals: 0, totalAssists: 0, totalDefenses: 0, totalSessions: 0, totalMatches: 0, avgGoalsPerMatch: 0, avgAttendancePerSession: 0, goalRanking: [], assistRanking: [], defenseRanking: [], attendanceRanking: [], winRateRanking: [], mvpRanking: [] }, updatedAt: null, updatedBy: null })
   }
+
+  const seasonStartMonth = await getClubSeasonStartMonth(c.env.DB, clubId)
+  const { yearStart, yearEnd } = getSeasonDateRange(year, seasonStartMonth)
 
   // 캐시된 랭킹 데이터 (클럽별) — 없으면 자동 계산
   let cache = await c.env.DB.prepare(`
@@ -21,7 +24,7 @@ rankingsRoutes.get('/', optionalAuthMiddleware, async (c) => {
   `).bind(year, clubId).first()
 
   if (!cache) {
-    await buildAndCacheRankings(c.env.DB, clubId, year, 'auto')
+    await buildAndCacheRankings(c.env.DB, clubId, year, yearStart, yearEnd, 'auto')
     cache = await c.env.DB.prepare(`
       SELECT * FROM rankings_cache WHERE year = ? AND club_id = ?
     `).bind(year, clubId).first()
@@ -40,15 +43,15 @@ rankingsRoutes.get('/', optionalAuthMiddleware, async (c) => {
 
   // 세션 수
   const sessionCount = await c.env.DB.prepare(`
-    SELECT COUNT(*) as count FROM sessions WHERE session_date BETWEEN ? AND ? AND (club_id = ? OR club_id IS NULL)
-  `).bind(yearStart, yearEnd, clubId ?? 0).first()
+    SELECT COUNT(*) as count FROM sessions WHERE session_date BETWEEN ? AND ? AND club_id = ?
+  `).bind(yearStart, yearEnd, clubId).first()
 
   // 경기 수
   const matchCount = await c.env.DB.prepare(`
     SELECT COUNT(*) as count FROM matches m
     JOIN sessions s ON m.session_id = s.id
-    WHERE s.session_date BETWEEN ? AND ? AND (s.club_id = ? OR s.club_id IS NULL)
-  `).bind(yearStart, yearEnd, clubId ?? 0).first()
+    WHERE s.session_date BETWEEN ? AND ? AND s.club_id = ?
+  `).bind(yearStart, yearEnd, clubId).first()
 
   // 세션당 평균 참석자 수 계산
   const avgAttendanceResult = await c.env.DB.prepare(`
@@ -110,9 +113,8 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
     return c.json({ error: '클럽이 없습니다.' }, 400)
   }
 
-  // 해당 연도 세션 조회
-  const yearStart = `${year}-01-01`
-  const yearEnd = `${year}-12-31`
+  const seasonStartMonth = await getClubSeasonStartMonth(c.env.DB, clubId)
+  const { yearStart, yearEnd } = getSeasonDateRange(year, seasonStartMonth)
 
   // ─── MVP 전체 재계산 (현재 DB 데이터 기준) ───
   try {
@@ -138,7 +140,7 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
     console.error('MVP recalculation error (ignored):', err)
   }
 
-  const enrichedRankings = await buildAndCacheRankings(c.env.DB, clubId, year, userId || 'admin')
+  const enrichedRankings = await buildAndCacheRankings(c.env.DB, clubId, year, yearStart, yearEnd, userId || 'admin')
 
   return c.json({
     message: '랭킹이 갱신되었습니다.',
@@ -150,8 +152,10 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
 // MVP 데이터 백필 (기존 완료된 세션에 대해)
 rankingsRoutes.post('/backfill-mvp', authMiddleware('ADMIN'), async (c) => {
   const year = Number(c.req.query('year')) || new Date().getFullYear()
-  const yearStart = `${year}-01-01`
-  const yearEnd = `${year}-12-31`
+  if (!clubId) return c.json({ error: '클럽이 없습니다.' }, 400)
+
+  const seasonStartMonth = await getClubSeasonStartMonth(c.env.DB, clubId)
+  const { yearStart, yearEnd } = getSeasonDateRange(year, seasonStartMonth)
 
   // 완료된 세션 조회 (MVP가 아직 없는 것) - closed 또는 completed 상태
   const sessionsWithoutMvp = await c.env.DB.prepare(`
@@ -159,162 +163,18 @@ rankingsRoutes.post('/backfill-mvp', authMiddleware('ADMIN'), async (c) => {
     FROM sessions s
     WHERE s.status IN ('completed', 'closed')
       AND s.session_date BETWEEN ? AND ?
+      AND s.club_id = ?
       AND s.id NOT IN (SELECT session_id FROM session_mvp_results)
     ORDER BY s.session_date
-  `).bind(yearStart, yearEnd).all()
+  `).bind(yearStart, yearEnd, clubId).all()
 
   const results: any[] = []
 
   for (const session of sessionsWithoutMvp.results as any[]) {
-    // 해당 세션의 팀 조회
-    const teams = await c.env.DB.prepare(`
-      SELECT id FROM teams WHERE session_id = ?
-    `).bind(session.id).all()
-
-    const teamIds = (teams.results as any[]).map(t => t.id)
-    if (teamIds.length === 0) continue
-
-    // 해당 세션의 완료된 경기 조회
-    const matches = await c.env.DB.prepare(`
-      SELECT * FROM matches WHERE session_id = ? AND status = 'completed'
-    `).bind(session.id).all()
-
-    if (matches.results.length === 0) continue
-
-    // 팀별 승점 계산
-    const teamStandings = new Map<number, { points: number; goalsFor: number; members: number[] }>()
-
-    for (const teamId of teamIds) {
-      const members = await c.env.DB.prepare(`
-        SELECT player_id FROM team_members WHERE team_id = ? AND player_id IS NOT NULL
-      `).bind(teamId).all()
-      teamStandings.set(teamId, {
-        points: 0,
-        goalsFor: 0,
-        members: (members.results as any[]).map(m => m.player_id)
-      })
-    }
-
-    for (const match of matches.results as any[]) {
-      const team1 = teamStandings.get(match.team1_id)
-      const team2 = teamStandings.get(match.team2_id)
-
-      if (team1 && team2) {
-        team1.goalsFor += match.team1_score || 0
-        team2.goalsFor += match.team2_score || 0
-
-        if (match.team1_score > match.team2_score) {
-          team1.points += 3
-        } else if (match.team1_score < match.team2_score) {
-          team2.points += 3
-        } else {
-          team1.points += 1
-          team2.points += 1
-        }
-      }
-    }
-
-    // 우승팀 찾기 (승점 > 득점 순)
-    const sortedTeams = Array.from(teamStandings.entries())
-      .sort((a, b) => b[1].points - a[1].points || b[1].goalsFor - a[1].goalsFor)
-    const winningTeamMembers = new Set(sortedTeams[0]?.[1]?.members || [])
-
-    // 선수별 MVP 점수 계산
-    const playerStats = new Map<number, {
-      id: number
-      name: string
-      goals: number
-      assists: number
-      defenses: number
-      mvpScore: number
-    }>()
-
-    // match_events에서 골/어시스트/수비 조회
-    for (const match of matches.results as any[]) {
-      const events = await c.env.DB.prepare(`
-        SELECT * FROM match_events WHERE match_id = ?
-      `).bind(match.id).all()
-
-      for (const event of events.results as any[]) {
-        // 용병 제외
-        if (!event.player_id || event.guest_name) continue
-
-        if (!playerStats.has(event.player_id)) {
-          const player = await c.env.DB.prepare(`
-            SELECT name FROM players WHERE id = ?
-          `).bind(event.player_id).first()
-
-          playerStats.set(event.player_id, {
-            id: event.player_id,
-            name: (player as any)?.name || 'Unknown',
-            goals: 0,
-            assists: 0,
-            defenses: 0,
-            mvpScore: 0,
-          })
-        }
-
-        const stats = playerStats.get(event.player_id)!
-
-        if (event.event_type === 'GOAL') {
-          stats.goals++
-          stats.mvpScore += 2
-        } else if (event.event_type === 'DEFENSE') {
-          stats.defenses++
-          stats.mvpScore += 0.5
-        }
-
-        // 어시스트
-        if (event.assister_id && event.event_type === 'GOAL' && !event.assister_guest_name) {
-          if (!playerStats.has(event.assister_id)) {
-            const assister = await c.env.DB.prepare(`
-              SELECT name FROM players WHERE id = ?
-            `).bind(event.assister_id).first()
-
-            playerStats.set(event.assister_id, {
-              id: event.assister_id,
-              name: (assister as any)?.name || 'Unknown',
-              goals: 0,
-              assists: 0,
-              defenses: 0,
-              mvpScore: 0,
-            })
-          }
-          const assisterStats = playerStats.get(event.assister_id)!
-          assisterStats.assists++
-          assisterStats.mvpScore += 1
-        }
-      }
-    }
-
-    // 우승팀 멤버에게 1.5점 보너스
-    playerStats.forEach((stats, playerId) => {
-      if (winningTeamMembers.has(playerId)) {
-        stats.mvpScore += 1.5
-      }
-    })
-
-    // MVP 선정 (최고 점수)
-    const sortedPlayers = Array.from(playerStats.values()).sort((a, b) => b.mvpScore - a.mvpScore)
-    const mvp = sortedPlayers[0]
-
-    if (mvp) {
-      const now = new Date().toISOString()
-
-      // session_mvp_results에 저장
-      await c.env.DB.prepare(`
-        INSERT INTO session_mvp_results (session_id, player_id, vote_count, decided_at)
-        VALUES (?, ?, 0, ?)
-      `).bind(session.id, mvp.id, now).run()
-
-      results.push({
-        sessionId: session.id,
-        sessionDate: session.session_date,
-        mvpId: mvp.id,
-        mvpName: mvp.name,
-        mvpScore: mvp.mvpScore,
-        stats: { goals: mvp.goals, assists: mvp.assists, defenses: mvp.defenses }
-      })
+    await autoBackfillMvp(c.env.DB, session.id, yearStart, yearEnd)
+    const mvpRow = await c.env.DB.prepare(`SELECT smr.player_id, p.name FROM session_mvp_results smr JOIN players p ON smr.player_id = p.id WHERE smr.session_id = ?`).bind(session.id).first()
+    if (mvpRow) {
+      results.push({ sessionId: session.id, sessionDate: session.session_date, mvpId: (mvpRow as any).player_id, mvpName: (mvpRow as any).name })
     }
   }
 
@@ -325,19 +185,22 @@ rankingsRoutes.post('/backfill-mvp', authMiddleware('ADMIN'), async (c) => {
 })
 
 // 명예의 전당
-rankingsRoutes.get('/hall-of-fame', async (c) => {
+rankingsRoutes.get('/hall-of-fame', optionalAuthMiddleware, async (c) => {
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ hallOfFame: [] })
+
   // 시즌별로 25세션 이상 참석 + 각 지표 1등 조회
   const years = await c.env.DB.prepare(`
-    SELECT DISTINCT year FROM rankings_cache ORDER BY year DESC
-  `).all()
+    SELECT DISTINCT year FROM rankings_cache WHERE club_id = ? ORDER BY year DESC
+  `).bind(clubId).all()
 
   const hallOfFame = []
 
   for (const yearRow of years.results as any[]) {
     const year = yearRow.year
     const cache = await c.env.DB.prepare(`
-      SELECT data FROM rankings_cache WHERE year = ?
-    `).bind(year).first()
+      SELECT data FROM rankings_cache WHERE year = ? AND club_id = ?
+    `).bind(year, clubId).first()
 
     if (!cache) continue
 
@@ -392,7 +255,10 @@ rankingsRoutes.get('/hall-of-fame', async (c) => {
 })
 
 // 재미 통계: 최고의 듀오, 베스트 파트너, 동반 출전 등
-rankingsRoutes.get('/fun-stats', async (c) => {
+rankingsRoutes.get('/fun-stats', optionalAuthMiddleware, async (c) => {
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ goalDuos: [], bestPartners: [], worstPartners: [], rivals: [] })
+
   const year = Number(c.req.query('year')) || new Date().getFullYear()
   const yearStart = `${year}-01-01`
   const yearEnd = `${year}-12-31`
@@ -410,13 +276,13 @@ rankingsRoutes.get('/fun-stats', async (c) => {
     JOIN sessions s ON m.session_id = s.id
     WHERE me.event_type = 'GOAL' AND me.assister_id IS NOT NULL
       AND p1.is_guest = 0 AND p2.is_guest = 0
-      AND s.session_date BETWEEN ? AND ?
+      AND s.club_id = ? AND s.session_date BETWEEN ? AND ?
     GROUP BY
       CASE WHEN me.player_id < me.assister_id THEN me.player_id ELSE me.assister_id END,
       CASE WHEN me.player_id < me.assister_id THEN me.assister_id ELSE me.player_id END
     ORDER BY combo_count DESC
     LIMIT 5
-  `).bind(yearStart, yearEnd).all()
+  `).bind(clubId, yearStart, yearEnd).all()
 
   // 2. 베스트 파트너: 같은 팀에서 승률 높은 콤비 (최소 6경기)
   const bestPartners = await c.env.DB.prepare(`
@@ -428,7 +294,7 @@ rankingsRoutes.get('/fun-stats', async (c) => {
       FROM team_members tm
       JOIN matches m ON tm.team_id = m.team1_id OR tm.team_id = m.team2_id
       JOIN sessions s ON m.session_id = s.id
-      WHERE m.status = 'completed' AND s.session_date BETWEEN ? AND ?
+      WHERE m.status = 'completed' AND s.club_id = ? AND s.session_date BETWEEN ? AND ?
     )
     SELECT
       p1.name as player1,
@@ -445,7 +311,7 @@ rankingsRoutes.get('/fun-stats', async (c) => {
     HAVING games_together >= 6
     ORDER BY win_rate DESC, games_together DESC
     LIMIT 5
-  `).bind(yearStart, yearEnd).all()
+  `).bind(clubId, yearStart, yearEnd).all()
 
   // 3. 최악의 궁합: 같은 팀에서 승률이 낮은 콤비 (최소 6경기)
   const worstPartners = await c.env.DB.prepare(`
@@ -457,7 +323,7 @@ rankingsRoutes.get('/fun-stats', async (c) => {
       FROM team_members tm
       JOIN matches m ON tm.team_id = m.team1_id OR tm.team_id = m.team2_id
       JOIN sessions s ON m.session_id = s.id
-      WHERE m.status = 'completed' AND s.session_date BETWEEN ? AND ?
+      WHERE m.status = 'completed' AND s.club_id = ? AND s.session_date BETWEEN ? AND ?
     )
     SELECT
       p1.name as player1,
@@ -474,7 +340,7 @@ rankingsRoutes.get('/fun-stats', async (c) => {
     HAVING games_together >= 6
     ORDER BY win_rate ASC, games_together DESC
     LIMIT 5
-  `).bind(yearStart, yearEnd).all()
+  `).bind(clubId, yearStart, yearEnd).all()
 
   // 4. 천적 관계: 상대팀에서 만났을 때 한 선수의 골이 많은 조합
   const rivals = await c.env.DB.prepare(`
@@ -488,7 +354,7 @@ rankingsRoutes.get('/fun-stats', async (c) => {
       FROM team_members tm
       JOIN matches m ON tm.team_id = m.team1_id OR tm.team_id = m.team2_id
       JOIN sessions s ON m.session_id = s.id
-      WHERE m.status = 'completed' AND s.session_date BETWEEN ? AND ?
+      WHERE m.status = 'completed' AND s.club_id = ? AND s.session_date BETWEEN ? AND ?
     )
     SELECT
       p_scorer.name as scorer,
@@ -508,7 +374,7 @@ rankingsRoutes.get('/fun-stats', async (c) => {
     HAVING goals_against >= 2
     ORDER BY goals_against DESC, matches_faced ASC
     LIMIT 5
-  `).bind(yearStart, yearEnd).all()
+  `).bind(clubId, yearStart, yearEnd).all()
 
   return c.json({
     goalDuos: goalDuos.results,
@@ -519,7 +385,10 @@ rankingsRoutes.get('/fun-stats', async (c) => {
 })
 
 // 개인화 재미 통계: 나를 기준으로 한 팀원 궁합, 어시스트 주고받기
-rankingsRoutes.get('/my-stats', async (c) => {
+rankingsRoutes.get('/my-stats', optionalAuthMiddleware, async (c) => {
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ teammates: [], assistedToMe: [], myAssists: [], worstTeammates: [] })
+
   const year = Number(c.req.query('year')) || new Date().getFullYear()
   const playerId = Number(c.req.query('playerId'))
 
@@ -540,7 +409,7 @@ rankingsRoutes.get('/my-stats', async (c) => {
       FROM team_members tm
       JOIN matches m ON tm.team_id = m.team1_id OR tm.team_id = m.team2_id
       JOIN sessions s ON m.session_id = s.id
-      WHERE m.status = 'completed' AND s.session_date BETWEEN ? AND ?
+      WHERE m.status = 'completed' AND s.club_id = ? AND s.session_date BETWEEN ? AND ?
     )
     SELECT
       p2.name as teammate,
@@ -555,7 +424,7 @@ rankingsRoutes.get('/my-stats', async (c) => {
     HAVING games_together >= 3
     ORDER BY win_rate DESC, games_together DESC
     LIMIT 5
-  `).bind(yearStart, yearEnd, playerId).all()
+  `).bind(clubId, yearStart, yearEnd, playerId).all()
 
   // 2. 나한테 어시스트 많이 해준 선수
   const assistedToMe = await c.env.DB.prepare(`
@@ -567,11 +436,11 @@ rankingsRoutes.get('/my-stats', async (c) => {
     WHERE me.player_id = ? AND me.assister_id IS NOT NULL
       AND me.event_type = 'GOAL'
       AND p.is_guest = 0
-      AND s.session_date BETWEEN ? AND ?
+      AND s.club_id = ? AND s.session_date BETWEEN ? AND ?
     GROUP BY me.assister_id
     ORDER BY assist_count DESC
     LIMIT 5
-  `).bind(playerId, yearStart, yearEnd).all()
+  `).bind(playerId, clubId, yearStart, yearEnd).all()
 
   // 3. 내가 어시스트 많이 해준 선수
   const myAssists = await c.env.DB.prepare(`
@@ -582,11 +451,11 @@ rankingsRoutes.get('/my-stats', async (c) => {
     JOIN sessions s ON m.session_id = s.id
     WHERE me.assister_id = ? AND me.event_type = 'GOAL'
       AND p.is_guest = 0
-      AND s.session_date BETWEEN ? AND ?
+      AND s.club_id = ? AND s.session_date BETWEEN ? AND ?
     GROUP BY me.player_id
     ORDER BY assist_count DESC
     LIMIT 5
-  `).bind(playerId, yearStart, yearEnd).all()
+  `).bind(playerId, clubId, yearStart, yearEnd).all()
 
   // 4. 함께할 때 승률이 낮은 팀원 (최소 3경기)
   const worstTeammates = await c.env.DB.prepare(`
@@ -598,7 +467,7 @@ rankingsRoutes.get('/my-stats', async (c) => {
       FROM team_members tm
       JOIN matches m ON tm.team_id = m.team1_id OR tm.team_id = m.team2_id
       JOIN sessions s ON m.session_id = s.id
-      WHERE m.status = 'completed' AND s.session_date BETWEEN ? AND ?
+      WHERE m.status = 'completed' AND s.club_id = ? AND s.session_date BETWEEN ? AND ?
     )
     SELECT
       p2.name as teammate,
@@ -613,7 +482,7 @@ rankingsRoutes.get('/my-stats', async (c) => {
     HAVING games_together >= 3
     ORDER BY win_rate ASC, games_together DESC
     LIMIT 5
-  `).bind(yearStart, yearEnd, playerId).all()
+  `).bind(clubId, yearStart, yearEnd, playerId).all()
 
   return c.json({
     teammates: teammates.results,
@@ -674,7 +543,7 @@ async function autoBackfillMvp(db: D1Database, sessionId: number, yearStart: str
           const assister = await db.prepare(`SELECT name FROM players WHERE id = ?`).bind(event.assister_id).first()
           playerStats.set(event.assister_id, { id: event.assister_id, name: (assister as any)?.name || 'Unknown', mvpScore: 0 })
         }
-        playerStats.get(event.assister_id)!.mvpScore += 1
+        playerStats.get(event.assister_id)!.mvpScore += 1.5
       }
     }
   }
@@ -691,9 +560,7 @@ async function autoBackfillMvp(db: D1Database, sessionId: number, yearStart: str
 }
 
 // 랭킹 통계 계산 + 캐시 저장 공통 함수
-async function buildAndCacheRankings(db: D1Database, clubId: number, year: number, updatedBy: string): Promise<any[]> {
-  const yearStart = `${year}-01-01`
-  const yearEnd = `${year}-12-31`
+async function buildAndCacheRankings(db: D1Database, clubId: number, year: number, yearStart: string, yearEnd: string, updatedBy: string): Promise<any[]> {
 
   const rankings = await db.prepare(`
     SELECT
@@ -750,7 +617,7 @@ async function buildAndCacheRankings(db: D1Database, clubId: number, year: numbe
       `).bind(yearStart, yearEnd, player.id).first()
       const sessionWins = (sessionWinsResult?.session_wins as number) || 0
 
-      const mvpScore = player.goals * 2 + player.assists * 1 + player.defenses * 0.5 + sessionWins * 1.5
+      const mvpScore = player.goals * 2 + player.assists * 1.5 + player.defenses * 0.5 + sessionWins * 1.5
       const ppm = totalGames > 0 ? (points / totalGames).toFixed(2) : '0.00'
       const winRate = player.attendance > 0 ? ((sessionWins / player.attendance) * 100).toFixed(1) : '0.0'
 

@@ -33,11 +33,11 @@ export default function LoginPage() {
 
   const navigateAfterLogin = (clubs: any[]) => {
     if (clubs.length === 0) {
-      router.push('/club')
+      router.push('/clubs')   // 클럽 없음 → 클럽 가입/생성 화면
     } else if (clubs.length === 1) {
       router.push('/')
     } else {
-      router.push('/clubs')
+      router.push('/clubs')   // 여러 클럽 → 선택 화면
     }
   }
 

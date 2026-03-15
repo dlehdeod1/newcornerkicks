@@ -238,7 +238,8 @@ clubsRoutes.post('/me/regenerate-invite', authMiddleware(), async (c) => {
   `).bind(userId).first<{ id: number; role: string }>()
 
   if (!membership) return c.json({ error: '소속 클럽이 없습니다.' }, 404)
-  if (membership.role !== 'admin') return c.json({ error: '관리자만 초대 코드를 변경할 수 있습니다.' }, 403)
+  const memberRole = membership.role.toLowerCase()
+  if (memberRole !== 'admin' && memberRole !== 'owner') return c.json({ error: '관리자만 초대 코드를 변경할 수 있습니다.' }, 403)
 
   const newCode = generateInviteCode()
   const now = Math.floor(Date.now() / 1000)
@@ -300,7 +301,7 @@ clubsRoutes.get('/me/fee-config', authMiddleware(), async (c) => {
 })
 
 // 회비 설정 저장 (admin만)
-clubsRoutes.put('/me/fee-config', authMiddleware('ADMIN'), async (c) => {
+clubsRoutes.put('/me/fee-config', authMiddleware(), async (c) => {
   const userId = (c as any).userId
   const body = await c.req.json()
 

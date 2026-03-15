@@ -299,7 +299,7 @@ export const clubsApi = {
     api('/clubs/me', { token }),
 
   regenerateInviteCode: (token: string) =>
-    api('/clubs/me/regenerate-invite-code', { method: 'POST', token }),
+    api('/clubs/me/regenerate-invite', { method: 'POST', token }),
 
   join: (inviteCode: string, token: string) =>
     api('/clubs/join', { method: 'POST', body: { inviteCode }, token }),
