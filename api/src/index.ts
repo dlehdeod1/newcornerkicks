@@ -11,11 +11,16 @@ import { statsRoutes } from './routes/stats'
 import { teamsRoutes } from './routes/teams'
 import { settlementsRoutes } from './routes/settlements'
 import { meRoutes } from './routes/me'
+import { clubsRoutes } from './routes/clubs'
+import { paymentsRoutes } from './routes/payments'
+import { subscriptionsRoutes } from './routes/subscriptions'
 
 export type Env = {
   DB: D1Database
   JWT_SECRET: string
   GEMINI_API_KEY?: string
+  TOSS_SECRET_KEY?: string
+  TOSS_CLIENT_KEY?: string
 }
 
 const app = new Hono<{ Bindings: Env }>()
@@ -24,17 +29,16 @@ const app = new Hono<{ Bindings: Env }>()
 app.use('*', logger())
 app.use('*', cors({
   origin: (origin) => {
-    // 허용된 도메인 패턴
     const allowedOrigins = [
       'http://localhost:3000',
-      /^http:\/\/localhost:\d+$/,  // 모든 localhost 포트 (Flutter 웹 개발용)
+      /^http:\/\/localhost:\d+$/,
       'https://cornerkicks.vercel.app',
       'https://cornerkicks.pages.dev',
-      /\.pages\.dev$/,  // 모든 pages.dev 서브도메인
-      /\.workers\.dev$/,  // 모든 workers.dev 서브도메인
+      /\.pages\.dev$/,
+      /\.workers\.dev$/,
     ]
 
-    if (!origin) return '*' // 서버 to 서버 요청
+    if (!origin) return '*'
 
     for (const allowed of allowedOrigins) {
       if (typeof allowed === 'string' && origin === allowed) return origin
@@ -51,12 +55,13 @@ app.get('/', (c) => {
   return c.json({
     status: 'ok',
     name: 'CornerKicks API',
-    version: '0.1.0'
+    version: '0.2.0'
   })
 })
 
 // 라우트
 app.route('/auth', authRoutes)
+app.route('/clubs', clubsRoutes)
 app.route('/sessions', sessionsRoutes)
 app.route('/players', playersRoutes)
 app.route('/matches', matchesRoutes)
@@ -66,6 +71,8 @@ app.route('/stats', statsRoutes)
 app.route('/teams', teamsRoutes)
 app.route('/settlements', settlementsRoutes)
 app.route('/me', meRoutes)
+app.route('/payments', paymentsRoutes)
+app.route('/subscriptions', subscriptionsRoutes)
 
 // 404
 app.notFound((c) => {
@@ -82,4 +89,27 @@ app.onError((err, c) => {
   }, 500)
 })
 
-export default app
+// 매시간 실행: 경기 종료 시간 지난 세션 → 'ended' 로 전환
+async function autoTransitionSessions(env: Env) {
+  const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000)
+  const todayKST = kstNow.toISOString().split('T')[0]
+  const timeKST = kstNow.toISOString().split('T')[1].substring(0, 5)
+  const now = Math.floor(Date.now() / 1000)
+
+  await env.DB.prepare(`
+    UPDATE sessions SET status = 'ended', updated_at = ?
+    WHERE status IN ('recruiting', 'open', 'closed')
+      AND end_time IS NOT NULL
+      AND (
+        session_date < ?
+        OR (session_date = ? AND end_time <= ?)
+      )
+  `).bind(now, todayKST, todayKST, timeKST).run()
+}
+
+export default {
+  fetch: app.fetch.bind(app),
+  async scheduled(_event: any, env: Env, _ctx: any) {
+    await autoTransitionSessions(env)
+  },
+}

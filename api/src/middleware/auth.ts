@@ -24,10 +24,10 @@ export function authMiddleware(requiredRole?: string) {
       const clubId = membership?.club_id ?? null
       const clubRole = membership?.role?.toLowerCase() ?? null
 
-      // 역할 체크: 시스템 ADMIN 또는 클럽 어드민 모두 허용
+      // 역할 체크: 시스템 ADMIN 또는 클럽 owner/admin 모두 허용
       if (requiredRole === 'ADMIN') {
         const isSystemAdmin = payload.role === 'ADMIN'
-        const isClubAdmin = clubRole === 'admin'
+        const isClubAdmin = clubRole === 'admin' || clubRole === 'owner'
         if (!isSystemAdmin && !isClubAdmin) {
           return c.json({ error: '권한이 없습니다.' }, 403)
         }

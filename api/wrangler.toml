@@ -4,9 +4,13 @@ compatibility_date = "2024-11-01"
 
 [vars]
 JWT_SECRET = "change-this-in-production"
-# GEMINI_API_KEY는 wrangler secret put 으로 설정하세요
+TOSS_CLIENT_KEY = "test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq"
+# GEMINI_API_KEY, TOSS_SECRET_KEY는 wrangler secret put 으로 설정하세요
 
 [[d1_databases]]
 binding = "DB"
 database_name = "conerkicks-db"
 database_id = "7108af93-707b-46cf-8a70-9be933810001"
+
+[triggers]
+crons = ["0 * * * *"]
