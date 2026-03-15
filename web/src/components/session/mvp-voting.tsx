@@ -146,15 +146,14 @@ export function MvpVoting({ sessionId, attendance, sessionStatus, matches = [], 
     // 정렬
     const sorted = Object.values(scoreMap).sort((a, b) => b.rawScore - a.rawScore)
 
-    // 최고 점수 기준 10점 만점으로 환산
-    const maxScore = sorted[0]?.rawScore || 1
     return sorted.map((p) => ({
       ...p,
-      finalScore: maxScore > 0 ? Math.min(10, (p.rawScore / maxScore) * 10) : 0,
+      finalScore: p.rawScore,
     }))
   }, [attendance, sessionData?.events, voteMap])
 
   const topPlayer = playerScores[0]
+  const maxRawScore = topPlayer?.finalScore || 1
 
   // 투표 가능한 선수 목록
   const eligiblePlayers = attendance
@@ -263,7 +262,7 @@ export function MvpVoting({ sessionId, attendance, sessionStatus, matches = [], 
                         'absolute inset-0 opacity-20',
                         index === 0 ? 'bg-amber-400' : 'bg-slate-300 dark:bg-slate-600'
                       )}
-                      style={{ width: `${player.finalScore * 10}%` }}
+                      style={{ width: `${(player.finalScore / maxRawScore) * 100}%` }}
                     />
 
                     <div className="relative flex items-center justify-between gap-2">
