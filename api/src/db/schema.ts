@@ -54,6 +54,7 @@ export const abilityLogs = sqliteTable('ability_logs', {
 
 export const players = sqliteTable('players', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  clubId: integer('club_id').references(() => clubs.id),
   userId: text('user_id').references(() => users.id),
   name: text('name').notNull(),
   nickname: text('nickname'),
@@ -136,6 +137,7 @@ export const statChanges = sqliteTable('stat_changes', {
 
 export const sessions = sqliteTable('sessions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  clubId: integer('club_id').references(() => clubs.id),
   sessionDate: text('session_date').notNull(), // YYYY-MM-DD
   title: text('title'),
   potTotal: integer('pot_total').default(120000),
@@ -238,6 +240,30 @@ export const sessionMvp = sqliteTable('session_mvp', {
   playerId: integer('player_id').notNull().references(() => players.id),
   mvpScore: real('mvp_score'), // 골*2 + 어시*1 + 수비*0.5
   createdAt: integer('created_at', { mode: 'timestamp' }),
+})
+
+// ============================================
+// 클럽 도메인 (멀티테넌시)
+// ============================================
+
+export const clubs = sqliteTable('clubs', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  slug: text('slug').notNull().unique(),
+  name: text('name').notNull(),
+  description: text('description'),
+  inviteCode: text('invite_code').notNull().unique(),
+  enabledEvents: text('enabled_events').default('["GOAL","SAVE"]'), // JSON array
+  planType: text('plan_type').default('free'), // free / pro
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+})
+
+export const clubMembers = sqliteTable('club_members', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  clubId: integer('club_id').notNull().references(() => clubs.id),
+  userId: text('user_id').notNull().references(() => users.id),
+  role: text('role').notNull().default('member'), // admin | member
+  joinedAt: integer('joined_at', { mode: 'timestamp' }).notNull(),
 })
 
 // ============================================

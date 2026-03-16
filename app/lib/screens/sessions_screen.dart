@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import 'session_detail_screen.dart';
 
 class SessionsScreen extends StatefulWidget {
@@ -13,6 +15,8 @@ class _SessionsScreenState extends State<SessionsScreen> {
   final ApiService _api = ApiService();
   List<dynamic> _sessions = [];
   bool _loading = true;
+  // 낙관적 업데이트: sessionId → rsvp status
+  final Map<int, String?> _rsvpUpdating = {};
 
   @override
   void initState() {
@@ -21,8 +25,9 @@ class _SessionsScreenState extends State<SessionsScreen> {
   }
 
   Future<void> _loadSessions() async {
+    final token = context.read<AuthService>().token;
     try {
-      final res = await _api.getSessions();
+      final res = await _api.getSessions(token: token);
       if (mounted) {
         setState(() {
           _sessions = (res['sessions'] as List?) ?? [];
@@ -31,6 +36,46 @@ class _SessionsScreenState extends State<SessionsScreen> {
       }
     } catch (_) {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _toggleRsvp(dynamic session) async {
+    final auth = context.read<AuthService>();
+    if (auth.token == null || auth.player == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('선수 연동 후 참석 투표가 가능합니다'), backgroundColor: Color(0xFF3b82f6)),
+      );
+      return;
+    }
+    final sid = session['id'] as int;
+    final currentStatus = session['my_rsvp'] as String?;
+    final newStatus = currentStatus == 'going' ? 'not_going' : 'going';
+
+    // 낙관적 업데이트
+    setState(() {
+      final idx = _sessions.indexWhere((s) => s['id'] == sid);
+      if (idx >= 0) {
+        final updated = Map<String, dynamic>.from(_sessions[idx]);
+        final prevCount = (updated['rsvp_count'] ?? 0) as int;
+        if (currentStatus == 'going') {
+          updated['rsvp_count'] = prevCount - 1;
+          updated['my_rsvp'] = null;
+        } else {
+          updated['rsvp_count'] = prevCount + 1;
+          updated['my_rsvp'] = 'going';
+        }
+        _sessions[idx] = updated;
+      }
+      _rsvpUpdating[sid] = newStatus;
+    });
+
+    try {
+      await _api.rsvpSession(sid, newStatus, auth.token!);
+    } catch (_) {
+      // 실패 시 롤백
+      await _loadSessions();
+    } finally {
+      if (mounted) setState(() => _rsvpUpdating.remove(sid));
     }
   }
 
@@ -43,22 +88,204 @@ class _SessionsScreenState extends State<SessionsScreen> {
     }
   }
 
+  String _formatDate(String dateStr) {
+    try {
+      final d = DateTime.parse(dateStr);
+      return '${d.month}월 ${d.day}일 (${_dayOfWeek(dateStr)})';
+    } catch (_) {
+      return dateStr;
+    }
+  }
+
+  Color _statusColor(String? status) {
+    switch (status) {
+      case 'recruiting':
+      case 'open': return const Color(0xFF34d399);
+      case 'closed': return const Color(0xFF3b82f6);
+      case 'ended': return const Color(0xFFf97316);
+      case 'completed': return const Color(0xFF64748b);
+      default: return Colors.white38;
+    }
+  }
+
+  String _statusLabel(String? status) {
+    switch (status) {
+      case 'recruiting':
+      case 'open': return '모집중';
+      case 'closed': return '마감';
+      case 'ended': return '경기완료';
+      case 'completed': return '정산완료';
+      default: return status ?? '';
+    }
+  }
+
+  Future<void> _showCreateSessionSheet() async {
+    final auth = context.read<AuthService>();
+    if (auth.token == null) return;
+    DateTime? picked = DateTime.now().add(const Duration(days: 7));
+    final titleCtrl = TextEditingController();
+    bool saving = false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1e293b),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) => Padding(
+          padding: EdgeInsets.only(
+            left: 20, right: 20, top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text('세션 만들기', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white54),
+                    onPressed: () => Navigator.pop(ctx),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // 날짜 선택
+              GestureDetector(
+                onTap: () async {
+                  final d = await showDatePicker(
+                    context: ctx,
+                    initialDate: picked ?? DateTime.now(),
+                    firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                    lastDate: DateTime.now().add(const Duration(days: 180)),
+                    builder: (c, child) => Theme(
+                      data: ThemeData.dark().copyWith(colorScheme: const ColorScheme.dark(primary: Color(0xFF34d399))),
+                      child: child!,
+                    ),
+                  );
+                  if (d != null) setS(() => picked = d);
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(10),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withAlpha(26)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_today, size: 16, color: Color(0xFF34d399)),
+                      const SizedBox(width: 10),
+                      Text(
+                        picked != null
+                            ? '${picked!.year}.${picked!.month.toString().padLeft(2, '0')}.${picked!.day.toString().padLeft(2, '0')}'
+                            : '날짜 선택',
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: titleCtrl,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: '세션 제목 (선택)',
+                  hintStyle: TextStyle(color: Colors.white.withAlpha(77), fontSize: 13),
+                  filled: true,
+                  fillColor: Colors.white.withAlpha(10),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF34d399), width: 1.5),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: saving || picked == null
+                      ? null
+                      : () async {
+                          setS(() => saving = true);
+                          try {
+                            final dateStr =
+                                '${picked!.year}-${picked!.month.toString().padLeft(2, '0')}-${picked!.day.toString().padLeft(2, '0')}';
+                            await _api.request(
+                              '/sessions',
+                              method: 'POST',
+                              body: {
+                                'sessionDate': dateStr,
+                                if (titleCtrl.text.trim().isNotEmpty) 'title': titleCtrl.text.trim(),
+                              },
+                              token: auth.token,
+                            );
+                            if (ctx.mounted) Navigator.pop(ctx);
+                            await _loadSessions();
+                          } catch (e) {
+                            if (ctx.mounted) {
+                              setS(() => saving = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString()), backgroundColor: const Color(0xFFef4444)),
+                              );
+                            }
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF34d399),
+                    foregroundColor: const Color(0xFF0f172a),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: saving
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text('세션 생성', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        setState(() => _loading = true);
-        await _loadSessions();
-      },
-      child: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF34d399)))
-          : _sessions.isEmpty
-              ? _buildEmpty()
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _sessions.length,
-                  itemBuilder: (ctx, i) => _buildSessionCard(_sessions[i]),
-                ),
+    final auth = context.watch<AuthService>();
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: auth.isAdmin
+          ? FloatingActionButton(
+              onPressed: _showCreateSessionSheet,
+              backgroundColor: const Color(0xFF34d399),
+              foregroundColor: const Color(0xFF0f172a),
+              child: const Icon(Icons.add),
+            )
+          : null,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          setState(() => _loading = true);
+          await _loadSessions();
+        },
+        color: const Color(0xFF34d399),
+        child: _loading
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF34d399)))
+            : _sessions.isEmpty
+                ? _buildEmpty()
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+                    itemCount: _sessions.length,
+                    itemBuilder: (ctx, i) => _buildSessionCard(_sessions[i]),
+                  ),
+      ),
     );
   }
 
@@ -72,16 +299,17 @@ class _SessionsScreenState extends State<SessionsScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 64,
-                  height: 64,
+                  width: 72, height: 72,
                   decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(13),
-                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.white.withAlpha(10),
+                    borderRadius: BorderRadius.circular(22),
                   ),
-                  child: Icon(Icons.calendar_today, size: 32, color: Colors.white.withAlpha(64)),
+                  child: const Center(child: Text('📅', style: TextStyle(fontSize: 32))),
                 ),
                 const SizedBox(height: 16),
-                Text('등록된 일정이 없습니다', style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 16)),
+                const Text('세션이 없습니다', style: TextStyle(color: Colors.white54, fontSize: 16)),
+                const SizedBox(height: 8),
+                Text('아직 등록된 세션이 없어요', style: TextStyle(color: Colors.white.withAlpha(77), fontSize: 13)),
               ],
             ),
           ),
@@ -90,103 +318,140 @@ class _SessionsScreenState extends State<SessionsScreen> {
     );
   }
 
-  Widget _buildSessionCard(Map<String, dynamic> session) {
-    final status = session['status'] ?? 'closed';
-    final date = session['session_date'] ?? '';
-    final title = session['title'] ?? '코너킥스 정기 풋살';
-    final dow = _dayOfWeek(date);
-
-    Color statusColor;
-    String statusLabel;
-    switch (status) {
-      case 'recruiting':
-        statusColor = const Color(0xFF34d399);
-        statusLabel = '모집중';
-        break;
-      case 'completed':
-        statusColor = const Color(0xFF64748b);
-        statusLabel = '완료';
-        break;
-      default:
-        statusColor = const Color(0xFFf59e0b);
-        statusLabel = '마감';
-    }
+  Widget _buildSessionCard(dynamic session) {
+    final status = session['status'] as String?;
+    final statusColor = _statusColor(status);
+    final dateStr = session['session_date'] as String? ?? '';
+    final title = session['title'] as String? ?? '정기 풋살';
+    final rsvpCount = (session['rsvp_count'] ?? 0) as int;
+    final myRsvp = session['my_rsvp'] as String?;
+    final isRecruiting = status == 'recruiting';
+    final isGoing = myRsvp == 'going';
+    final sid = session['id'] as int;
+    final isUpdating = _rsvpUpdating.containsKey(sid);
 
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: session['id'])),
-        );
-      },
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: session['id'])),
+      ).then((_) => _loadSessions()),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(20),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white.withAlpha(8),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withAlpha(20)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isGoing ? const Color(0xFF34d399).withAlpha(51) : Colors.white.withAlpha(15)),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 상태 뱃지
             Row(
               children: [
+                // 날짜 블록
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  width: 52, height: 52,
                   decoration: BoxDecoration(
-                    color: statusColor.withAlpha(26),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: statusColor.withAlpha(64)),
+                    color: statusColor.withAlpha(20),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: statusColor.withAlpha(51)),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
+                      Text(
+                        dateStr.length >= 10 ? dateStr.substring(5, 7) : '-',
+                        style: TextStyle(fontSize: 11, color: statusColor.withAlpha(204), fontWeight: FontWeight.w600),
                       ),
-                      const SizedBox(width: 6),
-                      Text(statusLabel, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: statusColor)),
+                      Text(
+                        dateStr.length >= 10 ? dateStr.substring(8, 10) : '-',
+                        style: TextStyle(fontSize: 18, color: statusColor, fontWeight: FontWeight.bold, height: 1.1),
+                      ),
                     ],
                   ),
                 ),
-                const Spacer(),
-                Icon(Icons.chevron_right, color: Colors.white.withAlpha(64), size: 20),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: statusColor.withAlpha(20),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(_statusLabel(status), style: TextStyle(fontSize: 10, color: statusColor, fontWeight: FontWeight.w600)),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(_formatDate(dateStr), style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(77))),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // 상태 배지 + 화살표
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Icon(Icons.chevron_right, color: Colors.white.withAlpha(51), size: 18),
+                    if (rsvpCount > 0) ...[
+                      const SizedBox(height: 4),
+                      Text('$rsvpCount명', style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102))),
+                    ],
+                  ],
+                ),
               ],
             ),
-            const SizedBox(height: 14),
-
-            // 날짜
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text(date, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-                const SizedBox(width: 8),
-                Text('($dow요일)', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(128))),
-              ],
-            ),
-            const SizedBox(height: 6),
-
-            // 제목
-            Text(title, style: TextStyle(fontSize: 15, color: Colors.white.withAlpha(179))),
-            const SizedBox(height: 12),
-
-            // 정보
-            Row(
-              children: [
-                Icon(Icons.location_on_outlined, size: 15, color: Colors.white.withAlpha(102)),
-                const SizedBox(width: 4),
-                Text('수성대 풋살장 2번구장', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
-                const SizedBox(width: 16),
-                Icon(Icons.access_time, size: 15, color: Colors.white.withAlpha(102)),
-                const SizedBox(width: 4),
-                Text('21:00 ~ 23:00', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
-              ],
-            ),
+            // RSVP 버튼 (모집중인 세션만)
+            if (isRecruiting) ...[
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: isUpdating ? null : () => _toggleRsvp(session),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isGoing
+                        ? const Color(0xFF34d399).withAlpha(26)
+                        : Colors.white.withAlpha(8),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isGoing ? const Color(0xFF34d399).withAlpha(77) : Colors.white.withAlpha(20),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (isUpdating)
+                        const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFF34d399)))
+                      else
+                        Text(
+                          isGoing ? '✓' : '+',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: isGoing ? const Color(0xFF34d399) : Colors.white.withAlpha(153),
+                          ),
+                        ),
+                      const SizedBox(width: 6),
+                      Text(
+                        isGoing ? '참석 예정 ($rsvpCount명)' : '참석하기',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: isGoing ? FontWeight.w600 : FontWeight.normal,
+                          color: isGoing ? const Color(0xFF34d399) : Colors.white.withAlpha(153),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

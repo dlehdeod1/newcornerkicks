@@ -6,9 +6,10 @@ import { optionalAuthMiddleware, authMiddleware } from '../middleware/auth'
 const matchesRoutes = new Hono<{ Bindings: Env }>()
 
 // 경기 생성
-matchesRoutes.post('/', optionalAuthMiddleware, async (c) => {
+matchesRoutes.post('/', authMiddleware(), async (c) => {
   try {
     const body = await c.req.json()
+    const clubId = (c as any).clubId
 
     const schema = z.object({
       sessionId: z.number(),
@@ -18,6 +19,14 @@ matchesRoutes.post('/', optionalAuthMiddleware, async (c) => {
     })
 
     const data = schema.parse(body)
+
+    // 세션이 요청자의 클럽 소속인지 확인
+    const session = await c.env.DB.prepare(
+      'SELECT club_id FROM sessions WHERE id = ?'
+    ).bind(data.sessionId).first()
+    if (!session || (session as any).club_id !== clubId) {
+      return c.json({ error: '해당 클럽 소속 세션이 아닙니다.' }, 403)
+    }
 
     // matchNo가 없으면 자동 계산
     let matchNo = data.matchNo
@@ -46,9 +55,10 @@ matchesRoutes.post('/', optionalAuthMiddleware, async (c) => {
 })
 
 // 3팀 순환 경기 일괄 생성 (AB, BC, CA)
-matchesRoutes.post('/round-robin', optionalAuthMiddleware, async (c) => {
+matchesRoutes.post('/round-robin', authMiddleware(), async (c) => {
   try {
     const body = await c.req.json()
+    const clubId = (c as any).clubId
 
     const schema = z.object({
       sessionId: z.number(),
@@ -58,6 +68,14 @@ matchesRoutes.post('/round-robin', optionalAuthMiddleware, async (c) => {
 
     const parsed = schema.parse(body)
     const data = { ...parsed, rounds: parsed.rounds || 1 }
+
+    // 세션이 요청자의 클럽 소속인지 확인
+    const session = await c.env.DB.prepare(
+      'SELECT club_id FROM sessions WHERE id = ?'
+    ).bind(data.sessionId).first()
+    if (!session || (session as any).club_id !== clubId) {
+      return c.json({ error: '해당 클럽 소속 세션이 아닙니다.' }, 403)
+    }
 
     // 현재 최대 match_no 조회
     const lastMatch = await c.env.DB.prepare(`
@@ -105,14 +123,23 @@ matchesRoutes.post('/round-robin', optionalAuthMiddleware, async (c) => {
 })
 
 // 경기 삭제
-matchesRoutes.delete('/:id', optionalAuthMiddleware, async (c) => {
+matchesRoutes.delete('/:id', authMiddleware('ADMIN'), async (c) => {
   try {
     const id = c.req.param('id')
+    const clubId = (c as any).clubId
 
-    // 삭제 전 세션 정보 가져오기 (랭킹 캐시 무효화용)
+    // 삭제 전 세션 정보 가져오기 (랭킹 캐시 무효화용 + 클럽 검증)
     const match = await c.env.DB.prepare(
-      'SELECT session_id FROM matches WHERE id = ?'
+      'SELECT m.session_id, s.club_id FROM matches m JOIN sessions s ON m.session_id = s.id WHERE m.id = ?'
     ).bind(id).first()
+
+    if (!match) {
+      return c.json({ error: '경기를 찾을 수 없습니다.' }, 404)
+    }
+
+    if ((match as any).club_id !== clubId) {
+      return c.json({ error: '해당 클럽 소속 경기가 아닙니다.' }, 403)
+    }
 
     // 관련 이벤트 먼저 삭제
     await c.env.DB.prepare('DELETE FROM match_events WHERE match_id = ?').bind(id).run()
@@ -248,10 +275,19 @@ matchesRoutes.put('/:id', optionalAuthMiddleware, async (c) => {
 })
 
 // 이벤트 추가 (골/수비)
-matchesRoutes.post('/:id/events', optionalAuthMiddleware, async (c) => {
+matchesRoutes.post('/:id/events', authMiddleware(), async (c) => {
   try {
     const matchId = c.req.param('id')
     const body = await c.req.json()
+    const clubId = (c as any).clubId
+
+    // 경기가 요청자의 클럽 소속인지 확인
+    const matchCheck = await c.env.DB.prepare(
+      'SELECT s.club_id FROM matches m JOIN sessions s ON m.session_id = s.id WHERE m.id = ?'
+    ).bind(matchId).first()
+    if (!matchCheck || (matchCheck as any).club_id !== clubId) {
+      return c.json({ error: '해당 클럽 소속 경기가 아닙니다.' }, 403)
+    }
 
     const schema = z.object({
       eventType: z.enum(['GOAL', 'DEFENSE']),
@@ -311,10 +347,19 @@ matchesRoutes.post('/:id/events', optionalAuthMiddleware, async (c) => {
 })
 
 // 이벤트 삭제
-matchesRoutes.delete('/:id/events/:eventId', optionalAuthMiddleware, async (c) => {
+matchesRoutes.delete('/:id/events/:eventId', authMiddleware(), async (c) => {
   try {
     const matchId = c.req.param('id')
     const eventId = c.req.param('eventId')
+    const clubId = (c as any).clubId
+
+    // 경기가 요청자의 클럽 소속인지 확인
+    const matchCheck = await c.env.DB.prepare(
+      'SELECT s.club_id FROM matches m JOIN sessions s ON m.session_id = s.id WHERE m.id = ?'
+    ).bind(matchId).first()
+    if (!matchCheck || (matchCheck as any).club_id !== clubId) {
+      return c.json({ error: '해당 클럽 소속 경기가 아닙니다.' }, 403)
+    }
 
     // 이벤트 조회
     const event = await c.env.DB.prepare(

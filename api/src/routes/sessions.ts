@@ -1,38 +1,72 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import type { Env } from '../index'
-import { authMiddleware } from '../middleware/auth'
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth'
 
 const sessionsRoutes = new Hono<{ Bindings: Env }>()
 
 // 세션 목록 조회
-sessionsRoutes.get('/', async (c) => {
+sessionsRoutes.get('/', optionalAuthMiddleware, async (c) => {
   const status = c.req.query('status')
-  const limit = Number(c.req.query('limit')) || 10
+  const limitParam = c.req.query('limit')
+  const clubId = (c as any).clubId
 
-  let query = 'SELECT * FROM sessions'
-  const params: string[] = []
+  if (!clubId) {
+    return c.json({ sessions: [] })
+  }
+
+  const conditions: string[] = ['club_id = ?']
+  const params: any[] = [clubId]
 
   if (status) {
-    query += ' WHERE status = ?'
+    conditions.push('status = ?')
     params.push(status)
   }
 
-  query += ' ORDER BY session_date DESC LIMIT ?'
-  params.push(String(limit))
+  let query = `SELECT s.*,
+    (SELECT COUNT(*) FROM session_rsvp WHERE session_id = s.id AND status = 'going') as rsvp_count
+    FROM sessions s WHERE ${conditions.join(' AND ')} ORDER BY s.session_date DESC`
+  if (limitParam) {
+    query += ` LIMIT ?`
+    params.push(Number(limitParam))
+  }
 
   const sessions = await c.env.DB.prepare(query).bind(...params).all()
 
-  return c.json({ sessions: sessions.results })
+  // 내 RSVP 상태 조회
+  const userId = (c as any).userId
+  let myRsvpMap: Record<number, string> = {}
+  if (userId && sessions.results.length > 0) {
+    const sessionIds = sessions.results.map((s: any) => s.id)
+    const placeholders = sessionIds.map(() => '?').join(',')
+    const myRsvps = await c.env.DB.prepare(
+      `SELECT session_id, status FROM session_rsvp WHERE session_id IN (${placeholders}) AND user_id = ?`
+    ).bind(...sessionIds, userId).all()
+    for (const r of myRsvps.results as any[]) {
+      myRsvpMap[r.session_id] = r.status
+    }
+  }
+
+  const sessionsWithRsvp = sessions.results.map((s: any) => ({
+    ...s,
+    my_rsvp: userId ? (myRsvpMap[s.id] ?? null) : null,
+  }))
+
+  return c.json({ sessions: sessionsWithRsvp })
 })
 
 // 세션 상세 조회
-sessionsRoutes.get('/:id', async (c) => {
+sessionsRoutes.get('/:id', optionalAuthMiddleware, async (c) => {
   const id = c.req.param('id')
+  const clubId = (c as any).clubId
+
+  if (!clubId) {
+    return c.json({ error: '세션을 찾을 수 없습니다.' }, 404)
+  }
 
   const session = await c.env.DB.prepare(
-    'SELECT * FROM sessions WHERE id = ?'
-  ).bind(id).first()
+    'SELECT * FROM sessions WHERE id = ? AND club_id = ?'
+  ).bind(id, clubId).first()
 
   if (!session) {
     return c.json({ error: '세션을 찾을 수 없습니다.' }, 404)
@@ -102,47 +136,69 @@ sessionsRoutes.get('/:id', async (c) => {
     WHERE a.session_id = ?
   `).bind(id).all()
 
+  // RSVP 조회
+  const rsvpList = await c.env.DB.prepare(`
+    SELECT r.*, u.username,
+           CASE WHEN r.player_id IS NOT NULL THEN p.name ELSE u.username END as display_name
+    FROM session_rsvp r
+    JOIN users u ON r.user_id = u.id
+    LEFT JOIN players p ON r.player_id = p.id
+    WHERE r.session_id = ?
+    ORDER BY r.created_at ASC
+  `).bind(id).all()
+
   return c.json({
     session,
     teams: teamsWithMembers,
     matches: matchesWithEvents,
     attendance: attendance.results,
+    rsvp: rsvpList.results,
+    rsvpCount: rsvpList.results.filter((r: any) => r.status === 'going').length,
   })
 })
 
 // 세션 생성 (관리자)
 sessionsRoutes.post('/', authMiddleware('ADMIN'), async (c) => {
-  const body = await c.req.json()
+  try {
+    const body = await c.req.json()
 
-  const schema = z.object({
-    sessionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    title: z.string().optional(),
-    notes: z.string().optional(),
-  })
+    const schema = z.object({
+      sessionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      title: z.string().optional(),
+      notes: z.string().optional(),
+    })
 
-  const data = schema.parse(body)
-  const now = Math.floor(Date.now() / 1000)
+    const data = schema.parse(body)
+    const now = Math.floor(Date.now() / 1000)
 
-  const result = await c.env.DB.prepare(`
-    INSERT INTO sessions (session_date, title, status, created_at)
-    VALUES (?, ?, 'recruiting', ?)
-  `).bind(
-    data.sessionDate,
-    data.title || '코너킥스 정기 풋살',
-    now
-  ).run()
+    const clubId = (c as any).clubId
+    if (!clubId) return c.json({ error: '클럽에 소속되어 있지 않습니다.' }, 403)
 
-  return c.json({
-    id: result.meta.last_row_id,
-    message: '세션이 생성되었습니다.',
-  }, 201)
+    const result = await c.env.DB.prepare(`
+      INSERT INTO sessions (club_id, session_date, title, status, created_at)
+      VALUES (?, ?, ?, 'recruiting', ?)
+    `).bind(
+      clubId,
+      data.sessionDate,
+      data.title || '코너킥스 정기 풋살',
+      now
+    ).run()
+
+    return c.json({
+      id: result.meta.last_row_id,
+      message: '세션이 생성되었습니다.',
+    }, 201)
+  } catch (e: any) {
+    if (e instanceof z.ZodError) return c.json({ error: '입력값이 올바르지 않습니다.', details: e.errors }, 400)
+    throw e
+  }
 })
 
 // 세션 수정 (관리자)
 sessionsRoutes.put('/:id', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')
   const body = await c.req.json()
-  const { title, sessionDate, status, notes } = body
+  const { title, sessionDate, status, notes, startTime, endTime, location, targetMembers } = body
 
   // 동적으로 업데이트할 필드 구성
   const updates: string[] = []
@@ -164,6 +220,22 @@ sessionsRoutes.put('/:id', authMiddleware('ADMIN'), async (c) => {
     updates.push('notes = ?')
     params.push(notes)
   }
+  if (startTime !== undefined) {
+    updates.push('start_time = ?')
+    params.push(startTime)
+  }
+  if (endTime !== undefined) {
+    updates.push('end_time = ?')
+    params.push(endTime)
+  }
+  if (location !== undefined) {
+    updates.push('location = ?')
+    params.push(location)
+  }
+  if (targetMembers !== undefined) {
+    updates.push('target_members = ?')
+    params.push(targetMembers)
+  }
 
   if (updates.length === 0) {
     return c.json({ error: '수정할 내용이 없습니다.' }, 400)
@@ -174,6 +246,11 @@ sessionsRoutes.put('/:id', authMiddleware('ADMIN'), async (c) => {
   await c.env.DB.prepare(`
     UPDATE sessions SET ${updates.join(', ')} WHERE id = ?
   `).bind(...params).run()
+
+  // 세션이 ended 상태가 되면 자동 정산 처리
+  if (status === 'ended') {
+    await autoSettleSession(c.env.DB, Number(id))
+  }
 
   return c.json({ message: '세션이 수정되었습니다.' })
 })
@@ -306,7 +383,19 @@ function calculateRole(player: any): { attack: number; defense: number } {
   return { attack, defense }
 }
 
-// AI 팀 밸런싱 알고리즘
+// 무료 플랜: 랜덤 + 균등 배분 (Fisher-Yates 셔플)
+function randomBalanceTeams(players: any[], teamCount: number): any[][] {
+  const shuffled = [...players]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  const teams: any[][] = Array.from({ length: teamCount }, () => [])
+  shuffled.forEach((p, i) => teams[i % teamCount].push(p))
+  return teams
+}
+
+// 유료 플랜: 능력치 기반 밸런싱 알고리즘
 function balanceTeams(players: any[], teamCount: number): any[][] {
   // 종합 능력치와 역할 계산
   const playersWithStats = players.map(p => ({
@@ -364,13 +453,20 @@ function balanceTeams(players: any[], teamCount: number): any[][] {
   return teams
 }
 
-// 팀 편성 (AI 밸런싱)
+// 팀 편성 (플랜에 따라 AI/랜덤 분기)
 sessionsRoutes.post('/:id/teams', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')
 
   try {
     const body = await c.req.json()
     const { attendees } = body
+
+    // 클럽 플랜 확인
+    const clubId = (c as any).clubId
+    const clubRow = clubId
+      ? await c.env.DB.prepare('SELECT plan_type FROM clubs WHERE id = ?').bind(clubId).first<{ plan_type: string }>()
+      : null
+    const isPro = clubRow?.plan_type === 'pro'
 
     const playerAttendees = attendees.filter((a: any) => a.playerId)
     const guestAttendees = attendees.filter((a: any) => !a.playerId)
@@ -425,8 +521,10 @@ sessionsRoutes.post('/:id/teams', authMiddleware('ADMIN'), async (c) => {
     // 모든 참가자 합치기
     const allPlayers = [...playersWithStats, ...guestsWithStats]
 
-    // AI 밸런싱으로 팀 구성
-    const balancedTeams = balanceTeams(allPlayers, teamCount)
+    // 플랜에 따라 팀 편성 방식 결정
+    const balancedTeams = isPro
+      ? balanceTeams(allPlayers, teamCount)
+      : randomBalanceTeams(allPlayers, teamCount)
 
     // 팀 생성 및 멤버 배치
     const teamNames = ['A팀', 'B팀', 'C팀']
@@ -494,11 +592,12 @@ sessionsRoutes.post('/:id/teams', authMiddleware('ADMIN'), async (c) => {
     await createMatchSchedule(c.env.DB, Number(id), teamIds)
 
     return c.json({
-      message: '🤖 AI 팀 편성이 완료되었습니다!',
+      message: isPro ? '🤖 AI 팀 편성이 완료되었습니다!' : '🎲 팀 편성이 완료되었습니다!',
       teamCount,
       teamIds,
       teams: teamSummaries,
       balanceScore: calculateBalanceScore(balancedTeams),
+      isPro,
     })
   } catch (err: any) {
     console.error('Create teams error:', err)
@@ -744,7 +843,7 @@ sessionsRoutes.get('/:id/settlement', async (c) => {
   ).bind(id).first()
 
   // 정산 상세 조회 (팀별, 개인별)
-  let details: any[] = []
+  let details: any = null
   if (settlement) {
     const teamSettlements = await c.env.DB.prepare(`
       SELECT ts.*, t.name as team_name
@@ -774,75 +873,53 @@ sessionsRoutes.get('/:id/settlement', async (c) => {
   })
 })
 
-// 정산 완료 (관리자)
+// 정산 완료 (관리자) - session_payments 기반 자동 정산
 sessionsRoutes.post('/:id/settlement', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')
-  const body = await c.req.json()
-  const { baseFee, totalPot, prizeDistribution, teamResults, mvp } = body
-
+  const clubId = (c as any).clubId
   const now = Math.floor(Date.now() / 1000)
 
-  // 기존 정산 삭제
+  // 세션 존재 + 클럽 격리 확인
+  const session = await c.env.DB.prepare(
+    'SELECT id, status FROM sessions WHERE id = ? AND club_id = ?'
+  ).bind(id, clubId).first()
+  if (!session) return c.json({ error: '세션을 찾을 수 없습니다.' }, 404)
+
+  // 1. 해당 세션의 session_payments 조회
+  const payments = await c.env.DB.prepare(
+    'SELECT * FROM session_payments WHERE session_id = ?'
+  ).bind(id).all()
+
+  // 2. settlements 레코드 없으면 생성, 있으면 재사용
+  let settlementId: number
   const existingSettlement = await c.env.DB.prepare(
     'SELECT id FROM settlements WHERE session_id = ?'
-  ).bind(id).first()
+  ).bind(id).first() as any
 
   if (existingSettlement) {
-    await c.env.DB.prepare('DELETE FROM player_settlements WHERE settlement_id = ?')
-      .bind(existingSettlement.id).run()
-    await c.env.DB.prepare('DELETE FROM team_settlements WHERE settlement_id = ?')
-      .bind(existingSettlement.id).run()
-    await c.env.DB.prepare('DELETE FROM settlements WHERE id = ?')
-      .bind(existingSettlement.id).run()
+    settlementId = existingSettlement.id as number
+  } else {
+    const totalPot = (payments.results as any[]).reduce(
+      (sum: number, p: any) => sum + (p.amount ?? 0), 0
+    )
+    const settlementResult = await c.env.DB.prepare(`
+      INSERT INTO settlements (session_id, total_pot, status, created_at)
+      VALUES (?, ?, 'pending', ?)
+    `).bind(id, totalPot, now).run()
+    settlementId = settlementResult.meta.last_row_id as number
   }
 
-  // 정산 생성
-  const settlementResult = await c.env.DB.prepare(`
-    INSERT INTO settlements (session_id, base_fee, total_pot, operation_fee, status, created_at)
-    VALUES (?, ?, ?, ?, 'completed', ?)
-  `).bind(
-    id,
-    baseFee,
-    totalPot,
-    prizeDistribution?.operations || Math.floor(totalPot * 0.15),
-    now
-  ).run()
+  // 3. 모든 session_payments의 settlement_id 업데이트
+  await c.env.DB.prepare(
+    'UPDATE session_payments SET settlement_id = ? WHERE session_id = ?'
+  ).bind(settlementId, id).run()
 
-  const settlementId = settlementResult.meta.last_row_id
+  // 4. settlements 상태를 completed로 업데이트
+  await c.env.DB.prepare(
+    'UPDATE settlements SET status = ? WHERE id = ?'
+  ).bind('completed', settlementId).run()
 
-  // 팀별 정산 저장
-  for (const team of teamResults) {
-    await c.env.DB.prepare(`
-      INSERT INTO team_settlements (settlement_id, team_id, rank, prize_amount, per_person)
-      VALUES (?, ?, ?, ?, ?)
-    `).bind(
-      settlementId,
-      team.teamId,
-      team.rank,
-      team.prizeAmount,
-      team.perPerson
-    ).run()
-  }
-
-  // MVP 정산 저장
-  if (mvp?.playerId) {
-    await c.env.DB.prepare(`
-      INSERT INTO player_settlements (settlement_id, player_id, prize_type, prize_amount)
-      VALUES (?, ?, 'mvp', ?)
-    `).bind(settlementId, mvp.playerId, mvp.prizeAmount).run()
-
-    // session_mvp_results에도 저장 (기존 결과 삭제 후)
-    await c.env.DB.prepare(
-      'DELETE FROM session_mvp_results WHERE session_id = ?'
-    ).bind(id).run()
-
-    await c.env.DB.prepare(`
-      INSERT INTO session_mvp_results (session_id, player_id, vote_count, decided_at)
-      VALUES (?, ?, 0, ?)
-    `).bind(id, mvp.playerId, now).run()
-  }
-
-  // 세션 상태 업데이트
+  // 5. 세션 status를 'completed'로 변경
   await c.env.DB.prepare(
     'UPDATE sessions SET status = ?, updated_at = ? WHERE id = ?'
   ).bind('completed', now, id).run()
@@ -899,14 +976,14 @@ sessionsRoutes.get('/:id/mvp-votes', async (c) => {
     votes: voteResults.results,
     totalVotes: (totalVotes as any)?.count || 0,
     mvpResult,
-    isVotingClosed: !!(session as any).status === 'completed' || !!mvpResult,
+    isVotingClosed: (session as any).status === 'completed' || !!mvpResult,
   })
 })
 
 // MVP 투표하기 (로그인 필수)
 sessionsRoutes.post('/:id/mvp-votes', authMiddleware(), async (c) => {
   const id = c.req.param('id')
-  const userId = c.get('userId')
+  const userId = (c as any).userId
   const body = await c.req.json()
   const { playerId } = body
 
@@ -970,7 +1047,7 @@ sessionsRoutes.post('/:id/mvp-votes', authMiddleware(), async (c) => {
 // 내 투표 확인
 sessionsRoutes.get('/:id/mvp-votes/me', authMiddleware(), async (c) => {
   const id = c.req.param('id')
-  const userId = c.get('userId')
+  const userId = (c as any).userId
 
   const myVote = await c.env.DB.prepare(`
     SELECT v.*, p.name as player_name
@@ -1085,9 +1162,18 @@ sessionsRoutes.get('/:id/ai-analysis', async (c) => {
   return c.json({ analysis: teamsWithMembers, hasAnalysis })
 })
 
-// AI 팀 분석 실행 (관리자 전용 - Gemini API 비용 발생)
+// AI 팀 분석 실행 (관리자 전용 + PRO 플랜 - Gemini API 비용 발생)
 sessionsRoutes.post('/:id/ai-analysis', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')
+
+  // PRO 플랜 체크
+  const clubId = (c as any).clubId
+  const clubRow = clubId
+    ? await c.env.DB.prepare('SELECT plan_type FROM clubs WHERE id = ?').bind(clubId).first<{ plan_type: string }>()
+    : null
+  if (clubRow?.plan_type !== 'pro') {
+    return c.json({ error: 'PRO 플랜에서만 AI 분석을 사용할 수 있습니다.' }, 403)
+  }
 
   // 팀 조회
   const teams = await c.env.DB.prepare(
@@ -1376,5 +1462,212 @@ JSON 형식으로만 응답 (다른 텍스트 없이):
     })
   }
 })
+
+
+// 참석 투표 (RSVP) - 토글
+sessionsRoutes.post('/:id/rsvp', authMiddleware(), async (c) => {
+  const sessionId = c.req.param('id')
+  const userId = (c as any).userId
+  const clubId = (c as any).clubId
+
+  const body = await c.req.json()
+  const status: string = body.status === 'not_going' ? 'not_going' : 'going'
+
+  // 세션 존재 + 클럽 확인
+  const session = await c.env.DB.prepare(
+    'SELECT id, status FROM sessions WHERE id = ? AND club_id = ?'
+  ).bind(sessionId, clubId).first<any>()
+  if (!session) return c.json({ error: '세션을 찾을 수 없습니다.' }, 404)
+
+  // 연동된 선수 조회
+  const player = await c.env.DB.prepare(
+    'SELECT id FROM players WHERE user_id = ? AND club_id = ?'
+  ).bind(userId, clubId).first<any>()
+
+  const now = Math.floor(Date.now() / 1000)
+
+  // 기존 RSVP 확인
+  const existing = await c.env.DB.prepare(
+    'SELECT id, status FROM session_rsvp WHERE session_id = ? AND user_id = ?'
+  ).bind(sessionId, userId).first<any>()
+
+  if (existing) {
+    if (existing.status === status) {
+      // 같은 상태면 취소 (토글)
+      await c.env.DB.prepare(
+        'DELETE FROM session_rsvp WHERE session_id = ? AND user_id = ?'
+      ).bind(sessionId, userId).run()
+      return c.json({ ok: true, status: null, message: '참석 취소되었습니다.' })
+    } else {
+      await c.env.DB.prepare(
+        'UPDATE session_rsvp SET status = ? WHERE session_id = ? AND user_id = ?'
+      ).bind(status, sessionId, userId).run()
+    }
+  } else {
+    await c.env.DB.prepare(`
+      INSERT INTO session_rsvp (session_id, user_id, player_id, status, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind(sessionId, userId, player?.id ?? null, status, now).run()
+  }
+
+  const count = await c.env.DB.prepare(
+    "SELECT COUNT(*) as cnt FROM session_rsvp WHERE session_id = ? AND status = 'going'"
+  ).bind(sessionId).first<any>()
+
+  const rsvpCount = count?.cnt ?? 0
+
+  // 목표 인원 도달 시 자동 마감
+  if (status === 'going') {
+    const sessionInfo = await c.env.DB.prepare(
+      'SELECT target_members, status FROM sessions WHERE id = ?'
+    ).bind(sessionId).first<{ target_members: number | null; status: string }>()
+
+    if (
+      sessionInfo?.target_members &&
+      rsvpCount >= sessionInfo.target_members &&
+      sessionInfo.status !== 'closed'
+    ) {
+      await c.env.DB.prepare(
+        'UPDATE sessions SET status = ?, updated_at = ? WHERE id = ?'
+      ).bind('closed', now, sessionId).run()
+    }
+  }
+
+  return c.json({ ok: true, status, rsvpCount })
+})
+
+// ── 자동 정산: 세션 ended 시 순위별 참가비 session_payments 생성 ──────────────
+async function autoSettleSession(db: any, sessionId: number) {
+  // 1. 세션의 클럽 정보 및 fee_tiers 조회
+  const session = await db.prepare(`
+    SELECT s.id, s.club_id, c.per_game_fee, c.fee_tiers
+    FROM sessions s
+    JOIN clubs c ON c.id = s.club_id
+    WHERE s.id = ?
+  `).bind(sessionId).first() as any
+  if (!session) return
+
+  const perGameFee: number = session.per_game_fee ?? 0
+  const feeTiers: Array<{ rank: number; amount: number }> = JSON.parse(session.fee_tiers ?? '[]')
+
+  // 2. 해당 세션의 팀 목록
+  const teams = await db.prepare(
+    'SELECT id, name FROM teams WHERE session_id = ? ORDER BY id'
+  ).bind(sessionId).all()
+  if (!teams.results.length) return
+
+  // 3. 매치 및 이벤트로 리그 스탠딩 계산
+  const matches = await db.prepare(
+    `SELECT m.*, GROUP_CONCAT(me.event_type || ':' || COALESCE(me.team_id,'')) as events_raw
+     FROM matches m
+     LEFT JOIN match_events me ON me.match_id = m.id AND me.event_type = 'GOAL'
+     WHERE m.session_id = ? AND m.status = 'completed'
+     GROUP BY m.id`
+  ).bind(sessionId).all()
+
+  const standings: Record<number, { points: number; gf: number; ga: number }> = {}
+  for (const t of teams.results as any[]) {
+    standings[t.id] = { points: 0, gf: 0, ga: 0 }
+  }
+
+  for (const match of matches.results as any[]) {
+    const t1 = match.team1_id as number
+    const t2 = match.team2_id as number
+    const events = (match.events_raw as string | null)?.split(',') ?? []
+    const s1 = events.filter(e => e.startsWith('GOAL:' + t1)).length
+    const s2 = events.filter(e => e.startsWith('GOAL:' + t2)).length
+    if (!standings[t1] || !standings[t2]) continue
+    standings[t1].gf += s1; standings[t1].ga += s2
+    standings[t2].gf += s2; standings[t2].ga += s1
+    if (s1 > s2) { standings[t1].points += 3 }
+    else if (s1 < s2) { standings[t2].points += 3 }
+    else { standings[t1].points += 1; standings[t2].points += 1 }
+  }
+
+  // 4. 순위 정렬 (승점 → 골득실 → 다득점)
+  const ranked = Object.entries(standings)
+    .sort(([, a], [, b]) => {
+      const pd = b.points - a.points
+      if (pd !== 0) return pd
+      const gd = (b.gf - b.ga) - (a.gf - a.ga)
+      if (gd !== 0) return gd
+      return b.gf - a.gf
+    })
+    .map(([teamId], idx) => ({ teamId: Number(teamId), rank: idx + 1 }))
+
+  // 5. 팀별 멤버 조회
+  const members = await db.prepare(`
+    SELECT tm.player_id, tm.guest_name, tm.team_id, COALESCE(p.name, tm.guest_name) as name
+    FROM team_members tm
+    LEFT JOIN players p ON p.id = tm.player_id
+    WHERE tm.team_id IN (${teams.results.map(() => '?').join(',')})
+  `).bind(...teams.results.map((t: any) => t.id)).all()
+
+  // 6. session_payments 생성 (중복 방지)
+  const now = Math.floor(Date.now() / 1000)
+
+  // 총 참가비 합계 계산 (settlements.total_pot용)
+  let totalPot = 0
+  const memberPayments: Array<{
+    playerId: number | null
+    guestName: string | null
+    name: string
+    amount: number
+    teamRank: number
+  }> = []
+
+  for (const member of members.results as any[]) {
+    const teamRank = ranked.find(r => r.teamId === member.team_id)?.rank ?? 1
+    const tier = feeTiers.find(t => t.rank === teamRank)
+    const amount = tier ? tier.amount : perGameFee
+    totalPot += amount
+    memberPayments.push({
+      playerId: member.player_id ?? null,
+      guestName: member.guest_name ?? null,
+      name: member.name ?? '?',
+      amount,
+      teamRank,
+    })
+  }
+
+  // settlements 레코드 생성 (이미 있으면 스킵)
+  let settlementId: number | null = null
+  const existingSettlement = await db.prepare(
+    'SELECT id FROM settlements WHERE session_id = ?'
+  ).bind(sessionId).first() as any
+  if (existingSettlement) {
+    settlementId = existingSettlement.id
+  } else {
+    const settlementResult = await db.prepare(`
+      INSERT INTO settlements (session_id, total_pot, status, created_at)
+      VALUES (?, ?, 'pending', ?)
+    `).bind(sessionId, totalPot, now).run()
+    settlementId = settlementResult.meta.last_row_id as number
+  }
+
+  // session_payments 생성
+  for (const mp of memberPayments) {
+    // 이미 있으면 스킵
+    const existing = await db.prepare(
+      'SELECT id FROM session_payments WHERE session_id = ? AND player_id IS ? AND guest_name IS ?'
+    ).bind(sessionId, mp.playerId, mp.guestName).first()
+    if (existing) continue
+
+    await db.prepare(`
+      INSERT INTO session_payments
+        (settlement_id, session_id, player_id, guest_name, player_name, amount, team_rank, paid, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
+    `).bind(
+      settlementId,
+      sessionId,
+      mp.playerId,
+      mp.guestName,
+      mp.name,
+      mp.amount,
+      mp.teamRank,
+      now
+    ).run()
+  }
+}
 
 export { sessionsRoutes }

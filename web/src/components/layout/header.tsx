@@ -11,7 +11,7 @@ import { NotificationDropdown } from './notification-dropdown'
 
 const navItems = [
   { href: '/', label: '홈' },
-  { href: '/club', label: '클럽' },
+  { href: '/clubs', label: '클럽' },
   { href: '/sessions', label: '일정' },
   { href: '/ranking', label: '선수/랭킹' },
   { href: '/abilities', label: '능력치' },
@@ -40,9 +40,16 @@ export function Header() {
             <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
               <span className="text-lg">⚽</span>
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-              코너킥스
-            </span>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent leading-none">
+                코너킥스
+              </span>
+              {club && (
+                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium leading-none mt-0.5 truncate max-w-[120px]">
+                  {club.name}
+                </span>
+              )}
+            </div>
           </Link>
 
           {/* 데스크탑 네비게이션 */}
@@ -53,7 +60,7 @@ export function Header() {
                 href={item.href}
                 className={cn(
                   'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                  pathname === item.href
+                  pathname === item.href || (item.href === '/clubs' && pathname === '/club')
                     ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800/50'
                 )}
@@ -155,7 +162,7 @@ export function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
                   'block px-4 py-3 rounded-xl text-sm font-medium transition-colors',
-                  pathname === item.href
+                  pathname === item.href || (item.href === '/clubs' && pathname === '/club')
                     ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50'
                 )}

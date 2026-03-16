@@ -8,7 +8,10 @@ const playersRoutes = new Hono<{ Bindings: Env }>()
 // 선수 목록 조회
 playersRoutes.get('/', optionalAuthMiddleware, async (c) => {
   const userId = (c as any).userId
+  const clubId = (c as any).clubId
   const includeGuests = c.req.query('all') === '1'
+
+  if (!clubId) return c.json({ players: [] })
 
   const players = await c.env.DB.prepare(`
     SELECT p.*,
@@ -20,9 +23,9 @@ playersRoutes.get('/', optionalAuthMiddleware, async (c) => {
            (SELECT COUNT(*) FROM player_ratings WHERE player_id = p.id) as rating_count
     FROM players p
     LEFT JOIN users u ON p.user_id = u.id
-    ${includeGuests ? '' : 'WHERE p.is_guest = 0'}
+    WHERE p.club_id = ? ${includeGuests ? '' : 'AND p.is_guest = 0'}
     ORDER BY p.is_guest ASC, p.name ASC
-  `).all()
+  `).bind(clubId).all()
 
   // 로그인된 사용자가 있으면 각 선수에 대한 평가 여부 및 내 평가 점수 확인
   let myRatingsMap: Map<number, any> = new Map()
@@ -126,27 +129,35 @@ playersRoutes.get('/:id', async (c) => {
 
 // 선수 생성 (관리자)
 playersRoutes.post('/', authMiddleware('ADMIN'), async (c) => {
-  const body = await c.req.json()
+  try {
+    const body = await c.req.json()
 
-  const schema = z.object({
-    name: z.string().min(2),
-    nickname: z.string().optional(),
-  })
+    const schema = z.object({
+      name: z.string().min(2),
+      nickname: z.string().optional(),
+    })
 
-  const data = schema.parse(body)
-  const now = Math.floor(Date.now() / 1000)
-  const playerCode = generatePlayerCode()
+    const data = schema.parse(body)
+    const now = Math.floor(Date.now() / 1000)
+    const playerCode = generatePlayerCode()
 
-  const result = await c.env.DB.prepare(`
-    INSERT INTO players (name, nickname, player_code, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?)
-  `).bind(data.name, data.nickname || null, playerCode, now, now).run()
+    const clubId = (c as any).clubId
+    if (!clubId) return c.json({ error: '클럽에 소속되어 있지 않습니다.' }, 403)
 
-  return c.json({
-    id: result.meta.last_row_id,
-    playerCode,
-    message: '선수가 등록되었습니다.',
-  }, 201)
+    const result = await c.env.DB.prepare(`
+      INSERT INTO players (name, nickname, player_code, club_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(data.name, data.nickname || null, playerCode, clubId, now, now).run()
+
+    return c.json({
+      id: result.meta.last_row_id,
+      playerCode,
+      message: '선수가 등록되었습니다.',
+    }, 201)
+  } catch (e: any) {
+    if (e instanceof z.ZodError) return c.json({ error: '입력값이 올바르지 않습니다.', details: e.errors }, 400)
+    throw e
+  }
 })
 
 // 선수 수정 (관리자)
@@ -192,17 +203,23 @@ playersRoutes.put('/:id', authMiddleware('ADMIN'), async (c) => {
 // q 없으면 전체 목록(미연동 우선), q 있으면 필터링
 playersRoutes.get('/admin/search-users', authMiddleware('ADMIN'), async (c) => {
   const q = c.req.query('q') || ''
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽 정보가 없습니다.' }, 403)
 
-  const users = await c.env.DB.prepare(`
+  const baseQuery = `
     SELECT u.id, u.email, u.username, u.role, u.created_at,
            p.id as player_id, p.name as player_name,
            CASE WHEN p.id IS NULL THEN 0 ELSE 1 END as is_linked
     FROM users u
-    LEFT JOIN players p ON p.user_id = u.id
+    JOIN club_members cm ON cm.user_id = u.id AND cm.club_id = ?
+    LEFT JOIN players p ON p.user_id = u.id AND p.club_id = ?
     ${q.length > 0 ? 'WHERE u.username LIKE ? OR u.email LIKE ?' : ''}
     ORDER BY is_linked ASC, u.username ASC
     LIMIT 200
-  `).bind(...(q.length > 0 ? [`%${q}%`, `%${q}%`] : [])).all()
+  `
+
+  const bindings: any[] = [clubId, clubId, ...(q.length > 0 ? [`%${q}%`, `%${q}%`] : [])]
+  const users = await c.env.DB.prepare(baseQuery).bind(...bindings).all()
 
   return c.json({ users: users.results })
 })
@@ -210,6 +227,8 @@ playersRoutes.get('/admin/search-users', authMiddleware('ADMIN'), async (c) => {
 // 유저 계정 삭제 (관리자)
 playersRoutes.delete('/admin/users/:userId', authMiddleware('ADMIN'), async (c) => {
   const userId = c.req.param('userId')
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽 정보가 없습니다.' }, 403)
 
   const user = await c.env.DB.prepare(
     'SELECT id, email, username, role FROM users WHERE id = ?'
@@ -217,6 +236,15 @@ playersRoutes.delete('/admin/users/:userId', authMiddleware('ADMIN'), async (c) 
 
   if (!user) {
     return c.json({ error: '사용자를 찾을 수 없습니다.' }, 404)
+  }
+
+  // 해당 유저가 관리자의 클럽 소속인지 확인
+  const membership = await c.env.DB.prepare(
+    'SELECT id FROM club_members WHERE user_id = ? AND club_id = ?'
+  ).bind(userId, clubId).first()
+
+  if (!membership) {
+    return c.json({ error: '해당 클럽 소속 사용자가 아닙니다.' }, 403)
   }
 
   if ((user as any).role === 'ADMIN') {
@@ -254,13 +282,19 @@ playersRoutes.post('/:id/relink', authMiddleware('ADMIN'), async (c) => {
   const body = await c.req.json()
   const { userId } = body // null이면 연동 해제
   const now = Math.floor(Date.now() / 1000)
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽 정보가 없습니다.' }, 403)
 
   const player = await c.env.DB.prepare(
-    'SELECT id, name, user_id FROM players WHERE id = ?'
+    'SELECT id, name, user_id, club_id FROM players WHERE id = ?'
   ).bind(id).first()
 
   if (!player) {
     return c.json({ error: '선수를 찾을 수 없습니다.' }, 404)
+  }
+
+  if ((player as any).club_id !== clubId) {
+    return c.json({ error: '해당 클럽 소속 선수가 아닙니다.' }, 403)
   }
 
   if (userId) {
@@ -292,6 +326,8 @@ playersRoutes.post('/:id/relink', authMiddleware('ADMIN'), async (c) => {
 playersRoutes.post('/:id/approve-link', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')
   const now = Math.floor(Date.now() / 1000)
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽 정보가 없습니다.' }, 403)
 
   const player = await c.env.DB.prepare(
     'SELECT * FROM players WHERE id = ? AND link_status = ?'
@@ -299,6 +335,10 @@ playersRoutes.post('/:id/approve-link', authMiddleware('ADMIN'), async (c) => {
 
   if (!player) {
     return c.json({ error: '연동 대기 중인 선수가 아닙니다.' }, 400)
+  }
+
+  if ((player as any).club_id !== clubId) {
+    return c.json({ error: '해당 클럽 소속 선수가 아닙니다.' }, 403)
   }
 
   await c.env.DB.prepare(`
@@ -312,13 +352,19 @@ playersRoutes.post('/:id/approve-link', authMiddleware('ADMIN'), async (c) => {
 playersRoutes.post('/:id/reset-password', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')
   const now = Math.floor(Date.now() / 1000)
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽 정보가 없습니다.' }, 403)
 
   const player = await c.env.DB.prepare(
-    'SELECT user_id FROM players WHERE id = ?'
+    'SELECT user_id, club_id FROM players WHERE id = ?'
   ).bind(id).first()
 
   if (!player || !player.user_id) {
     return c.json({ error: '연동된 유저가 없습니다.' }, 400)
+  }
+
+  if ((player as any).club_id !== clubId) {
+    return c.json({ error: '해당 클럽 소속 선수가 아닙니다.' }, 403)
   }
 
   // 임시 비밀번호 생성
@@ -339,9 +385,20 @@ playersRoutes.post('/:id/ratings', optionalAuthMiddleware, async (c) => {
   const id = c.req.param('id')
   const body = await c.req.json()
   const userId = (c as any).userId
+  const clubId = (c as any).clubId
 
   if (!userId) {
     return c.json({ error: '로그인이 필요합니다.' }, 401)
+  }
+
+  // 해당 선수가 요청자의 클럽 소속인지 확인
+  if (clubId) {
+    const playerCheck = await c.env.DB.prepare(
+      'SELECT club_id FROM players WHERE id = ?'
+    ).bind(id).first()
+    if (!playerCheck || (playerCheck as any).club_id !== clubId) {
+      return c.json({ error: '해당 클럽 소속 선수가 아닙니다.' }, 403)
+    }
   }
 
   const schema = z.object({
@@ -483,10 +540,13 @@ async function updatePlayerStats(db: D1Database, playerId: number) {
 
 // 전체 선수 능력치 재계산 (관리자)
 playersRoutes.post('/recalculate-all', authMiddleware('ADMIN'), async (c) => {
-  // 모든 선수 ID 조회
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽 정보가 없습니다.' }, 403)
+
+  // 해당 클럽 선수 ID 조회
   const players = await c.env.DB.prepare(`
-    SELECT id, name FROM players WHERE is_guest = 0
-  `).all()
+    SELECT p.id, p.name FROM players p WHERE p.is_guest = 0 AND p.club_id = ?
+  `).bind(clubId).all()
 
   const results: { id: number; name: string; status: string }[] = []
 
@@ -508,14 +568,20 @@ playersRoutes.post('/recalculate-all', authMiddleware('ADMIN'), async (c) => {
 // 선수 삭제 (관리자)
 playersRoutes.delete('/:id', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽 정보가 없습니다.' }, 403)
 
   // 선수 존재 확인
   const player = await c.env.DB.prepare(
-    'SELECT id, name, user_id FROM players WHERE id = ?'
+    'SELECT id, name, user_id, club_id FROM players WHERE id = ?'
   ).bind(id).first()
 
   if (!player) {
     return c.json({ error: '선수를 찾을 수 없습니다.' }, 404)
+  }
+
+  if ((player as any).club_id !== clubId) {
+    return c.json({ error: '해당 클럽 소속 선수가 아닙니다.' }, 403)
   }
 
   // 연관 데이터 삭제 (cascade)
@@ -549,11 +615,24 @@ function generateTempPassword(): string {
 }
 
 // 선수 기록 로그 조회 (세션별 이벤트)
-playersRoutes.get('/:id/event-logs', async (c) => {
+playersRoutes.get('/:id/event-logs', optionalAuthMiddleware, async (c) => {
   const id = c.req.param('id')
   const year = Number(c.req.query('year')) || new Date().getFullYear()
   const yearStart = `${year}-01-01`
   const yearEnd = `${year}-12-31`
+  const clubId = (c as any).clubId
+
+  // 선수가 요청자의 클럽 소속인지 확인 (clubId 있을 때만)
+  if (clubId) {
+    const playerCheck = await c.env.DB.prepare(
+      'SELECT club_id FROM players WHERE id = ?'
+    ).bind(id).first()
+    if (!playerCheck || (playerCheck as any).club_id !== clubId) {
+      return c.json({ error: '해당 클럽 소속 선수가 아닙니다.' }, 403)
+    }
+  }
+
+  const clubFilter = clubId ? 'AND s.club_id = ?' : ''
 
   // 골/어시스트 이벤트
   const goalEvents = await c.env.DB.prepare(`
@@ -570,8 +649,9 @@ playersRoutes.get('/:id/event-logs', async (c) => {
     LEFT JOIN players pa ON me.assister_id = pa.id
     WHERE me.player_id = ? AND me.event_type = 'GOAL'
       AND s.session_date BETWEEN ? AND ?
+      ${clubFilter}
     ORDER BY s.session_date DESC, m.match_no ASC
-  `).bind(id, yearStart, yearEnd).all()
+  `).bind(...[id, yearStart, yearEnd, ...(clubId ? [clubId] : [])]).all()
 
   // 어시스트 (내가 어시스트한 경우)
   const assistEvents = await c.env.DB.prepare(`
@@ -588,8 +668,9 @@ playersRoutes.get('/:id/event-logs', async (c) => {
     JOIN players ps ON me.player_id = ps.id
     WHERE me.assister_id = ? AND me.event_type = 'GOAL'
       AND s.session_date BETWEEN ? AND ?
+      ${clubFilter}
     ORDER BY s.session_date DESC, m.match_no ASC
-  `).bind(id, yearStart, yearEnd).all()
+  `).bind(...[id, yearStart, yearEnd, ...(clubId ? [clubId] : [])]).all()
 
   // 수비 이벤트
   const defenseEvents = await c.env.DB.prepare(`
@@ -604,8 +685,9 @@ playersRoutes.get('/:id/event-logs', async (c) => {
     JOIN teams t2 ON m.team2_id = t2.id
     WHERE me.player_id = ? AND me.event_type = 'DEFENSE'
       AND s.session_date BETWEEN ? AND ?
+      ${clubFilter}
     ORDER BY s.session_date DESC, m.match_no ASC
-  `).bind(id, yearStart, yearEnd).all()
+  `).bind(...[id, yearStart, yearEnd, ...(clubId ? [clubId] : [])]).all()
 
   // MVP 기록
   const mvpRecords = await c.env.DB.prepare(`
@@ -614,8 +696,9 @@ playersRoutes.get('/:id/event-logs', async (c) => {
     JOIN sessions s ON smr.session_id = s.id
     WHERE smr.player_id = ?
       AND s.session_date BETWEEN ? AND ?
+      ${clubFilter}
     ORDER BY s.session_date DESC
-  `).bind(id, yearStart, yearEnd).all()
+  `).bind(...[id, yearStart, yearEnd, ...(clubId ? [clubId] : [])]).all()
 
   // 1등/2등/3등 기록
   const placementRecords = await c.env.DB.prepare(`
@@ -635,6 +718,7 @@ playersRoutes.get('/:id/event-logs', async (c) => {
       JOIN matches m ON t.id = m.team1_id OR t.id = m.team2_id
       JOIN sessions s ON t.session_id = s.id
       WHERE s.session_date BETWEEN ? AND ? AND m.status = 'completed'
+        ${clubId ? 'AND s.club_id = ?' : ''}
       GROUP BY t.session_id, t.id
     ),
     ranked AS (
@@ -647,7 +731,7 @@ playersRoutes.get('/:id/event-logs', async (c) => {
     JOIN sessions s ON r.session_id = s.id
     WHERE tm.player_id = ?
     ORDER BY s.session_date DESC
-  `).bind(yearStart, yearEnd, id).all()
+  `).bind(...[yearStart, yearEnd, ...(clubId ? [clubId] : []), id]).all()
 
   return c.json({
     goals: goalEvents.results,

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import 'main_shell.dart';
 import 'session_detail_screen.dart';
+import 'players_screen.dart';
+import 'hall_of_fame_screen.dart';
+import 'settlements_screen.dart';
+import 'match_result_popup.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,20 +31,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadData() async {
     final auth = context.read<AuthService>();
+    final token = auth.token;
 
     try {
-      // 내 스탯 조회
-      if (auth.token != null && auth.player != null) {
+      if (token != null && auth.player != null) {
         try {
-          final stats = await _api.getMyStats(auth.token!);
+          final stats = await _api.getMyStats(token);
           _myStats = stats['stats'];
         } catch (_) {}
       }
 
-      // 최근 세션 조회
       try {
-        final closedRes = await _api.getSessions(status: 'closed', limit: 1);
-        final completedRes = await _api.getSessions(status: 'completed', limit: 1);
+        final closedRes = await _api.getSessions(status: 'closed', limit: 1, token: token);
+        final completedRes = await _api.getSessions(status: 'completed', limit: 1, token: token);
         final closed = (closedRes['sessions'] as List?)?.isNotEmpty == true ? closedRes['sessions'][0] : null;
         final completed = (completedRes['sessions'] as List?)?.isNotEmpty == true ? completedRes['sessions'][0] : null;
 
@@ -50,97 +54,169 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       } catch (_) {}
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+        _checkAndShowResultPopup();
+      }
     }
+  }
+
+  Future<void> _checkAndShowResultPopup() async {
+    if (_recentSession == null) return;
+    final status = _recentSession!['status'] as String?;
+    if (status != 'ended' && status != 'completed') return;
+
+    final sessionId = _recentSession!['id'];
+    if (sessionId == null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'result_popup_seen_$sessionId';
+    if (prefs.getBool(key) == true) return;
+
+    // Load full session details to get teams/matches
+    try {
+      final res = await _api.getSession(sessionId as int);
+      final matches = (res['matches'] as List?) ?? [];
+      if (matches.isEmpty) return;
+      final allDone = matches.every((m) => m['status'] == 'completed');
+      if (!allDone) return;
+
+      if (mounted) {
+        await Future.delayed(const Duration(milliseconds: 600));
+        if (mounted) {
+          await MatchResultPopup.show(
+            context,
+            session: res['session'] as Map<String, dynamic>,
+            teams: (res['teams'] as List?) ?? [],
+            matches: matches,
+            sessionId: sessionId,
+          );
+        }
+      }
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
     final player = auth.player;
+    final club = auth.club;
 
     return RefreshIndicator(
       onRefresh: () async {
         setState(() => _loading = true);
         await _loadData();
       },
+      color: const Color(0xFF34d399),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 헤더
+            // 클럽 헤더
             Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 52,
+                  height: 52,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xFF34d399), Color(0xFF14b8a6)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF34d399).withAlpha(51),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: const Center(child: Text('⚽', style: TextStyle(fontSize: 24))),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        player != null ? '안녕하세요, ${player['name']}님!' : '코너킥스',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                        player != null ? '안녕하세요, ${player['name']}님!' : (auth.user?['username'] ?? '코너킥스'),
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
+                      const SizedBox(height: 2),
                       Text(
-                        '매주 수요일 21:00',
-                        style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(153)),
+                        club?['name'] ?? '클럽',
+                        style: TextStyle(fontSize: 13, color: const Color(0xFF34d399).withAlpha(204)),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 24),
 
             // 내 최근 기록 카드
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(13),
+                gradient: LinearGradient(
+                  colors: [Colors.white.withAlpha(13), Colors.white.withAlpha(8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withAlpha(26)),
+                border: Border.all(color: Colors.white.withAlpha(20)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.person, color: Colors.white.withAlpha(153), size: 20),
+                      Icon(Icons.bar_chart_rounded, color: Colors.white.withAlpha(153), size: 18),
                       const SizedBox(width: 8),
                       Text(
-                        '내 최근 기록',
-                        style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(153)),
+                        _myStats?['sessionDate'] != null
+                            ? () {
+                                final d = DateTime.tryParse(_myStats!['sessionDate'] as String);
+                                return d != null ? '최근 세션 (${d.month}/${d.day})' : '최근 세션 기록';
+                              }()
+                            : '최근 세션 기록',
+                        style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(153), fontWeight: FontWeight.w500),
                       ),
+                      const Spacer(),
+                      if (auth.player == null)
+                        Text('선수 미연동', style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(77))),
                     ],
                   ),
                   const SizedBox(height: 16),
                   if (_loading)
-                    const Center(child: CircularProgressIndicator(color: Color(0xFF34d399)))
+                    const Center(child: SizedBox(height: 40, child: CircularProgressIndicator(color: Color(0xFF34d399), strokeWidth: 2)))
                   else if (_myStats != null)
                     Row(
                       children: [
                         _StatMini(label: '득점', value: '${_myStats!['goals'] ?? 0}', icon: '⚽', color: const Color(0xFF34d399)),
                         _StatMini(label: '도움', value: '${_myStats!['assists'] ?? 0}', icon: '⚡', color: const Color(0xFF3b82f6)),
                         _StatMini(label: '수비', value: '${_myStats!['defenses'] ?? 0}', icon: '🛡️', color: const Color(0xFF8b5cf6)),
-                        _StatMini(label: 'MVP', value: _myStats!['mvpScore'] != null ? (_myStats!['mvpScore'] as num).toStringAsFixed(1) : '-', icon: '⭐', color: const Color(0xFFf59e0b)),
+                        _StatMini(
+                          label: '평점',
+                          value: _myStats!['mvpScore'] != null
+                              ? () {
+                                  final v = (_myStats!['mvpScore'] as num).toDouble();
+                                  return '${v == v.truncate() ? v.toInt() : v.toStringAsFixed(1)}/10';
+                                }()
+                              : '-',
+                          icon: '⭐',
+                          color: const Color(0xFFf59e0b),
+                        ),
                       ],
                     )
                   else
                     Text(
-                      auth.isLoggedIn ? (player != null ? '기록을 불러올 수 없습니다' : '선수 연동이 필요합니다') : '로그인이 필요합니다',
-                      style: TextStyle(color: Colors.white.withAlpha(153), fontSize: 14),
+                      auth.player != null ? '기록이 없습니다' : '선수 연동 후 기록이 표시됩니다',
+                      style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 14),
                     ),
                 ],
               ),
@@ -149,78 +225,163 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // 빠른 메뉴
             Text(
-              '⚡ 빠른 메뉴',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(230)),
+              '빠른 메뉴',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(204), letterSpacing: 0.5),
             ),
             const SizedBox(height: 12),
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.6,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 1.65,
               children: [
-                _QuickMenu(icon: Icons.calendar_today, title: '경기 결과', subtitle: '지난 매치 확인', color: const Color(0xFF34d399), onTap: () => MainShell.switchTab(context, 1)),
-                _QuickMenu(icon: Icons.emoji_events, title: '랭킹', subtitle: '시즌 순위', color: const Color(0xFFf59e0b), onTap: () => MainShell.switchTab(context, 2)),
-                _QuickMenu(icon: Icons.star, title: '능력치 평가', subtitle: '팀원 능력치', color: const Color(0xFF3b82f6), onTap: () {}),
-                _QuickMenu(icon: Icons.workspace_premium, title: '명예의 전당', subtitle: '시즌 챔피언', color: const Color(0xFF8b5cf6), onTap: () {}),
+                _QuickMenu(
+                  icon: Icons.calendar_today_rounded,
+                  title: '경기 세션',
+                  subtitle: '지난 매치 결과 확인',
+                  color: const Color(0xFF34d399),
+                  onTap: () => MainShell.switchTab(context, 1),
+                ),
+                _QuickMenu(
+                  icon: Icons.emoji_events_rounded,
+                  title: '랭킹',
+                  subtitle: '시즌 순위 보기',
+                  color: const Color(0xFFf59e0b),
+                  onTap: () => MainShell.switchTab(context, 2),
+                ),
+                _QuickMenu(
+                  icon: Icons.people_rounded,
+                  title: '선수단',
+                  subtitle: '팀원 능력치 평가',
+                  color: const Color(0xFF3b82f6),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PlayersScreen())),
+                ),
+                _QuickMenu(
+                  icon: Icons.workspace_premium_rounded,
+                  title: '명예의전당',
+                  subtitle: '역대 시즌 챔피언',
+                  color: const Color(0xFF8b5cf6),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HallOfFameScreen())),
+                ),
+                _QuickMenu(
+                  icon: Icons.receipt_long_rounded,
+                  title: '정산',
+                  subtitle: '회비 납부 현황',
+                  color: const Color(0xFF14b8a6),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettlementsScreen())),
+                ),
               ],
             ),
             const SizedBox(height: 24),
 
-            // 최근 세션 하이라이트
+            // 지난 세션
             Text(
-              '🕐 지난 세션',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(230)),
+              '지난 세션',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(204), letterSpacing: 0.5),
             ),
             const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(13),
+                color: Colors.white.withAlpha(8),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withAlpha(26)),
+                border: Border.all(color: Colors.white.withAlpha(15)),
               ),
               child: _loading
-                  ? const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator(color: Color(0xFF34d399))))
+                  ? const Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Center(child: CircularProgressIndicator(color: Color(0xFF34d399), strokeWidth: 2)),
+                    )
                   : _recentSession != null
-                      ? GestureDetector(
-                          onTap: () {
-                            if (_recentSession!['id'] != null) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: _recentSession!['id'])),
-                              );
-                            }
-                          },
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      _recentSession!['title'] ?? '정기 풋살',
-                                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      _recentSession!['session_date'] ?? '',
-                                      style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(153)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(Icons.chevron_right, color: Colors.white.withAlpha(64), size: 20),
-                            ],
+                      ? _buildRecentSession(_recentSession!)
+                      : Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Center(
+                            child: Text(
+                              '완료된 세션이 없습니다.',
+                              style: TextStyle(color: Colors.white.withAlpha(77), fontSize: 14),
+                            ),
                           ),
-                        )
-                      : Text(
-                          '완료된 세션이 없습니다.',
-                          style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 14),
                         ),
             ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecentSession(Map<String, dynamic> session) {
+    final dateStr = session['session_date'] as String? ?? '';
+    final title = session['title'] as String? ?? '정기 풋살';
+    final status = session['status'] as String?;
+
+    Color statusColor;
+    String statusLabel;
+    switch (status) {
+      case 'completed': statusColor = const Color(0xFF64748b); statusLabel = '정산완료'; break;
+      case 'ended': statusColor = const Color(0xFFf97316); statusLabel = '경기완료'; break;
+      case 'closed': statusColor = const Color(0xFF3b82f6); statusLabel = '마감'; break;
+      default: statusColor = const Color(0xFF34d399); statusLabel = '진행중'; break;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        if (session['id'] != null) {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: session['id'])));
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: statusColor.withAlpha(20),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    dateStr.length >= 10 ? dateStr.substring(5, 7) : '-',
+                    style: TextStyle(fontSize: 10, color: statusColor.withAlpha(179)),
+                  ),
+                  Text(
+                    dateStr.length >= 10 ? dateStr.substring(8, 10) : '-',
+                    style: TextStyle(fontSize: 16, color: statusColor, fontWeight: FontWeight.bold, height: 1.1),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: statusColor.withAlpha(20),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(statusLabel, style: TextStyle(fontSize: 10, color: statusColor, fontWeight: FontWeight.w600)),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(dateStr, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(77))),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Colors.white.withAlpha(51), size: 20),
           ],
         ),
       ),
@@ -240,19 +401,19 @@ class _StatMini extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         margin: const EdgeInsets.symmetric(horizontal: 3),
         decoration: BoxDecoration(
-          color: color.withAlpha(26),
+          color: color.withAlpha(20),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withAlpha(51)),
+          border: Border.all(color: color.withAlpha(40)),
         ),
         child: Column(
           children: [
-            Text(icon, style: const TextStyle(fontSize: 16)),
+            Text(icon, style: const TextStyle(fontSize: 15)),
             const SizedBox(height: 4),
             Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-            Text(label, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(153))),
+            Text(label, style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(128))),
           ],
         ),
       ),
@@ -274,28 +435,28 @@ class _QuickMenu extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(10),
+          color: Colors.white.withAlpha(8),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withAlpha(20)),
+          border: Border.all(color: Colors.white.withAlpha(15)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 34,
+              height: 34,
               decoration: BoxDecoration(
                 color: color.withAlpha(26),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: color, size: 20),
+              child: Icon(icon, color: color, size: 18),
             ),
-            const SizedBox(height: 10),
-            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
-            Text(subtitle, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102))),
+            const SizedBox(height: 8),
+            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+            Text(subtitle, style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(102))),
           ],
         ),
       ),

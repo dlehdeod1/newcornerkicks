@@ -5,13 +5,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Coins,
   Trophy,
-  Target,
   Award,
   Check,
   Calculator,
-  Users,
   ChevronDown,
   Sparkles,
+  AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/auth'
@@ -162,7 +161,7 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
 
   // 정산 완료 mutation
   const completeMutation = useMutation({
-    mutationFn: (data: any) => settlementsApi.complete(sessionId, data, token!),
+    mutationFn: () => settlementsApi.complete(sessionId, undefined, token!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
       onRefetch()
@@ -170,17 +169,8 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
   })
 
   const handleComplete = () => {
-    if (!window.confirm('정산을 완료하시겠습니까?')) return
-
-    completeMutation.mutate({
-      totalPot: settlement.totalPot,
-      firstPlaceTeamId: settlement.rankedTeams[0]?.id,
-      firstPrizee: settlement.prizes.first,
-      secondPlaceTeamId: settlement.rankedTeams[1]?.id,
-      secondPrize: settlement.prizes.second,
-      mvpPlayerId: settlement.mvp?.id,
-      mvpPrize: settlement.prizes.mvp,
-    })
+    if (!window.confirm('정산을 완료하시겠습니까?\n세션이 "완료" 상태로 전환되고 랭킹에 반영됩니다.')) return
+    completeMutation.mutate()
   }
 
   if (isLoading) {
@@ -350,17 +340,31 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
         </div>
       </div>
 
-      {/* 정산 완료 버튼 */}
-      {isAdmin && settlement.isComplete && !session.is_settled && (
+      {/* 에러 메시지 */}
+      {completeMutation.isError && (
+        <div className="bg-red-50 dark:bg-red-500/10 rounded-2xl p-4 border border-red-200 dark:border-red-500/30 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+          <p className="text-sm text-red-700 dark:text-red-400">
+            {(completeMutation.error as Error)?.message || '정산 처리 중 오류가 발생했습니다.'}
+          </p>
+        </div>
+      )}
+
+      {/* 정산 완료 버튼 - ended 상태에서만 표시 */}
+      {isAdmin && session.status === 'ended' && session.status !== 'completed' && (
         <div className="bg-blue-50 dark:bg-blue-500/10 rounded-2xl p-6 border border-blue-200 dark:border-blue-500/30">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div>
               <h4 className="font-medium text-blue-700 dark:text-blue-400">정산 준비 완료</h4>
               <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                모든 경기가 완료되었습니다. 정산을 완료해주세요.
+                세션이 종료되었습니다. 정산을 완료하면 랭킹에 반영됩니다.
               </p>
             </div>
-            <Button onClick={handleComplete} loading={completeMutation.isPending}>
+            <Button
+              onClick={handleComplete}
+              loading={completeMutation.isPending}
+              className="shrink-0"
+            >
               <Check className="w-4 h-4" />
               정산 완료
             </Button>
@@ -368,14 +372,15 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
         </div>
       )}
 
-      {session.is_settled && (
+      {/* 정산 완료 상태 표시 */}
+      {session.status === 'completed' && (
         <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl p-6 border border-emerald-200 dark:border-emerald-500/30 text-center">
           <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3">
             <Check className="w-6 h-6 text-white" />
           </div>
           <h4 className="font-semibold text-emerald-700 dark:text-emerald-400">정산 완료</h4>
           <p className="text-sm text-emerald-600 dark:text-emerald-300 mt-1">
-            이 세션의 정산이 완료되었습니다.
+            이 세션의 정산이 완료되어 랭킹에 반영되었습니다.
           </p>
         </div>
       )}

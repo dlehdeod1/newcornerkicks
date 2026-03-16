@@ -1,11 +1,25 @@
 import { Hono } from 'hono'
 import type { Env } from '../index'
-import { authMiddleware } from '../middleware/auth'
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth'
 
 const settlementsRoutes = new Hono<{ Bindings: Env }>()
 
 // 시즌 요약 조회
-settlementsRoutes.get('/summary', async (c) => {
+settlementsRoutes.get('/summary', optionalAuthMiddleware, async (c) => {
+  const clubId = (c as any).clubId
+  if (!clubId) {
+    const year = Number(c.req.query('year')) || new Date().getFullYear()
+    return c.json({
+      summary: {
+        year,
+        totalSessions: 0,
+        totalPot: 0,
+        operationFee: 0,
+        totalPrize: 0,
+      }
+    })
+  }
+
   const year = Number(c.req.query('year')) || new Date().getFullYear()
   const startDate = `${year}-01-01`
   const endDate = `${year}-12-31`
@@ -13,8 +27,10 @@ settlementsRoutes.get('/summary', async (c) => {
   try {
     // 세션 수만 먼저 조회 (이건 항상 동작)
     const sessionCount = await c.env.DB.prepare(`
-      SELECT COUNT(*) as count FROM sessions WHERE session_date BETWEEN ? AND ?
-    `).bind(startDate, endDate).first()
+      SELECT COUNT(*) as count FROM sessions
+      WHERE session_date BETWEEN ? AND ?
+        AND club_id = ?
+    `).bind(startDate, endDate, clubId).first()
 
     // settlements 테이블이 있으면 정산 통계도 조회
     let totalPot = 0
@@ -29,8 +45,9 @@ settlementsRoutes.get('/summary', async (c) => {
         FROM settlements st
         JOIN sessions s ON st.session_id = s.id
         WHERE s.session_date BETWEEN ? AND ?
+          AND s.club_id = ?
           AND st.status = 'completed'
-      `).bind(startDate, endDate).first()
+      `).bind(startDate, endDate, clubId).first()
 
       totalPot = (stats?.total_pot as number) || 0
       operationFee = (stats?.operation_fee as number) || 0
@@ -130,7 +147,12 @@ settlementsRoutes.get('/me', authMiddleware(), async (c) => {
 })
 
 // 전체 정산 리더보드
-settlementsRoutes.get('/leaderboard', async (c) => {
+settlementsRoutes.get('/leaderboard', optionalAuthMiddleware, async (c) => {
+  const clubId = (c as any).clubId
+  if (!clubId) {
+    return c.json({ leaderboard: [], year: new Date().getFullYear() })
+  }
+
   const year = Number(c.req.query('year')) || new Date().getFullYear()
   const startDate = `${year}-01-01`
   const endDate = `${year}-12-31`
@@ -151,9 +173,10 @@ settlementsRoutes.get('/leaderboard', async (c) => {
     JOIN settlements st ON ts.settlement_id = st.id
     JOIN sessions s ON st.session_id = s.id
     WHERE s.session_date BETWEEN ? AND ?
+      AND s.club_id = ?
       AND st.status = 'completed'
     GROUP BY p.id
-  `).bind(startDate, endDate).all()
+  `).bind(startDate, endDate, clubId).all()
 
   // MVP 상금 집계
   const mvpEarnings = await c.env.DB.prepare(`
@@ -165,10 +188,11 @@ settlementsRoutes.get('/leaderboard', async (c) => {
     JOIN settlements st ON ps.settlement_id = st.id
     JOIN sessions s ON st.session_id = s.id
     WHERE s.session_date BETWEEN ? AND ?
+      AND s.club_id = ?
       AND ps.prize_type = 'mvp'
       AND st.status = 'completed'
     GROUP BY ps.player_id
-  `).bind(startDate, endDate).all()
+  `).bind(startDate, endDate, clubId).all()
 
   // 합치기
   const mvpMap = new Map<number, any>()

@@ -5,7 +5,7 @@ export const runtime = 'edge'
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { Calendar, MapPin, Users, Trophy, BarChart3, Clock, Settings } from 'lucide-react'
+import { Calendar, MapPin, Users, Trophy, BarChart3, Clock, Settings, Coins } from 'lucide-react'
 import { sessionsApi } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { cn } from '@/lib/cn'
@@ -14,9 +14,10 @@ import { OverviewTab } from '@/components/session/overview-tab'
 import { TeamsTab } from '@/components/session/teams-tab'
 import { ScoreboardTab } from '@/components/session/scoreboard-tab'
 import { StatsTab } from '@/components/session/stats-tab'
+import { SettlementTab } from '@/components/session/settlement-tab'
 import { SessionEditModal } from '@/components/session/session-edit-modal'
 
-type Tab = 'overview' | 'teams' | 'scoreboard' | 'stats'
+type Tab = 'overview' | 'teams' | 'scoreboard' | 'stats' | 'settlement'
 
 export default function SessionDetailPage() {
   const params = useParams()
@@ -55,11 +56,14 @@ export default function SessionDetailPage() {
   const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()]
   const hasTeams = teams && teams.length > 0
 
+  const isEndedOrCompleted = session.status === 'ended' || session.status === 'completed'
+
   const tabs = [
     { id: 'overview' as Tab, label: '개요/참석', icon: Users },
     { id: 'teams' as Tab, label: '팀 구성', icon: Trophy, disabled: !hasTeams },
     { id: 'scoreboard' as Tab, label: '점수판', icon: BarChart3, disabled: !hasTeams },
     { id: 'stats' as Tab, label: '선수 스탯', icon: BarChart3, disabled: !hasTeams },
+    { id: 'settlement' as Tab, label: '정산', icon: Coins, disabled: !isEndedOrCompleted },
   ]
 
   return (
@@ -177,6 +181,16 @@ export default function SessionDetailPage() {
           sessionStatus={session.status}
           teams={teams}
           sessionDate={session.session_date}
+        />
+      )}
+      {activeTab === 'settlement' && isEndedOrCompleted && (
+        <SettlementTab
+          sessionId={sessionId}
+          session={session}
+          teams={teams || []}
+          matches={matches || []}
+          attendance={attendance || []}
+          onRefetch={refetch}
         />
       )}
     </div>

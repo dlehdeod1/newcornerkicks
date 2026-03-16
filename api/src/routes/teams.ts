@@ -1,22 +1,31 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import type { Env } from '../index'
-import { optionalAuthMiddleware, authMiddleware } from '../middleware/auth'
+import { authMiddleware } from '../middleware/auth'
 
 const teamsRoutes = new Hono<{ Bindings: Env }>()
 
 // 팀 멤버 이동
-teamsRoutes.post('/:teamId/members/:memberId/move', optionalAuthMiddleware, async (c) => {
+teamsRoutes.post('/:teamId/members/:memberId/move', authMiddleware(), async (c) => {
   try {
     const fromTeamId = c.req.param('teamId')
     const memberId = c.req.param('memberId')
     const body = await c.req.json()
+    const clubId = (c as any).clubId
 
     const schema = z.object({
       toTeamId: z.number(),
     })
 
     const { toTeamId } = schema.parse(body)
+
+    // 팀이 요청자의 클럽 소속인지 확인
+    const fromTeam = await c.env.DB.prepare(
+      'SELECT t.id, s.club_id FROM teams t JOIN sessions s ON t.session_id = s.id WHERE t.id = ?'
+    ).bind(fromTeamId).first()
+    if (!fromTeam || (fromTeam as any).club_id !== clubId) {
+      return c.json({ error: '해당 클럽 소속 팀이 아닙니다.' }, 403)
+    }
 
     // 멤버 확인
     const member = await c.env.DB.prepare(
@@ -27,13 +36,17 @@ teamsRoutes.post('/:teamId/members/:memberId/move', optionalAuthMiddleware, asyn
       return c.json({ error: '멤버를 찾을 수 없습니다.' }, 404)
     }
 
-    // 대상 팀 확인
+    // 대상 팀 확인 및 같은 클럽 소속인지 확인
     const toTeam = await c.env.DB.prepare(
-      'SELECT * FROM teams WHERE id = ?'
+      'SELECT t.id, s.club_id FROM teams t JOIN sessions s ON t.session_id = s.id WHERE t.id = ?'
     ).bind(toTeamId).first()
 
     if (!toTeam) {
       return c.json({ error: '대상 팀을 찾을 수 없습니다.' }, 404)
+    }
+
+    if ((toTeam as any).club_id !== clubId) {
+      return c.json({ error: '대상 팀이 해당 클럽 소속이 아닙니다.' }, 403)
     }
 
     // 팀 이동
@@ -49,10 +62,19 @@ teamsRoutes.post('/:teamId/members/:memberId/move', optionalAuthMiddleware, asyn
 })
 
 // 팀 조끼색 변경
-teamsRoutes.put('/:teamId/color', optionalAuthMiddleware, async (c) => {
+teamsRoutes.put('/:teamId/color', authMiddleware(), async (c) => {
   try {
     const teamId = c.req.param('teamId')
     const body = await c.req.json()
+    const clubId = (c as any).clubId
+
+    // 팀이 요청자의 클럽 소속인지 확인
+    const team = await c.env.DB.prepare(
+      'SELECT t.id, s.club_id FROM teams t JOIN sessions s ON t.session_id = s.id WHERE t.id = ?'
+    ).bind(teamId).first()
+    if (!team || (team as any).club_id !== clubId) {
+      return c.json({ error: '해당 클럽 소속 팀이 아닙니다.' }, 403)
+    }
 
     const schema = z.object({
       vestColor: z.enum(['yellow', 'orange', 'white']),
@@ -72,10 +94,19 @@ teamsRoutes.put('/:teamId/color', optionalAuthMiddleware, async (c) => {
 })
 
 // 팀 정보 수정 (이름, 조끼색 등)
-teamsRoutes.put('/:teamId', optionalAuthMiddleware, async (c) => {
+teamsRoutes.put('/:teamId', authMiddleware(), async (c) => {
   try {
     const teamId = c.req.param('teamId')
     const body = await c.req.json()
+    const clubId = (c as any).clubId
+
+    // 팀이 요청자의 클럽 소속인지 확인
+    const team = await c.env.DB.prepare(
+      'SELECT t.id, s.club_id FROM teams t JOIN sessions s ON t.session_id = s.id WHERE t.id = ?'
+    ).bind(teamId).first()
+    if (!team || (team as any).club_id !== clubId) {
+      return c.json({ error: '해당 클럽 소속 팀이 아닙니다.' }, 403)
+    }
 
     const updates: string[] = []
     const values: any[] = []
@@ -111,10 +142,19 @@ teamsRoutes.put('/:teamId', optionalAuthMiddleware, async (c) => {
 })
 
 // 팀 멤버 순서 변경
-teamsRoutes.put('/:teamId/reorder', optionalAuthMiddleware, async (c) => {
+teamsRoutes.put('/:teamId/reorder', authMiddleware(), async (c) => {
   try {
     const teamId = c.req.param('teamId')
     const body = await c.req.json()
+    const clubId = (c as any).clubId
+
+    // 팀이 요청자의 클럽 소속인지 확인
+    const team = await c.env.DB.prepare(
+      'SELECT t.id, s.club_id FROM teams t JOIN sessions s ON t.session_id = s.id WHERE t.id = ?'
+    ).bind(teamId).first()
+    if (!team || (team as any).club_id !== clubId) {
+      return c.json({ error: '해당 클럽 소속 팀이 아닙니다.' }, 403)
+    }
 
     const schema = z.object({
       memberIds: z.array(z.number()),

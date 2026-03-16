@@ -22,6 +22,12 @@ class _RankingScreenState extends State<RankingScreen> {
   int _selectedYear = DateTime.now().year;
   String? _lastLoadedToken;
 
+  static int _currentSeasonYear(int startMonth) {
+    final now = DateTime.now();
+    if (startMonth <= 1) return now.year;
+    return now.month >= startMonth ? now.year : now.year - 1;
+  }
+
   final List<Map<String, dynamic>> _categories = [
     {'key': 'mvpCount', 'label': 'MVP', 'icon': '⭐', 'color': const Color(0xFF34d399)},
     {'key': 'goals', 'label': '득점', 'icon': '⚽', 'color': const Color(0xFFf59e0b)},
@@ -35,6 +41,7 @@ class _RankingScreenState extends State<RankingScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthService>();
+      _selectedYear = _currentSeasonYear(auth.seasonStartMonth);
       if (!auth.isLoading) {
         _loadRankings();
       }
@@ -456,7 +463,7 @@ class _RankingScreenState extends State<RankingScreen> {
   }
 
   void _showYearPicker() {
-    final currentYear = DateTime.now().year;
+    final currentYear = _currentSeasonYear(context.read<AuthService>().seasonStartMonth);
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF1e293b),

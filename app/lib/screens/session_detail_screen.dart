@@ -41,7 +41,8 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
 
   Future<void> _loadSession() async {
     try {
-      final res = await _api.getSession(widget.sessionId);
+      final token = context.read<AuthService>().token;
+      final res = await _api.getSession(widget.sessionId, token: token);
       if (mounted) {
         setState(() {
           _session = res['session'];
@@ -52,8 +53,13 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
           _loading = false;
         });
       }
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('에러: $e'), backgroundColor: const Color(0xFFef4444), duration: const Duration(seconds: 6)),
+        );
+      }
     }
   }
 
@@ -1025,11 +1031,6 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
       return Center(child: Text('완료된 경기가 없습니다', style: TextStyle(color: Colors.white.withAlpha(102))));
     }
 
-    final maxScore = (sorted.first['mvpScore'] as double);
-    for (final s in sorted) {
-      s['normalizedScore'] = maxScore > 0 ? ((s['mvpScore'] as double) / maxScore) * 10 : 0.0;
-    }
-
     final mvp = sorted.first;
     final topScorer = List.from(sorted)..sort((a, b) => (b['goals'] as int).compareTo(a['goals'] as int));
     final topAssister = List.from(sorted)..sort((a, b) => (b['assists'] as int).compareTo(a['assists'] as int));
@@ -1042,7 +1043,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
         children: [
           Row(
             children: [
-              _highlightCard('⭐', 'MVP', mvp['name'], '${(mvp['normalizedScore'] as double).toStringAsFixed(1)}점', const Color(0xFFf59e0b)),
+              _highlightCard('⭐', 'MVP', mvp['name'], '${(mvp['mvpScore'] as double).toStringAsFixed(1)}점', const Color(0xFFf59e0b)),
               const SizedBox(width: 8),
               _highlightCard('⚽', '득점왕', topScorer.first['name'], '${topScorer.first['goals']}골', const Color(0xFF34d399)),
             ],
@@ -1117,7 +1118,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                         Expanded(child: Center(child: Text('${p['assists']}', style: const TextStyle(fontSize: 13, color: Color(0xFF3b82f6))))),
                         Expanded(child: Center(child: Text('${p['defenses']}', style: const TextStyle(fontSize: 13, color: Color(0xFF8b5cf6))))),
                         Expanded(child: Center(child: Text(
-                          (p['normalizedScore'] as double).toStringAsFixed(1),
+                          (p['mvpScore'] as double).toStringAsFixed(1),
                           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFFf59e0b)),
                         ))),
                       ],

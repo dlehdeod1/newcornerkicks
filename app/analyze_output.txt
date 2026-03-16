@@ -1,0 +1,17 @@
+﻿Analyzing app...                                                
+
+  error - Undefined name 'auth' - lib\screens\profile_screen.dart:115:52 - undefined_identifier
+  error - The method 'loadUser' isn't defined for the type 'AuthService' - lib\screens\profile_screen.dart:447:28 - undefined_method
+warning - The value of the field 'defaultFees' isn't used - lib\screens\settlements_screen.dart:17:16 - unused_field
+
+flutter : 3 issues found. (ran in 1.3s)
+위치 줄:1 문자:1
++ flutter analyze 2>&1 | Out-File -FilePath anal
+yze_output.txt -Encodin ...
++ ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (3  
+   issues found. (ran in 1.3s):String) [], Rem  
+  oteException
+    + FullyQualifiedErrorId : NativeCommandErro 
+   r
+ 

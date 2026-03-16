@@ -171,9 +171,9 @@ export const settlementsApi = {
   getBySession: (sessionId: number) =>
     api(`/sessions/${sessionId}/settlement`),
 
-  // 정산 생성/완료
+  // 정산 생성/완료 (body 없이 호출 - session_payments 기반 자동 계산)
   complete: (sessionId: number, data: any, token: string) =>
-    api(`/sessions/${sessionId}/settlement`, { method: 'POST', body: data, token }),
+    api(`/sessions/${sessionId}/settlement`, { method: 'POST', body: data ?? undefined, token }),
 
   // 내 정산 내역 조회
   myHistory: (token: string) =>
