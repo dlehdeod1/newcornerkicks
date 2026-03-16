@@ -17,6 +17,7 @@ const config: Config = {
         // CSS 변수 기반 시맨틱 컬러
         primary: {
           DEFAULT: 'hsl(var(--primary))',
+          hover: 'hsl(var(--primary-hover))',
           foreground: 'hsl(var(--primary-foreground))',
         },
         background: 'hsl(var(--background))',

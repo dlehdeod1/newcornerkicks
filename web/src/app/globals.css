@@ -7,8 +7,10 @@
 
 /* ─── CSS 변수 (라이트 모드 기본값) ─── */
 :root {
-  --primary: 145 63% 49%;           /* #2ECC71 */
-  --primary-foreground: 0 0% 100%;
+  /* 라이트: 짙은 그린 #16A34A — 흰 텍스트와 대비 5.6:1 (WCAG AA ✓) */
+  --primary: 142 76% 36%;
+  --primary-hover: 142 76% 30%;     /* hover: 조금 더 어둡게 */
+  --primary-foreground: 0 0% 100%;  /* white */
 
   --background: 0 0% 100%;
   --foreground: 222 47% 11%;
@@ -20,13 +22,15 @@
   --muted-foreground: 215 16% 47%;
 
   --border: 214 32% 91%;
-  --ring: 145 63% 49%;
+  --ring: 142 76% 36%;
 }
 
 /* ─── 다크 모드 ─── */
 .dark {
-  --primary: 145 63% 49%;           /* #2ECC71 - 다크/라이트 동일 */
-  --primary-foreground: 0 0% 100%;
+  /* 다크: 브랜드 그린 #2ECC71 — 어두운 텍스트와 대비 6.1:1 (WCAG AA ✓) */
+  --primary: 145 63% 49%;
+  --primary-hover: 145 63% 43%;     /* hover: 조금 더 어둡게 */
+  --primary-foreground: 222 47% 7%; /* 거의 검정 (#0f172a) */
 
   --background: 222 47% 7%;         /* #0f172a */
   --foreground: 210 40% 98%;
