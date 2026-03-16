@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
@@ -38,21 +39,21 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
     final isAdmin = auth.isAdmin;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0f172a),
+      backgroundColor: AppColors.bgBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0f172a),
+        backgroundColor: AppColors.bgBase,
         title: const Text('정산 내역', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: !auth.isLoggedIn
           ? const Center(child: Text('로그인이 필요합니다', style: TextStyle(color: Colors.white38)))
           : _loading
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFF34d399)))
+              ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
               : _error != null
                   ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
                   : RefreshIndicator(
                       onRefresh: _load,
-                      color: const Color(0xFF34d399),
+                      color: AppColors.primary,
                       child: isAdmin ? _AdminView(data: _data) : _MemberView(data: _data),
                     ),
     );
@@ -95,12 +96,12 @@ class _MemberView extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: const Color(0xFF1e293b),
+            color: AppColors.bgCard,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: unpaidTotal > 0
-                  ? const Color(0xFFf59e0b).withAlpha(60)
-                  : const Color(0xFF34d399).withAlpha(40),
+                  ? AppColors.amber.withAlpha(60)
+                  : AppColors.primary.withAlpha(40),
             ),
           ),
           child: Column(
@@ -121,7 +122,7 @@ class _MemberView extends StatelessWidget {
                   _StatCol(
                     label: '납부 완료',
                     value: paidTotal > 0 ? '₩${_fmt(paidTotal)}' : '-',
-                    color: const Color(0xFF34d399),
+                    color: AppColors.primary,
                   ),
                   Container(
                     width: 1,
@@ -132,7 +133,7 @@ class _MemberView extends StatelessWidget {
                   _StatCol(
                     label: '미납 합계',
                     value: unpaidTotal > 0 ? '₩${_fmt(unpaidTotal)}' : '없음',
-                    color: unpaidTotal > 0 ? const Color(0xFFf59e0b) : Colors.white38,
+                    color: unpaidTotal > 0 ? AppColors.amber : Colors.white38,
                     isBig: unpaidTotal > 0,
                   ),
                   if (unpaidTotal > 0) ...[
@@ -140,9 +141,9 @@ class _MemberView extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFf59e0b).withAlpha(26),
+                        color: AppColors.amber.withAlpha(26),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFf59e0b).withAlpha(80)),
+                        border: Border.all(color: AppColors.amber.withAlpha(80)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -150,7 +151,7 @@ class _MemberView extends StatelessWidget {
                           Text('⚠️', style: TextStyle(fontSize: 12)),
                           SizedBox(width: 4),
                           Text('미납', style: TextStyle(
-                            color: Color(0xFFf59e0b),
+                            color: AppColors.amber,
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                           )),
@@ -222,28 +223,28 @@ class _PaymentTile extends StatelessWidget {
     Color statusColor;
     String statusLabel;
     if (isExempt) {
-      statusColor = const Color(0xFF8b5cf6);
+      statusColor = AppColors.purple;
       statusLabel = '면제';
     } else if (isPaid) {
-      statusColor = const Color(0xFF34d399);
+      statusColor = AppColors.primary;
       statusLabel = '납부완료';
     } else {
-      statusColor = const Color(0xFFf59e0b);
+      statusColor = AppColors.amber;
       statusLabel = '미납';
     }
 
     // 테두리 색상: 미납이면 주황 강조, 납부완료 초록, 면제 보라
     final borderColor = isExempt
-        ? const Color(0xFF8b5cf6).withAlpha(50)
+        ? AppColors.purple.withAlpha(50)
         : isPaid
-            ? const Color(0xFF34d399).withAlpha(40)
-            : const Color(0xFFf59e0b).withAlpha(70);
+            ? AppColors.primary.withAlpha(40)
+            : AppColors.amber.withAlpha(70);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1e293b),
+        color: AppColors.bgCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: borderColor),
       ),
@@ -292,10 +293,10 @@ class _PaymentTile extends StatelessWidget {
                 style: TextStyle(
                   // 미납이면 주황색, 납부완료면 초록색, 면제면 보라색
                   color: isExempt
-                      ? const Color(0xFF8b5cf6)
+                      ? AppColors.purple
                       : isPaid
-                          ? const Color(0xFF34d399)
-                          : const Color(0xFFf59e0b),
+                          ? AppColors.primary
+                          : AppColors.amber,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -358,7 +359,7 @@ class _AdminView extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: const Color(0xFF1e293b),
+              color: AppColors.bgCard,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.white.withAlpha(13)),
             ),
@@ -380,7 +381,7 @@ class _AdminView extends StatelessWidget {
                     _StatCol(
                       label: '징수 완료',
                       value: totalCollected > 0 ? '₩${_fmt(totalCollected)}' : '-',
-                      color: const Color(0xFF34d399),
+                      color: AppColors.primary,
                     ),
                     Container(
                       width: 1,
@@ -391,7 +392,7 @@ class _AdminView extends StatelessWidget {
                     _StatCol(
                       label: '미수금 합계',
                       value: totalUnpaid > 0 ? '₩${_fmt(totalUnpaid)}' : '없음',
-                      color: totalUnpaid > 0 ? const Color(0xFFf59e0b) : Colors.white38,
+                      color: totalUnpaid > 0 ? AppColors.amber : Colors.white38,
                       isBig: totalUnpaid > 0,
                     ),
                     const Spacer(),
@@ -446,11 +447,11 @@ class _SessionRow extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1e293b),
+          color: AppColors.bgCard,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isFullyPaid
-                ? const Color(0xFF34d399).withAlpha(40)
+                ? AppColors.primary.withAlpha(40)
                 : Colors.white.withAlpha(13),
           ),
         ),
@@ -463,7 +464,7 @@ class _SessionRow extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF34d399).withAlpha(20),
+                    color: AppColors.primary.withAlpha(20),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -473,14 +474,14 @@ class _SessionRow extends StatelessWidget {
                         date.length >= 7 ? date.substring(5, 7) : '-',
                         style: TextStyle(
                           fontSize: 10,
-                          color: const Color(0xFF34d399).withAlpha(179),
+                          color: AppColors.primary.withAlpha(179),
                         ),
                       ),
                       Text(
                         date.length >= 10 ? date.substring(8, 10) : '-',
                         style: const TextStyle(
                           fontSize: 15,
-                          color: Color(0xFF34d399),
+                          color: AppColors.primary,
                           fontWeight: FontWeight.bold,
                           height: 1.1,
                         ),
@@ -505,10 +506,10 @@ class _SessionRow extends StatelessWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          _badge('$paid/$total 납부', const Color(0xFF34d399)),
+                          _badge('$paid/$total 납부', AppColors.primary),
                           if (exempt > 0) ...[
                             const SizedBox(width: 6),
-                            _badge('면제 $exempt명', const Color(0xFF8b5cf6)),
+                            _badge('면제 $exempt명', AppColors.purple),
                           ],
                         ],
                       ),
@@ -523,14 +524,14 @@ class _SessionRow extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF34d399).withAlpha(26),
+                          color: AppColors.primary.withAlpha(26),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFF34d399).withAlpha(60)),
+                          border: Border.all(color: AppColors.primary.withAlpha(60)),
                         ),
                         child: const Text(
                           '완납',
                           style: TextStyle(
-                            color: Color(0xFF34d399),
+                            color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -540,14 +541,14 @@ class _SessionRow extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFf59e0b).withAlpha(20),
+                          color: AppColors.amber.withAlpha(20),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFf59e0b).withAlpha(60)),
+                          border: Border.all(color: AppColors.amber.withAlpha(60)),
                         ),
                         child: Text(
                           '미수 ₩${_fmt(unpaidAmt)}',
                           style: const TextStyle(
-                            color: Color(0xFFf59e0b),
+                            color: AppColors.amber,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -584,7 +585,7 @@ class _SessionRow extends StatelessWidget {
                                   ? '${((paidAmt / totalAmt) * 100).round()}%'
                                   : '0%',
                               style: const TextStyle(
-                                color: Color(0xFF34d399),
+                                color: AppColors.primary,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -598,7 +599,7 @@ class _SessionRow extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: totalAmt > 0 ? (paidAmt / totalAmt).clamp(0.0, 1.0) : 0,
                             backgroundColor: Colors.white.withAlpha(20),
-                            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF34d399)),
+                            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
                             minHeight: 6,
                           ),
                         ),
@@ -684,16 +685,16 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
     final paidAmt = (_summary?['paidAmount'] as num?)?.toInt() ?? 0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0f172a),
+      backgroundColor: AppColors.bgBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0f172a),
+        backgroundColor: AppColors.bgBase,
         title: Text(widget.title,
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _loading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF34d399)))
+              child: CircularProgressIndicator(color: AppColors.primary))
           : Column(
               children: [
                 // ── 요약 헤더 ──
@@ -701,7 +702,7 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1e293b),
+                    color: AppColors.bgCard,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.white.withAlpha(13)),
                   ),
@@ -717,14 +718,14 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                           _SummaryChip(
                             label: '납부',
                             value: '$paidCount명',
-                            color: const Color(0xFF34d399),
+                            color: AppColors.primary,
                           ),
                           _SummaryChip(
                             label: '미납액',
                             value: unpaidAmt > 0 ? '₩${_fmt(unpaidAmt)}' : '없음',
                             color: unpaidAmt > 0
-                                ? const Color(0xFFf59e0b)
-                                : const Color(0xFF34d399),
+                                ? AppColors.amber
+                                : AppColors.primary,
                           ),
                         ],
                       ),
@@ -774,7 +775,7 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                                       Text(
                                         '₩${_fmt(paidAmt)}',
                                         style: const TextStyle(
-                                          color: Color(0xFF34d399),
+                                          color: AppColors.primary,
                                           fontSize: 13,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -799,7 +800,7 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                                       : 0,
                                   backgroundColor: Colors.white.withAlpha(20),
                                   valueColor: const AlwaysStoppedAnimation<Color>(
-                                      Color(0xFF34d399)),
+                                      AppColors.primary),
                                   minHeight: 7,
                                 ),
                               ),
@@ -814,7 +815,7 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: _load,
-                    color: const Color(0xFF34d399),
+                    color: AppColors.primary,
                     child: ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: _payments.length,
@@ -829,17 +830,17 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
 
                         // 테두리 색상
                         final borderColor = isExempt
-                            ? const Color(0xFF8b5cf6).withAlpha(40)
+                            ? AppColors.purple.withAlpha(40)
                             : isPaid
-                                ? const Color(0xFF34d399).withAlpha(40)
-                                : const Color(0xFFf59e0b).withAlpha(70);
+                                ? AppColors.primary.withAlpha(40)
+                                : AppColors.amber.withAlpha(70);
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1e293b),
+                            color: AppColors.bgCard,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: borderColor),
                           ),
@@ -865,10 +866,10 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                                       isExempt ? '면제' : '₩${_fmt(amount)}',
                                       style: TextStyle(
                                         color: isExempt
-                                            ? const Color(0xFF8b5cf6)
+                                            ? AppColors.purple
                                             : isPaid
-                                                ? const Color(0xFF34d399)
-                                                : const Color(0xFFf59e0b),
+                                                ? AppColors.primary
+                                                : AppColors.amber,
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -883,13 +884,13 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                                       horizontal: 10, vertical: 6),
                                   decoration: BoxDecoration(
                                     color:
-                                        const Color(0xFF8b5cf6).withAlpha(26),
+                                        AppColors.purple.withAlpha(26),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: const Text(
                                     '면제',
                                     style: TextStyle(
-                                      color: Color(0xFF8b5cf6),
+                                      color: AppColors.purple,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -904,21 +905,21 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                                         horizontal: 10, vertical: 6),
                                     decoration: BoxDecoration(
                                       color: isPaid
-                                          ? const Color(0xFF34d399).withAlpha(26)
-                                          : const Color(0xFFf59e0b).withAlpha(26),
+                                          ? AppColors.primary.withAlpha(26)
+                                          : AppColors.amber.withAlpha(26),
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
                                         color: isPaid
-                                            ? const Color(0xFF34d399).withAlpha(80)
-                                            : const Color(0xFFf59e0b).withAlpha(80),
+                                            ? AppColors.primary.withAlpha(80)
+                                            : AppColors.amber.withAlpha(80),
                                       ),
                                     ),
                                     child: Text(
                                       isPaid ? '납부완료' : '미납',
                                       style: TextStyle(
                                         color: isPaid
-                                            ? const Color(0xFF34d399)
-                                            : const Color(0xFFf59e0b),
+                                            ? AppColors.primary
+                                            : AppColors.amber,
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                       ),

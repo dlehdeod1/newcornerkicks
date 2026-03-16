@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
@@ -107,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() => _loading = true);
         await _loadData();
       },
-      color: const Color(0xFF34d399),
+      color: AppColors.primary,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(20),
@@ -122,14 +123,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 52,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF34d399), Color(0xFF14b8a6)],
+                      colors: [AppColors.primary, AppColors.teal],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF34d399).withAlpha(51),
+                        color: AppColors.primary.withAlpha(51),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -149,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 2),
                       Text(
                         club?['name'] ?? '클럽',
-                        style: TextStyle(fontSize: 13, color: const Color(0xFF34d399).withAlpha(204)),
+                        style: TextStyle(fontSize: 13, color: AppColors.primary.withAlpha(204)),
                       ),
                     ],
                   ),
@@ -193,13 +194,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
                   if (_loading)
-                    const Center(child: SizedBox(height: 40, child: CircularProgressIndicator(color: Color(0xFF34d399), strokeWidth: 2)))
+                    const Center(child: SizedBox(height: 40, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2)))
                   else if (_myStats != null)
                     Row(
                       children: [
-                        _StatMini(label: '득점', value: '${_myStats!['goals'] ?? 0}', icon: '⚽', color: const Color(0xFF34d399)),
-                        _StatMini(label: '도움', value: '${_myStats!['assists'] ?? 0}', icon: '⚡', color: const Color(0xFF3b82f6)),
-                        _StatMini(label: '수비', value: '${_myStats!['defenses'] ?? 0}', icon: '🛡️', color: const Color(0xFF8b5cf6)),
+                        _StatMini(label: '득점', value: '${_myStats!['goals'] ?? 0}', icon: '⚽', color: AppColors.primary),
+                        _StatMini(label: '도움', value: '${_myStats!['assists'] ?? 0}', icon: '⚡', color: AppColors.blue),
+                        _StatMini(label: '수비', value: '${_myStats!['defenses'] ?? 0}', icon: '🛡️', color: AppColors.purple),
                         _StatMini(
                           label: '평점',
                           value: _myStats!['mvpScore'] != null
@@ -209,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 }()
                               : '-',
                           icon: '⭐',
-                          color: const Color(0xFFf59e0b),
+                          color: AppColors.amber,
                         ),
                       ],
                     )
@@ -241,35 +242,35 @@ class _HomeScreenState extends State<HomeScreen> {
                   icon: Icons.calendar_today_rounded,
                   title: '경기 세션',
                   subtitle: '지난 매치 결과 확인',
-                  color: const Color(0xFF34d399),
+                  color: AppColors.primary,
                   onTap: () => MainShell.switchTab(context, 1),
                 ),
                 _QuickMenu(
                   icon: Icons.emoji_events_rounded,
                   title: '랭킹',
                   subtitle: '시즌 순위 보기',
-                  color: const Color(0xFFf59e0b),
+                  color: AppColors.amber,
                   onTap: () => MainShell.switchTab(context, 2),
                 ),
                 _QuickMenu(
                   icon: Icons.people_rounded,
                   title: '선수단',
                   subtitle: '팀원 능력치 평가',
-                  color: const Color(0xFF3b82f6),
+                  color: AppColors.blue,
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PlayersScreen())),
                 ),
                 _QuickMenu(
                   icon: Icons.workspace_premium_rounded,
                   title: '명예의전당',
                   subtitle: '역대 시즌 챔피언',
-                  color: const Color(0xFF8b5cf6),
+                  color: AppColors.purple,
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HallOfFameScreen())),
                 ),
                 _QuickMenu(
                   icon: Icons.receipt_long_rounded,
                   title: '정산',
                   subtitle: '회비 납부 현황',
-                  color: const Color(0xFF14b8a6),
+                  color: AppColors.teal,
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettlementsScreen())),
                 ),
               ],
@@ -291,7 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: _loading
                   ? const Padding(
                       padding: EdgeInsets.all(32),
-                      child: Center(child: CircularProgressIndicator(color: Color(0xFF34d399), strokeWidth: 2)),
+                      child: Center(child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2)),
                     )
                   : _recentSession != null
                       ? _buildRecentSession(_recentSession!)
@@ -320,10 +321,10 @@ class _HomeScreenState extends State<HomeScreen> {
     Color statusColor;
     String statusLabel;
     switch (status) {
-      case 'completed': statusColor = const Color(0xFF64748b); statusLabel = '정산완료'; break;
-      case 'ended': statusColor = const Color(0xFFf97316); statusLabel = '경기완료'; break;
-      case 'closed': statusColor = const Color(0xFF3b82f6); statusLabel = '마감'; break;
-      default: statusColor = const Color(0xFF34d399); statusLabel = '진행중'; break;
+      case 'completed': statusColor = AppColors.slate; statusLabel = '정산완료'; break;
+      case 'ended': statusColor = AppColors.orange; statusLabel = '경기완료'; break;
+      case 'closed': statusColor = AppColors.blue; statusLabel = '마감'; break;
+      default: statusColor = AppColors.primary; statusLabel = '진행중'; break;
     }
 
     return GestureDetector(

@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -291,7 +292,7 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
     await Clipboard.setData(ClipboardData(text: text));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('클립보드에 복사됐습니다 ✓'), backgroundColor: Color(0xFF34d399), duration: Duration(seconds: 2)),
+        const SnackBar(content: Text('클립보드에 복사됐습니다 ✓'), backgroundColor: AppColors.primary, duration: Duration(seconds: 2)),
       );
     }
   }
@@ -331,7 +332,7 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
           Container(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
             decoration: BoxDecoration(
-              color: const Color(0xFF1e293b),
+              color: AppColors.bgCard,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -344,19 +345,19 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
                       Expanded(child: _ActionBtn(
                         icon: Icons.copy_rounded, label: '텍스트 복사',
                         subtitle: '카톡에 붙여넣기',
-                        color: const Color(0xFF34d399), onTap: () => _copyText(shareText),
+                        color: AppColors.primary, onTap: () => _copyText(shareText),
                       )),
                       const SizedBox(width: 8),
                       Expanded(child: _ActionBtn(
                         icon: Icons.share_rounded, label: '텍스트 공유',
                         subtitle: '카톡 바로 공유',
-                        color: const Color(0xFF3b82f6), onTap: () => _shareText(shareText),
+                        color: AppColors.blue, onTap: () => _shareText(shareText),
                       )),
                       const SizedBox(width: 8),
                       Expanded(child: _ActionBtn(
                         icon: Icons.image_rounded, label: '이미지 공유',
                         subtitle: '사진으로 저장',
-                        color: const Color(0xFFf59e0b), loading: _capturing, onTap: _shareImage,
+                        color: AppColors.amber, loading: _capturing, onTap: _shareImage,
                       )),
                     ],
                   ),
@@ -427,7 +428,7 @@ class _MatchResultCard extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF0d1b2a), Color(0xFF1a2744), Color(0xFF0d1b2a)],
+          colors: [AppColors.bgDeep, AppColors.bgDeep, AppColors.bgDeep],
           begin: Alignment.topCenter, end: Alignment.bottomCenter,
         ),
         borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -440,11 +441,11 @@ class _MatchResultCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [const Color(0xFF34d399).withAlpha(50), const Color(0xFF14b8a6).withAlpha(25)],
+                colors: [AppColors.primary.withAlpha(50), AppColors.teal.withAlpha(25)],
                 begin: Alignment.topLeft, end: Alignment.bottomRight,
               ),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              border: Border(bottom: BorderSide(color: const Color(0xFF34d399).withAlpha(40))),
+              border: Border(bottom: BorderSide(color: AppColors.primary.withAlpha(40))),
             ),
             child: Column(
               children: [
@@ -456,7 +457,7 @@ class _MatchResultCard extends StatelessWidget {
                     const Flexible(
                       child: Text('MATCH  DAY', style: TextStyle(
                         fontSize: 24, fontWeight: FontWeight.w900,
-                        color: Color(0xFF34d399), letterSpacing: 4,
+                        color: AppColors.primary, letterSpacing: 4,
                       )),
                     ),
                     const SizedBox(width: 10),
@@ -488,9 +489,9 @@ class _MatchResultCard extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 6),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isFirst ? const Color(0xFFf59e0b).withAlpha(20) : Colors.white.withAlpha(8),
+                    color: isFirst ? AppColors.amber.withAlpha(20) : Colors.white.withAlpha(8),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: isFirst ? const Color(0xFFf59e0b).withAlpha(51) : Colors.white.withAlpha(13)),
+                    border: Border.all(color: isFirst ? AppColors.amber.withAlpha(51) : Colors.white.withAlpha(13)),
                   ),
                   child: Row(
                     children: [
@@ -502,13 +503,13 @@ class _MatchResultCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Expanded(child: Text(t['name'] as String, style: TextStyle(
                         fontSize: 14, fontWeight: isFirst ? FontWeight.bold : FontWeight.w500,
-                        color: isFirst ? const Color(0xFFf59e0b) : Colors.white,
+                        color: isFirst ? AppColors.amber : Colors.white,
                       ), overflow: TextOverflow.ellipsis)),
                       // 최근 결과 ●
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: results.take(5).map((r) {
-                          final c = r == 'W' ? const Color(0xFF34d399) : r == 'D' ? const Color(0xFFf59e0b) : const Color(0xFFef4444);
+                          final c = r == 'W' ? AppColors.primary : r == 'D' ? AppColors.amber : AppColors.red;
                           return Padding(padding: const EdgeInsets.only(right: 2), child: Text('●', style: TextStyle(fontSize: 11, color: c)));
                         }).toList(),
                       ),
@@ -518,12 +519,12 @@ class _MatchResultCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                         decoration: BoxDecoration(
-                          color: isFirst ? const Color(0xFFf59e0b).withAlpha(40) : Colors.white.withAlpha(13),
+                          color: isFirst ? AppColors.amber.withAlpha(40) : Colors.white.withAlpha(13),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text('${t['points']}pt', style: TextStyle(
                           fontSize: 12, fontWeight: FontWeight.bold,
-                          color: isFirst ? const Color(0xFFf59e0b) : Colors.white,
+                          color: isFirst ? AppColors.amber : Colors.white,
                         )),
                       ),
                     ],
@@ -543,13 +544,13 @@ class _MatchResultCard extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF34d399).withAlpha(20),
+                  color: AppColors.primary.withAlpha(20),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF34d399).withAlpha(40)),
+                  border: Border.all(color: AppColors.primary.withAlpha(40)),
                 ),
                 child: Text(
                   '#코너킥스  #풋살  #경기결과',
-                  style: TextStyle(fontSize: 11, color: const Color(0xFF34d399).withAlpha(179)),
+                  style: TextStyle(fontSize: 11, color: AppColors.primary.withAlpha(179)),
                 ),
               ),
             ),
@@ -588,7 +589,7 @@ class _MatchResultCard extends StatelessWidget {
         icon: '⚡', title: '도움왕',
         name: ap['name'] as String? ?? '?',
         value: '${topAssister['count']}도움',
-        color: const Color(0xFF3b82f6),
+        color: AppColors.blue,
       ));
     }
 
@@ -613,7 +614,7 @@ class _MatchResultCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFFf59e0b), Color(0xFFf97316)],
+              colors: [AppColors.amber, AppColors.orange],
               begin: Alignment.topLeft, end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(14),
@@ -642,12 +643,12 @@ class _MatchResultCard extends StatelessWidget {
 
   Color _typeColor(String type) {
     switch (type) {
-      case 'GOAL': return const Color(0xFF34d399);
-      case 'DEFENSE': return const Color(0xFF8b5cf6);
-      case 'SAVE': return const Color(0xFF0ea5e9);
-      case 'YELLOW_CARD': return const Color(0xFFf59e0b);
-      case 'RED_CARD': return const Color(0xFFef4444);
-      default: return const Color(0xFF6366f1);
+      case 'GOAL': return AppColors.primary;
+      case 'DEFENSE': return AppColors.purple;
+      case 'SAVE': return AppColors.blueSky;
+      case 'YELLOW_CARD': return AppColors.amber;
+      case 'RED_CARD': return AppColors.red;
+      default: return AppColors.indigo;
     }
   }
 }

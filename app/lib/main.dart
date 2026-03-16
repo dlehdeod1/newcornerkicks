@@ -5,6 +5,7 @@ import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/club_onboarding_screen.dart';
 import 'screens/club_selector_screen.dart';
+import 'theme/app_colors.dart';
 
 void main() {
   runApp(
@@ -14,9 +15,6 @@ void main() {
     ),
   );
 }
-
-// 브랜드 컬러
-const Color kBrandGreen = Color(0xFF2ECC71);
 
 class CornerKicksApp extends StatelessWidget {
   const CornerKicksApp({super.key});
@@ -32,7 +30,7 @@ class CornerKicksApp extends StatelessWidget {
         brightness: Brightness.light,
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: kBrandGreen,
+          seedColor: AppColors.primary,
           brightness: Brightness.light,
         ),
         useMaterial3: true,
@@ -42,7 +40,7 @@ class CornerKicksApp extends StatelessWidget {
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF0F172A),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: kBrandGreen,
+          seedColor: AppColors.primary,
           brightness: Brightness.dark,
           surface: const Color(0xFF1E293B),
         ),
@@ -56,7 +54,7 @@ class CornerKicksApp extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(color: kBrandGreen),
+                    CircularProgressIndicator(color: AppColors.primary),
                     SizedBox(height: 16),
                     Text('로딩 중...', style: TextStyle(color: Colors.white54)),
                   ],

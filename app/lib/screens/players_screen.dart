@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'package:provider/provider.dart';
@@ -46,7 +47,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setS) => AlertDialog(
-          backgroundColor: const Color(0xFF1e293b),
+          backgroundColor: AppColors.bgCard,
           title: const Text('선수 추가', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -80,13 +81,13 @@ class _PlayersScreenState extends State<PlayersScreen> {
                 } catch (e) {
                   setS(() => saving = false);
                   if (ctx.mounted) ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e.toString()), backgroundColor: const Color(0xFFef4444)),
+                    SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red),
                   );
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF34d399),
-                foregroundColor: const Color(0xFF0f172a),
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.bgBase,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               child: saving
@@ -112,7 +113,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFF34d399), width: 1.5),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         ),
@@ -125,17 +126,17 @@ class _PlayersScreenState extends State<PlayersScreen> {
         (p['name'] ?? '').toString().toLowerCase().contains(_search.toLowerCase())).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0f172a),
+      backgroundColor: AppColors.bgBase,
       floatingActionButton: auth.isAdmin
           ? FloatingActionButton(
               onPressed: _showAddPlayerDialog,
-              backgroundColor: const Color(0xFF34d399),
-              foregroundColor: const Color(0xFF0f172a),
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.bgBase,
               child: const Icon(Icons.person_add_outlined),
             )
           : null,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0f172a),
+        backgroundColor: AppColors.bgBase,
         title: const Text('선수 목록', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -152,7 +153,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                 hintStyle: const TextStyle(color: Colors.white38),
                 prefixIcon: const Icon(Icons.search, color: Colors.white38),
                 filled: true,
-                fillColor: const Color(0xFF1e293b),
+                fillColor: AppColors.bgCard,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
@@ -160,10 +161,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
           ),
           Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF34d399)))
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
                 : RefreshIndicator(
                     onRefresh: _load,
-                    color: const Color(0xFF34d399),
+                    color: AppColors.primary,
                     child: ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: filtered.length,
@@ -179,7 +180,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1e293b),
+                              color: AppColors.bgCard,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(color: Colors.white.withAlpha(13)),
                             ),
@@ -187,7 +188,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                               children: [
                                 CircleAvatar(
                                   radius: 22,
-                                  backgroundColor: const Color(0xFF334155),
+                                  backgroundColor: AppColors.bgBorder,
                                   child: Text(
                                     (p['name'] ?? '?')[0],
                                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
@@ -202,9 +203,9 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                       const SizedBox(height: 4),
                                       Row(
                                         children: [
-                                          _miniTag('⚽ $goals', const Color(0xFF34d399)),
+                                          _miniTag('⚽ $goals', AppColors.primary),
                                           const SizedBox(width: 8),
-                                          _miniTag('⚡ $assists', const Color(0xFF60a5fa)),
+                                          _miniTag('⚡ $assists', AppColors.blueLight),
                                           const SizedBox(width: 8),
                                           _miniTag('${p['rating_count'] ?? 0}명 평가', Colors.white38),
                                         ],

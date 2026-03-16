@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
@@ -43,7 +44,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
     final auth = context.read<AuthService>();
     if (auth.token == null || auth.player == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('선수 연동 후 참석 투표가 가능합니다'), backgroundColor: Color(0xFF3b82f6)),
+        const SnackBar(content: Text('선수 연동 후 참석 투표가 가능합니다'), backgroundColor: AppColors.blue),
       );
       return;
     }
@@ -100,10 +101,10 @@ class _SessionsScreenState extends State<SessionsScreen> {
   Color _statusColor(String? status) {
     switch (status) {
       case 'recruiting':
-      case 'open': return const Color(0xFF34d399);
-      case 'closed': return const Color(0xFF3b82f6);
-      case 'ended': return const Color(0xFFf97316);
-      case 'completed': return const Color(0xFF64748b);
+      case 'open': return AppColors.primary;
+      case 'closed': return AppColors.blue;
+      case 'ended': return AppColors.orange;
+      case 'completed': return AppColors.slate;
       default: return Colors.white38;
     }
   }
@@ -129,7 +130,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1e293b),
+      backgroundColor: AppColors.bgCard,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setS) => Padding(
@@ -163,7 +164,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                     firstDate: DateTime.now().subtract(const Duration(days: 30)),
                     lastDate: DateTime.now().add(const Duration(days: 180)),
                     builder: (c, child) => Theme(
-                      data: ThemeData.dark().copyWith(colorScheme: const ColorScheme.dark(primary: Color(0xFF34d399))),
+                      data: ThemeData.dark().copyWith(colorScheme: const ColorScheme.dark(primary: AppColors.primary)),
                       child: child!,
                     ),
                   );
@@ -179,7 +180,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_today, size: 16, color: Color(0xFF34d399)),
+                      const Icon(Icons.calendar_today, size: 16, color: AppColors.primary),
                       const SizedBox(width: 10),
                       Text(
                         picked != null
@@ -203,7 +204,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF34d399), width: 1.5),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                 ),
@@ -235,14 +236,14 @@ class _SessionsScreenState extends State<SessionsScreen> {
                             if (ctx.mounted) {
                               setS(() => saving = false);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(e.toString()), backgroundColor: const Color(0xFFef4444)),
+                                SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red),
                               );
                             }
                           }
                         },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF34d399),
-                    foregroundColor: const Color(0xFF0f172a),
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.bgBase,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   child: saving
@@ -265,8 +266,8 @@ class _SessionsScreenState extends State<SessionsScreen> {
       floatingActionButton: auth.isAdmin
           ? FloatingActionButton(
               onPressed: _showCreateSessionSheet,
-              backgroundColor: const Color(0xFF34d399),
-              foregroundColor: const Color(0xFF0f172a),
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.bgBase,
               child: const Icon(Icons.add),
             )
           : null,
@@ -275,9 +276,9 @@ class _SessionsScreenState extends State<SessionsScreen> {
           setState(() => _loading = true);
           await _loadSessions();
         },
-        color: const Color(0xFF34d399),
+        color: AppColors.primary,
         child: _loading
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF34d399)))
+            ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
             : _sessions.isEmpty
                 ? _buildEmpty()
                 : ListView.builder(
@@ -341,7 +342,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
         decoration: BoxDecoration(
           color: Colors.white.withAlpha(8),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isGoing ? const Color(0xFF34d399).withAlpha(51) : Colors.white.withAlpha(15)),
+          border: Border.all(color: isGoing ? AppColors.primary.withAlpha(51) : Colors.white.withAlpha(15)),
         ),
         child: Column(
           children: [
@@ -417,25 +418,25 @@ class _SessionsScreenState extends State<SessionsScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
                     color: isGoing
-                        ? const Color(0xFF34d399).withAlpha(26)
+                        ? AppColors.primary.withAlpha(26)
                         : Colors.white.withAlpha(8),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: isGoing ? const Color(0xFF34d399).withAlpha(77) : Colors.white.withAlpha(20),
+                      color: isGoing ? AppColors.primary.withAlpha(77) : Colors.white.withAlpha(20),
                     ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (isUpdating)
-                        const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: Color(0xFF34d399)))
+                        const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: AppColors.primary))
                       else
                         Text(
                           isGoing ? '✓' : '+',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: isGoing ? const Color(0xFF34d399) : Colors.white.withAlpha(153),
+                            color: isGoing ? AppColors.primary : Colors.white.withAlpha(153),
                           ),
                         ),
                       const SizedBox(width: 6),
@@ -444,7 +445,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: isGoing ? FontWeight.w600 : FontWeight.normal,
-                          color: isGoing ? const Color(0xFF34d399) : Colors.white.withAlpha(153),
+                          color: isGoing ? AppColors.primary : Colors.white.withAlpha(153),
                         ),
                       ),
                     ],

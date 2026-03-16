@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -94,7 +95,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: const Color(0xFFef4444)),
+          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red),
         );
       }
     }
@@ -129,7 +130,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
       if (mounted) {
         setState(() => _assigning = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: const Color(0xFFef4444)),
+          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red),
         );
       }
     }
@@ -138,9 +139,9 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f172a),
+      backgroundColor: AppColors.bgBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0f172a),
+        backgroundColor: AppColors.bgBase,
         foregroundColor: Colors.white,
         elevation: 0,
         title: Text(
@@ -177,7 +178,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
           ),
           child: TabBar(
             controller: _tab,
-            indicator: BoxDecoration(color: const Color(0xFF34d399), borderRadius: BorderRadius.circular(9)),
+            indicator: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(9)),
             indicatorSize: TabBarIndicatorSize.tab,
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white38,
@@ -194,7 +195,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
               Text(
                 '${_selected.length}명 선택됨',
                 style: TextStyle(
-                  color: _selected.length >= 4 ? const Color(0xFF34d399) : Colors.white.withAlpha(102),
+                  color: _selected.length >= 4 ? AppColors.primary : Colors.white.withAlpha(102),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -230,7 +231,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
 
   Widget _buildDirectSelect() {
     if (_loadingPlayers) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFF34d399)));
+      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
     if (_allPlayers.isEmpty) {
       return Center(
@@ -251,10 +252,10 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
             margin: const EdgeInsets.only(bottom: 6),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
             decoration: BoxDecoration(
-              color: checked ? const Color(0xFF34d399).withAlpha(20) : Colors.white.withAlpha(8),
+              color: checked ? AppColors.primary.withAlpha(20) : Colors.white.withAlpha(8),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: checked ? const Color(0xFF34d399).withAlpha(77) : Colors.white.withAlpha(13),
+                color: checked ? AppColors.primary.withAlpha(77) : Colors.white.withAlpha(13),
               ),
             ),
             child: Row(
@@ -264,9 +265,9 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                   width: 20,
                   height: 20,
                   decoration: BoxDecoration(
-                    color: checked ? const Color(0xFF34d399) : Colors.transparent,
+                    color: checked ? AppColors.primary : Colors.transparent,
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: checked ? const Color(0xFF34d399) : Colors.white38),
+                    border: Border.all(color: checked ? AppColors.primary : Colors.white38),
                   ),
                   child: checked ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
                 ),
@@ -305,7 +306,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('투표 템플릿이 복사됐습니다 ✓'),
-                  backgroundColor: Color(0xFF34d399),
+                  backgroundColor: AppColors.primary,
                   duration: Duration(seconds: 2),
                 ),
               );
@@ -314,18 +315,18 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
               decoration: BoxDecoration(
-                color: const Color(0xFF34d399).withAlpha(20),
+                color: AppColors.primary.withAlpha(20),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF34d399).withAlpha(51)),
+                border: Border.all(color: AppColors.primary.withAlpha(51)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.copy_outlined, size: 16, color: Color(0xFF34d399)),
+                  const Icon(Icons.copy_outlined, size: 16, color: AppColors.primary),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
                       '투표 템플릿 복사 → 카톡 붙여넣기',
-                      style: TextStyle(color: Color(0xFF34d399), fontSize: 13, fontWeight: FontWeight.w600),
+                      style: TextStyle(color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.w600),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -353,7 +354,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF34d399), width: 1.5),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.all(14),
               ),
@@ -386,7 +387,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                 children: [
                   Text(
                     '매칭: ${_parsed.where((a) => a['playerId'] != null).length}/${_parsed.length}명',
-                    style: const TextStyle(color: Color(0xFF34d399), fontSize: 12, fontWeight: FontWeight.w600),
+                    style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -397,14 +398,14 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: matched ? const Color(0xFF34d399).withAlpha(26) : Colors.orange.withAlpha(26),
+                          color: matched ? AppColors.primary.withAlpha(26) : Colors.orange.withAlpha(26),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           a['name'] as String? ?? '?',
                           style: TextStyle(
                             fontSize: 11,
-                            color: matched ? const Color(0xFF34d399) : Colors.orange,
+                            color: matched ? AppColors.primary : Colors.orange,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -432,7 +433,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1e293b),
+        backgroundColor: AppColors.bgCard,
         title: const Text('PRO 플랜 업그레이드', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -467,8 +468,8 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF34d399),
-              foregroundColor: const Color(0xFF0f172a),
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.bgBase,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             child: const Text('업그레이드', style: TextStyle(fontWeight: FontWeight.w700)),
@@ -534,8 +535,8 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
               child: ElevatedButton(
                 onPressed: canAssign ? _assignTeams : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF34d399),
-                  foregroundColor: const Color(0xFF0f172a),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.bgBase,
                   disabledBackgroundColor: Colors.white.withAlpha(20),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
@@ -560,7 +561,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
 
   // ── 결과 단계 ─────────────────────────────────────
   Widget _buildResultStep() {
-    final teamColors = [const Color(0xFF34d399), const Color(0xFFf59e0b), const Color(0xFF60a5fa), const Color(0xFFf472b6)];
+    final teamColors = [AppColors.primary, AppColors.amber, AppColors.blueLight, AppColors.fuchsia];
     final hasTwoTeams = _resultTeams.length == 2;
 
     return Column(
@@ -604,8 +605,8 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF34d399),
-                  foregroundColor: const Color(0xFF0f172a),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.bgBase,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: const Text(
@@ -690,7 +691,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                   Text(
                     members1.length == members2.length ? '균형 잡힌 팀!' : '팀 인원 차이 있음',
                     style: TextStyle(
-                      color: members1.length == members2.length ? const Color(0xFF34d399) : Colors.orange,
+                      color: members1.length == members2.length ? AppColors.primary : Colors.orange,
                       fontSize: 12,
                     ),
                   ),

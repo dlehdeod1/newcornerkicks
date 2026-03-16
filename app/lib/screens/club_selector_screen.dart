@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
@@ -17,12 +18,12 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
   bool _showCreate = false;
 
   static const List<List<Color>> _gradients = [
-    [Color(0xFF34d399), Color(0xFF14b8a6)],
-    [Color(0xFF3b82f6), Color(0xFF6366f1)],
-    [Color(0xFFa855f7), Color(0xFFec4899)],
-    [Color(0xFFf59e0b), Color(0xFFf97316)],
-    [Color(0xFFf43f5e), Color(0xFFef4444)],
-    [Color(0xFF06b6d4), Color(0xFF3b82f6)],
+    [AppColors.primary, AppColors.teal],
+    [AppColors.blue, AppColors.indigo],
+    [AppColors.violet, AppColors.pink],
+    [AppColors.amber, AppColors.orange],
+    [AppColors.rose, AppColors.red],
+    [AppColors.cyan, AppColors.blue],
   ];
 
   List<Color> _gradient(int index) => _gradients[index % _gradients.length];
@@ -39,7 +40,7 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
     final clubs = auth.clubs;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0f172a),
+      backgroundColor: AppColors.bgBase,
       body: SafeArea(
         child: Stack(
           children: [
@@ -91,12 +92,12 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
                             child: Container(
                               decoration: BoxDecoration(
                                 color: isActive
-                                    ? const Color(0xFF34d399).withAlpha(20)
+                                    ? AppColors.primary.withAlpha(20)
                                     : Colors.white.withAlpha(8),
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
                                   color: isActive
-                                      ? const Color(0xFF34d399).withAlpha(128)
+                                      ? AppColors.primary.withAlpha(128)
                                       : Colors.white.withAlpha(20),
                                 ),
                               ),
@@ -151,13 +152,13 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
                                                 Container(
                                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                                   decoration: BoxDecoration(
-                                                    color: const Color(0xFF34d399).withAlpha(30),
+                                                    color: AppColors.primary.withAlpha(30),
                                                     borderRadius: BorderRadius.circular(6),
-                                                    border: Border.all(color: const Color(0xFF34d399).withAlpha(100)),
+                                                    border: Border.all(color: AppColors.primary.withAlpha(100)),
                                                   ),
                                                   child: const Text(
                                                     '현재',
-                                                    style: TextStyle(fontSize: 11, color: Color(0xFF34d399), fontWeight: FontWeight.w600),
+                                                    style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600),
                                                   ),
                                                 ),
                                               ],
@@ -230,7 +231,7 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
                             icon: Icons.add_circle_outline,
                             label: '클럽 만들기',
                             subtitle: '새 클럽 생성',
-                            gradient: const [Color(0xFF34d399), Color(0xFF14b8a6)],
+                            gradient: const [AppColors.primary, AppColors.teal],
                             onTap: () => setState(() => _showCreate = true),
                           ),
                         ),
@@ -376,7 +377,7 @@ class _JoinModalState extends State<_JoinModal> {
               fillColor: Colors.white.withAlpha(10),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withAlpha(26))),
               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withAlpha(26))),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF34d399))),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
             ),
           ),
           if (_error != null) ...[
@@ -458,7 +459,7 @@ class _CreateModalState extends State<_CreateModal> {
             controller: _slugCtrl,
             hint: '클럽 ID (예: cornerkicks)',
             suffixIcon: _slugStatus == 'available'
-                ? const Icon(Icons.check_circle, color: Color(0xFF34d399), size: 18)
+                ? const Icon(Icons.check_circle, color: AppColors.primary, size: 18)
                 : _slugStatus == 'taken'
                     ? const Icon(Icons.cancel, color: Colors.red, size: 18)
                     : null,
@@ -501,7 +502,7 @@ class _CreateModalState extends State<_CreateModal> {
         fillColor: Colors.white.withAlpha(10),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withAlpha(26))),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withAlpha(26))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF34d399))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       ),
     );
@@ -515,7 +516,7 @@ Widget _buildBtn({required String label, required bool loading, required VoidCal
       width: double.infinity,
       height: 48,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF34d399), Color(0xFF14b8a6)]),
+        gradient: const LinearGradient(colors: [AppColors.primary, AppColors.teal]),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Center(
@@ -551,7 +552,7 @@ class _ModalOverlay extends StatelessWidget {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
             decoration: BoxDecoration(
-              color: const Color(0xFF1e293b),
+              color: AppColors.bgCard,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Colors.white.withAlpha(20)),
             ),

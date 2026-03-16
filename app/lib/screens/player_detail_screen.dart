@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'dart:math';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
@@ -51,21 +52,21 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f172a),
+      backgroundColor: AppColors.bgBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0f172a),
+        backgroundColor: AppColors.bgBase,
         title: Text(_player?['player']?['name'] ?? '선수 정보', style: const TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: const Color(0xFF34d399),
-          labelColor: const Color(0xFF34d399),
+          indicatorColor: AppColors.primary,
+          labelColor: AppColors.primary,
           unselectedLabelColor: Colors.white38,
           tabs: const [Tab(text: '능력치'), Tab(text: '기록 로그')],
         ),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF34d399)))
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : TabBarView(
               controller: _tabController,
               children: [_buildAbilityTab(), _buildLogsTab()],
@@ -74,9 +75,9 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
           ? null
           : FloatingActionButton.extended(
               onPressed: _showRatingDialog,
-              backgroundColor: const Color(0xFF34d399),
-              icon: const Icon(Icons.star, color: Color(0xFF0f172a)),
-              label: const Text('평가하기', style: TextStyle(color: Color(0xFF0f172a), fontWeight: FontWeight.bold)),
+              backgroundColor: AppColors.primary,
+              icon: const Icon(Icons.star, color: AppColors.bgBase),
+              label: const Text('평가하기', style: TextStyle(color: AppColors.bgBase, fontWeight: FontWeight.bold)),
             ),
     );
   }
@@ -118,7 +119,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
             height: MediaQuery.of(context).size.height * 0.85,
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
-              color: Color(0xFF1e293b),
+              color: AppColors.bgCard,
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(
@@ -146,13 +147,13 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(labels[key]!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                                Text('${tempStats[key]?.toInt()}', style: const TextStyle(color: Color(0xFF34d399), fontWeight: FontWeight.bold)),
+                                Text('${tempStats[key]?.toInt()}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                               ],
                             ),
                             Slider(
                               value: tempStats[key]!,
                               min: 0, max: 100, divisions: 100,
-                              activeColor: const Color(0xFF34d399),
+                              activeColor: AppColors.primary,
                               inactiveColor: Colors.white.withAlpha(26),
                               onChanged: (val) => setModalState(() => tempStats[key] = val),
                             ),
@@ -168,7 +169,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF34d399),
+                      backgroundColor: AppColors.primary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: () async {
@@ -177,15 +178,15 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
                         if (ctx.mounted) Navigator.pop(ctx);
                         _load(); // 새로고침
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('평가가 등록되었습니다 ✅'), backgroundColor: Color(0xFF34d399)));
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('평가가 등록되었습니다 ✅'), backgroundColor: AppColors.primary));
                         }
                       } catch (e) {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: const Color(0xFFef4444)));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: AppColors.red));
                         }
                       }
                     },
-                    child: const Text('제출하기', style: TextStyle(color: Color(0xFF0f172a), fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: const Text('제출하기', style: TextStyle(color: AppColors.bgBase, fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -223,7 +224,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF1e293b),
+              color: AppColors.bgCard,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Colors.white.withAlpha(13)),
             ),
@@ -231,7 +232,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
               children: [
                 CircleAvatar(
                   radius: 32,
-                  backgroundColor: const Color(0xFF334155),
+                  backgroundColor: AppColors.bgBorder,
                   child: Text((p['name'] ?? '?')[0], style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(width: 16),
@@ -246,11 +247,11 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF34d399).withAlpha(26),
+                          color: AppColors.primary.withAlpha(26),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text('OVR ${avgOverall.toStringAsFixed(0)}',
-                            style: const TextStyle(color: Color(0xFF34d399), fontWeight: FontWeight.bold)),
+                            style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -264,7 +265,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF1e293b),
+              color: AppColors.bgCard,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Colors.white.withAlpha(13)),
             ),
@@ -289,7 +290,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF1e293b),
+              color: AppColors.bgCard,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Colors.white.withAlpha(13)),
             ),
@@ -328,10 +329,10 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
   }
 
   Color _getStatColor(double val) {
-    if (val >= 80) return const Color(0xFF34d399);
-    if (val >= 60) return const Color(0xFF60a5fa);
-    if (val >= 40) return const Color(0xFFfbbf24);
-    return const Color(0xFFf87171);
+    if (val >= 80) return AppColors.primary;
+    if (val >= 60) return AppColors.blueLight;
+    if (val >= 40) return AppColors.amberLight;
+    return AppColors.redLight;
   }
 
   Widget _buildLogsTab() {
@@ -377,21 +378,21 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: active ? const Color(0xFF34d399).withAlpha(26) : const Color(0xFF1e293b),
+                      color: active ? AppColors.primary.withAlpha(26) : AppColors.bgCard,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: active ? const Color(0xFF34d399).withAlpha(77) : Colors.white.withAlpha(13)),
+                      border: Border.all(color: active ? AppColors.primary.withAlpha(77) : Colors.white.withAlpha(13)),
                     ),
                     child: Row(
                       children: [
                         Text(t['icon'] as String, style: const TextStyle(fontSize: 14)),
                         const SizedBox(width: 6),
                         Text(t['label'] as String,
-                            style: TextStyle(color: active ? const Color(0xFF34d399) : Colors.white54, fontWeight: FontWeight.w600, fontSize: 13)),
+                            style: TextStyle(color: active ? AppColors.primary : Colors.white54, fontWeight: FontWeight.w600, fontSize: 13)),
                         const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(color: Colors.white.withAlpha(active ? 26 : 13), borderRadius: BorderRadius.circular(6)),
-                          child: Text('${t['count']}', style: TextStyle(color: active ? const Color(0xFF34d399) : Colors.white38, fontSize: 11, fontWeight: FontWeight.bold)),
+                          child: Text('${t['count']}', style: TextStyle(color: active ? AppColors.primary : Colors.white38, fontSize: 11, fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
@@ -456,7 +457,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF1e293b),
+        color: AppColors.bgCard,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -516,8 +517,8 @@ class _RadarChartPainter extends CustomPainter {
 
     // Data polygon
     final dataPath = Path();
-    final fillPaint = Paint()..color = const Color(0xFF34d399).withAlpha(51)..style = PaintingStyle.fill;
-    final strokePaint = Paint()..color = const Color(0xFF34d399)..style = PaintingStyle.stroke..strokeWidth = 2;
+    final fillPaint = Paint()..color = AppColors.primary.withAlpha(51)..style = PaintingStyle.fill;
+    final strokePaint = Paint()..color = AppColors.primary..style = PaintingStyle.stroke..strokeWidth = 2;
 
     for (int i = 0; i <= n; i++) {
       final idx = i % n;

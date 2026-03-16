@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
@@ -103,7 +104,7 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
     // GOAL is mandatory
     if (!_enabledEvents.contains('GOAL')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('득점(GOAL)은 필수 기록 항목입니다.'), backgroundColor: Color(0xFFef4444)),
+        const SnackBar(content: Text('득점(GOAL)은 필수 기록 항목입니다.'), backgroundColor: AppColors.red),
       );
       return;
     }
@@ -124,7 +125,7 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('설정이 저장되었습니다 ✅'), backgroundColor: Color(0xFF34d399), duration: Duration(seconds: 2)),
+          const SnackBar(content: Text('설정이 저장되었습니다 ✅'), backgroundColor: AppColors.primary, duration: Duration(seconds: 2)),
         );
         // Refresh auth service club info
         await context.read<AuthService>().refreshClub();
@@ -132,7 +133,7 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: const Color(0xFFef4444)),
+          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red),
         );
       }
     } finally {
@@ -143,9 +144,9 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f172a),
+      backgroundColor: AppColors.bgBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0f172a),
+        backgroundColor: AppColors.bgBase,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
@@ -159,20 +160,20 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
               child: TextButton(
                 onPressed: _saving ? null : _save,
                 style: TextButton.styleFrom(
-                  backgroundColor: const Color(0xFF34d399).withAlpha(26),
-                  foregroundColor: const Color(0xFF34d399),
+                  backgroundColor: AppColors.primary.withAlpha(26),
+                  foregroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 ),
                 child: _saving
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Color(0xFF34d399), strokeWidth: 2))
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2))
                     : const Text('저장', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
               ),
             ),
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF34d399)))
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -243,23 +244,23 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.flag_rounded, size: 16, color: Color(0xFF34d399)),
+              const Icon(Icons.flag_rounded, size: 16, color: AppColors.primary),
               const SizedBox(width: 8),
               const Text('시즌 시작 월', style: TextStyle(color: Colors.white70, fontSize: 13)),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF34d399).withAlpha(20),
+                  color: AppColors.primary.withAlpha(20),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFF34d399).withAlpha(51)),
+                  border: Border.all(color: AppColors.primary.withAlpha(51)),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<int>(
                     value: _seasonStartMonth,
-                    dropdownColor: const Color(0xFF1e293b),
-                    style: const TextStyle(color: Color(0xFF34d399), fontSize: 14, fontWeight: FontWeight.w600),
-                    icon: const Icon(Icons.expand_more, color: Color(0xFF34d399), size: 18),
+                    dropdownColor: AppColors.bgCard,
+                    style: const TextStyle(color: AppColors.primary, fontSize: 14, fontWeight: FontWeight.w600),
+                    icon: const Icon(Icons.expand_more, color: AppColors.primary, size: 18),
                     isDense: true,
                     items: List.generate(12, (i) => DropdownMenuItem(
                       value: i + 1,
@@ -302,7 +303,7 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
   Widget _buildSectionTitle(IconData icon, String title) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: const Color(0xFF34d399)),
+        Icon(icon, size: 18, color: AppColors.primary),
         const SizedBox(width: 8),
         Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
       ],
@@ -375,7 +376,7 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF34d399), width: 1.5),
+              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           ),
@@ -449,7 +450,7 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF34d399), width: 1.5),
+              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
@@ -494,7 +495,7 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
                         fillColor: Colors.white.withAlpha(10),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.white.withAlpha(20))),
                         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.white.withAlpha(20))),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF34d399), width: 1.5)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         hintText: '참가비',
                         hintStyle: TextStyle(color: Colors.white.withAlpha(51), fontSize: 13),
@@ -507,10 +508,10 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFef4444).withAlpha(20),
+                        color: AppColors.red.withAlpha(20),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.remove, color: Color(0xFFef4444), size: 16),
+                      child: const Icon(Icons.remove, color: AppColors.red, size: 16),
                     ),
                   ),
                 ],
@@ -552,17 +553,17 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFF34d399).withAlpha(13),
+                color: AppColors.primary.withAlpha(13),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 13, color: const Color(0xFF34d399).withAlpha(179)),
+                  Icon(Icons.info_outline, size: 13, color: AppColors.primary.withAlpha(179)),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       '경기 종료 → 순위 자동 계산 → 각 선수 참가비 자동 생성',
-                      style: TextStyle(fontSize: 11, color: const Color(0xFF34d399).withAlpha(179)),
+                      style: TextStyle(fontSize: 11, color: AppColors.primary.withAlpha(179)),
                     ),
                   ),
                 ],
@@ -584,10 +585,10 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
-            color: enabled ? const Color(0xFF34d399).withAlpha(13) : Colors.white.withAlpha(6),
+            color: enabled ? AppColors.primary.withAlpha(13) : Colors.white.withAlpha(6),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: enabled ? const Color(0xFF34d399).withAlpha(51) : Colors.white.withAlpha(13),
+              color: enabled ? AppColors.primary.withAlpha(51) : Colors.white.withAlpha(13),
             ),
           ),
           child: ListTile(
@@ -608,10 +609,10 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF34d399).withAlpha(26),
+                      color: AppColors.primary.withAlpha(26),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Text('필수', style: TextStyle(fontSize: 9, color: Color(0xFF34d399), fontWeight: FontWeight.w700)),
+                    child: const Text('필수', style: TextStyle(fontSize: 9, color: AppColors.primary, fontWeight: FontWeight.w700)),
                   ),
                 ],
               ],
@@ -634,8 +635,8 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
                   }
                 });
               },
-              activeThumbColor: const Color(0xFF34d399),
-              activeTrackColor: const Color(0xFF34d399).withAlpha(77),
+              activeThumbColor: AppColors.primary,
+              activeTrackColor: AppColors.primary.withAlpha(77),
               inactiveThumbColor: Colors.white.withAlpha(77),
               inactiveTrackColor: Colors.white.withAlpha(26),
             ),
@@ -684,7 +685,7 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1e293b),
+                  color: AppColors.bgCard,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.white.withAlpha(20)),
                 ),

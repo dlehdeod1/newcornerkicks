@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
@@ -29,7 +30,7 @@ class _ClubOnboardingScreenState extends State<ClubOnboardingScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f172a),
+      backgroundColor: AppColors.bgBase,
       body: SafeArea(
         child: Column(
           children: [
@@ -40,14 +41,14 @@ class _ClubOnboardingScreenState extends State<ClubOnboardingScreen>
               height: 72,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF34d399), Color(0xFF14b8a6)],
+                  colors: [AppColors.primary, AppColors.teal],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF34d399).withAlpha(77),
+                    color: AppColors.primary.withAlpha(77),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -78,7 +79,7 @@ class _ClubOnboardingScreenState extends State<ClubOnboardingScreen>
               child: TabBar(
                 controller: _tab,
                 indicator: BoxDecoration(
-                  color: const Color(0xFF34d399),
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
@@ -203,7 +204,7 @@ class _JoinTabState extends State<_JoinTab> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline, color: Color(0xFF34d399), size: 18),
+                const Icon(Icons.info_outline, color: AppColors.primary, size: 18),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -335,7 +336,7 @@ class _CreateTabState extends State<_CreateTab> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
                             color: _slugStatus == 'available'
-                                ? const Color(0xFF34d399).withAlpha(128)
+                                ? AppColors.primary.withAlpha(128)
                                 : _slugStatus == 'taken'
                                     ? Colors.red.withAlpha(128)
                                     : Colors.white.withAlpha(26),
@@ -343,16 +344,16 @@ class _CreateTabState extends State<_CreateTab> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF34d399)),
+                          borderSide: const BorderSide(color: AppColors.primary),
                         ),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                         suffixIcon: _slugStatus == 'checking'
                             ? const Padding(
                                 padding: EdgeInsets.all(12),
-                                child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF34d399))),
+                                child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
                               )
                             : _slugStatus == 'available'
-                                ? const Icon(Icons.check_circle, color: Color(0xFF34d399), size: 20)
+                                ? const Icon(Icons.check_circle, color: AppColors.primary, size: 20)
                                 : _slugStatus == 'taken'
                                     ? const Icon(Icons.cancel, color: Colors.red, size: 20)
                                     : null,
@@ -373,11 +374,11 @@ class _CreateTabState extends State<_CreateTab> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF34d399).withAlpha(20),
+                        color: AppColors.primary.withAlpha(20),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFF34d399).withAlpha(77)),
+                        border: Border.all(color: AppColors.primary.withAlpha(77)),
                       ),
-                      child: Text(s, style: const TextStyle(color: Color(0xFF34d399), fontSize: 12)),
+                      child: Text(s, style: const TextStyle(color: AppColors.primary, fontSize: 12)),
                     ),
                   )).toList(),
                 ),
@@ -451,7 +452,7 @@ Widget _buildInput({
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF34d399)),
+            borderSide: const BorderSide(color: AppColors.primary),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         ),
@@ -468,12 +469,12 @@ Widget _buildButton({required String label, required bool loading, required Void
       height: 52,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF34d399), Color(0xFF14b8a6)],
+          colors: [AppColors.primary, AppColors.teal],
         ),
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF34d399).withAlpha(51),
+            color: AppColors.primary.withAlpha(51),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),

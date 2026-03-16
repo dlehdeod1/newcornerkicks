@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
@@ -51,23 +52,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final auth = context.watch<AuthService>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0f172a),
+      backgroundColor: AppColors.bgBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0f172a),
+        backgroundColor: AppColors.bgBase,
         title: const Text('알림', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           if (_notifications.any((n) => n['is_read'] != 1))
             TextButton(
               onPressed: _markAllRead,
-              child: const Text('모두 읽음', style: TextStyle(color: Color(0xFF34d399), fontSize: 13)),
+              child: const Text('모두 읽음', style: TextStyle(color: AppColors.primary, fontSize: 13)),
             ),
         ],
       ),
       body: !auth.isLoggedIn
           ? const Center(child: Text('로그인이 필요합니다', style: TextStyle(color: Colors.white38)))
           : _loading
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFF34d399)))
+              ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
               : _notifications.isEmpty
                   ? Center(
                       child: Column(
@@ -81,7 +82,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     )
                   : RefreshIndicator(
                       onRefresh: _load,
-                      color: const Color(0xFF34d399),
+                      color: AppColors.primary,
                       child: ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: _notifications.length,
@@ -111,10 +112,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               margin: const EdgeInsets.only(bottom: 8),
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: isRead ? const Color(0xFF1e293b) : const Color(0xFF1e293b).withAlpha(230),
+                                color: isRead ? AppColors.bgCard : AppColors.bgCard.withAlpha(230),
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
-                                  color: isRead ? Colors.white.withAlpha(13) : const Color(0xFF34d399).withAlpha(51),
+                                  color: isRead ? Colors.white.withAlpha(13) : AppColors.primary.withAlpha(51),
                                 ),
                               ),
                               child: Row(
@@ -149,7 +150,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   if (!isRead)
                                     Container(
                                       width: 8, height: 8,
-                                      decoration: const BoxDecoration(color: Color(0xFF34d399), shape: BoxShape.circle),
+                                      decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
                                     ),
                                 ],
                               ),

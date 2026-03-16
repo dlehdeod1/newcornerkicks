@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
@@ -29,11 +30,11 @@ class _RankingScreenState extends State<RankingScreen> {
   }
 
   final List<Map<String, dynamic>> _categories = [
-    {'key': 'mvpCount', 'label': 'MVP', 'icon': '⭐', 'color': const Color(0xFF34d399)},
-    {'key': 'goals', 'label': '득점', 'icon': '⚽', 'color': const Color(0xFFf59e0b)},
-    {'key': 'assists', 'label': '도움', 'icon': '⚡', 'color': const Color(0xFF3b82f6)},
-    {'key': 'defenses', 'label': '수비', 'icon': '🛡️', 'color': const Color(0xFF8b5cf6)},
-    {'key': 'games', 'label': '경기', 'icon': '🎮', 'color': const Color(0xFF64748b)},
+    {'key': 'mvpCount', 'label': 'MVP', 'icon': '⭐', 'color': AppColors.primary},
+    {'key': 'goals', 'label': '득점', 'icon': '⚽', 'color': AppColors.amber},
+    {'key': 'assists', 'label': '도움', 'icon': '⚡', 'color': AppColors.blue},
+    {'key': 'defenses', 'label': '수비', 'icon': '🛡️', 'color': AppColors.purple},
+    {'key': 'games', 'label': '경기', 'icon': '🎮', 'color': AppColors.slate},
   ];
 
   @override
@@ -93,9 +94,9 @@ class _RankingScreenState extends State<RankingScreen> {
         setState(() => _loading = true);
         await _loadRankings();
       },
-      color: const Color(0xFF34d399),
+      color: AppColors.primary,
       child: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF34d399)))
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(child: _buildHeader()),
@@ -168,7 +169,7 @@ class _RankingScreenState extends State<RankingScreen> {
                   border: Border.all(color: Colors.white.withAlpha(20)),
                 ),
                 child: _refreshing
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Color(0xFF34d399), strokeWidth: 2))
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2))
                     : const Icon(Icons.refresh, size: 16, color: Colors.white54),
               ),
             ),
@@ -179,16 +180,16 @@ class _RankingScreenState extends State<RankingScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFFf59e0b).withAlpha(20),
+                color: AppColors.amber.withAlpha(20),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFf59e0b).withAlpha(51)),
+                border: Border.all(color: AppColors.amber.withAlpha(51)),
               ),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text('🏆', style: TextStyle(fontSize: 14)),
                   SizedBox(width: 6),
-                  Text('명예의전당', style: TextStyle(fontSize: 12, color: Color(0xFFf59e0b), fontWeight: FontWeight.w600)),
+                  Text('명예의전당', style: TextStyle(fontSize: 12, color: AppColors.amber, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
@@ -221,7 +222,7 @@ class _RankingScreenState extends State<RankingScreen> {
             ),
             child: Column(
               children: [
-                Text(item['value']!, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF34d399))),
+                Text(item['value']!, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary)),
                 const SizedBox(height: 2),
                 Text(item['label']!, style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(102))),
               ],
@@ -300,10 +301,10 @@ class _RankingScreenState extends State<RankingScreen> {
           final height = pos['height'] as double;
           final isFirst = idx == 0;
           final color = isFirst
-              ? const Color(0xFFf59e0b)
+              ? AppColors.amber
               : idx == 1
-                  ? const Color(0xFF94a3b8)
-                  : const Color(0xFFd97706);
+                  ? AppColors.slateLight
+                  : AppColors.bronze;
 
           return Expanded(
             child: GestureDetector(
@@ -466,7 +467,7 @@ class _RankingScreenState extends State<RankingScreen> {
     final currentYear = _currentSeasonYear(context.read<AuthService>().seasonStartMonth);
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1e293b),
+      backgroundColor: AppColors.bgCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -482,8 +483,8 @@ class _RankingScreenState extends State<RankingScreen> {
             final year = currentYear - i;
             final isSelected = year == _selectedYear;
             return ListTile(
-              title: Text('$year시즌', style: TextStyle(color: isSelected ? const Color(0xFF34d399) : Colors.white)),
-              trailing: isSelected ? const Icon(Icons.check, color: Color(0xFF34d399)) : null,
+              title: Text('$year시즌', style: TextStyle(color: isSelected ? AppColors.primary : Colors.white)),
+              trailing: isSelected ? const Icon(Icons.check, color: AppColors.primary) : null,
               onTap: () {
                 Navigator.pop(context);
                 setState(() { _selectedYear = year; _loading = true; });

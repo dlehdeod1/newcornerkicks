@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
@@ -36,19 +37,19 @@ class _HallOfFameScreenState extends State<HallOfFameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0f172a),
+      backgroundColor: AppColors.bgBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0f172a),
+        backgroundColor: AppColors.bgBase,
         title: const Text('🏆 명예의 전당', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF34d399)))
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _records.isEmpty
               ? const Center(child: Text('기록이 없습니다', style: TextStyle(color: Colors.white38)))
               : RefreshIndicator(
                   onRefresh: _load,
-                  color: const Color(0xFF34d399),
+                  color: AppColors.primary,
                   child: ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: _records.length,
@@ -62,17 +63,17 @@ class _HallOfFameScreenState extends State<HallOfFameScreen> {
                           gradient: i < 3
                               ? LinearGradient(
                                   colors: [
-                                    i == 0 ? const Color(0xFFfbbf24).withAlpha(26) : i == 1 ? const Color(0xFF94a3b8).withAlpha(26) : const Color(0xFFf97316).withAlpha(26),
-                                    const Color(0xFF1e293b),
+                                    i == 0 ? AppColors.amberLight.withAlpha(26) : i == 1 ? AppColors.slateLight.withAlpha(26) : AppColors.orange.withAlpha(26),
+                                    AppColors.bgCard,
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 )
                               : null,
-                          color: i >= 3 ? const Color(0xFF1e293b) : null,
+                          color: i >= 3 ? AppColors.bgCard : null,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: i == 0 ? const Color(0xFFfbbf24).withAlpha(51) : Colors.white.withAlpha(13),
+                            color: i == 0 ? AppColors.amberLight.withAlpha(51) : Colors.white.withAlpha(13),
                           ),
                         ),
                         child: Row(
@@ -95,11 +96,11 @@ class _HallOfFameScreenState extends State<HallOfFameScreen> {
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      _tag('MVP ${r['mvpCount'] ?? r['mvp_count'] ?? 0}회', const Color(0xFF34d399)),
+                                      _tag('MVP ${r['mvpCount'] ?? r['mvp_count'] ?? 0}회', AppColors.primary),
                                       const SizedBox(width: 8),
-                                      _tag('${r['goals'] ?? 0}골', const Color(0xFFfbbf24)),
+                                      _tag('${r['goals'] ?? 0}골', AppColors.amberLight),
                                       const SizedBox(width: 8),
-                                      _tag('${r['assists'] ?? 0}도움', const Color(0xFF60a5fa)),
+                                      _tag('${r['assists'] ?? 0}도움', AppColors.blueLight),
                                     ],
                                   ),
                                 ],

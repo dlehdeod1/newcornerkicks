@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/auth_service.dart';
@@ -42,7 +43,7 @@ class _MainShellState extends State<MainShell> {
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            backgroundColor: const Color(0xFF1e293b),
+            backgroundColor: AppColors.bgCard,
             title: const Text('PRO 플랜으로 업그레이드', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -67,8 +68,8 @@ class _MainShellState extends State<MainShell> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF34d399),
-                  foregroundColor: const Color(0xFF0f172a),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.bgBase,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: const Text('업그레이드', style: TextStyle(fontWeight: FontWeight.w700)),
@@ -81,7 +82,7 @@ class _MainShellState extends State<MainShell> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFF1e293b),
+          color: AppColors.bgCard,
           border: Border(
             top: BorderSide(color: Colors.white.withAlpha(13)),
             bottom: BorderSide(color: Colors.white.withAlpha(13)),
@@ -105,7 +106,7 @@ class _MainShellState extends State<MainShell> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Text('업그레이드 →', style: TextStyle(color: Color(0xFF34d399), fontSize: 12, fontWeight: FontWeight.w600)),
+            const Text('업그레이드 →', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
@@ -127,9 +128,9 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
     return Scaffold(
-      backgroundColor: const Color(0xFF0f172a),
+      backgroundColor: AppColors.bgBase,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0f172a),
+        backgroundColor: AppColors.bgBase,
         elevation: 0,
         title: Row(
           children: [
@@ -138,7 +139,7 @@ class _MainShellState extends State<MainShell> {
               height: 32,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF34d399), Color(0xFF14b8a6)],
+                  colors: [AppColors.primary, AppColors.teal],
                 ),
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -172,7 +173,7 @@ class _MainShellState extends State<MainShell> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1e293b),
+          color: AppColors.bgCard,
           border: Border(top: BorderSide(color: Colors.white.withAlpha(26))),
         ),
         child: BottomNavigationBar(
@@ -181,7 +182,7 @@ class _MainShellState extends State<MainShell> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           type: BottomNavigationBarType.fixed,
-          selectedItemColor: const Color(0xFF34d399),
+          selectedItemColor: AppColors.primary,
           unselectedItemColor: Colors.white38,
           selectedFontSize: 12,
           unselectedFontSize: 12,

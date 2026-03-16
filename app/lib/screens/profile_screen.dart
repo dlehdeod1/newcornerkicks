@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -68,7 +69,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1e293b),
+        backgroundColor: AppColors.bgCard,
         title: const Text('초대 코드 재생성', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
         content: const Text('기존 초대 코드는 더 이상 사용할 수 없게 됩니다. 계속할까요?', style: TextStyle(color: Colors.white70, fontSize: 13)),
         actions: [
@@ -79,8 +80,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF34d399),
-              foregroundColor: const Color(0xFF0f172a),
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.bgBase,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             child: const Text('재생성', style: TextStyle(fontWeight: FontWeight.w700)),
@@ -98,14 +99,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('초대 코드가 재생성되었습니다'), backgroundColor: Color(0xFF34d399), duration: Duration(seconds: 2)),
+            const SnackBar(content: Text('초대 코드가 재생성되었습니다'), backgroundColor: AppColors.primary, duration: Duration(seconds: 2)),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: const Color(0xFFef4444)),
+          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red),
         );
       }
     }
@@ -164,7 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFF34d399), Color(0xFF14b8a6)]),
+              gradient: const LinearGradient(colors: [AppColors.primary, AppColors.teal]),
               borderRadius: BorderRadius.circular(24),
             ),
             child: Center(child: Text(initial, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white))),
@@ -197,10 +198,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _badge(role, auth.isAdmin ? const Color(0xFF8b5cf6) : const Color(0xFF3b82f6)),
+              _badge(role, auth.isAdmin ? AppColors.purple : AppColors.blue),
               if (player != null) ...[
                 const SizedBox(width: 8),
-                _badge('선수 연동됨', const Color(0xFF34d399)),
+                _badge('선수 연동됨', AppColors.primary),
               ],
             ],
           ),
@@ -234,7 +235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withAlpha(8),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF34d399).withAlpha(30)),
+        border: Border.all(color: AppColors.primary.withAlpha(30)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,10 +257,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF34d399).withAlpha(20),
+                    color: AppColors.primary.withAlpha(20),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Text('$memberCount명', style: const TextStyle(fontSize: 12, color: Color(0xFF34d399), fontWeight: FontWeight.w600)),
+                  child: Text('$memberCount명', style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
                 ),
             ],
           ),
@@ -291,21 +292,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: () {
                     Clipboard.setData(ClipboardData(text: inviteCode));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('초대 코드가 복사되었습니다 ✅'), backgroundColor: Color(0xFF34d399), duration: Duration(seconds: 2)),
+                      const SnackBar(content: Text('초대 코드가 복사되었습니다 ✅'), backgroundColor: AppColors.primary, duration: Duration(seconds: 2)),
                     );
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF34d399).withAlpha(20),
+                      color: AppColors.primary.withAlpha(20),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFF34d399).withAlpha(51)),
+                      border: Border.all(color: AppColors.primary.withAlpha(51)),
                     ),
                     child: Row(
                       children: [
-                        Text(inviteCode, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF34d399), letterSpacing: 1.5)),
+                        Text(inviteCode, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primary, letterSpacing: 1.5)),
                         const SizedBox(width: 6),
-                        const Icon(Icons.copy, size: 13, color: Color(0xFF34d399)),
+                        const Icon(Icons.copy, size: 13, color: AppColors.primary),
                       ],
                     ),
                   ),
@@ -342,7 +343,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildSeasonStats() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFF34d399)));
+      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
 
     if (_playerStats == null) {
@@ -378,7 +379,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.trending_up, size: 18, color: Color(0xFF34d399)),
+              const Icon(Icons.trending_up, size: 18, color: AppColors.primary),
               const SizedBox(width: 8),
               Text('$year년 시즌 스탯', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
             ],
@@ -387,10 +388,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // 주요 스탯 4개
           Row(
             children: [
-              _statCard('⭐', 'MVP', '${stats['mvpCount'] ?? 0}회', const Color(0xFF34d399)),
-              _statCard('⚽', '득점', '${stats['goals'] ?? 0}', const Color(0xFFf59e0b)),
-              _statCard('⚡', '도움', '${stats['assists'] ?? 0}', const Color(0xFF3b82f6)),
-              _statCard('🛡️', '수비', '${stats['defenses'] ?? 0}', const Color(0xFF8b5cf6)),
+              _statCard('⭐', 'MVP', '${stats['mvpCount'] ?? 0}회', AppColors.primary),
+              _statCard('⚽', '득점', '${stats['goals'] ?? 0}', AppColors.amber),
+              _statCard('⚡', '도움', '${stats['assists'] ?? 0}', AppColors.blue),
+              _statCard('🛡️', '수비', '${stats['defenses'] ?? 0}', AppColors.purple),
             ],
           ),
           const SizedBox(height: 12),
@@ -465,7 +466,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _menuItem(
             icon: Icons.tune_rounded,
             label: '클럽 관리 설정',
-            color: const Color(0xFF8b5cf6),
+            color: AppColors.purple,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminClubSettingsScreen())),
           ),
           const SizedBox(height: 8),
@@ -473,14 +474,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _menuItem(
           icon: Icons.receipt_long,
           label: '정산 내역',
-          color: const Color(0xFF34d399),
+          color: AppColors.primary,
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettlementsScreen())),
         ),
         const SizedBox(height: 8),
         _menuItem(
           icon: Icons.lock_outline,
           label: '비밀번호 변경',
-          color: const Color(0xFF3b82f6),
+          color: AppColors.blue,
           onTap: () => _showPasswordDialog(auth),
         ),
         const SizedBox(height: 8),
@@ -489,25 +490,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ? _menuItem(
               icon: Icons.link_off,
               label: 'Google 계정 연동됨 (해제하기)',
-              color: const Color(0xFF94a3b8),
+              color: AppColors.slateLight,
               onTap: () => _unlinkGoogle(auth),
             )
           : _menuItem(
               icon: Icons.add_link,
               label: 'Google 계정 연동하기',
-              color: const Color(0xFF4285F4),
+              color: AppColors.google,
               onTap: () => _linkGoogle(auth),
             ),
         const SizedBox(height: 8),
         _menuItem(
           icon: Icons.logout,
           label: '로그아웃',
-          color: const Color(0xFFef4444),
+          color: AppColors.red,
           onTap: () async {
             final confirm = await showDialog<bool>(
               context: context,
               builder: (ctx) => AlertDialog(
-                backgroundColor: const Color(0xFF1e293b),
+                backgroundColor: AppColors.bgCard,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 title: const Text('로그아웃', style: TextStyle(color: Colors.white)),
                 content: const Text('정말 로그아웃 하시겠습니까?', style: TextStyle(color: Colors.white70)),
@@ -518,7 +519,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text('로그아웃', style: TextStyle(color: Color(0xFFef4444))),
+                    child: const Text('로그아웃', style: TextStyle(color: AppColors.red)),
                   ),
                 ],
               ),
@@ -547,13 +548,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() => _googleLinked = true);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${account.email} Google 계정이 연동되었습니다'), backgroundColor: const Color(0xFF34d399)),
+          SnackBar(content: Text('${account.email} Google 계정이 연동되었습니다'), backgroundColor: AppColors.primary),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', '')), backgroundColor: const Color(0xFFef4444)),
+          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', '')), backgroundColor: AppColors.red),
         );
       }
     } finally {
@@ -565,13 +566,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1e293b),
+        backgroundColor: AppColors.bgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Google 연동 해제', style: TextStyle(color: Colors.white)),
         content: const Text('Google 계정 연동을 해제할까요?', style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소', style: TextStyle(color: Colors.white54))),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('해제', style: TextStyle(color: Color(0xFFef4444)))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('해제', style: TextStyle(color: AppColors.red))),
         ],
       ),
     );
@@ -581,13 +582,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() => _googleLinked = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Google 연동이 해제되었습니다'), backgroundColor: Color(0xFF34d399)),
+          const SnackBar(content: Text('Google 연동이 해제되었습니다'), backgroundColor: AppColors.primary),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', '')), backgroundColor: const Color(0xFFef4444)),
+          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', '')), backgroundColor: AppColors.red),
         );
       }
     }
@@ -601,7 +602,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1e293b),
+        backgroundColor: AppColors.bgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('비밀번호 변경', style: TextStyle(color: Colors.white)),
         content: Column(
@@ -623,7 +624,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () async {
               if (newCtrl.text != confirmCtrl.text) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('새 비밀번호가 일치하지 않습니다'), backgroundColor: Color(0xFFef4444)),
+                  const SnackBar(content: Text('새 비밀번호가 일치하지 않습니다'), backgroundColor: AppColors.red),
                 );
                 return;
               }
@@ -635,18 +636,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('비밀번호가 변경되었습니다 ✅'), backgroundColor: Color(0xFF34d399)),
+                    const SnackBar(content: Text('비밀번호가 변경되었습니다 ✅'), backgroundColor: AppColors.primary),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('$e'), backgroundColor: const Color(0xFFef4444)),
+                    SnackBar(content: Text('$e'), backgroundColor: AppColors.red),
                   );
                 }
               }
             },
-            child: const Text('변경', style: TextStyle(color: Color(0xFF34d399))),
+            child: const Text('변경', style: TextStyle(color: AppColors.primary)),
           ),
         ],
       ),
@@ -662,7 +663,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1e293b),
+        backgroundColor: AppColors.bgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('닉네임 변경', style: TextStyle(color: Colors.white)),
         content: TextField(
@@ -672,7 +673,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             hintText: '새 닉네임 입력',
             hintStyle: const TextStyle(color: Colors.white38),
             filled: true,
-            fillColor: const Color(0xFF0f172a),
+            fillColor: AppColors.bgBase,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           ),
@@ -685,7 +686,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () async {
               if (nicknameCtrl.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('닉네임을 입력해주세요'), backgroundColor: Color(0xFFef4444)));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('닉네임을 입력해주세요'), backgroundColor: AppColors.red));
                 return;
               }
               try {
@@ -696,15 +697,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (mounted) {
                   _loadProfile();
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('닉네임이 변경되었습니다 ✅'), backgroundColor: Color(0xFF34d399)));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('닉네임이 변경되었습니다 ✅'), backgroundColor: AppColors.primary));
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: const Color(0xFFef4444)));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: AppColors.red));
                 }
               }
             },
-            child: const Text('변경', style: TextStyle(color: Color(0xFF34d399))),
+            child: const Text('변경', style: TextStyle(color: AppColors.primary)),
           ),
         ],
       ),
@@ -719,7 +720,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       hintText: hint,
       hintStyle: const TextStyle(color: Colors.white38),
       filled: true,
-      fillColor: const Color(0xFF0f172a),
+      fillColor: AppColors.bgBase,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     ),

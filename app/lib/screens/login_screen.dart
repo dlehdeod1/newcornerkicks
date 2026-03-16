@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
@@ -108,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0f172a), Color(0xFF1e293b)],
+            colors: [AppColors.bgBase, AppColors.bgCard],
           ),
         ),
         child: SafeArea(
@@ -124,10 +125,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [Color(0xFF34d399), Color(0xFF14b8a6)]),
+                      gradient: const LinearGradient(colors: [AppColors.primary, AppColors.teal]),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
-                        BoxShadow(color: const Color(0xFF34d399).withAlpha(64), blurRadius: 20, offset: const Offset(0, 8)),
+                        BoxShadow(color: AppColors.primary.withAlpha(64), blurRadius: 20, offset: const Offset(0, 8)),
                       ],
                     ),
                     child: const Center(child: Text('⚽', style: TextStyle(fontSize: 36))),
@@ -148,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     child: TabBar(
                       controller: _tab,
                       onTap: (_) => setState(() => _error = null),
-                      indicator: BoxDecoration(color: const Color(0xFF34d399), borderRadius: BorderRadius.circular(10)),
+                      indicator: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(10)),
                       indicatorSize: TabBarIndicatorSize.tab,
                       labelColor: Colors.white,
                       unselectedLabelColor: Colors.white38,
@@ -176,15 +177,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFef4444).withAlpha(26),
+                          color: AppColors.red.withAlpha(26),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFef4444).withAlpha(77)),
+                          border: Border.all(color: AppColors.red.withAlpha(77)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, color: Color(0xFFef4444), size: 16),
+                            const Icon(Icons.error_outline, color: AppColors.red, size: 16),
                             const SizedBox(width: 8),
-                            Expanded(child: Text(_error!, style: const TextStyle(color: Color(0xFFef4444), fontSize: 13))),
+                            Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.red, fontSize: 13))),
                           ],
                         ),
                       ),
@@ -198,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     child: ElevatedButton(
                       onPressed: _loading ? null : (_tab.index == 0 ? _login : _register),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF34d399),
+                        backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         elevation: 0,
@@ -235,7 +236,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           Container(
                             width: 20, height: 20,
                             decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
-                            child: const Center(child: Text('G', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF4285F4)))),
+                            child: const Center(child: Text('G', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.google))),
                           ),
                           const SizedBox(width: 10),
                           const Text('Google로 계속하기', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500)),
@@ -342,7 +343,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF34d399), width: 1.5),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         prefixIcon: Icon(icon, color: Colors.white.withAlpha(128), size: 20),
         suffixIcon: onToggleObscure != null
