@@ -15,6 +15,9 @@ void main() {
   );
 }
 
+// 브랜드 컬러
+const Color kBrandGreen = Color(0xFF2ECC71);
+
 class CornerKicksApp extends StatelessWidget {
   const CornerKicksApp({super.key});
 
@@ -23,13 +26,25 @@ class CornerKicksApp extends StatelessWidget {
     return MaterialApp(
       title: '코너킥스',
       debugShowCheckedModeBanner: false,
+      themeMode: ThemeMode.system,
+      // 라이트 모드
       theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0f172a),
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF10b981),
+          seedColor: kBrandGreen,
+          brightness: Brightness.light,
+        ),
+        useMaterial3: true,
+      ),
+      // 다크 모드
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF0F172A),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: kBrandGreen,
           brightness: Brightness.dark,
-          surface: const Color(0xFF1e293b),
+          surface: const Color(0xFF1E293B),
         ),
         useMaterial3: true,
       ),
@@ -37,12 +52,11 @@ class CornerKicksApp extends StatelessWidget {
         builder: (context, auth, _) {
           if (auth.isLoading) {
             return const Scaffold(
-              backgroundColor: Color(0xFF0f172a),
               body: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(color: Color(0xFF34d399)),
+                    CircularProgressIndicator(color: kBrandGreen),
                     SizedBox(height: 16),
                     Text('로딩 중...', style: TextStyle(color: Colors.white54)),
                   ],

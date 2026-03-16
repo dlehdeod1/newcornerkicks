@@ -145,6 +145,28 @@ recruiting → (진행 중) → ended → completed → closed
 이 파일이 200줄을 넘어가면 중복되거나 오래된 내용을 정리해서 200줄 이내로 유지할 것.
 정리 전에 사용자에게 어떤 내용 삭제할지 먼저 보여주고 승인받을 것.
 
+## 디자인 시스템
+
+### 브랜드 컬러
+- **메인**: `#2ECC71` (다크/라이트 공통)
+- Tailwind: `brand.green` → `bg-brand-green`, `text-brand-green`
+- Flutter: `kBrandGreen = Color(0xFF2ECC71)` (app/lib/main.dart)
+
+### Web CSS 변수 (globals.css)
+| 변수 | 라이트 | 다크 |
+|------|--------|------|
+| `--primary` | `145 63% 49%` (#2ECC71) | 동일 |
+| `--background` | `0 0% 100%` | `222 47% 7%` (#0f172a) |
+| `--card` | `0 0% 100%` | `217 33% 17%` (#1e293b) |
+| `--border` | `214 32% 91%` | `217 33% 27%` (#334155) |
+
+Tailwind에서 시맨틱 컬러: `bg-background`, `text-foreground`, `bg-card`, `bg-primary`, `text-primary`
+
+### Flutter 테마
+- `ThemeMode.system` (시스템 설정 따름)
+- 다크: `scaffoldBg #0F172A`, `surface #1E293B`
+- 라이트: `scaffoldBg #F8FAFC`
+
 ## 마이그레이션 파일 순서
 
 ```
