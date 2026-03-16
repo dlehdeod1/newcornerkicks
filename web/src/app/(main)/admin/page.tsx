@@ -18,13 +18,36 @@ import {
   AlertCircle,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore, useAuthHydrated } from '@/stores/auth'
 import { sessionsApi, playersApi, rankingsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
 export default function AdminDashboardPage() {
   const router = useRouter()
+  const hydrated = useAuthHydrated()
   const { isAdmin, isLoggedIn, token } = useAuthStore()
+
+  // hooks는 조건부 return 전에 모두 선언 (React hooks 규칙)
+  const { data: sessionsData } = useQuery({
+    queryKey: ['sessions'],
+    queryFn: () => sessionsApi.list(undefined, token ?? undefined),
+    enabled: hydrated && isLoggedIn && isAdmin,
+  })
+
+  const { data: playersData } = useQuery({
+    queryKey: ['players'],
+    queryFn: () => playersApi.list(token ?? undefined),
+    enabled: hydrated && isLoggedIn && isAdmin,
+  })
+
+  // 하이드레이션 대기
+  if (!hydrated) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="w-8 h-8 border-2 border-brand-green border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   // 권한 체크
   if (!isLoggedIn || !isAdmin) {
@@ -41,23 +64,13 @@ export default function AdminDashboardPage() {
         </p>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-brand-green hover:bg-[#27AE60] text-white rounded-xl transition-colors"
         >
           홈으로 돌아가기
         </Link>
       </div>
     )
   }
-
-  const { data: sessionsData } = useQuery({
-    queryKey: ['sessions'],
-    queryFn: () => sessionsApi.list(undefined, token ?? undefined),
-  })
-
-  const { data: playersData } = useQuery({
-    queryKey: ['players'],
-    queryFn: () => playersApi.list(token ?? undefined),
-  })
 
   const sessions = sessionsData?.sessions || []
   const players = playersData?.players || []

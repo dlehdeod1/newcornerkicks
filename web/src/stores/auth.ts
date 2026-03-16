@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useState, useEffect } from 'react'
 
 interface User {
   id: string
@@ -96,3 +97,15 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 )
+
+// SSR 하이드레이션 완료 여부를 반환하는 훅
+// Zustand persist는 localStorage에서 동기적으로 복원하지만,
+// 서버는 localStorage를 모르므로 첫 렌더에서 isLoggedIn=false로 시작한다.
+// useEffect가 실행되는 시점(클라이언트 마운트)에는 이미 복원 완료 → 안전하게 권한 체크 가능.
+export function useAuthHydrated(): boolean {
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
+  return hydrated
+}

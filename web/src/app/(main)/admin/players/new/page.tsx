@@ -12,12 +12,13 @@ import {
   CheckCircle,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore, useAuthHydrated } from '@/stores/auth'
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 
 export default function NewPlayerPage() {
   const router = useRouter()
+  const hydrated = useAuthHydrated()
   const { token, isAdmin } = useAuthStore()
 
   const [name, setName] = useState('')
@@ -52,6 +53,14 @@ export default function NewPlayerPage() {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
+  }
+
+  if (!hydrated) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="w-8 h-8 border-2 border-brand-green border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
   }
 
   if (!isAdmin) {

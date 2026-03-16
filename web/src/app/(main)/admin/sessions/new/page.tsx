@@ -11,13 +11,14 @@ import {
   Check,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore, useAuthHydrated } from '@/stores/auth'
 import { sessionsApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
 
 export default function NewSessionPage() {
   const router = useRouter()
+  const hydrated = useAuthHydrated()
   const { token, isAdmin } = useAuthStore()
 
   const [sessionDate, setSessionDate] = useState('')
@@ -56,6 +57,14 @@ export default function NewSessionPage() {
     { label: '오늘', value: new Date().toISOString().split('T')[0] },
     { label: '내일', value: new Date(Date.now() + 86400000).toISOString().split('T')[0] },
   ]
+
+  if (!hydrated) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="w-8 h-8 border-2 border-brand-green border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   if (!isAdmin) {
     return (

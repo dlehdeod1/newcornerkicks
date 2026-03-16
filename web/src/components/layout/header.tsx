@@ -37,15 +37,15 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           {/* 로고 */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
+            <div className="w-9 h-9 bg-brand-green rounded-xl flex items-center justify-center shadow-lg shadow-brand-green/20 group-hover:shadow-brand-green/40 transition-shadow">
               <span className="text-lg">⚽</span>
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent leading-none">
                 코너킥스
               </span>
-              {club && (
-                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium leading-none mt-0.5 truncate max-w-[120px]">
+              {mounted && club && (
+                <span className="text-xs text-brand-green font-medium leading-none mt-0.5 truncate max-w-[120px]">
                   {club.name}
                 </span>
               )}
@@ -61,7 +61,7 @@ export function Header() {
                 className={cn(
                   'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
                   pathname === item.href || (item.href === '/clubs' && pathname === '/club')
-                    ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400'
+                    ? 'bg-brand-green/20 text-brand-green'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800/50'
                 )}
               >
@@ -71,7 +71,7 @@ export function Header() {
           </nav>
 
           {/* 유저 메뉴 */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3 min-w-[120px] justify-end">
             {/* 테마 토글 */}
             {mounted && (
               <button
@@ -83,56 +83,60 @@ export function Header() {
               </button>
             )}
 
-            {isLoggedIn ? (
-              <div className="flex items-center gap-2">
-                {isLoggedIn && !isPro && club && (
+            {/* 인증 영역: mounted 전엔 스켈레톤 표시 (SSR 하이드레이션 플래시 방지) */}
+            {mounted ? (
+              isLoggedIn ? (
+                <div className="flex items-center gap-2">
+                  {!isPro && club && (
+                    <Link
+                      href="/upgrade"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-brand-green/20 text-brand-green rounded-lg border border-brand-green/30 hover:bg-brand-green/30 transition-all"
+                    >
+                      <Crown className="w-3 h-3" />
+                      PRO
+                    </Link>
+                  )}
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 dark:text-amber-400 rounded-lg border border-amber-300 dark:border-amber-500/30 hover:from-amber-500/30 hover:to-orange-500/30 transition-all"
+                    >
+                      <LayoutDashboard className="w-3 h-3" />
+                      관리자
+                    </Link>
+                  )}
+                  <NotificationDropdown />
                   <Link
-                    href="/upgrade"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg border border-emerald-300 dark:border-emerald-500/30 hover:from-emerald-500/30 hover:to-teal-500/30 transition-all"
+                    href="/profile"
+                    className="flex items-center gap-2 px-3 py-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
                   >
-                    <Crown className="w-3 h-3" />
-                    PRO
+                    <div className="w-7 h-7 bg-gradient-to-br from-slate-400 to-slate-500 dark:from-slate-600 dark:to-slate-700 rounded-lg flex items-center justify-center">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-sm font-medium">{user?.username}</span>
                   </Link>
-                )}
-                {isAdmin && (
-                  <Link
-                    href="/admin"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 dark:text-amber-400 rounded-lg border border-amber-300 dark:border-amber-500/30 hover:from-amber-500/30 hover:to-orange-500/30 transition-all"
+                  <button
+                    onClick={logout}
+                    className="p-2.5 text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/10 rounded-xl transition-colors"
                   >
-                    <LayoutDashboard className="w-3 h-3" />
-                    관리자
-                  </Link>
-                )}
-                <NotificationDropdown />
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
                 <Link
-                  href="/profile"
-                  className="flex items-center gap-2 px-3 py-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
+                  href="/login"
+                  className="px-5 py-2 bg-brand-green hover:bg-[#27AE60] rounded-xl text-sm font-medium text-white shadow-lg shadow-brand-green/25 transition-all"
                 >
-                  <div className="w-7 h-7 bg-gradient-to-br from-slate-400 to-slate-500 dark:from-slate-600 dark:to-slate-700 rounded-lg flex items-center justify-center">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-sm font-medium">{user?.username}</span>
+                  로그인
                 </Link>
-                <button
-                  onClick={logout}
-                  className="p-2.5 text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/10 rounded-xl transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
+              )
             ) : (
-              <Link
-                href="/login"
-                className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl text-sm font-medium text-white shadow-lg shadow-emerald-500/25 transition-all"
-              >
-                로그인
-              </Link>
+              <div className="w-20 h-9 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse" />
             )}
           </div>
 
           {/* 모바일 메뉴 버튼 */}
           <div className="flex md:hidden items-center gap-2">
-            {/* 모바일 테마 토글 */}
             {mounted && (
               <button
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -163,7 +167,7 @@ export function Header() {
                 className={cn(
                   'block px-4 py-3 rounded-xl text-sm font-medium transition-colors',
                   pathname === item.href || (item.href === '/clubs' && pathname === '/club')
-                    ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400'
+                    ? 'bg-brand-green/20 text-brand-green'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50'
                 )}
               >
@@ -171,15 +175,15 @@ export function Header() {
               </Link>
             ))}
             <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800/50">
-              {isLoggedIn ? (
+              {mounted && isLoggedIn ? (
                 <div className="space-y-1">
                   {!isPro && club && (
                     <Link
                       href="/upgrade"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl"
+                      className="flex items-center gap-3 px-4 py-3 text-brand-green hover:bg-brand-green/10 rounded-xl"
                     >
-                      <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-brand-green rounded-lg flex items-center justify-center">
                         <Crown className="w-4 h-4 text-white" />
                       </div>
                       <div className="font-medium">PRO로 업그레이드</div>
@@ -227,7 +231,7 @@ export function Header() {
                 <Link
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-center text-sm font-medium text-white"
+                  className="block px-4 py-3 bg-brand-green hover:bg-[#27AE60] rounded-xl text-center text-sm font-medium text-white"
                 >
                   로그인
                 </Link>

@@ -504,10 +504,53 @@ async function recalculateMatchStats(db: D1Database, matchId: number) {
 
 // 경기 완료 시 처리
 async function onMatchCompleted(db: D1Database, matchId: number) {
-  // 랭킹 캐시 무효화
   await invalidateRankingsCache(db, matchId)
+  await awardBadgesForMatch(db, matchId)
+}
 
-  // TODO: 배지 자동 부여 로직
+// 경기 완료 후 골/어시스트 배지 자동 부여
+async function awardBadgesForMatch(db: D1Database, matchId: number) {
+  // 이 경기에 참가한 정회원 선수 목록
+  const participants = await db.prepare(`
+    SELECT DISTINCT player_id FROM player_match_stats WHERE match_id = ?
+  `).bind(matchId).all()
+
+  const playerIds: number[] = (participants.results as any[]).map((r) => r.player_id)
+  if (playerIds.length === 0) return
+
+  const now = Date.now()
+
+  for (const playerId of playerIds) {
+    // 누적 골/어시스트 집계 (전체 이력)
+    const stats = await db.prepare(`
+      SELECT
+        COALESCE(SUM(goals), 0)   AS total_goals,
+        COALESCE(SUM(assists), 0) AS total_assists
+      FROM player_match_stats
+      WHERE player_id = ?
+    `).bind(playerId).first() as { total_goals: number; total_assists: number } | null
+
+    const totalGoals   = stats?.total_goals   ?? 0
+    const totalAssists = stats?.total_assists ?? 0
+
+    // 배지 조건: [badge_code, 조건 충족 여부]
+    const badgesToCheck: [string, boolean][] = [
+      ['first_goal', totalGoals >= 1],
+      ['goal_5',     totalGoals >= 5],
+      ['goal_10',    totalGoals >= 10],
+      ['assist_5',   totalAssists >= 5],
+      ['assist_10',  totalAssists >= 10],
+    ]
+
+    for (const [code, conditionMet] of badgesToCheck) {
+      if (!conditionMet) continue
+      // INSERT OR IGNORE: 이미 보유한 배지면 무시
+      await db.prepare(`
+        INSERT OR IGNORE INTO player_badges (player_id, badge_code, earned_at)
+        VALUES (?, ?, ?)
+      `).bind(playerId, code, now).run()
+    }
+  }
 }
 
 export { matchesRoutes }

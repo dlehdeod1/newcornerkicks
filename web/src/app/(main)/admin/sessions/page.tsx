@@ -15,30 +15,41 @@ import {
   Trash2,
   Edit,
 } from 'lucide-react'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore, useAuthHydrated } from '@/stores/auth'
 import { sessionsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
 export default function AdminSessionsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const hydrated = useAuthHydrated()
   const { isAdmin, isLoggedIn, token } = useAuthStore()
   const queryClient = useQueryClient()
+
+  // hooks는 조건부 return 전에 모두 선언 (React hooks 규칙)
+  const { data, isLoading } = useQuery({
+    queryKey: ['sessions'],
+    queryFn: () => sessionsApi.list(undefined, token ?? undefined),
+    enabled: hydrated && isLoggedIn && isAdmin,
+  })
+
+  if (!hydrated) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="w-8 h-8 border-2 border-brand-green border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   if (!isLoggedIn || !isAdmin) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">접근 권한이 없습니다</h2>
-        <Link href="/" className="text-emerald-600 hover:underline">홈으로 돌아가기</Link>
+        <Link href="/" className="text-brand-green hover:underline">홈으로 돌아가기</Link>
       </div>
     )
   }
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['sessions'],
-    queryFn: () => sessionsApi.list(undefined, token ?? undefined),
-  })
 
   const sessions = data?.sessions || []
 

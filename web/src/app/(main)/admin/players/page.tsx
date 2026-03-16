@@ -18,7 +18,7 @@ import {
   Trash2,
   ShieldAlert,
 } from 'lucide-react'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore, useAuthHydrated } from '@/stores/auth'
 import { playersApi, adminApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
@@ -26,6 +26,7 @@ export default function AdminPlayersPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<string>('all')
   const { isAdmin, isLoggedIn, token } = useAuthStore()
+  const hydrated = useAuthHydrated()
   const queryClient = useQueryClient()
   const [resetModal, setResetModal] = useState<{ playerName: string; tempPassword: string } | null>(null)
   const [relinkModal, setRelinkModal] = useState<{ playerId: number; playerName: string; currentUserId: string | null } | null>(null)
@@ -163,6 +164,14 @@ export default function AdminPlayersPage() {
   const dummyCount = players.filter((p: any) => p.user_email?.includes('@noemail.conerkicks.com')).length
 
   // ✅ 조건부 return은 모든 hooks 선언 이후에 위치
+  if (!hydrated) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="w-8 h-8 border-2 border-brand-green border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   if (!isLoggedIn || !isAdmin) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">

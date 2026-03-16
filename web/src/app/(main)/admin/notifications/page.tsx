@@ -14,7 +14,7 @@ import {
   Check,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore, useAuthHydrated } from '@/stores/auth'
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
@@ -45,6 +45,7 @@ const TEMPLATES = [
 
 export default function AdminNotificationsPage() {
   const router = useRouter()
+  const hydrated = useAuthHydrated()
   const { token, isAdmin } = useAuthStore()
 
   const [type, setType] = useState('announcement')
@@ -83,6 +84,14 @@ export default function AdminNotificationsPage() {
     setType(template.type)
     setTitle(template.title)
     setMessage(template.message)
+  }
+
+  if (!hydrated) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="w-8 h-8 border-2 border-brand-green border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
   }
 
   if (!isAdmin) {
