@@ -22,6 +22,7 @@ export type Env = {
   TOSS_SECRET_KEY?: string
   TOSS_CLIENT_KEY?: string
   TOSS_WEBHOOK_SECRET?: string
+  PHOTOS: R2Bucket
 }
 
 const app = new Hono<{ Bindings: Env }>()
