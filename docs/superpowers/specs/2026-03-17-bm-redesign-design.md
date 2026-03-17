@@ -52,6 +52,20 @@ ALTER TABLE sessions ADD COLUMN ai_team_count INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE sessions ADD COLUMN ai_analysis_count INTEGER NOT NULL DEFAULT 0;
 ```
 
+#### player_preferences 테이블 (기존 코드 참조, 마이그레이션 누락 보완)
+
+```sql
+CREATE TABLE IF NOT EXISTS player_preferences (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  preferred_player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL,
+  UNIQUE(player_id, preferred_player_id)
+);
+```
+
+> 기존 코드(`players.ts`)에서 사용 중이나 마이그레이션 파일이 없었으므로 `0013`에 `IF NOT EXISTS`로 포함.
+
 #### 새 테이블: player_tag_votes
 
 선수 태그 투표. 멤버들이 특정 선수에게 태그를 투표. 상위 3개가 공식 태그로 표시.
@@ -66,6 +80,27 @@ CREATE TABLE player_tag_votes (
   UNIQUE(player_id, voter_user_id, tag)
 );
 CREATE INDEX idx_tag_votes_player ON player_tag_votes(player_id);
+```
+
+#### 새 테이블: player_chemistry_cache
+
+케미 점수 사전 계산 캐시. 랭킹 리프레시(`POST /rankings/refresh`) 시 함께 갱신.
+
+```sql
+CREATE TABLE player_chemistry_cache (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  club_id INTEGER NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+  player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  partner_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  games_together INTEGER NOT NULL DEFAULT 0,
+  win_rate REAL NOT NULL DEFAULT 0,
+  assist_link REAL NOT NULL DEFAULT 0,
+  pref_bonus REAL NOT NULL DEFAULT 0,
+  chem_score REAL NOT NULL DEFAULT 0,
+  updated_at INTEGER NOT NULL,
+  UNIQUE(club_id, player_id, partner_id)
+);
+CREATE INDEX idx_chemistry_club ON player_chemistry_cache(club_id);
 ```
 
 프리셋 태그 목록 (API 하드코딩, DB 불필요):
@@ -117,7 +152,7 @@ PHOTOS: R2Bucket
 
 요청 body에 `useAI: boolean` 추가. 기본값 `false` (기존 클라이언트 하위 호환).
 
-기존 `randomBalanceTeams()`는 폐기. FREE에서도 `balanceTeams()` 제공.
+기존 `randomBalanceTeams()`는 삭제(dead code 방지). FREE에서도 `balanceTeams()` 제공.
 
 | 조건 | 동작 |
 |------|------|
@@ -134,6 +169,7 @@ PHOTOS: R2Bucket
 - 선수별 태그 (투표 상위 3개)
 - 선수 간 케미 점수 (동반 승률 × 0.4 + 어시스트 연계 × 0.4 + 선호 보너스 × 0.2)
 - 선호 선수 관계 (기존 `player_preferences` 테이블 활용)
+- 케미 데이터는 `player_chemistry_cache` 테이블에서 읽음 (실시간 계산 아님)
 
 ### 2. AI 분석 변경: `POST /sessions/:id/ai-analysis`
 
@@ -147,12 +183,12 @@ PHOTOS: R2Bucket
 
 ```
 요청: { tags: ["골결정력", "캡틴"] }
-동작: voter_user_id 기준으로 해당 선수에 대한 기존 투표 전부 삭제 후 새 투표 삽입
+동작: voter_user_id 기준으로 해당 선수에 대한 기존 투표 전부 삭제 후 새 투표 삽입 (D1 batch로 원자적 처리)
 응답: { tags: [{ tag: "골결정력", votes: 5 }, ...] }  // 전체 투표 현황
 ```
 
 - 조회: `GET /players/:id` 응답에 `tags` 필드 추가 — 투표 수 상위 3개만 반환.
-- 관리자 삭제: `DELETE /players/:playerId/tags/:tag` — 해당 태그의 모든 투표 삭제 (악용 방지)
+- 관리자 삭제: `DELETE /players/:playerId/tags/:tag` — 해당 태그의 모든 투표 삭제 (악용 방지). 관리자 권한 검증 시 해당 선수가 관리자의 `clubId` 소속인지 반드시 확인.
 
 ### 4. 케미: `GET /players/:id/chemistry` (PRO 전용)
 
@@ -167,14 +203,15 @@ PHOTOS: R2Bucket
 }
 ```
 
-케미 점수 산출:
+케미 점수 산출 (사전 계산, `player_chemistry_cache` 테이블에서 조회):
 ```
 chemScore = (동반 승률 × 0.4) + (어시스트 연계 빈도 × 0.4) + (선호 보너스 × 0.2)
 ```
-- 동반 승률: 같은 팀 승률 (0~100)
-- 어시스트 연계: `match_events.assister_id`로 A↔B 간 어시스트 횟수 / 동반 경기 수 × 100
+- 동반 승률: 같은 팀 승률 (0~100). `team_members` 조인으로 계산.
+- 어시스트 연계: `match_events` 테이블의 GOAL 이벤트에서 `assister_id`로 A↔B 간 어시스트 횟수 / 동반 경기 수 × 100 (별도 ASSIST 이벤트 타입이 아님)
 - 선호 보너스: 상호 선호 100, 편측 선호 50, 없음 0 (기존 `player_preferences` 테이블 활용)
 - 최소 5회 동반 경기 필터
+- **캐싱 전략**: `POST /rankings/refresh` 호출 시 해당 클럽의 모든 선수 쌍 케미를 재계산하여 `player_chemistry_cache`에 upsert. `GET /players/:id/chemistry`는 캐시 테이블만 조회하므로 Workers CPU 제한에 걸리지 않음.
 
 FREE 접근 시: 403 locked 응답.
 
@@ -239,8 +276,10 @@ function getFutsalDNA(player): { type: string, emoji: string } | null {
 ```
 최종 MVP 점수 = STAT 점수 + (받은 투표 수 / 전체 참가자 수) × 3.0
 ```
+> STAT 점수: `rankings.ts`의 `buildAndCacheRankings()`에서 계산하는 기존 MVP 점수 (`mvpScore` = 골 × 3 + 도움 × 2 + 세이브 × 2 + 키패스 + 출석점 등)를 기반으로 해당 세션의 경기 이벤트에서 산출.
 
-투표 마감: cron에서 `status = 'ended'` 세션 중 `updated_at`이 24시간 이상 지난 세션의 투표를 확정. 결과를 `session_mvp_results`에 저장.
+투표 마감: cron에서 `status IN ('ended', 'completed')` 세션 중 `updated_at`이 24시간 이상 지난 세션의 투표를 확정. 결과를 `session_mvp_results`에 저장.
+> `ended` 이후 수동 정산으로 `completed`로 넘어갈 수 있으므로 두 상태 모두 포함.
 
 클럽 설정: `PUT /clubs/me/settings` — `{ mvpVoteEnabled: true/false }`. `clubs.mvp_vote_enabled`로 on/off. 기본 off.
 
@@ -254,6 +293,7 @@ function getFutsalDNA(player): { type: string, emoji: string } | null {
 
 사진 접근: Workers 프록시 엔드포인트 `GET /photos/players/:clubId/:playerId.webp` 제공.
 R2에서 읽어 응답. Cache-Control 헤더로 CDN 캐싱 활용.
+라우트 파일: `api/src/routes/photos.ts` 신규 생성, `index.ts`에 `app.route('/photos', photosRoutes)` 마운트.
 
 - `DELETE /players/:id/photo` — R2 삭제 + photo_url null (본인 또는 관리자)
 
@@ -268,6 +308,8 @@ type: `rankings` | `sessions` | `payments`
 Workers에서 CSV 생성하여 반환. Content-Type: `text/csv; charset=utf-8`.
 Content-Disposition: `attachment; filename="cornerkicks-rankings-2026.csv"`
 세부 항목은 구현 시 기존 데이터 구조에 맞춰 확정.
+
+쿼리 파라미터 `season` (기본값: 현재 시즌)으로 범위 제한. 대량 데이터 클럽의 Workers CPU/메모리 제한 방지.
 
 FREE 접근 시: 403 locked 응답.
 
@@ -300,13 +342,13 @@ FREE 접근 시: 403 locked 응답.
 
 - Cloudflare R2 버킷 생성: `cornerkicks-photos`
 - `wrangler.toml`에 R2 바인딩 추가
-- `Env` 타입에 `PHOTOS: R2Bucket` 추가
+- `Env` 타입에 `PHOTOS: R2Bucket` 추가 (`@cloudflare/workers-types` devDependency 확인 필요)
 - 기존 cron에 MVP 투표 마감 처리 추가
 - CLAUDE.md 마이그레이션 목록 업데이트 (0013 추가)
 
 ## 비용 분석
 
-Gemini 3 Flash 기준:
+Gemini Flash 기준 (모델명은 배포 시점의 최신 Flash 모델 확인):
 - Input: $0.50/1M 토큰, Output: $3.00/1M 토큰
 - AI 팀편성 1회: ~₩8, AI 분석 1회: ~₩6
 - 세션당 최대(3+3회): ~₩42
