@@ -2,7 +2,7 @@
 
 ## 개요
 
-CornerKicks 앱의 구독 비즈니스 모델을 재설계한다. FREE/PRO 티어 기능 재배치, AI 크레딧 폐기 및 세션 단위 과금, 신규 기능(태그, 케미, 풋살 DNA, MVP 투표, 사진 업로드, 데이터 내보내기) 추가.
+CornerKicks 앱의 구독 비즈니스 모델을 재설계한다. FREE/PRO 티어 기능 재배치, AI 세션 단위 횟수제, 신규 기능(태그 투표, 케미, 풋살 DNA, MVP 투표 가산점, 사진 업로드, 데이터 내보내기) 추가.
 
 ## 배경
 
@@ -19,7 +19,7 @@ CornerKicks 앱의 구독 비즈니스 모델을 재설계한다. FREE/PRO 티�
 | AI 분석 리포트 | 잠금 (버튼 노출, 업그레이드 팝업 유도) | 세션당 3회 |
 | 광고 | 있음 | 없음 |
 | 상세 통계 (파트너/천적/연속기록) | 블러 처리 + PRO 유도 | 전체 공개 |
-| 데이터 내보내기 (Excel) | 잠금 | 가능 |
+| 데이터 내보내기 (CSV) | 잠금 | 가능 |
 | 풋살 DNA | ✅ | ✅ |
 | 태그 투표 | ✅ | ✅ |
 | MVP 투표 | ✅ | ✅ |
@@ -74,21 +74,15 @@ CREATE INDEX idx_tag_votes_player ON player_tag_votes(player_id);
 - 수비: 수비벽, 탱커, 인터셉터
 - 기타: 체력괴물, 캡틴, 분위기메이커
 - 커스텀 직접 입력 가능 (최대 10자)
+- 악용 방지: 관리자가 `DELETE /players/:playerId/tags/:tag` 로 특정 태그 삭제 가능
 
-#### 새 테이블: mvp_votes
+#### MVP 투표: 기존 테이블 활용
 
-세션당 1인 1투표. 본인 투표 불가.
+`session_mvp_votes` 테이블(0005_mvp_voting.sql)이 이미 존재하므로 새 테이블을 만들지 않는다.
+- 투표: `session_mvp_votes` (session_id, voter_user_id, voted_player_id)
+- 결과: `session_mvp_results` (session_id, player_id, vote_count, decided_at)
 
-```sql
-CREATE TABLE mvp_votes (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  session_id INTEGER NOT NULL REFERENCES sessions(id),
-  voter_player_id INTEGER NOT NULL REFERENCES players(id),
-  voted_player_id INTEGER NOT NULL REFERENCES players(id),
-  created_at INTEGER NOT NULL,
-  UNIQUE(session_id, voter_player_id)
-);
-```
+변경점: MVP 최종 점수 산출 시 STAT 점수 + 투표 가산점 로직만 추가.
 
 #### R2 버킷 (사진 업로드)
 
@@ -108,40 +102,57 @@ PHOTOS: R2Bucket
 
 ## API 설계
 
+### PRO 게이팅 응답 규약
+
+모든 PRO 전용 엔드포인트는 FREE 유저 접근 시 통일된 응답:
+
+```json
+// HTTP 403
+{ "locked": true, "reason": "PRO 전용 기능입니다." }
+```
+
+프론트에서 `locked: true`를 감지하면 업그레이드 팝업을 표시한다.
+
 ### 1. 팀 편성 변경: `POST /sessions/:id/teams`
 
-요청 body에 `useAI: boolean` 추가.
+요청 body에 `useAI: boolean` 추가. 기본값 `false` (기존 클라이언트 하위 호환).
+
+기존 `randomBalanceTeams()`는 폐기. FREE에서도 `balanceTeams()` 제공.
 
 | 조건 | 동작 |
 |------|------|
-| FREE (또는 useAI=false) | `balanceTeams()` 실행 |
+| useAI 미전송 또는 false | `balanceTeams()` 실행 (FREE/PRO 공통) |
 | PRO + useAI=true + ai_team_count < 3 | Gemini AI 편성 실행, ai_team_count++ |
 | PRO + useAI=true + ai_team_count >= 3 | `{ limitReached: true, message: "AI 편성 횟수(3회)를 초과했습니다. 스탯 기반으로 편성할까요?" }` 반환. 프론트에서 확인 후 useAI=false로 재요청. |
+| FREE + useAI=true | 403 locked 응답 |
+
+팀 삭제 후 재편성 시: `ai_team_count`는 리셋하지 않는다. 세션 전체에서 3회 제한.
 
 #### AI 팀 편성 Gemini 프롬프트 구성
 
 기존 `balanceTeams()` 대비 추가 데이터:
-- 선수별 태그 (상위 3개)
+- 선수별 태그 (투표 상위 3개)
 - 선수 간 케미 점수 (동반 승률 × 0.4 + 어시스트 연계 × 0.4 + 선호 보너스 × 0.2)
-- 선호 선수 관계 (기존 player_preferences 테이블 활용)
+- 선호 선수 관계 (기존 `player_preferences` 테이블 활용)
 
 ### 2. AI 분석 변경: `POST /sessions/:id/ai-analysis`
 
 | 조건 | 동작 |
 |------|------|
-| FREE | `{ locked: true, reason: 'PRO 전용 기능입니다.' }` (403 대신) |
+| FREE | 403 `{ locked: true, reason: 'PRO 전용 기능입니다.' }` |
 | PRO + ai_analysis_count < 3 | 기존 Gemini 분석 실행, ai_analysis_count++ |
-| PRO + ai_analysis_count >= 3 | `{ error: '이 세션의 AI 분석 횟수(3회)를 초과했습니다.' }` |
+| PRO + ai_analysis_count >= 3 | 400 `{ error: '이 세션의 AI 분석 횟수(3회)를 초과했습니다.' }` |
 
-### 3. 태그 투표: `PUT /players/:id/tags`
+### 3. 태그 투표: `POST /players/:id/tags`
 
 ```
 요청: { tags: ["골결정력", "캡틴"] }
-동작: voter_user_id 기준으로 기존 투표 전부 삭제 후 새 투표 삽입
+동작: voter_user_id 기준으로 해당 선수에 대한 기존 투표 전부 삭제 후 새 투표 삽입
 응답: { tags: [{ tag: "골결정력", votes: 5 }, ...] }  // 전체 투표 현황
 ```
 
-조회: `GET /players/:id` 응답에 `tags` 필드 추가 — 투표 수 상위 3개만 반환.
+- 조회: `GET /players/:id` 응답에 `tags` 필드 추가 — 투표 수 상위 3개만 반환.
+- 관리자 삭제: `DELETE /players/:playerId/tags/:tag` — 해당 태그의 모든 투표 삭제 (악용 방지)
 
 ### 4. 케미: `GET /players/:id/chemistry` (PRO 전용)
 
@@ -161,9 +172,11 @@ PHOTOS: R2Bucket
 chemScore = (동반 승률 × 0.4) + (어시스트 연계 빈도 × 0.4) + (선호 보너스 × 0.2)
 ```
 - 동반 승률: 같은 팀 승률 (0~100)
-- 어시스트 연계: A↔B 간 어시스트 횟수 / 동반 경기 수 × 100
-- 선호 보너스: 상호 선호 100, 편측 선호 50, 없음 0
+- 어시스트 연계: `match_events.assister_id`로 A↔B 간 어시스트 횟수 / 동반 경기 수 × 100
+- 선호 보너스: 상호 선호 100, 편측 선호 50, 없음 0 (기존 `player_preferences` 테이블 활용)
 - 최소 5회 동반 경기 필터
+
+FREE 접근 시: 403 locked 응답.
 
 ### 5. 연속 기록: `GET /players/:id/streaks` (PRO 전용)
 
@@ -176,26 +189,34 @@ chemScore = (동반 승률 × 0.4) + (어시스트 연계 빈도 × 0.4) + (선�
 }
 ```
 
-실시간 쿼리 계산 (캐싱 불필요).
+- 쿼리 범위: 현재 시즌으로 제한 (Workers CPU 시간 제약 고려)
+- `sessions` + `teams` + `match_events` 조인으로 계산
+
+FREE 접근 시: 403 locked 응답.
 
 ### 6. 풋살 DNA
 
 `GET /players/:id` 응답에 `futsalDna: { type: string, emoji: string }` 포함.
 
 ```typescript
-function getFutsalDNA(player): { type: string, emoji: string } {
+function getFutsalDNA(player): { type: string, emoji: string } | null {
+  // 스탯이 모두 기본값(5)이면 null 반환 (미표시)
+  const stats = [shooting, offball_run, ball_keeping, passing, linkup, intercept, marking, stamina, speed, physical]
+  if (stats.every(s => s === 5)) return null
+
   const attack = (shooting * 1.5 + offball_run + ball_keeping) / 3.5
   const playmaking = (passing * 1.5 + linkup * 1.5) / 3
   const defense = (intercept * 1.5 + marking * 1.5 + physical) / 4
   const engine = (stamina * 1.5 + speed * 1.5) / 3
 
-  const max = Math.max(attack, playmaking, defense, engine)
   const values = [attack, playmaking, defense, engine]
-  const range = Math.max(...values) - Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - Math.min(...values)
 
   // 편차 10% 이내면 올라운더
   if (range < max * 0.1) return { type: '올라운더', emoji: '⚡' }
 
+  // 동점 시 우선순위: 공격 > 플레이메이킹 > 수비 > 엔진
   if (max === attack)     return { type: '스트라이커', emoji: '🎯' }
   if (max === playmaking) return { type: '플레이메이커', emoji: '🎩' }
   if (max === defense)    return { type: '수비수', emoji: '🛡️' }
@@ -204,33 +225,37 @@ function getFutsalDNA(player): { type: string, emoji: string } {
 }
 ```
 
-스탯이 기본값(5)이거나 기록이 부족한 경우 → 타입 표시 안 함.
+동점 시 우선순위는 공격 > 플레이메이킹 > 수비 > 엔진. 풋살 특성상 공격적 플레이 빈도가 높으므로 의도된 순서.
 
-### 7. MVP 투표: `POST /sessions/:id/mvp-vote`
+### 7. MVP 투표 가산점
 
-```
-요청: { votedPlayerId: 5 }
-조건: clubs.mvp_vote_enabled = 1, 본인 투표 불가
-응답: { ok: true }
-```
+기존 `session_mvp_votes` / `session_mvp_results` 테이블을 그대로 활용.
 
-- `GET /sessions/:id/mvp-vote` — 내 투표 + 현재 집계 반환
-- 투표 마감: cron에서 세션 종료 24시간 후 자동 확정
+투표 API (기존과 동일):
+- `POST /sessions/:id/mvp-vote` — `{ votedPlayerId: 5 }`, 본인 투표 불가
+- `GET /sessions/:id/mvp-vote` — 내 투표 + 현재 집계
 
-MVP 최종 점수:
+변경점 — MVP 최종 점수 산출:
 ```
 최종 MVP 점수 = STAT 점수 + (받은 투표 수 / 전체 참가자 수) × 3.0
 ```
 
-클럽 설정 API: `PUT /clubs/me/settings` — `{ mvpVoteEnabled: true/false }`
+투표 마감: cron에서 `status = 'ended'` 세션 중 `updated_at`이 24시간 이상 지난 세션의 투표를 확정. 결과를 `session_mvp_results`에 저장.
+
+클럽 설정: `PUT /clubs/me/settings` — `{ mvpVoteEnabled: true/false }`. `clubs.mvp_vote_enabled`로 on/off. 기본 off.
 
 ### 8. 사진 업로드: `POST /players/:id/photo`
 
 - multipart/form-data, 프론트에서 300×300 webp 리사이즈 후 전송
 - 최대 1MB
+- 권한: 본인 또는 관리자(admin/owner)만 업로드 가능
 - R2 저장 경로: `players/{clubId}/{playerId}.webp`
 - `players.photo_url` 업데이트
-- `DELETE /players/:id/photo` — R2 삭제 + photo_url null
+
+사진 접근: Workers 프록시 엔드포인트 `GET /photos/players/:clubId/:playerId.webp` 제공.
+R2에서 읽어 응답. Cache-Control 헤더로 CDN 캐싱 활용.
+
+- `DELETE /players/:id/photo` — R2 삭제 + photo_url null (본인 또는 관리자)
 
 ### 9. 데이터 내보내기: `GET /clubs/me/export/:type` (PRO 전용)
 
@@ -240,8 +265,11 @@ type: `rankings` | `sessions` | `payments`
 - 세션 기록: 참가자, 팀 편성, 경기 결과, 이벤트 기록
 - 정산 내역: 세션별 납부 현황
 
-Workers에서 CSV 생성하여 반환. Content-Type: text/csv.
+Workers에서 CSV 생성하여 반환. Content-Type: `text/csv; charset=utf-8`.
+Content-Disposition: `attachment; filename="cornerkicks-rankings-2026.csv"`
 세부 항목은 구현 시 기존 데이터 구조에 맞춰 확정.
+
+FREE 접근 시: 403 locked 응답.
 
 ---
 
@@ -274,6 +302,7 @@ Workers에서 CSV 생성하여 반환. Content-Type: text/csv.
 - `wrangler.toml`에 R2 바인딩 추가
 - `Env` 타입에 `PHOTOS: R2Bucket` 추가
 - 기존 cron에 MVP 투표 마감 처리 추가
+- CLAUDE.md 마이그레이션 목록 업데이트 (0013 추가)
 
 ## 비용 분석
 
