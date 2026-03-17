@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
+import '../config/api_config.dart';
 
 /// 멀티클럽 사용자가 활성 클럽을 선택하는 화면
 class ClubSelectorScreen extends StatefulWidget {
@@ -32,6 +33,51 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
     if (role == 'owner') return '오너';
     if (role == 'admin') return '관리자';
     return '멤버';
+  }
+
+  Widget _buildClubAvatar(Map<String, dynamic> club, int index, double size) {
+    final logoUrl = club['logoUrl'] as String?;
+    final clubName = club['name'] as String? ?? '';
+
+    if (logoUrl != null && logoUrl.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.3),
+        child: Image.network(
+          '${ApiConfig.baseUrl}$logoUrl',
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _buildFallbackAvatar(clubName, index, size),
+        ),
+      );
+    }
+    return _buildFallbackAvatar(clubName, index, size);
+  }
+
+  Widget _buildFallbackAvatar(String clubName, int index, double size) {
+    final gradient = _gradient(index);
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(size * 0.3),
+      ),
+      child: Center(
+        child: Text(
+          clubName.isNotEmpty ? clubName[0].toUpperCase() : '?',
+          style: TextStyle(
+            fontSize: size * 0.42,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -74,7 +120,6 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
                       (context, index) {
                         final club = clubs[index];
                         final isActive = auth.activeClub?['id'] == club['id'];
-                        final gradient = _gradient(index);
                         final clubName = club['name'] as String? ?? '';
                         final role = club['myRole'] as String? ?? 'member';
                         final slug = club['slug'] as String? ?? '';
@@ -86,7 +131,6 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
                           child: GestureDetector(
                             onTap: () {
                               auth.setActiveClub(Map<String, dynamic>.from(club));
-                              // MainShell로 이동 (main.dart에서 처리)
                               Navigator.of(context).pop();
                             },
                             child: Container(
@@ -105,31 +149,8 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
                                 padding: const EdgeInsets.all(16),
                                 child: Row(
                                   children: [
-                                    // 아바타
-                                    Container(
-                                      width: 52,
-                                      height: 52,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: gradient,
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          clubName.isNotEmpty ? clubName[0].toUpperCase() : '?',
-                                          style: const TextStyle(
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                                    _buildClubAvatar(club, index, 52),
                                     const SizedBox(width: 14),
-                                    // 정보
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -540,12 +561,10 @@ class _ModalOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // 배경 딤
         GestureDetector(
           onTap: onClose,
           child: Container(color: Colors.black.withAlpha(160)),
         ),
-        // 바텀 시트 스타일
         Align(
           alignment: Alignment.bottomCenter,
           child: Container(
