@@ -3,6 +3,8 @@ import { z } from 'zod'
 import type { Env } from '../index'
 import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth'
 import { getFutsalDNA } from '../utils/futsalDna'
+import { isClubPro, proLockedResponse } from '../utils/planUtils'
+import { computeStreaks } from '../utils/streaks'
 
 const PRESET_TAGS = [
   '골결정력', '스피드스터', '프리킥장인', '양발',
@@ -586,6 +588,52 @@ playersRoutes.post('/recalculate-all', authMiddleware('ADMIN'), async (c) => {
     message: `${results.filter(r => r.status === 'success').length}/${results.length}명의 능력치가 재계산되었습니다.`,
     results,
   })
+})
+
+// 케미 조회 (PRO 전용)
+playersRoutes.get('/:id/chemistry', authMiddleware(), async (c) => {
+  const clubId = (c as any).clubId
+  const playerId = Number(c.req.param('id'))
+  if (!clubId) return c.json({ error: '클럽이 없습니다.' }, 400)
+
+  const club = await c.env.DB.prepare('SELECT plan_type FROM clubs WHERE id = ?').bind(clubId).first<any>()
+  if (!isClubPro(club?.plan_type)) return proLockedResponse(c)
+
+  // Best partners (top 5 by chem_score)
+  const partners = await c.env.DB.prepare(`
+    SELECT cc.partner_id as playerId, p.name, cc.games_together as gamesTogether,
+           cc.win_rate as winRate, cc.assist_link as assistLink, cc.chem_score as chemScore
+    FROM player_chemistry_cache cc
+    JOIN players p ON cc.partner_id = p.id
+    WHERE cc.club_id = ? AND cc.player_id = ? AND cc.games_together >= 5
+    ORDER BY cc.chem_score DESC LIMIT 5
+  `).bind(clubId, playerId).all()
+
+  // Rivals (bottom 5 by win_rate)
+  const rivals = await c.env.DB.prepare(`
+    SELECT cc.partner_id as playerId, p.name, cc.games_together as gamesAgainst,
+           cc.win_rate as winRate
+    FROM player_chemistry_cache cc
+    JOIN players p ON cc.partner_id = p.id
+    WHERE cc.club_id = ? AND cc.player_id = ? AND cc.games_together >= 5
+    ORDER BY cc.win_rate ASC LIMIT 5
+  `).bind(clubId, playerId).all()
+
+  return c.json({ bestPartners: partners.results, rivals: rivals.results })
+})
+
+// 스트릭 조회 (PRO 전용)
+playersRoutes.get('/:id/streaks', authMiddleware(), async (c) => {
+  const clubId = (c as any).clubId
+  const playerId = Number(c.req.param('id'))
+  if (!clubId) return c.json({ error: '클럽이 없습니다.' }, 400)
+
+  const club = await c.env.DB.prepare('SELECT plan_type FROM clubs WHERE id = ?').bind(clubId).first<any>()
+  if (!isClubPro(club?.plan_type)) return proLockedResponse(c)
+
+  const year = Number(c.req.query('year')) || new Date().getFullYear()
+  const streaks = await computeStreaks(c.env.DB, playerId, clubId, year)
+  return c.json(streaks)
 })
 
 // 선수 삭제 (관리자)
