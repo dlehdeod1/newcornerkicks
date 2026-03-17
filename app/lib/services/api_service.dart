@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 
@@ -138,6 +139,50 @@ class ApiService {
 
   Future<dynamic> submitRating(int playerId, Map<String, dynamic> ratings, String token) =>
       request('/players/$playerId/ratings', method: 'POST', body: ratings, token: token);
+
+  // 태그 투표
+  Future<dynamic> voteTags(int playerId, List<String> tags, String token) =>
+      request('/players/$playerId/tags', method: 'POST', body: {'tags': tags}, token: token);
+
+  Future<dynamic> deleteTag(int playerId, String tag, String token) =>
+      request('/players/$playerId/tags/${Uri.encodeComponent(tag)}', method: 'DELETE', token: token);
+
+  // 케미
+  Future<dynamic> getChemistry(int playerId, String token) =>
+      request('/players/$playerId/chemistry', token: token);
+
+  // 스트릭
+  Future<dynamic> getStreaks(int playerId, String token, {int? year}) =>
+      request('/players/$playerId/streaks${year != null ? '?year=$year' : ''}', token: token);
+
+  // 사진 업로드 (multipart)
+  Future<dynamic> uploadPlayerPhoto(int playerId, File file, String token) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/players/$playerId/photo');
+    final req = http.MultipartRequest('POST', url);
+    req.headers['Authorization'] = 'Bearer $token';
+    if (activeClubId != null) {
+      req.headers['X-Club-Id'] = activeClubId.toString();
+    }
+    req.files.add(await http.MultipartFile.fromPath('photo', file.path));
+    final streamed = await req.send();
+    final body = await streamed.stream.bytesToString();
+    final data = jsonDecode(body);
+    if (streamed.statusCode >= 400) {
+      throw ApiException(data['error'] ?? '업로드 실패', streamed.statusCode);
+    }
+    return data;
+  }
+
+  Future<dynamic> deletePlayerPhoto(int playerId, String token) =>
+      request('/players/$playerId/photo', method: 'DELETE', token: token);
+
+  // 팀 편성
+  Future<dynamic> createTeams(int sessionId, List<Map<String, dynamic>> attendees, String token, {bool useAI = false}) =>
+      request('/sessions/$sessionId/teams', method: 'POST', body: {'attendees': attendees, 'useAI': useAI}, token: token);
+
+  // AI 분석
+  Future<dynamic> getAiAnalysis(int sessionId, String token) =>
+      request('/sessions/$sessionId/ai-analysis', method: 'POST', token: token);
 
   // Me
   Future<dynamic> getMyStats(String token) =>
