@@ -113,8 +113,11 @@ export const sessionsApi = {
   saveAttendance: (id: number, attendees: any[], token: string) =>
     api(`/sessions/${id}/attendance`, { method: 'POST', body: { attendees }, token }),
 
-  createTeams: (id: number, attendees: any[], token: string) =>
-    api(`/sessions/${id}/teams`, { method: 'POST', body: { attendees }, token }),
+  createTeams: (id: number, data: { attendees: any[]; useAI?: boolean }, token: string) =>
+    api(`/sessions/${id}/teams`, { method: 'POST', body: data, token }),
+
+  aiAnalysis: (id: number, token: string) =>
+    api(`/sessions/${id}/ai-analysis`, { method: 'POST', token }),
 }
 
 // Players API
@@ -139,6 +142,37 @@ export const playersApi = {
 
   eventLogs: (id: number, year?: number) =>
     api(`/players/${id}/event-logs${year ? `?year=${year}` : ''}`),
+
+  voteTags: (id: number, tags: string[], token: string) =>
+    api(`/players/${id}/tags`, { method: 'POST', body: { tags }, token }),
+
+  deleteTag: (id: number, tag: string, token: string) =>
+    api(`/players/${id}/tags/${encodeURIComponent(tag)}`, { method: 'DELETE', token }),
+
+  chemistry: (id: number, token: string) =>
+    api(`/players/${id}/chemistry`, { token }),
+
+  streaks: (id: number, token: string, year?: number) =>
+    api(`/players/${id}/streaks${year ? `?year=${year}` : ''}`, { token }),
+
+  uploadPhoto: async (id: number, file: File, token: string) => {
+    const formData = new FormData()
+    formData.append('photo', file)
+    const headers: Record<string, string> = { 'Authorization': `Bearer ${token}` }
+    const clubId = getActiveClubId()
+    if (clubId) headers['X-Club-Id'] = String(clubId)
+    const res = await fetch(`${API_BASE}/players/${id}/photo`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || '업로드 실패')
+    return data
+  },
+
+  deletePhoto: (id: number, token: string) =>
+    api(`/players/${id}/photo`, { method: 'DELETE', token }),
 }
 
 // Matches API
@@ -309,4 +343,29 @@ export const clubsApi = {
 
   checkSlug: (slug: string) =>
     api(`/clubs/check-slug?slug=${encodeURIComponent(slug)}`),
+
+  updateSettings: (data: any, token: string) =>
+    api('/clubs/me', { method: 'PUT', body: data, token }),
+}
+
+// Export API (CSV 내보내기)
+export const exportApi = {
+  download: async (token: string, type: string, season?: number) => {
+    const headers: Record<string, string> = { 'Authorization': `Bearer ${token}` }
+    const clubId = getActiveClubId()
+    if (clubId) headers['X-Club-Id'] = String(clubId)
+    const url = `${API_BASE}/export/${type}${season ? `?season=${season}` : ''}`
+    const res = await fetch(url, { headers })
+    if (!res.ok) {
+      const err = await res.json()
+      if (err.locked) throw err
+      throw new Error(err.error || '다운로드 실패')
+    }
+    const blob = await res.blob()
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = res.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') || `export-${type}.csv`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  },
 }

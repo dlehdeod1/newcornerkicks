@@ -180,7 +180,7 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
         setIsReforming(false)
         return
       }
-      await sessionsApi.createTeams(sessionId, attendees, token)
+      await sessionsApi.createTeams(sessionId, { attendees }, token)
       setAiAnalysis(new Map())
       onRefetch()
     } catch (err: any) {

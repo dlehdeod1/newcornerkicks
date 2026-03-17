@@ -35,7 +35,7 @@ export function OverviewTab({ session, attendance, teams, onRefetch }: Props) {
         isGuest: !a.player_id,
       }))
 
-      await sessionsApi.createTeams(session.id, attendees, token!)
+      await sessionsApi.createTeams(session.id, { attendees }, token!)
       onRefetch()
     } catch (err: any) {
       alert(err.message || '팀 편성에 실패했습니다.')
