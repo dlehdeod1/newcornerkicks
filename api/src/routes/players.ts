@@ -2,6 +2,16 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import type { Env } from '../index'
 import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth'
+import { getFutsalDNA } from '../utils/futsalDna'
+import { isClubPro, proLockedResponse } from '../utils/planUtils'
+import { computeStreaks } from '../utils/streaks'
+
+const PRESET_TAGS = [
+  '골결정력', '스피드스터', '프리킥장인', '양발',
+  '플레이메이커', '연계왕', '다재다능',
+  '수비벽', '탱커', '인터셉터',
+  '체력괴물', '캡틴', '분위기메이커',
+]
 
 const playersRoutes = new Hono<{ Bindings: Env }>()
 
@@ -118,12 +128,27 @@ playersRoutes.get('/:id', async (c) => {
     ORDER BY pr.updated_at DESC
   `).bind(id).all()
 
+  // 태그 투표 집계 (상위 3개)
+  const tags = await c.env.DB.prepare(`
+    SELECT tag, COUNT(*) as votes
+    FROM player_tag_votes
+    WHERE player_id = ?
+    GROUP BY tag
+    ORDER BY votes DESC
+    LIMIT 3
+  `).bind(id).all()
+
+  // 풋살 DNA
+  const futsalDna = getFutsalDNA(player as any)
+
   return c.json({
     player,
     stats,
     recentMatches: recentMatches.results,
     badges: badges.results,
     ratings: ratings.results,
+    tags: tags.results,
+    futsalDna,
   })
 })
 
@@ -565,6 +590,134 @@ playersRoutes.post('/recalculate-all', authMiddleware('ADMIN'), async (c) => {
   })
 })
 
+// 케미 조회 (PRO 전용)
+playersRoutes.get('/:id/chemistry', authMiddleware(), async (c) => {
+  const clubId = (c as any).clubId
+  const playerId = Number(c.req.param('id'))
+  if (!clubId) return c.json({ error: '클럽이 없습니다.' }, 400)
+
+  const club = await c.env.DB.prepare('SELECT plan_type FROM clubs WHERE id = ?').bind(clubId).first<any>()
+  if (!isClubPro(club?.plan_type)) return proLockedResponse(c)
+
+  // Best partners (top 5 by chem_score)
+  const partners = await c.env.DB.prepare(`
+    SELECT cc.partner_id as playerId, p.name, cc.games_together as gamesTogether,
+           cc.win_rate as winRate, cc.assist_link as assistLink, cc.chem_score as chemScore
+    FROM player_chemistry_cache cc
+    JOIN players p ON cc.partner_id = p.id
+    WHERE cc.club_id = ? AND cc.player_id = ? AND cc.games_together >= 5
+    ORDER BY cc.chem_score DESC LIMIT 5
+  `).bind(clubId, playerId).all()
+
+  // Rivals (bottom 5 by win_rate)
+  const rivals = await c.env.DB.prepare(`
+    SELECT cc.partner_id as playerId, p.name, cc.games_together as gamesAgainst,
+           cc.win_rate as winRate
+    FROM player_chemistry_cache cc
+    JOIN players p ON cc.partner_id = p.id
+    WHERE cc.club_id = ? AND cc.player_id = ? AND cc.games_together >= 5
+    ORDER BY cc.win_rate ASC LIMIT 5
+  `).bind(clubId, playerId).all()
+
+  return c.json({ bestPartners: partners.results, rivals: rivals.results })
+})
+
+// 스트릭 조회 (PRO 전용)
+playersRoutes.get('/:id/streaks', authMiddleware(), async (c) => {
+  const clubId = (c as any).clubId
+  const playerId = Number(c.req.param('id'))
+  if (!clubId) return c.json({ error: '클럽이 없습니다.' }, 400)
+
+  const club = await c.env.DB.prepare('SELECT plan_type FROM clubs WHERE id = ?').bind(clubId).first<any>()
+  if (!isClubPro(club?.plan_type)) return proLockedResponse(c)
+
+  const year = Number(c.req.query('year')) || new Date().getFullYear()
+  const streaks = await computeStreaks(c.env.DB, playerId, clubId, year)
+  return c.json(streaks)
+})
+
+// 사진 업로드
+playersRoutes.post('/:id/photo', authMiddleware(), async (c) => {
+  const id = c.req.param('id')
+  const userId = (c as any).userId
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽에 소속되어 있지 않습니다.' }, 403)
+
+  const player = await c.env.DB.prepare(
+    'SELECT id, user_id, club_id FROM players WHERE id = ? AND club_id = ?'
+  ).bind(id, clubId).first<any>()
+
+  if (!player) return c.json({ error: '해당 클럽 소속 선수를 찾을 수 없습니다.' }, 404)
+
+  // 본인 또는 admin/owner만 허용
+  const member = await c.env.DB.prepare(
+    'SELECT role FROM club_members WHERE user_id = ? AND club_id = ?'
+  ).bind(userId, clubId).first<any>()
+
+  const isOwnerOrAdmin = member && (member.role === 'admin' || member.role === 'owner')
+  const isSelf = player.user_id === userId
+
+  if (!isSelf && !isOwnerOrAdmin) {
+    return c.json({ error: '권한이 없습니다.' }, 403)
+  }
+
+  const formData = await c.req.formData()
+  const file = formData.get('photo') as File | null
+  if (!file) return c.json({ error: '사진 파일이 필요합니다.' }, 400)
+
+  if (file.size > 1024 * 1024) {
+    return c.json({ error: '파일 크기는 1MB 이하여야 합니다.' }, 400)
+  }
+
+  const key = `players/${clubId}/${id}.webp`
+  await c.env.PHOTOS.put(key, file.stream(), {
+    httpMetadata: { contentType: 'image/webp' },
+  })
+
+  const photoUrl = `/photos/players/${clubId}/${id}.webp`
+  const now = Math.floor(Date.now() / 1000)
+  await c.env.DB.prepare(
+    'UPDATE players SET photo_url = ?, updated_at = ? WHERE id = ?'
+  ).bind(photoUrl, now, id).run()
+
+  return c.json({ photoUrl })
+})
+
+// 사진 삭제
+playersRoutes.delete('/:id/photo', authMiddleware(), async (c) => {
+  const id = c.req.param('id')
+  const userId = (c as any).userId
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽에 소속되어 있지 않습니다.' }, 403)
+
+  const player = await c.env.DB.prepare(
+    'SELECT id, user_id, club_id FROM players WHERE id = ? AND club_id = ?'
+  ).bind(id, clubId).first<any>()
+
+  if (!player) return c.json({ error: '해당 클럽 소속 선수를 찾을 수 없습니다.' }, 404)
+
+  const member = await c.env.DB.prepare(
+    'SELECT role FROM club_members WHERE user_id = ? AND club_id = ?'
+  ).bind(userId, clubId).first<any>()
+
+  const isOwnerOrAdmin = member && (member.role === 'admin' || member.role === 'owner')
+  const isSelf = player.user_id === userId
+
+  if (!isSelf && !isOwnerOrAdmin) {
+    return c.json({ error: '권한이 없습니다.' }, 403)
+  }
+
+  const key = `players/${clubId}/${id}.webp`
+  await c.env.PHOTOS.delete(key)
+
+  const now = Math.floor(Date.now() / 1000)
+  await c.env.DB.prepare(
+    'UPDATE players SET photo_url = NULL, updated_at = ? WHERE id = ?'
+  ).bind(now, id).run()
+
+  return c.json({ ok: true })
+})
+
 // 선수 삭제 (관리자)
 playersRoutes.delete('/:id', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')
@@ -599,6 +752,8 @@ playersRoutes.delete('/:id', authMiddleware('ADMIN'), async (c) => {
     c.env.DB.prepare('DELETE FROM player_preferences WHERE target_player_id = ?').bind(id),
     c.env.DB.prepare('DELETE FROM stat_changes WHERE player_id = ?').bind(id),
     c.env.DB.prepare('DELETE FROM chemistry_edges WHERE player_a_id = ? OR player_b_id = ?').bind(id, id),
+    c.env.DB.prepare('DELETE FROM player_tag_votes WHERE player_id = ?').bind(id),
+    c.env.DB.prepare('DELETE FROM player_chemistry_cache WHERE player_id = ? OR partner_id = ?').bind(id, id),
     c.env.DB.prepare('DELETE FROM players WHERE id = ?').bind(id),
   ])
 
@@ -613,6 +768,83 @@ function generatePlayerCode(): string {
 function generateTempPassword(): string {
   return Math.random().toString(36).substring(2, 10)
 }
+
+// 태그 투표
+playersRoutes.post('/:id/tags', authMiddleware(), async (c) => {
+  const id = c.req.param('id')
+  const userId = (c as any).userId
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽에 소속되어 있지 않습니다.' }, 403)
+
+  const body = await c.req.json()
+  const schema = z.object({
+    tags: z.array(z.string()).min(1).max(3),
+  })
+
+  let data: z.infer<typeof schema>
+  try {
+    data = schema.parse(body)
+  } catch (e: any) {
+    return c.json({ error: '태그는 1~3개를 선택해야 합니다.', details: e.errors }, 400)
+  }
+
+  // 각 태그 유효성: 프리셋이거나 최대 10자 커스텀
+  for (const tag of data.tags) {
+    if (!PRESET_TAGS.includes(tag) && tag.length > 10) {
+      return c.json({ error: `커스텀 태그는 최대 10자입니다: "${tag}"` }, 400)
+    }
+  }
+
+  // 선수 존재 + 클럽 확인
+  const player = await c.env.DB.prepare(
+    'SELECT id FROM players WHERE id = ? AND club_id = ?'
+  ).bind(id, clubId).first()
+  if (!player) return c.json({ error: '해당 클럽 소속 선수를 찾을 수 없습니다.' }, 404)
+
+  const now = Math.floor(Date.now() / 1000)
+
+  // 기존 투표 삭제 후 새 투표 삽입 (배치)
+  const statements = [
+    c.env.DB.prepare('DELETE FROM player_tag_votes WHERE player_id = ? AND voter_user_id = ?').bind(id, userId),
+    ...data.tags.map(tag =>
+      c.env.DB.prepare(
+        'INSERT INTO player_tag_votes (player_id, voter_user_id, tag, created_at) VALUES (?, ?, ?, ?)'
+      ).bind(id, userId, tag, now)
+    ),
+  ]
+  await c.env.DB.batch(statements)
+
+  // 전체 투표 집계 반환
+  const tags = await c.env.DB.prepare(`
+    SELECT tag, COUNT(*) as votes
+    FROM player_tag_votes
+    WHERE player_id = ?
+    GROUP BY tag
+    ORDER BY votes DESC
+  `).bind(id).all()
+
+  return c.json({ tags: tags.results })
+})
+
+// 태그 삭제 (관리자 - 어뷰징 방지)
+playersRoutes.delete('/:id/tags/:tag', authMiddleware('ADMIN'), async (c) => {
+  const id = c.req.param('id')
+  const tag = decodeURIComponent(c.req.param('tag'))
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽 정보가 없습니다.' }, 403)
+
+  // 선수 클럽 확인
+  const player = await c.env.DB.prepare(
+    'SELECT id FROM players WHERE id = ? AND club_id = ?'
+  ).bind(id, clubId).first()
+  if (!player) return c.json({ error: '해당 클럽 소속 선수를 찾을 수 없습니다.' }, 404)
+
+  await c.env.DB.prepare(
+    'DELETE FROM player_tag_votes WHERE player_id = ? AND tag = ?'
+  ).bind(id, tag).run()
+
+  return c.json({ ok: true })
+})
 
 // 선수 기록 로그 조회 (세션별 이벤트)
 playersRoutes.get('/:id/event-logs', optionalAuthMiddleware, async (c) => {

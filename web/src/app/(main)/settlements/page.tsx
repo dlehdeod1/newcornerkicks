@@ -4,11 +4,11 @@ import { useQuery } from '@tanstack/react-query'
 import { Coins, Trophy, TrendingUp, Calendar, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { useAuthStore } from '@/stores/auth'
-import { settlementsApi } from '@/lib/api'
+import { settlementsApi, exportApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
 export default function SettlementsPage() {
-  const { isLoggedIn, token } = useAuthStore()
+  const { isLoggedIn, token, club } = useAuthStore()
   const currentYear = new Date().getFullYear()
 
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
@@ -28,13 +28,23 @@ export default function SettlementsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* 헤더 */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
-          정산
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-2">
-          시즌 정산 현황과 개인 수익을 확인하세요
-        </p>
+      <div className="flex items-start justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
+            정산
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-2">
+            시즌 정산 현황과 개인 수익을 확인하세요
+          </p>
+        </div>
+        {club?.isPro && token && (
+          <button
+            onClick={() => exportApi.download(token, 'payments')}
+            className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1"
+          >
+            CSV 내보내기
+          </button>
+        )}
       </div>
 
       {/* 시즌 요약 */}

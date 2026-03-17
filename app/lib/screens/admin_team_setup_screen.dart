@@ -28,6 +28,9 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
   bool _loadingPlayers = true;
   bool _assigning = false;
 
+  // 세션 정보 (ai_team_count 용)
+  Map<String, dynamic>? _session;
+
   // 결과
   List<dynamic> _resultTeams = [];
   List<dynamic> _resultMatches = [];
@@ -38,6 +41,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
     super.initState();
     _tab = TabController(length: 2, vsync: this);
     _loadPlayers();
+    _loadSession();
   }
 
   @override
@@ -59,6 +63,24 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
       }
     } catch (_) {
       if (mounted) setState(() => _loadingPlayers = false);
+    }
+  }
+
+  Future<void> _loadSession() async {
+    final token = context.read<AuthService>().token;
+    try {
+      final res = await _api.request(
+        '/sessions/${widget.sessionId}',
+        method: 'GET',
+        token: token,
+      );
+      if (mounted) {
+        setState(() {
+          _session = res['session'] as Map<String, dynamic>? ?? res as Map<String, dynamic>?;
+        });
+      }
+    } catch (_) {
+      // 실패해도 무시 — ai_team_count 없이 표시
     }
   }
 
@@ -101,7 +123,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
     }
   }
 
-  Future<void> _assignTeams() async {
+  Future<void> _assignTeams({bool useAI = false}) async {
     if (_selected.length < 4) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('최소 4명 이상 선택해주세요'), backgroundColor: Colors.orange),
@@ -112,18 +134,42 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
     final token = context.read<AuthService>().token;
     try {
       final attendees = _selected.map((pid) => {'playerId': pid, 'isGuest': false}).toList();
-      final res = await _api.request(
-        '/sessions/${widget.sessionId}/teams',
-        method: 'POST',
-        body: {'attendees': attendees},
-        token: token,
-      );
+      final res = await _api.createTeams(widget.sessionId, attendees, token!, useAI: useAI);
+
       if (mounted) {
+        // limitReached: true → AI 횟수 소진
+        if (res['limitReached'] == true) {
+          setState(() => _assigning = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(res['message'] as String? ?? 'AI 팀 편성 횟수를 모두 사용했습니다.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
+        }
+        // locked: true → PRO 전용 기능
+        if (res['locked'] == true) {
+          setState(() => _assigning = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(res['message'] as String? ?? 'PRO 플랜으로 업그레이드하면 AI 팀 편성을 이용할 수 있습니다.'),
+              backgroundColor: Colors.deepPurple,
+            ),
+          );
+          return;
+        }
+
         setState(() {
           _resultTeams = (res['teams'] as List?) ?? [];
           _resultMatches = (res['matches'] as List?) ?? [];
           _showResult = true;
           _assigning = false;
+          // 세션 ai_team_count 갱신
+          if (res['ai_team_count'] != null && _session != null) {
+            _session = Map<String, dynamic>.from(_session!)
+              ..['ai_team_count'] = res['ai_team_count'];
+          }
         });
       }
     } catch (e) {
@@ -494,6 +540,9 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
     final auth = context.watch<AuthService>();
     final isPro = auth.isPro;
     final canAssign = _selected.length >= 4 && !_assigning;
+    final aiCount = (_session?['ai_team_count'] as int?) ?? 0;
+    final aiRemaining = 3 - aiCount;
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
@@ -529,29 +578,68 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                   ),
                 ),
               ),
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: canAssign ? _assignTeams : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.bgBase,
-                  disabledBackgroundColor: Colors.white.withAlpha(20),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: _assigning
-                    ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text(
-                        _selected.length < 4
-                            ? '최소 4명 선택 필요 (${_selected.length}명)'
-                            : isPro
-                                ? '⚡ AI 팀 편성  ${_selected.length}명'
-                                : '🎲 팀 편성  ${_selected.length}명',
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                        overflow: TextOverflow.ellipsis,
+            // 버튼 행: 일반 팀 편성 + (PRO인 경우) AI 팀 편성
+            Row(
+              children: [
+                // 일반 팀 편성 버튼
+                Expanded(
+                  child: SizedBox(
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: canAssign ? () => _assignTeams(useAI: false) : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.bgBase,
+                        disabledBackgroundColor: Colors.white.withAlpha(20),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-              ),
+                      child: _assigning
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : Text(
+                              _selected.length < 4
+                                  ? '${_selected.length}명 선택'
+                                  : '🎲 팀 편성  ${_selected.length}명',
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                    ),
+                  ),
+                ),
+                // AI 팀 편성 버튼 (PRO 전용)
+                if (isPro) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SizedBox(
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: canAssign ? () => _assignTeams(useAI: true) : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: Colors.white.withAlpha(20),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: _assigning
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '⚡ AI 팀 편성',
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    '(${aiRemaining}회 남음)',
+                                    style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(179)),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
         ),

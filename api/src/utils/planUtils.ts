@@ -15,6 +15,13 @@ export function isSubscriptionActive(expiresAt: number | null | undefined): bool
 }
 
 /**
+ * PRO 전용 기능 접근 시 통일된 403 응답
+ */
+export function proLockedResponse(c: any, reason = 'PRO 전용 기능입니다.') {
+  return c.json({ locked: true, reason }, 403)
+}
+
+/**
  * 청구 주기별 금액
  */
 export const PLAN_PRICES = {

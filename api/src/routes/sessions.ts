@@ -384,19 +384,7 @@ function calculateRole(player: any): { attack: number; defense: number } {
   return { attack, defense }
 }
 
-// 무료 플랜: 랜덤 + 균등 배분 (Fisher-Yates 셔플)
-function randomBalanceTeams(players: any[], teamCount: number): any[][] {
-  const shuffled = [...players]
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-  }
-  const teams: any[][] = Array.from({ length: teamCount }, () => [])
-  shuffled.forEach((p, i) => teams[i % teamCount].push(p))
-  return teams
-}
-
-// 유료 플랜: 능력치 기반 밸런싱 알고리즘
+// 능력치 기반 밸런싱 알고리즘
 function balanceTeams(players: any[], teamCount: number): any[][] {
   // 종합 능력치와 역할 계산
   const playersWithStats = players.map(p => ({
@@ -460,7 +448,7 @@ sessionsRoutes.post('/:id/teams', authMiddleware('ADMIN'), async (c) => {
 
   try {
     const body = await c.req.json()
-    const { attendees } = body
+    const { attendees, useAI = false } = body
 
     // 클럽 플랜 확인
     const clubId = (c as any).clubId
@@ -522,10 +510,148 @@ sessionsRoutes.post('/:id/teams', authMiddleware('ADMIN'), async (c) => {
     // 모든 참가자 합치기
     const allPlayers = [...playersWithStats, ...guestsWithStats]
 
-    // 플랜에 따라 팀 편성 방식 결정
-    const balancedTeams = isPro
-      ? balanceTeams(allPlayers, teamCount)
-      : randomBalanceTeams(allPlayers, teamCount)
+    // 팀 편성 방식 결정
+    let teamArrays: any[][]
+
+    if (useAI) {
+      if (!isPro) {
+        return c.json({ locked: true, reason: 'PRO 전용 기능입니다.' }, 403)
+      }
+
+      // Check AI team count
+      const sessionRow = await c.env.DB.prepare(
+        'SELECT ai_team_count FROM sessions WHERE id = ?'
+      ).bind(id).first<any>()
+
+      if ((sessionRow?.ai_team_count ?? 0) >= 3) {
+        return c.json({
+          limitReached: true,
+          message: 'AI 편성 횟수(3회)를 초과했습니다. 스탯 기반으로 편성할까요?',
+        })
+      }
+
+      // 선수별 태그 (상위 3개)
+      const playerIds = allPlayers.filter((p: any) => p.id).map((p: any) => p.id)
+      let tagsByPlayer = new Map<number, string[]>()
+      if (playerIds.length > 0) {
+        const tagResults = await c.env.DB.prepare(`
+          SELECT player_id, tag, COUNT(*) as votes
+          FROM player_tag_votes
+          WHERE player_id IN (${playerIds.map(() => '?').join(',')})
+          GROUP BY player_id, tag
+          ORDER BY votes DESC
+        `).bind(...playerIds).all()
+
+        for (const row of tagResults.results as any[]) {
+          const existing = tagsByPlayer.get(row.player_id) || []
+          if (existing.length < 3) {
+            existing.push(row.tag)
+            tagsByPlayer.set(row.player_id, existing)
+          }
+        }
+      }
+
+      // 케미 데이터 (캐시에서)
+      const chemResults = await c.env.DB.prepare(`
+        SELECT player_id, partner_id, chem_score
+        FROM player_chemistry_cache
+        WHERE club_id = ? AND chem_score > 70
+      `).bind(clubId).all()
+
+      const apiKey = c.env.GEMINI_API_KEY
+      if (!apiKey) {
+        // API 키 없으면 일반 편성으로 fallback
+        teamArrays = balanceTeams(allPlayers, teamCount)
+      } else {
+        const prompt = `풋살 팀 편성을 해주세요.
+
+선수 목록:
+${allPlayers.map((p: any) => {
+  const tags = (p.id && tagsByPlayer.get(p.id))?.join(', ') || '없음'
+  const overall = ((p.shooting || 5) + (p.offball_run || 5) + (p.ball_keeping || 5) + (p.passing || 5) + (p.linkup || 5) + (p.intercept || 5) + (p.marking || 5) + (p.stamina || 5) + (p.speed || 5) + (p.physical || 5)) / 10
+  const name = p.name || p.guestName || '용병'
+  return `- ${p.id || 'guest'}. ${name}: 종합 ${overall.toFixed(1)}, 슈팅 ${p.shooting || 5}, 패스 ${p.passing || 5}, 수비 ${p.intercept || 5}, 체력 ${p.stamina || 5}, 태그: ${tags}`
+}).join('\n')}
+
+${(chemResults.results as any[]).length > 0 ? `케미 정보 (같은 팀 배치 추천):
+${(chemResults.results as any[]).map((ch: any) => `${ch.player_id}번-${ch.partner_id}번: 케미 ${ch.chem_score.toFixed(0)}점`).join('\n')}` : ''}
+
+${teamCount}팀으로 밸런스 있게 편성해주세요.
+- 팀 간 종합 능력치 편차를 최소화하세요
+- 케미가 높은 선수쌍은 가급적 같은 팀에 배치하세요
+- 각 팀에 공격/수비/체력 역할이 고르게 분배되도록 하세요
+
+반드시 JSON 배열로만 응답하세요 (다른 텍스트 없이):
+[[선수ID또는"guest_이름",...], [선수ID또는"guest_이름",...]]`
+
+        try {
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                  temperature: 0.5,
+                  maxOutputTokens: 2048,
+                },
+              }),
+            }
+          )
+
+          if (!response.ok) {
+            console.error('Gemini team API error:', response.status)
+            teamArrays = balanceTeams(allPlayers, teamCount)
+          } else {
+            const geminiResult = await response.json() as any
+            const textContent = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text || ''
+
+            // JSON 파싱
+            const jsonMatch = textContent.match(/\[[\s\S]*\]/)
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]) as any[][]
+
+              // Gemini 결과를 allPlayers 기반으로 매핑
+              teamArrays = parsed.map((teamIds: any[]) => {
+                return teamIds.map((idOrName: any) => {
+                  if (typeof idOrName === 'number') {
+                    return allPlayers.find((p: any) => p.id === idOrName)
+                  } else if (typeof idOrName === 'string' && idOrName.startsWith('guest_')) {
+                    const guestName = idOrName.replace('guest_', '')
+                    return allPlayers.find((p: any) => p.guestName === guestName || p.name === guestName)
+                  }
+                  return null
+                }).filter(Boolean)
+              })
+
+              // 매핑 실패한 선수가 있으면 fallback
+              const mappedCount = teamArrays.reduce((sum, t) => sum + t.length, 0)
+              if (mappedCount < allPlayers.length * 0.8) {
+                console.warn('Gemini team mapping incomplete, falling back to balanceTeams')
+                teamArrays = balanceTeams(allPlayers, teamCount)
+              }
+            } else {
+              console.warn('No JSON found in Gemini team response')
+              teamArrays = balanceTeams(allPlayers, teamCount)
+            }
+          }
+        } catch (e) {
+          console.error('Gemini team formation error:', e)
+          teamArrays = balanceTeams(allPlayers, teamCount)
+        }
+      }
+
+      // Increment AI counter
+      await c.env.DB.prepare(
+        'UPDATE sessions SET ai_team_count = ai_team_count + 1 WHERE id = ?'
+      ).bind(id).run()
+    } else {
+      // FREE/PRO common: balanceTeams()
+      teamArrays = balanceTeams(allPlayers, teamCount)
+    }
+
+    const balancedTeams = teamArrays
 
     // 팀 생성 및 멤버 배치
     const teamNames = ['A팀', 'B팀', 'C팀']
@@ -1176,6 +1302,15 @@ sessionsRoutes.post('/:id/ai-analysis', authMiddleware('ADMIN'), async (c) => {
     return c.json({ error: 'PRO 플랜에서만 AI 분석을 사용할 수 있습니다.' }, 403)
   }
 
+  // AI 분석 횟수 제한 체크
+  const sessionForCount = await c.env.DB.prepare(
+    'SELECT ai_analysis_count FROM sessions WHERE id = ?'
+  ).bind(id).first<any>()
+
+  if ((sessionForCount?.ai_analysis_count ?? 0) >= 3) {
+    return c.json({ error: '이 세션의 AI 분석 횟수(3회)를 초과했습니다.' }, 400)
+  }
+
   // 팀 조회
   const teams = await c.env.DB.prepare(
     'SELECT * FROM teams WHERE session_id = ? ORDER BY id'
@@ -1435,6 +1570,11 @@ JSON 형식으로만 응답 (다른 텍스트 없이):
 
       return result
     }))
+
+    // AI 분석 횟수 증가
+    await c.env.DB.prepare(
+      'UPDATE sessions SET ai_analysis_count = ai_analysis_count + 1 WHERE id = ?'
+    ).bind(id).run()
 
     return c.json({ analysis, isAiGenerated: true })
   } catch (err: any) {

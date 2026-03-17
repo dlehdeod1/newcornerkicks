@@ -2,16 +2,24 @@
 
 export const runtime = 'edge'
 
-import { use } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { ArrowLeft, Star, Target, Shield, Zap, Activity, User } from 'lucide-react'
+import { ArrowLeft, Star, Target, Shield, Zap, Activity, User, Lock } from 'lucide-react'
 import { playersApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import { PlayerRadarChart } from '@/components/ui/radar-chart'
+import { useAuthStore } from '@/stores/auth'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://cornerkicks-api.conerkicks.workers.dev'
 
 export default function PlayerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const { token, club } = useAuthStore()
+  const isPro = club?.isPro ?? false
+
+  const [chemistry, setChemistry] = useState<any>(null)
+  const [streaks, setStreaks] = useState<any>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['player', id],
@@ -19,6 +27,18 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
   })
 
   const player = data?.player
+
+  useEffect(() => {
+    if (!player || !token) return
+
+    playersApi.chemistry(player.id, token)
+      .then((res: any) => setChemistry(res))
+      .catch(() => {})
+
+    playersApi.streaks(player.id, token)
+      .then((res: any) => setStreaks(res))
+      .catch(() => {})
+  }, [player?.id, token])
 
   if (isLoading) {
     return (
@@ -73,9 +93,13 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
         <div className="flex flex-col md:flex-row items-start gap-6">
           {/* 프로필 이미지 */}
           <div className="relative">
-            <div className="w-28 h-28 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-xl">
+            <div className="w-28 h-28 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden">
               {player.photo_url ? (
-                <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover rounded-2xl" />
+                <img
+                  src={`${API_BASE}${player.photo_url}`}
+                  alt={player.name}
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <span className="text-5xl text-slate-600 dark:text-slate-300">{player.name.charAt(0)}</span>
               )}
@@ -89,10 +113,16 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
 
           {/* 정보 */}
           <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
               <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{player.name}</h1>
               {player.nickname && (
                 <span className="text-lg text-slate-500">({player.nickname})</span>
+              )}
+              {/* Futsal DNA 뱃지 */}
+              {player.futsalDna && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-full text-xs font-medium text-slate-700 dark:text-slate-300">
+                  {player.futsalDna.emoji} {player.futsalDna.type}
+                </span>
               )}
             </div>
 
@@ -113,6 +143,20 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                 </span>
               )}
             </div>
+
+            {/* 태그 */}
+            {player.tags && player.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2 mb-4">
+                {player.tags.map((t: any) => (
+                  <span
+                    key={t.tag}
+                    className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs rounded-full"
+                  >
+                    {t.tag} ({t.votes})
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* 종합 능력치 */}
             <div className="flex items-center gap-4">
@@ -176,6 +220,114 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
               <StatRow label="피지컬" value={player.physical || 5} />
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 케미스트리 (PRO) */}
+      <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+          🤝 케미스트리
+          {!isPro && (
+            <span className="ml-2 px-2 py-0.5 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs rounded-full font-medium">
+              PRO
+            </span>
+          )}
+        </h2>
+        <div className="relative">
+          <div className={cn(!isPro && 'blur-sm pointer-events-none select-none')}>
+            {chemistry?.partners && chemistry.partners.length > 0 ? (
+              <div className="space-y-3">
+                {chemistry.partners.slice(0, 3).map((p: any, i: number) => (
+                  <div key={p.partner_id ?? i} className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                      {i + 1}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-slate-900 dark:text-white">{p.partner_name}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{typeof p.chem_score === 'number' ? p.chem_score.toFixed(1) : p.chem_score}</p>
+                      <p className="text-xs text-slate-500">케미 점수</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-slate-400">
+                케미스트리 데이터가 없습니다.
+              </div>
+            )}
+          </div>
+          {!isPro && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl px-6 py-4 shadow-lg border border-slate-200 dark:border-slate-700 text-center">
+                <Lock className="w-6 h-6 text-amber-500 mx-auto mb-2" />
+                <p className="text-sm font-medium text-slate-900 dark:text-white mb-3">PRO 전용 기능</p>
+                <Link
+                  href="/settings/subscription"
+                  className="inline-block px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  PRO로 업그레이드
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 스트릭 (PRO) */}
+      <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+          🔥 스트릭
+          {!isPro && (
+            <span className="ml-2 px-2 py-0.5 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs rounded-full font-medium">
+              PRO
+            </span>
+          )}
+        </h2>
+        <div className="relative">
+          <div className={cn(!isPro && 'blur-sm pointer-events-none select-none')}>
+            {streaks ? (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <StreakCard
+                  label="연승 스트릭"
+                  value={streaks.win_streak ?? 0}
+                  emoji="🏆"
+                  color="amber"
+                />
+                <StreakCard
+                  label="득점 스트릭"
+                  value={streaks.scoring_streak ?? 0}
+                  emoji="⚽"
+                  color="red"
+                />
+                <StreakCard
+                  label="출석 스트릭"
+                  value={streaks.attendance_streak ?? 0}
+                  emoji="📅"
+                  color="blue"
+                />
+              </div>
+            ) : (
+              <div className="text-center py-8 text-slate-400">
+                스트릭 데이터가 없습니다.
+              </div>
+            )}
+          </div>
+          {!isPro && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl px-6 py-4 shadow-lg border border-slate-200 dark:border-slate-700 text-center">
+                <Lock className="w-6 h-6 text-amber-500 mx-auto mb-2" />
+                <p className="text-sm font-medium text-slate-900 dark:text-white mb-3">PRO 전용 기능</p>
+                <Link
+                  href="/settings/subscription"
+                  className="inline-block px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  PRO로 업그레이드
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -310,6 +462,23 @@ function StatCard({ label, value, icon, color }: { label: string; value: number 
       <div className="text-2xl mb-1">{icon}</div>
       <p className="text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
       <p className="text-sm opacity-80">{label}</p>
+    </div>
+  )
+}
+
+function StreakCard({ label, value, emoji, color }: { label: string; value: number; emoji: string; color: string }) {
+  const colorClasses: Record<string, string> = {
+    amber: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
+    red: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400',
+    blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400',
+  }
+  const bgClass = colorClasses[color] ?? colorClasses.amber
+
+  return (
+    <div className={cn('rounded-2xl p-5 text-center', bgClass)}>
+      <div className="text-3xl mb-2">{emoji}</div>
+      <p className="text-3xl font-bold text-slate-900 dark:text-white">{value}<span className="text-base font-normal ml-1">연속</span></p>
+      <p className="text-sm mt-1 opacity-80">{label}</p>
     </div>
   )
 }
