@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Calendar, Users, Trophy, CreditCard, ChevronRight, Shield, BarChart3, Zap } from 'lucide-react'
+import { Calendar, Users, Trophy, CreditCard, ChevronRight, Shield, BarChart3, Zap, Check } from 'lucide-react'
 
 export default function LandingPage() {
   return (
@@ -138,6 +138,52 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* 요금제 */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">
+            요금제
+          </h2>
+          <p className="text-lg text-slate-600 dark:text-slate-400">
+            기본 기능은 무료. PRO로 업그레이드하면 더 강력한 기능을 사용할 수 있습니다.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {/* 무료 */}
+          <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">무료</h3>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white mb-6">0<span className="text-base font-normal text-slate-500">원</span></p>
+            <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
+              <PlanFeature text="세션 & 출석 관리" />
+              <PlanFeature text="RSVP 선착순 마감" />
+              <PlanFeature text="팀 편성" />
+              <PlanFeature text="경기 기록 & 랭킹" />
+              <PlanFeature text="참가비 정산" />
+            </ul>
+          </div>
+
+          {/* PRO */}
+          <div className="relative bg-white dark:bg-slate-900/50 rounded-2xl p-8 border-2 border-emerald-500 shadow-lg shadow-emerald-500/10">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full text-xs font-semibold text-white">
+              추천
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">PRO</h3>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white mb-1">
+              9,900<span className="text-base font-normal text-slate-500">원/월</span>
+            </p>
+            <p className="text-sm text-slate-500 mb-6">연 결제 시 99,000원/년</p>
+            <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
+              <PlanFeature text="무료 플랜의 모든 기능" />
+              <PlanFeature text="AI 기반 밸런스 팀 편성" />
+              <PlanFeature text="선수 능력치 분석" />
+              <PlanFeature text="고급 통계 & 리포트" />
+              <PlanFeature text="우선 고객 지원" />
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* 하단 CTA */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-500 p-12 md:p-16 text-center">
@@ -165,13 +211,35 @@ export default function LandingPage() {
 
       {/* 푸터 */}
       <footer className="border-t border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <p>CornerKicks - 풋살/축구 동호회 관리 플랫폼</p>
-            <div className="flex items-center gap-6">
-              <Link href="/login" className="hover:text-slate-700 dark:hover:text-slate-300 transition-colors">로그인</Link>
-              <Link href="/register" className="hover:text-slate-700 dark:hover:text-slate-300 transition-colors">회원가입</Link>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
+            <div>
+              <h4 className="font-semibold text-slate-900 dark:text-white mb-3">코너킥스</h4>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                풋살/축구 동호회를 위한<br />올인원 관리 플랫폼
+              </p>
             </div>
+            <div>
+              <h4 className="font-semibold text-slate-900 dark:text-white mb-3">서비스</h4>
+              <div className="space-y-2 text-sm">
+                <Link href="/login" className="block text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">로그인</Link>
+                <Link href="/register" className="block text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">회원가입</Link>
+                <Link href="/upgrade" className="block text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">PRO 구독</Link>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-slate-900 dark:text-white mb-3">약관 및 정책</h4>
+              <div className="space-y-2 text-sm">
+                <Link href="/terms" className="block text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">이용약관</Link>
+                <Link href="/privacy" className="block text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">개인정보처리방침</Link>
+                <Link href="/refund" className="block text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">환불 정책</Link>
+              </div>
+            </div>
+          </div>
+          <div className="pt-8 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-400 space-y-1">
+            <p>세인샵 | 대표: 이상훈 | 사업자등록번호: 219-20-34591</p>
+            <p>주소: 대구광역시 남구 효성중앙길 38, 효성타운 208동 205호</p>
+            <p>이메일: dlehdeod1@gmail.com | 전화: 010-3910-3404</p>
           </div>
         </div>
       </footer>
@@ -205,6 +273,15 @@ function FeatureCard({
       <h3 className="font-semibold text-slate-900 dark:text-white mb-2">{title}</h3>
       <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{description}</p>
     </div>
+  )
+}
+
+function PlanFeature({ text }: { text: string }) {
+  return (
+    <li className="flex items-center gap-2">
+      <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+      {text}
+    </li>
   )
 }
 
