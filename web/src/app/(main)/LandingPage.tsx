@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { Calendar, Users, Trophy, CreditCard, ChevronRight, Shield, BarChart3, Zap } from 'lucide-react'
 
 export default function LandingPage() {
@@ -57,13 +56,10 @@ export default function LandingPage() {
               <div className="relative">
                 <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-3xl blur-2xl" />
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700">
-                  <Image
+                  <img
                     src="/screenshot-home.png"
                     alt="코너킥스 대시보드"
-                    width={400}
-                    height={720}
                     className="w-full h-auto"
-                    priority
                   />
                 </div>
               </div>
@@ -131,11 +127,9 @@ export default function LandingPage() {
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-3xl blur-2xl" />
               <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-700 max-w-sm mx-auto">
-                <Image
+                <img
                   src="/screenshot-login.png"
                   alt="코너킥스 로그인"
-                  width={400}
-                  height={500}
                   className="w-full h-auto"
                 />
               </div>
