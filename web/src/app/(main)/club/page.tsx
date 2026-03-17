@@ -31,6 +31,7 @@ export default function ClubPage() {
   const [copied, setCopied] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
   const [logoUploading, setLogoUploading] = useState(false)
+  const [mvpToggling, setMvpToggling] = useState(false)
 
   const { data, isLoading } = useQuery({
     queryKey: ['club-me'],
@@ -75,6 +76,19 @@ export default function ClubPage() {
       if (storeClub) setClub({ ...storeClub, logoUrl: null })
     } catch (err: any) {
       alert(err.message || '삭제에 실패했습니다.')
+    }
+  }
+
+  const handleMvpToggle = async () => {
+    if (!token || !club) return
+    setMvpToggling(true)
+    try {
+      await clubsApi.updateSettings({ mvpVoteEnabled: !club.mvpVoteEnabled }, token)
+      queryClient.invalidateQueries({ queryKey: ['club-me'] })
+    } catch (err: any) {
+      alert(err.message || '설정 변경에 실패했습니다.')
+    } finally {
+      setMvpToggling(false)
     }
   }
 
@@ -251,6 +265,34 @@ export default function ClubPage() {
                 </div>
               </div>
               <p className="text-xs text-slate-400 mt-3">권장: 정사각형 이미지, 5MB 이하</p>
+            </div>
+          )}
+
+          {/* 클럽 설정 (관리자만) */}
+          {isAdmin && (
+            <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
+                클럽 설정
+              </h3>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-slate-900 dark:text-white">MVP 투표</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">세션 종료 후 24시간 내 MVP 투표 진행</p>
+                </div>
+                <button
+                  onClick={handleMvpToggle}
+                  disabled={mvpToggling}
+                  className={cn(
+                    'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+                    club.mvpVoteEnabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                  )}
+                >
+                  <span className={cn(
+                    'inline-block h-4 w-4 rounded-full bg-white transition-transform shadow-sm',
+                    club.mvpVoteEnabled ? 'translate-x-6' : 'translate-x-1'
+                  )} />
+                </button>
+              </div>
             </div>
           )}
 
