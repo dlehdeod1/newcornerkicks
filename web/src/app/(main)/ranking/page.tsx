@@ -6,7 +6,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { Trophy, Target, Handshake, Shield, ChevronDown, Search, ChevronRight, ChevronUp, Crown, Award } from 'lucide-react'
-import { rankingsApi } from '@/lib/api'
+import { rankingsApi, exportApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
 type SortKey = 'mvpCount' | 'goals' | 'assists' | 'attackPoints' | 'defenses' | 'games' | 'rank1' | 'rank2' | 'rank3' | 'ppm' | 'winRate'
@@ -101,6 +101,16 @@ export default function RankingPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {/* CSV 내보내기 */}
+          {club?.isPro && (
+            <button
+              onClick={() => exportApi.download(token!, 'rankings', selectedYear)}
+              className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1"
+            >
+              CSV 내보내기
+            </button>
+          )}
+
           {/* 검색 */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
