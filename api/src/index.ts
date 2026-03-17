@@ -15,6 +15,7 @@ import { clubsRoutes } from './routes/clubs'
 import { paymentsRoutes } from './routes/payments'
 import { subscriptionsRoutes } from './routes/subscriptions'
 import { photosRoutes } from './routes/photos'
+import { exportRoutes } from './routes/export'
 
 export type Env = {
   DB: D1Database
@@ -77,6 +78,7 @@ app.route('/me', meRoutes)
 app.route('/payments', paymentsRoutes)
 app.route('/subscriptions', subscriptionsRoutes)
 app.route('/photos', photosRoutes)
+app.route('/export', exportRoutes)
 
 // 404
 app.notFound((c) => {
