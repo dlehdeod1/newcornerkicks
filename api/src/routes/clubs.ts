@@ -172,6 +172,7 @@ clubsRoutes.get('/me', authMiddleware(), async (c) => {
       feeNotes: membership.fee_notes ?? '',
       feeTiers: JSON.parse(membership.fee_tiers ?? '[]'),
       seasonStartMonth: membership.season_start_month ?? 1,
+      mvpVoteEnabled: membership.mvp_vote_enabled === 1,
     },
   })
 })
@@ -213,6 +214,7 @@ clubsRoutes.put('/me', authMiddleware(), async (c) => {
   if (body.feeNotes !== undefined) { updates.push('fee_notes = ?'); vals.push(body.feeNotes) }
   if (body.feeTiers !== undefined) { updates.push('fee_tiers = ?'); vals.push(JSON.stringify(body.feeTiers)) }
   if (body.seasonStartMonth !== undefined) { updates.push('season_start_month = ?'); vals.push(Number(body.seasonStartMonth)) }
+  if (body.mvpVoteEnabled !== undefined) { updates.push('mvp_vote_enabled = ?'); vals.push(body.mvpVoteEnabled ? 1 : 0) }
 
   if (updates.length === 0) return c.json({ error: '변경할 내용이 없습니다.' }, 400)
 

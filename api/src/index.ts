@@ -141,10 +141,56 @@ async function expireSubscriptions(env: Env) {
   }
 }
 
+// 매시간 실행: MVP 투표 마감 (ended/completed, 24시간 경과, mvp_vote_enabled 클럽)
+async function finalizeMvpVotes(env: Env) {
+  const now = Math.floor(Date.now() / 1000)
+  const cutoff = now - 86400 // 24시간 전
+
+  // MVP 투표 마감 대상 세션 (ended/completed, 24시간 경과, mvp_vote_enabled 클럽)
+  const sessions = await env.DB.prepare(`
+    SELECT s.id, s.club_id
+    FROM sessions s
+    JOIN clubs c ON s.club_id = c.id
+    WHERE s.status IN ('ended', 'completed')
+      AND s.updated_at < ?
+      AND c.mvp_vote_enabled = 1
+      AND s.id NOT IN (SELECT session_id FROM session_mvp_results)
+  `).bind(cutoff).all()
+
+  for (const session of sessions.results as any[]) {
+    // 투표 집계
+    const votes = await env.DB.prepare(`
+      SELECT voted_player_id, COUNT(*) as vote_count
+      FROM session_mvp_votes
+      WHERE session_id = ?
+      GROUP BY voted_player_id
+      ORDER BY vote_count DESC
+    `).bind(session.id).all()
+
+    if ((votes.results as any[]).length === 0) continue
+
+    // 참가자 수 (attendance 테이블)
+    const attendeeCount = await env.DB.prepare(
+      'SELECT COUNT(*) as cnt FROM attendance WHERE session_id = ?'
+    ).bind(session.id).first<any>()
+    const total = attendeeCount?.cnt || 1
+
+    // 최고 득표자만 MVP로 저장
+    const winner = (votes.results as any[])[0]
+    const voteBonus = (winner.vote_count / total) * 3.0
+    await env.DB.prepare(`
+      INSERT OR REPLACE INTO session_mvp_results
+        (session_id, player_id, vote_count, vote_bonus, decided_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind(session.id, winner.voted_player_id, winner.vote_count, voteBonus, now).run()
+  }
+}
+
 export default {
   fetch: app.fetch.bind(app),
   async scheduled(_event: any, env: Env, _ctx: any) {
     await autoTransitionSessions(env)
     await expireSubscriptions(env)
+    await finalizeMvpVotes(env)
   },
 }
