@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import type { Env } from '../index'
 import { authMiddleware } from '../middleware/auth'
-import { isClubPro, PLAN_PRICES, calcExpiresAt } from '../utils/planUtils'
+import { isClubPro, isSubscriptionActive, PLAN_PRICES, calcExpiresAt } from '../utils/planUtils'
 
 const subscriptionsRoutes = new Hono<{ Bindings: Env }>()
 
@@ -16,15 +16,29 @@ subscriptionsRoutes.get('/me', authMiddleware(), async (c) => {
   const userId = (c as any).userId
   const clubId = (c as any).clubId
 
+  if (!clubId) return c.json({ subscription: null, isPro: false })
+
   const sub = await c.env.DB.prepare(`
     SELECT s.*, c.plan_type FROM subscriptions s
     JOIN clubs c ON s.club_id = c.id
-    WHERE s.user_id = ? AND s.status = 'active'
+    WHERE s.user_id = ? AND s.club_id = ? AND s.status = 'active'
     ORDER BY s.created_at DESC LIMIT 1
-  `).bind(userId).first<any>()
+  `).bind(userId, clubId).first<any>()
 
   if (!sub) {
     return c.json({ subscription: null, isPro: isClubPro(null) })
+  }
+
+  // 만료 체크: cron보다 먼저 접근한 경우 즉시 다운그레이드
+  if (!isSubscriptionActive(sub.expires_at)) {
+    const now = Math.floor(Date.now() / 1000)
+    await c.env.DB.prepare(
+      `UPDATE subscriptions SET status = 'expired', updated_at = ? WHERE id = ?`
+    ).bind(now, sub.id).run()
+    await c.env.DB.prepare(
+      `UPDATE clubs SET plan_type = 'free', updated_at = ? WHERE id = ?`
+    ).bind(now, sub.club_id).run()
+    return c.json({ subscription: null, isPro: false })
   }
 
   return c.json({
@@ -50,10 +64,10 @@ subscriptionsRoutes.post('/checkout', authMiddleware(), async (c) => {
     return c.json({ error: '소속 클럽이 없습니다.' }, 400)
   }
 
-  // 이미 활성 구독 있는지 확인
+  // 이미 이 클럽에 활성 구독 있는지 확인
   const existing = await c.env.DB.prepare(
-    `SELECT id FROM subscriptions WHERE user_id = ? AND status = 'active'`
-  ).bind(userId).first()
+    `SELECT id FROM subscriptions WHERE user_id = ? AND club_id = ? AND status = 'active'`
+  ).bind(userId, clubId).first()
   if (existing) {
     return c.json({ error: '이미 구독 중입니다.' }, 400)
   }
@@ -150,9 +164,11 @@ subscriptionsRoutes.post('/cancel', authMiddleware(), async (c) => {
   const userId = (c as any).userId
   const clubId = (c as any).clubId
 
+  if (!clubId) return c.json({ error: '소속 클럽이 없습니다.' }, 400)
+
   const sub = await c.env.DB.prepare(
-    `SELECT * FROM subscriptions WHERE user_id = ? AND status = 'active' ORDER BY created_at DESC LIMIT 1`
-  ).bind(userId).first<any>()
+    `SELECT * FROM subscriptions WHERE user_id = ? AND club_id = ? AND status = 'active' ORDER BY created_at DESC LIMIT 1`
+  ).bind(userId, clubId).first<any>()
 
   if (!sub) {
     return c.json({ error: '활성 구독이 없습니다.' }, 404)
@@ -171,10 +187,55 @@ subscriptionsRoutes.post('/cancel', authMiddleware(), async (c) => {
   })
 })
 
+async function verifyTossSignature(body: string, signature: string, secret: string): Promise<boolean> {
+  const enc = new TextEncoder()
+  const key = await crypto.subtle.importKey(
+    'raw', enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false, ['verify']
+  )
+  const sigBytes = Uint8Array.from(atob(signature), ch => ch.charCodeAt(0))
+  return crypto.subtle.verify('HMAC', key, sigBytes, enc.encode(body))
+}
+
 // ── 토스 웹훅 (결제/취소 이벤트) ─────────────────────
 subscriptionsRoutes.post('/webhook', async (c) => {
-  const secretKey = c.env.TOSS_SECRET_KEY
-  if (!secretKey) return c.json({ ok: true })
+  const webhookSecret = c.env.TOSS_WEBHOOK_SECRET
+
+  // 서명 검증 (TOSS_WEBHOOK_SECRET 설정된 경우)
+  if (webhookSecret) {
+    const signature = c.req.header('TossPayments-Signature') ?? ''
+    const rawBody = await c.req.text()
+    const valid = signature ? await verifyTossSignature(rawBody, signature, webhookSecret) : false
+    if (!valid) {
+      return c.json({ error: 'Invalid signature' }, 401)
+    }
+    // rawBody를 이미 읽었으므로 파싱해서 처리
+    try {
+      const event = JSON.parse(rawBody) as any
+      const { eventType, data } = event
+      if (eventType === 'PAYMENT_CANCELED' || eventType === 'BILLING_FAILED') {
+        const orderId = data?.orderId
+        if (orderId) {
+          const sub = await c.env.DB.prepare(
+            `SELECT * FROM subscriptions WHERE last_order_id = ?`
+          ).bind(orderId).first<any>()
+          if (sub) {
+            const now = Math.floor(Date.now() / 1000)
+            await c.env.DB.prepare(
+              `UPDATE subscriptions SET status = 'expired', updated_at = ? WHERE id = ?`
+            ).bind(now, sub.id).run()
+            await c.env.DB.prepare(
+              `UPDATE clubs SET plan_type = 'free', updated_at = ? WHERE id = ?`
+            ).bind(now, sub.club_id).run()
+          }
+        }
+      }
+    } catch (e) {
+      console.error('webhook error:', e)
+    }
+    return c.json({ ok: true })
+  }
 
   try {
     const event = await c.req.json() as any

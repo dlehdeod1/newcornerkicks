@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import type { Env } from '../index'
 import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth'
+import { isClubPro } from '../utils/planUtils'
 
 const sessionsRoutes = new Hono<{ Bindings: Env }>()
 
@@ -466,7 +467,7 @@ sessionsRoutes.post('/:id/teams', authMiddleware('ADMIN'), async (c) => {
     const clubRow = clubId
       ? await c.env.DB.prepare('SELECT plan_type FROM clubs WHERE id = ?').bind(clubId).first<{ plan_type: string }>()
       : null
-    const isPro = clubRow?.plan_type === 'pro'
+    const isPro = isClubPro(clubRow?.plan_type)
 
     const playerAttendees = attendees.filter((a: any) => a.playerId)
     const guestAttendees = attendees.filter((a: any) => !a.playerId)
@@ -1171,7 +1172,7 @@ sessionsRoutes.post('/:id/ai-analysis', authMiddleware('ADMIN'), async (c) => {
   const clubRow = clubId
     ? await c.env.DB.prepare('SELECT plan_type FROM clubs WHERE id = ?').bind(clubId).first<{ plan_type: string }>()
     : null
-  if (clubRow?.plan_type !== 'pro') {
+  if (!isClubPro(clubRow?.plan_type)) {
     return c.json({ error: 'PRO 플랜에서만 AI 분석을 사용할 수 있습니다.' }, 403)
   }
 

@@ -178,4 +178,5 @@ Tailwind에서 시맨틱 컬러: `bg-background`, `text-foreground`, `bg-card`, 
 0009_season_config.sql
 0010_google_id.sql           ← users.google_id
 0011_fix_session_payments.sql ← guest_name 추가, settlement_id nullable
+0012_subscriptions.sql       ← subscriptions 테이블, clubs.owner_user_id
 ```

@@ -27,7 +27,7 @@ const PRO_FEATURES = [
 
 export default function UpgradePage() {
   const router = useRouter()
-  const { token, club, isLoggedIn } = useAuthStore()
+  const { token, club, isLoggedIn, setClub } = useAuthStore()
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [loading, setLoading] = useState(false)
   const [subInfo, setSubInfo] = useState<any>(null)
@@ -43,6 +43,10 @@ export default function UpgradePage() {
     }
     subscriptionsApi.me(token).then((data: any) => {
       setSubInfo(data)
+      // 서버 응답 기준으로 auth store의 isPro 동기화 (만료/취소 후 stale 방지)
+      if (club && data.isPro !== club.isPro) {
+        setClub({ ...club, isPro: data.isPro, planType: data.isPro ? 'pro' : 'free' })
+      }
     }).catch(() => {})
   }, [isLoggedIn, token])
 

@@ -151,6 +151,7 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
 
 // MVP 데이터 백필 (기존 완료된 세션에 대해)
 rankingsRoutes.post('/backfill-mvp', authMiddleware('ADMIN'), async (c) => {
+  const clubId = (c as any).clubId
   const year = Number(c.req.query('year')) || new Date().getFullYear()
   if (!clubId) return c.json({ error: '클럽이 없습니다.' }, 400)
 

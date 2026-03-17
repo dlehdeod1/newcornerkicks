@@ -21,6 +21,7 @@ export type Env = {
   GEMINI_API_KEY?: string
   TOSS_SECRET_KEY?: string
   TOSS_CLIENT_KEY?: string
+  TOSS_WEBHOOK_SECRET?: string
 }
 
 const app = new Hono<{ Bindings: Env }>()
@@ -107,9 +108,38 @@ async function autoTransitionSessions(env: Env) {
   `).bind(now, todayKST, todayKST, timeKST).run()
 }
 
+// 매시간 실행: 만료된 구독 → 'expired' 처리 + 클럽 plan_type → 'free' 다운그레이드
+async function expireSubscriptions(env: Env) {
+  const now = Math.floor(Date.now() / 1000)
+
+  const expired = await env.DB.prepare(`
+    SELECT id, club_id FROM subscriptions
+    WHERE expires_at < ? AND status IN ('active', 'cancelled')
+  `).bind(now).all()
+
+  for (const sub of expired.results as any[]) {
+    await env.DB.prepare(
+      `UPDATE subscriptions SET status = 'expired', updated_at = ? WHERE id = ?`
+    ).bind(now, sub.id).run()
+
+    // 해당 클럽에 아직 유효한 다른 구독이 없으면 free로 다운그레이드
+    const otherActive = await env.DB.prepare(`
+      SELECT id FROM subscriptions
+      WHERE club_id = ? AND status IN ('active', 'cancelled') AND expires_at >= ?
+    `).bind(sub.club_id, now).first()
+
+    if (!otherActive) {
+      await env.DB.prepare(
+        `UPDATE clubs SET plan_type = 'free', updated_at = ? WHERE id = ?`
+      ).bind(now, sub.club_id).run()
+    }
+  }
+}
+
 export default {
   fetch: app.fetch.bind(app),
   async scheduled(_event: any, env: Env, _ctx: any) {
     await autoTransitionSessions(env)
+    await expireSubscriptions(env)
   },
 }
