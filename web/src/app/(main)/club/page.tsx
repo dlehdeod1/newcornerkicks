@@ -10,7 +10,6 @@ import {
   Check,
   Settings,
   Crown,
-  Shield,
   RefreshCw,
   Calendar,
   Trophy,
@@ -157,26 +156,11 @@ export default function ClubPage() {
                   <p className="text-white/80 text-sm mt-1">{club.description}</p>
                 )}
               </div>
-              <div className="relative group">
-                <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center text-2xl overflow-hidden">
-                  {club.logoUrl ? (
-                    <Image src={`${process.env.NEXT_PUBLIC_API_URL}${club.logoUrl}`} alt="클럽 로고" width={56} height={56} className="object-cover w-full h-full" />
-                  ) : (
-                    '⚽'
-                  )}
-                </div>
-                {isAdmin && (
-                  <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
-                    <label className="cursor-pointer p-1 hover:bg-white/20 rounded">
-                      <Camera className="w-4 h-4" />
-                      <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={logoUploading} />
-                    </label>
-                    {club.logoUrl && (
-                      <button onClick={handleLogoDelete} className="p-1 hover:bg-white/20 rounded">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
+              <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center text-2xl overflow-hidden">
+                {club.logoUrl ? (
+                  <Image src={`${process.env.NEXT_PUBLIC_API_URL}${club.logoUrl}`} alt="클럽 로고" width={56} height={56} className="object-cover w-full h-full" />
+                ) : (
+                  '⚽'
                 )}
               </div>
             </div>
@@ -231,6 +215,44 @@ export default function ClubPage() {
               </button>
             )}
           </div>
+
+          {/* 로고 설정 (관리자만) */}
+          {isAdmin && (
+            <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
+                클럽 로고
+              </h3>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-2xl overflow-hidden border-2 border-dashed border-slate-300 dark:border-slate-600">
+                  {club.logoUrl ? (
+                    <Image src={`${process.env.NEXT_PUBLIC_API_URL}${club.logoUrl}`} alt="클럽 로고" width={64} height={64} className="object-cover w-full h-full" />
+                  ) : (
+                    <Camera className="w-6 h-6 text-slate-400" />
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className={cn(
+                    'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg cursor-pointer transition-colors',
+                    'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  )}>
+                    <Camera className="w-3.5 h-3.5" />
+                    {club.logoUrl ? '변경' : '업로드'}
+                    <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={logoUploading} />
+                  </label>
+                  {club.logoUrl && (
+                    <button
+                      onClick={handleLogoDelete}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      삭제
+                    </button>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 mt-3">권장: 정사각형 이미지, 5MB 이하</p>
+            </div>
+          )}
 
           {/* 바로가기 메뉴 */}
           <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
