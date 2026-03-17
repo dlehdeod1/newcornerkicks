@@ -7,10 +7,12 @@ import { cn } from '@/lib/cn'
 import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/components/ui/button'
 import { sessionsApi } from '@/lib/api'
+import { useRouter } from 'next/navigation'
 
 interface Props {
   teams: any[]
   sessionId: number
+  session: any
   attendance: any[]
   onRefetch: () => void
 }
@@ -70,14 +72,19 @@ const colorMapping: Record<string, string> = {
   white: 'white',
 }
 
-export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
-  const { isAdmin, token } = useAuthStore()
+export function TeamsTab({ teams, sessionId, session, attendance, onRefetch }: Props) {
+  const { isAdmin, token, club } = useAuthStore()
+  const router = useRouter()
   const [editMode, setEditMode] = useState(false)
   const [selectedMember, setSelectedMember] = useState<{ member: any; fromTeamId: number } | null>(null)
   const [aiAnalysis, setAiAnalysis] = useState<Map<string, TeamAnalysis>>(new Map())
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isReforming, setIsReforming] = useState(false)
+  const [isAiReforming, setIsAiReforming] = useState(false)
   const [isDisbanding, setIsDisbanding] = useState(false)
+
+  const isPro = club?.isPro ?? false
+  const aiRemaining = 3 - (session?.ai_team_count || 0)
 
   // 페이지 로드 시 DB에 저장된 AI 분석 결과 자동 로드
   useEffect(() => {
@@ -157,30 +164,25 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
     }
   }
 
+  const buildAttendees = () =>
+    (attendance || []).map((a: any) => ({
+      playerId: a.player_id ?? null,
+      name: a.display_name || a.name || a.guest_name,
+      guestName: a.guest_name || null,
+      isGuest: !a.player_id,
+    }))
+
   const handleReformTeams = async () => {
-    console.log('handleReformTeams called!', { attendance, token, sessionId })
-    if (!window.confirm('팀을 다시 AI 편성하시겠습니까?\n기존 팀과 경기 기록이 초기화됩니다.')) return
+    if (!window.confirm('팀을 다시 편성하시겠습니까?\n기존 팀과 경기 기록이 초기화됩니다.')) return
 
     setIsReforming(true)
     try {
-      const attendees = (attendance || []).map((a: any) => ({
-        playerId: a.player_id ?? null,
-        name: a.display_name || a.name || a.guest_name,
-        guestName: a.guest_name || null,
-        isGuest: !a.player_id,
-      }))
-      console.log('Reform teams - attendees:', attendees)
-      if (!token) {
-        alert('로그인이 필요합니다.')
-        setIsReforming(false)
-        return
-      }
-      if (attendees.length === 0) {
-        alert('참석자가 없어 팀을 편성할 수 없습니다.')
-        setIsReforming(false)
-        return
-      }
-      await sessionsApi.createTeams(sessionId, { attendees }, token)
+      if (!token) { alert('로그인이 필요합니다.'); return }
+      const attendees = buildAttendees()
+      if (attendees.length === 0) { alert('참석자가 없어 팀을 편성할 수 없습니다.'); return }
+      const result = await sessionsApi.createTeams(sessionId, { attendees, useAI: false }, token)
+      if (result?.limitReached) { alert(result.message || 'AI 편성 한도에 도달했습니다.'); return }
+      if (result?.locked) { router.push('/upgrade'); return }
       setAiAnalysis(new Map())
       onRefetch()
     } catch (err: any) {
@@ -188,6 +190,31 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
       alert(err.message || '팀 재편성에 실패했습니다.')
     } finally {
       setIsReforming(false)
+    }
+  }
+
+  const handleReformTeamsAI = async () => {
+    if (aiRemaining <= 0) {
+      alert('이번 달 AI 팀 편성 횟수를 모두 사용했습니다.')
+      return
+    }
+    if (!window.confirm(`AI로 팀을 다시 편성하시겠습니까? (잔여 ${aiRemaining}회)\n기존 팀과 경기 기록이 초기화됩니다.`)) return
+
+    setIsAiReforming(true)
+    try {
+      if (!token) { alert('로그인이 필요합니다.'); return }
+      const attendees = buildAttendees()
+      if (attendees.length === 0) { alert('참석자가 없어 팀을 편성할 수 없습니다.'); return }
+      const result = await sessionsApi.createTeams(sessionId, { attendees, useAI: true }, token)
+      if (result?.limitReached) { alert(result.message || 'AI 편성 한도에 도달했습니다.'); return }
+      if (result?.locked) { router.push('/upgrade'); return }
+      setAiAnalysis(new Map())
+      onRefetch()
+    } catch (err: any) {
+      console.error('Reform teams AI error:', err)
+      alert(err.message || 'AI 팀 재편성에 실패했습니다.')
+    } finally {
+      setIsAiReforming(false)
     }
   }
 
@@ -291,10 +318,24 @@ export function TeamsTab({ teams, sessionId, attendance, onRefetch }: Props) {
                   size="sm"
                   onClick={handleReformTeams}
                   loading={isReforming}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white border-0"
                 >
                   <Wand2 className="w-4 h-4 mr-1.5" />
-                  AI 재편성
+                  재편성
                 </Button>
+                {isPro && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReformTeamsAI}
+                    loading={isAiReforming}
+                    disabled={aiRemaining <= 0}
+                    className="bg-purple-500 hover:bg-purple-600 text-white border-0 disabled:opacity-50"
+                  >
+                    <Sparkles className="w-4 h-4 mr-1.5" />
+                    AI 재편성 ({aiRemaining}회)
+                  </Button>
+                )}
                 <Button
                   variant={editMode ? 'primary' : 'outline'}
                   size="sm"
