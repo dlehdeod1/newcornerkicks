@@ -346,6 +346,20 @@ export const clubsApi = {
 
   updateSettings: (data: any, token: string) =>
     api('/clubs/me', { method: 'PUT', body: data, token }),
+
+  uploadLogo: async (file: File, token: string) => {
+    const headers: Record<string, string> = { 'Authorization': `Bearer ${token}` }
+    const clubId = getActiveClubId()
+    if (clubId) headers['X-Club-Id'] = String(clubId)
+    const formData = new FormData()
+    formData.append('logo', file)
+    const res = await fetch(`${API_BASE}/clubs/me/logo`, { method: 'POST', headers, body: formData })
+    if (!res.ok) throw new Error((await res.json()).error || '업로드 실패')
+    return res.json()
+  },
+
+  deleteLogo: (token: string) =>
+    api('/clubs/me/logo', { method: 'DELETE', token }),
 }
 
 // Export API (CSV 내보내기)

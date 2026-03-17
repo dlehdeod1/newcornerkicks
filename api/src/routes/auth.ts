@@ -25,7 +25,7 @@ const registerSchema = z.object({
 async function getUserClubs(db: any, userId: string) {
   const memberships = await db.prepare(`
     SELECT c.id as club_id, c.slug, c.name as club_name, c.enabled_events,
-           c.invite_code, c.plan_type, c.season_start_month, cm.role as club_role
+           c.invite_code, c.plan_type, c.season_start_month, c.logo_url, cm.role as club_role
     FROM club_members cm
     INNER JOIN clubs c ON c.id = cm.club_id
     WHERE cm.user_id = ?
@@ -46,6 +46,7 @@ async function getUserClubs(db: any, userId: string) {
       planType: m.plan_type ?? 'free',
       isPro: isClubPro(m.plan_type),
       seasonStartMonth: m.season_start_month ?? 1,
+      logoUrl: m.logo_url ?? null,
       player: player ? { id: player.id, name: player.name, nickname: player.nickname } : null,
     }
   }))

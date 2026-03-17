@@ -173,6 +173,7 @@ clubsRoutes.get('/me', authMiddleware(), async (c) => {
       feeTiers: JSON.parse(membership.fee_tiers ?? '[]'),
       seasonStartMonth: membership.season_start_month ?? 1,
       mvpVoteEnabled: membership.mvp_vote_enabled === 1,
+      logoUrl: membership.logo_url ?? null,
     },
   })
 })
@@ -408,6 +409,60 @@ clubsRoutes.put('/me/members/:userId/role', authMiddleware(), async (c) => {
   ).bind(role, clubId, targetUserId).run()
 
   return c.json({ message: '역할이 변경되었습니다.' })
+})
+
+// ─── 클럽 로고 업로드/삭제 ───────────────────────────
+clubsRoutes.post('/me/logo', authMiddleware(), async (c) => {
+  const userId = (c as any).userId
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '소속 클럽이 없습니다.' }, 404)
+
+  const member = await c.env.DB.prepare(
+    'SELECT role FROM club_members WHERE club_id = ? AND user_id = ?'
+  ).bind(clubId, userId).first<{ role: string }>()
+  if (!member || (member.role !== 'admin' && member.role !== 'owner')) {
+    return c.json({ error: '관리자만 로고를 변경할 수 있습니다.' }, 403)
+  }
+
+  const formData = await c.req.formData()
+  const file = formData.get('logo') as File | null
+  if (!file) return c.json({ error: '파일이 없습니다.' }, 400)
+
+  const maxSize = 5 * 1024 * 1024
+  if (file.size > maxSize) return c.json({ error: '파일 크기는 5MB 이하여야 합니다.' }, 400)
+
+  const key = `clubs/${clubId}/logo.webp`
+  const buf = await file.arrayBuffer()
+  await c.env.PHOTOS.put(key, buf, { httpMetadata: { contentType: 'image/webp' } })
+
+  const logoUrl = `/photos/${key}`
+  const now = Math.floor(Date.now() / 1000)
+  await c.env.DB.prepare(
+    'UPDATE clubs SET logo_url = ?, updated_at = ? WHERE id = ?'
+  ).bind(logoUrl, now, clubId).run()
+
+  return c.json({ logoUrl })
+})
+
+clubsRoutes.delete('/me/logo', authMiddleware(), async (c) => {
+  const userId = (c as any).userId
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '소속 클럽이 없습니다.' }, 404)
+
+  const member = await c.env.DB.prepare(
+    'SELECT role FROM club_members WHERE club_id = ? AND user_id = ?'
+  ).bind(clubId, userId).first<{ role: string }>()
+  if (!member || (member.role !== 'admin' && member.role !== 'owner')) {
+    return c.json({ error: '관리자만 로고를 변경할 수 있습니다.' }, 403)
+  }
+
+  await c.env.PHOTOS.delete(`clubs/${clubId}/logo.webp`)
+  const now = Math.floor(Date.now() / 1000)
+  await c.env.DB.prepare(
+    'UPDATE clubs SET logo_url = NULL, updated_at = ? WHERE id = ?'
+  ).bind(now, clubId).run()
+
+  return c.json({ message: '로고가 삭제되었습니다.' })
 })
 
 function generateInviteCode(): string {
