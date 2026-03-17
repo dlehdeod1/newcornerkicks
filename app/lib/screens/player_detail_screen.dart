@@ -15,7 +15,11 @@ class PlayerDetailScreen extends StatefulWidget {
 class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTickerProviderStateMixin {
   Map<String, dynamic>? _player;
   Map<String, dynamic>? _logs;
+  Map<String, dynamic>? _chemistry;
+  Map<String, dynamic>? _streaks;
   bool _loading = true;
+  bool _chemLoading = false;
+  bool _streakLoading = false;
   late TabController _tabController;
   int _logTab = 0; // 0=goals, 1=assists, 2=defenses, 3=mvp, 4=placements
 
@@ -33,6 +37,11 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
   }
 
   Future<void> _load() async {
+    // Context 사용은 await 이전에 캡처
+    final auth = context.read<AuthService>();
+    final isPro = auth.isPro;
+    final token = auth.token;
+
     try {
       final year = DateTime.now().year;
       final results = await Future.wait([
@@ -44,8 +53,34 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
         _logs = results[1];
         _loading = false;
       });
+
+      // PRO 기능 데이터 로드
+      if (isPro && token != null) {
+        _loadProData(token);
+      }
     } catch (_) {
       setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadProData(String token) async {
+    setState(() {
+      _chemLoading = true;
+      _streakLoading = true;
+    });
+
+    final results = await Future.wait([
+      ApiService().getChemistry(widget.playerId, token).catchError((_) => null),
+      ApiService().getStreaks(widget.playerId, token).catchError((_) => null),
+    ]);
+
+    if (mounted) {
+      setState(() {
+        _chemistry = results[0] as Map<String, dynamic>?;
+        _streaks = results[1] as Map<String, dynamic>?;
+        _chemLoading = false;
+        _streakLoading = false;
+      });
     }
   }
 
@@ -215,6 +250,8 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
     };
 
     final avgOverall = stats.values.reduce((a, b) => a + b) / stats.length;
+    final auth = context.watch<AuthService>();
+    final isPro = auth.isPro;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -253,13 +290,52 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
                         child: Text('OVR ${avgOverall.toStringAsFixed(0)}',
                             style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                       ),
+                      // Futsal DNA 뱃지
+                      if (_player?['futsalDna'] != null) ...[
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${_player!['futsalDna']['emoji']} ${_player!['futsalDna']['type']}',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+
+          // 태그 칩
+          if (_player?['tags'] != null && (_player!['tags'] as List).isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 0),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: (_player!['tags'] as List).map((t) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    '${t['tag']} (${t['votes']})',
+                    style: TextStyle(fontSize: 12, color: AppColors.primary),
+                  ),
+                )).toList(),
+              ),
+            ),
+
+          if (_player?['tags'] != null && (_player!['tags'] as List).isNotEmpty)
+            const SizedBox(height: 16),
 
           // 레이더 차트
           Container(
@@ -322,6 +398,224 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
                 )),
               ],
             ),
+          ),
+          const SizedBox(height: 16),
+
+          // 케미 섹션
+          _buildChemistrySection(isPro),
+          const SizedBox(height: 16),
+
+          // 스트릭 섹션
+          _buildStreaksSection(isPro),
+          const SizedBox(height: 80), // FAB 여백
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChemistrySection(bool isPro) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withAlpha(13)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('⚗️', style: TextStyle(fontSize: 16)),
+              const SizedBox(width: 8),
+              const Text('케미스트리', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              if (isPro) ...[
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withAlpha(26),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text('PRO', style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (!isPro)
+            _buildLockedState('PRO 플랜에서 팀원과의 케미스트리를 확인하세요')
+          else if (_chemLoading)
+            const Center(child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
+            ))
+          else if (_chemistry == null)
+            const Text('케미 데이터를 불러올 수 없습니다', style: TextStyle(color: Colors.white38, fontSize: 13))
+          else
+            _buildChemistryContent(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChemistryContent() {
+    final partners = _chemistry?['partners'] as List? ?? _chemistry?['data'] as List? ?? [];
+    if (partners.isEmpty) {
+      return const Text('아직 케미 데이터가 없습니다', style: TextStyle(color: Colors.white38, fontSize: 13));
+    }
+    return Column(
+      children: partners.take(5).map((partner) {
+        final name = partner['partnerName'] ?? partner['name'] ?? '?';
+        final score = (partner['chemScore'] ?? partner['chem_score'] ?? 0).toDouble();
+        final scoreInt = score.toInt();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: AppColors.bgBorder,
+                child: Text(name[0], style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: (score / 100).clamp(0.0, 1.0),
+                        backgroundColor: Colors.white.withAlpha(13),
+                        color: AppColors.primary,
+                        minHeight: 6,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text('$scoreInt', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14)),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildStreaksSection(bool isPro) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withAlpha(13)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('🔥', style: TextStyle(fontSize: 16)),
+              const SizedBox(width: 8),
+              const Text('스트릭', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              if (isPro) ...[
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withAlpha(26),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text('PRO', style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (!isPro)
+            _buildLockedState('PRO 플랜에서 연승, 득점, 출석 스트릭을 확인하세요')
+          else if (_streakLoading)
+            const Center(child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
+            ))
+          else if (_streaks == null)
+            const Text('스트릭 데이터를 불러올 수 없습니다', style: TextStyle(color: Colors.white38, fontSize: 13))
+          else
+            _buildStreaksContent(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStreaksContent() {
+    final streakData = _streaks?['data'] ?? _streaks ?? {};
+    final winStreak = streakData['winStreak'] ?? streakData['win_streak'] ?? 0;
+    final scoringStreak = streakData['scoringStreak'] ?? streakData['scoring_streak'] ?? 0;
+    final attendanceStreak = streakData['attendanceStreak'] ?? streakData['attendance_streak'] ?? 0;
+
+    final items = [
+      {'icon': '🏆', 'label': '연승 스트릭', 'value': winStreak},
+      {'icon': '⚽', 'label': '득점 스트릭', 'value': scoringStreak},
+      {'icon': '📅', 'label': '출석 스트릭', 'value': attendanceStreak},
+    ];
+
+    return Row(
+      children: items.map((item) {
+        final val = item['value'] as int;
+        return Expanded(
+          child: Container(
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+            decoration: BoxDecoration(
+              color: val > 0 ? AppColors.primary.withValues(alpha: 0.08) : Colors.white.withAlpha(8),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: val > 0 ? AppColors.primary.withAlpha(51) : Colors.white.withAlpha(13),
+              ),
+            ),
+            child: Column(
+              children: [
+                Text(item['icon'] as String, style: const TextStyle(fontSize: 20)),
+                const SizedBox(height: 6),
+                Text(
+                  '$val',
+                  style: TextStyle(
+                    color: val > 0 ? AppColors.primary : Colors.white38,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item['label'] as String,
+                  style: const TextStyle(color: Colors.white38, fontSize: 10),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildLockedState(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Column(
+        children: [
+          const Icon(Icons.lock_outline, color: Colors.white24, size: 32),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white38, fontSize: 13),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
