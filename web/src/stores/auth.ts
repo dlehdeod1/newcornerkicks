@@ -25,6 +25,7 @@ export interface Club {
   isPro?: boolean
   planType?: string
   inviteCode?: string
+  logoUrl?: string | null
   player?: Player | null
 }
 
