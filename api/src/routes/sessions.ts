@@ -384,19 +384,7 @@ function calculateRole(player: any): { attack: number; defense: number } {
   return { attack, defense }
 }
 
-// 무료 플랜: 랜덤 + 균등 배분 (Fisher-Yates 셔플)
-function randomBalanceTeams(players: any[], teamCount: number): any[][] {
-  const shuffled = [...players]
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-  }
-  const teams: any[][] = Array.from({ length: teamCount }, () => [])
-  shuffled.forEach((p, i) => teams[i % teamCount].push(p))
-  return teams
-}
-
-// 유료 플랜: 능력치 기반 밸런싱 알고리즘
+// 능력치 기반 밸런싱 알고리즘
 function balanceTeams(players: any[], teamCount: number): any[][] {
   // 종합 능력치와 역할 계산
   const playersWithStats = players.map(p => ({
@@ -460,7 +448,7 @@ sessionsRoutes.post('/:id/teams', authMiddleware('ADMIN'), async (c) => {
 
   try {
     const body = await c.req.json()
-    const { attendees } = body
+    const { attendees, useAI = false } = body
 
     // 클럽 플랜 확인
     const clubId = (c as any).clubId
@@ -522,10 +510,39 @@ sessionsRoutes.post('/:id/teams', authMiddleware('ADMIN'), async (c) => {
     // 모든 참가자 합치기
     const allPlayers = [...playersWithStats, ...guestsWithStats]
 
-    // 플랜에 따라 팀 편성 방식 결정
-    const balancedTeams = isPro
-      ? balanceTeams(allPlayers, teamCount)
-      : randomBalanceTeams(allPlayers, teamCount)
+    // 팀 편성 방식 결정
+    let teamArrays: any[][]
+
+    if (useAI) {
+      if (!isPro) {
+        return c.json({ locked: true, reason: 'PRO 전용 기능입니다.' }, 403)
+      }
+
+      // Check AI team count
+      const sessionRow = await c.env.DB.prepare(
+        'SELECT ai_team_count FROM sessions WHERE id = ?'
+      ).bind(id).first<any>()
+
+      if ((sessionRow?.ai_team_count ?? 0) >= 3) {
+        return c.json({
+          limitReached: true,
+          message: 'AI 편성 횟수(3회)를 초과했습니다. 스탯 기반으로 편성할까요?',
+        })
+      }
+
+      // For now, fall back to balanceTeams (Gemini AI integration is Task 11)
+      teamArrays = balanceTeams(allPlayers, teamCount)
+
+      // Increment AI counter
+      await c.env.DB.prepare(
+        'UPDATE sessions SET ai_team_count = ai_team_count + 1 WHERE id = ?'
+      ).bind(id).run()
+    } else {
+      // FREE/PRO common: balanceTeams()
+      teamArrays = balanceTeams(allPlayers, teamCount)
+    }
+
+    const balancedTeams = teamArrays
 
     // 팀 생성 및 멤버 배치
     const teamNames = ['A팀', 'B팀', 'C팀']
@@ -1176,6 +1193,15 @@ sessionsRoutes.post('/:id/ai-analysis', authMiddleware('ADMIN'), async (c) => {
     return c.json({ error: 'PRO 플랜에서만 AI 분석을 사용할 수 있습니다.' }, 403)
   }
 
+  // AI 분석 횟수 제한 체크
+  const sessionForCount = await c.env.DB.prepare(
+    'SELECT ai_analysis_count FROM sessions WHERE id = ?'
+  ).bind(id).first<any>()
+
+  if ((sessionForCount?.ai_analysis_count ?? 0) >= 3) {
+    return c.json({ error: '이 세션의 AI 분석 횟수(3회)를 초과했습니다.' }, 400)
+  }
+
   // 팀 조회
   const teams = await c.env.DB.prepare(
     'SELECT * FROM teams WHERE session_id = ? ORDER BY id'
@@ -1435,6 +1461,11 @@ JSON 형식으로만 응답 (다른 텍스트 없이):
 
       return result
     }))
+
+    // AI 분석 횟수 증가
+    await c.env.DB.prepare(
+      'UPDATE sessions SET ai_analysis_count = ai_analysis_count + 1 WHERE id = ?'
+    ).bind(id).run()
 
     return c.json({ analysis, isAiGenerated: true })
   } catch (err: any) {
