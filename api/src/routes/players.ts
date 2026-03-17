@@ -636,6 +636,88 @@ playersRoutes.get('/:id/streaks', authMiddleware(), async (c) => {
   return c.json(streaks)
 })
 
+// 사진 업로드
+playersRoutes.post('/:id/photo', authMiddleware(), async (c) => {
+  const id = c.req.param('id')
+  const userId = (c as any).userId
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽에 소속되어 있지 않습니다.' }, 403)
+
+  const player = await c.env.DB.prepare(
+    'SELECT id, user_id, club_id FROM players WHERE id = ? AND club_id = ?'
+  ).bind(id, clubId).first<any>()
+
+  if (!player) return c.json({ error: '해당 클럽 소속 선수를 찾을 수 없습니다.' }, 404)
+
+  // 본인 또는 admin/owner만 허용
+  const member = await c.env.DB.prepare(
+    'SELECT role FROM club_members WHERE user_id = ? AND club_id = ?'
+  ).bind(userId, clubId).first<any>()
+
+  const isOwnerOrAdmin = member && (member.role === 'admin' || member.role === 'owner')
+  const isSelf = player.user_id === userId
+
+  if (!isSelf && !isOwnerOrAdmin) {
+    return c.json({ error: '권한이 없습니다.' }, 403)
+  }
+
+  const formData = await c.req.formData()
+  const file = formData.get('photo') as File | null
+  if (!file) return c.json({ error: '사진 파일이 필요합니다.' }, 400)
+
+  if (file.size > 1024 * 1024) {
+    return c.json({ error: '파일 크기는 1MB 이하여야 합니다.' }, 400)
+  }
+
+  const key = `players/${clubId}/${id}.webp`
+  await c.env.PHOTOS.put(key, file.stream(), {
+    httpMetadata: { contentType: 'image/webp' },
+  })
+
+  const photoUrl = `/photos/players/${clubId}/${id}.webp`
+  const now = Math.floor(Date.now() / 1000)
+  await c.env.DB.prepare(
+    'UPDATE players SET photo_url = ?, updated_at = ? WHERE id = ?'
+  ).bind(photoUrl, now, id).run()
+
+  return c.json({ photoUrl })
+})
+
+// 사진 삭제
+playersRoutes.delete('/:id/photo', authMiddleware(), async (c) => {
+  const id = c.req.param('id')
+  const userId = (c as any).userId
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽에 소속되어 있지 않습니다.' }, 403)
+
+  const player = await c.env.DB.prepare(
+    'SELECT id, user_id, club_id FROM players WHERE id = ? AND club_id = ?'
+  ).bind(id, clubId).first<any>()
+
+  if (!player) return c.json({ error: '해당 클럽 소속 선수를 찾을 수 없습니다.' }, 404)
+
+  const member = await c.env.DB.prepare(
+    'SELECT role FROM club_members WHERE user_id = ? AND club_id = ?'
+  ).bind(userId, clubId).first<any>()
+
+  const isOwnerOrAdmin = member && (member.role === 'admin' || member.role === 'owner')
+  const isSelf = player.user_id === userId
+
+  if (!isSelf && !isOwnerOrAdmin) {
+    return c.json({ error: '권한이 없습니다.' }, 403)
+  }
+
+  const key = `players/${clubId}/${id}.webp`
+  await c.env.PHOTOS.delete(key)
+
+  const now = Math.floor(Date.now() / 1000)
+  await c.env.DB.prepare(
+    'UPDATE players SET photo_url = NULL, updated_at = ? WHERE id = ?'
+  ).bind(now, id).run()
+
+  return c.json({ ok: true })
+})
+
 // 선수 삭제 (관리자)
 playersRoutes.delete('/:id', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')
