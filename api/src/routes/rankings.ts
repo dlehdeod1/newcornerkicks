@@ -3,6 +3,7 @@ import type { Env } from '../index'
 import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth'
 
 import { getSeasonDateRange, getClubSeasonStartMonth } from '../utils/season'
+import { refreshChemistryCache } from '../utils/chemistry'
 
 const rankingsRoutes = new Hono<{ Bindings: Env }>()
 
@@ -141,6 +142,9 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
   }
 
   const enrichedRankings = await buildAndCacheRankings(c.env.DB, clubId, year, yearStart, yearEnd, userId || 'admin')
+
+  // 케미 캐시도 함께 갱신
+  await refreshChemistryCache(c.env.DB, clubId)
 
   return c.json({
     message: '랭킹이 갱신되었습니다.',
