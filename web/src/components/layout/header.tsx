@@ -290,9 +290,17 @@ export function Header() {
                         isActive ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                       )}
                     >
-                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${clubGradient(i)} flex items-center justify-center flex-shrink-0`}>
-                        <span className="text-xs font-bold text-white">{c.name.charAt(0)}</span>
-                      </div>
+                      {c.logoUrl ? (
+                        <img
+                          src={`${process.env.NEXT_PUBLIC_API_URL || 'https://cornerkicks-api.conerkicks.workers.dev'}${c.logoUrl}`}
+                          className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
+                          alt={c.name}
+                        />
+                      ) : (
+                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${clubGradient(i)} flex items-center justify-center flex-shrink-0`}>
+                          <span className="text-xs font-bold text-white">{c.name.charAt(0)}</span>
+                        </div>
+                      )}
                       <span className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{c.name}</span>
                       {isActive && <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 ml-auto" />}
                     </button>

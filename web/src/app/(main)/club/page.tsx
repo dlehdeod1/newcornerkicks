@@ -17,10 +17,13 @@ import {
   ChevronRight,
   AlertCircle,
   Zap,
+  Camera,
+  Trash2,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { clubsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import Image from 'next/image'
 
 export default function ClubPage() {
   const router = useRouter()
@@ -28,6 +31,7 @@ export default function ClubPage() {
   const queryClient = useQueryClient()
   const [copied, setCopied] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
+  const [logoUploading, setLogoUploading] = useState(false)
 
   const { data, isLoading } = useQuery({
     queryKey: ['club-me'],
@@ -47,6 +51,32 @@ export default function ClubPage() {
     await navigator.clipboard.writeText(club.inviteCode)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !token) return
+    setLogoUploading(true)
+    try {
+      const res = await clubsApi.uploadLogo(file, token)
+      queryClient.invalidateQueries({ queryKey: ['club-me'] })
+      if (storeClub) setClub({ ...storeClub, logoUrl: res.logoUrl })
+    } catch (err: any) {
+      alert(err.message || '로고 업로드에 실패했습니다.')
+    } finally {
+      setLogoUploading(false)
+    }
+  }
+
+  const handleLogoDelete = async () => {
+    if (!confirm('로고를 삭제할까요?')) return
+    try {
+      await clubsApi.deleteLogo(token!)
+      queryClient.invalidateQueries({ queryKey: ['club-me'] })
+      if (storeClub) setClub({ ...storeClub, logoUrl: null })
+    } catch (err: any) {
+      alert(err.message || '삭제에 실패했습니다.')
+    }
   }
 
   const handleRegenerateCode = async () => {
@@ -127,8 +157,27 @@ export default function ClubPage() {
                   <p className="text-white/80 text-sm mt-1">{club.description}</p>
                 )}
               </div>
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl">
-                ⚽
+              <div className="relative group">
+                <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center text-2xl overflow-hidden">
+                  {club.logoUrl ? (
+                    <Image src={`${process.env.NEXT_PUBLIC_API_URL}${club.logoUrl}`} alt="클럽 로고" width={56} height={56} className="object-cover w-full h-full" />
+                  ) : (
+                    '⚽'
+                  )}
+                </div>
+                {isAdmin && (
+                  <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                    <label className="cursor-pointer p-1 hover:bg-white/20 rounded">
+                      <Camera className="w-4 h-4" />
+                      <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={logoUploading} />
+                    </label>
+                    {club.logoUrl && (
+                      <button onClick={handleLogoDelete} className="p-1 hover:bg-white/20 rounded">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
