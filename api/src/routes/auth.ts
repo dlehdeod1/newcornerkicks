@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import * as jose from 'jose'
+import bcrypt from 'bcryptjs'
 import type { Env } from '../index'
 import { isClubPro } from '../utils/planUtils'
 
@@ -72,8 +73,21 @@ authRoutes.post('/login', async (c) => {
       return c.json({ error: '아이디(이메일) 또는 비밀번호가 올바르지 않습니다.' }, 401)
     }
 
-    if (user.password !== password) {
-      return c.json({ error: '아이디(이메일) 또는 비밀번호가 올바르지 않습니다.' }, 401)
+    // 해시 비교 (bcrypt 해시) 또는 평문 폴백 (점진적 마이그레이션)
+    const isHashed = user.password.startsWith('$2a$') || user.password.startsWith('$2b$')
+    if (isHashed) {
+      const match = await bcrypt.compare(password, user.password)
+      if (!match) {
+        return c.json({ error: '아이디(이메일) 또는 비밀번호가 올바르지 않습니다.' }, 401)
+      }
+    } else {
+      if (user.password !== password) {
+        return c.json({ error: '아이디(이메일) 또는 비밀번호가 올바르지 않습니다.' }, 401)
+      }
+      // 평문 로그인 성공 → 해시로 자동 변환
+      const hashed = await bcrypt.hash(password, 10)
+      await c.env.DB.prepare('UPDATE users SET password = ? WHERE id = ?')
+        .bind(hashed, user.id).run()
     }
 
     // JWT 생성
@@ -144,12 +158,13 @@ authRoutes.post('/register', async (c) => {
 
     const userId = crypto.randomUUID()
     const now = Math.floor(Date.now() / 1000)
+    const hashedPassword = await bcrypt.hash(password, 10)
 
     // 유저 생성
     await c.env.DB.prepare(
       `INSERT INTO users (id, email, username, password, role, created_at, updated_at)
        VALUES (?, ?, ?, ?, 'member', ?, ?)`
-    ).bind(userId, email, username, password, now, now).run()
+    ).bind(userId, email, username, hashedPassword, now, now).run()
 
     // 프로필 생성
     await c.env.DB.prepare(
@@ -380,14 +395,23 @@ authRoutes.put('/password', async (c) => {
       'SELECT password FROM users WHERE id = ?'
     ).bind(payload.userId).first<{ password: string }>()
 
-    if (!user || user.password !== oldPassword) {
+    if (!user) {
+      return c.json({ error: '현재 비밀번호가 일치하지 않습니다.' }, 400)
+    }
+
+    const isHashed = user.password.startsWith('$2a$') || user.password.startsWith('$2b$')
+    const passwordMatch = isHashed
+      ? await bcrypt.compare(oldPassword, user.password)
+      : user.password === oldPassword
+    if (!passwordMatch) {
       return c.json({ error: '현재 비밀번호가 일치하지 않습니다.' }, 400)
     }
 
     const now = Math.floor(Date.now() / 1000)
+    const hashedNew = await bcrypt.hash(newPassword, 10)
     await c.env.DB.prepare(
       'UPDATE users SET password = ?, updated_at = ? WHERE id = ?'
-    ).bind(newPassword, now, payload.userId).run()
+    ).bind(hashedNew, now, payload.userId).run()
 
     return c.json({ message: '비밀번호가 변경되었습니다.' })
   } catch {
@@ -443,9 +467,10 @@ authRoutes.post('/reset-password', async (c) => {
     }
 
     const now = Math.floor(Date.now() / 1000)
+    const hashedNew = await bcrypt.hash(newPassword, 10)
     await c.env.DB.prepare(
       'UPDATE users SET password = ?, updated_at = ? WHERE id = ?'
-    ).bind(newPassword, now, row.id).run()
+    ).bind(hashedNew, now, row.id).run()
 
     return c.json({ message: '비밀번호가 재설정되었습니다.' })
   } catch (error) {

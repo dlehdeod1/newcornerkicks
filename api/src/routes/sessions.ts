@@ -1627,6 +1627,30 @@ sessionsRoutes.post('/:id/rsvp', authMiddleware(), async (c) => {
 
   const now = Math.floor(Date.now() / 1000)
 
+  // going 시 선착순 마감 체크
+  if (status === 'going') {
+    const sessionInfo = await c.env.DB.prepare(
+      'SELECT target_members, status FROM sessions WHERE id = ?'
+    ).bind(sessionId).first<{ target_members: number | null; status: string }>()
+
+    if (sessionInfo?.target_members) {
+      const goingCount = await c.env.DB.prepare(
+        "SELECT COUNT(*) as cnt FROM session_rsvp WHERE session_id = ? AND status = 'going' AND user_id != ?"
+      ).bind(sessionId, userId).first<any>()
+      const currentGoing = goingCount?.cnt ?? 0
+
+      // 이미 본인이 going이 아닌 상태에서 going으로 변경 시 인원 초과 체크
+      const existing = await c.env.DB.prepare(
+        'SELECT status FROM session_rsvp WHERE session_id = ? AND user_id = ?'
+      ).bind(sessionId, userId).first<any>()
+      const alreadyGoing = existing?.status === 'going'
+
+      if (!alreadyGoing && currentGoing >= sessionInfo.target_members) {
+        return c.json({ error: `참석 인원이 마감되었습니다. (${sessionInfo.target_members}명)` }, 400)
+      }
+    }
+  }
+
   // 기존 RSVP 확인
   const existing = await c.env.DB.prepare(
     'SELECT id, status FROM session_rsvp WHERE session_id = ? AND user_id = ?'
@@ -1810,5 +1834,98 @@ async function autoSettleSession(db: any, sessionId: number) {
     ).run()
   }
 }
+
+// ── 관리자 알림 전송 (팀 편성 완료, 리마인더 등) ──────────────────────────
+sessionsRoutes.post('/:id/notify', authMiddleware('ADMIN'), async (c) => {
+  const sessionId = c.req.param('id')
+  const clubId = (c as any).clubId
+  const now = Math.floor(Date.now() / 1000)
+
+  const body = await c.req.json()
+  const { type, message } = body
+  if (!type || !message) {
+    return c.json({ error: 'type과 message는 필수입니다.' }, 400)
+  }
+
+  // 세션 존재 + 클럽 확인
+  const session = await c.env.DB.prepare(
+    'SELECT id, session_date FROM sessions WHERE id = ? AND club_id = ?'
+  ).bind(sessionId, clubId).first<any>()
+  if (!session) return c.json({ error: '세션을 찾을 수 없습니다.' }, 404)
+
+  // 출석자(attendance) 전원의 user_id 조회
+  const attendees = await c.env.DB.prepare(`
+    SELECT DISTINCT p.user_id
+    FROM attendance a
+    JOIN players p ON a.player_id = p.id
+    WHERE a.session_id = ? AND p.user_id IS NOT NULL
+  `).bind(sessionId).all()
+
+  // RSVP going 유저도 포함 (출석 전 단계에서도 알림 가능)
+  const rsvpUsers = await c.env.DB.prepare(`
+    SELECT DISTINCT user_id FROM session_rsvp
+    WHERE session_id = ? AND status = 'going'
+  `).bind(sessionId).all()
+
+  // 두 그룹 합쳐서 중복 제거
+  const userIdSet = new Set<string>()
+  for (const r of attendees.results as any[]) { userIdSet.add(r.user_id) }
+  for (const r of rsvpUsers.results as any[]) { userIdSet.add(r.user_id) }
+
+  const userIds = Array.from(userIdSet)
+  if (userIds.length === 0) {
+    return c.json({ error: '알림을 보낼 대상이 없습니다.' }, 400)
+  }
+
+  const title = type === 'team_ready' ? '팀 편성 완료' :
+                type === 'session_reminder' ? '세션 리마인더' : '알림'
+
+  for (const userId of userIds) {
+    await c.env.DB.prepare(`
+      INSERT INTO notifications (user_id, type, title, message, link_url, is_read, created_at)
+      VALUES (?, ?, ?, ?, ?, 0, ?)
+    `).bind(userId, type, title, message, `/sessions/${sessionId}`, now).run()
+  }
+
+  return c.json({ ok: true, sentCount: userIds.length })
+})
+
+// ── 정산 리마인드 알림 (미납자에게만) ──────────────────────────────────────
+sessionsRoutes.post('/:id/settlement-remind', authMiddleware('ADMIN'), async (c) => {
+  const sessionId = c.req.param('id')
+  const clubId = (c as any).clubId
+  const now = Math.floor(Date.now() / 1000)
+
+  // 세션 존재 + 클럽 확인
+  const session = await c.env.DB.prepare(
+    'SELECT id FROM sessions WHERE id = ? AND club_id = ?'
+  ).bind(sessionId, clubId).first<any>()
+  if (!session) return c.json({ error: '세션을 찾을 수 없습니다.' }, 404)
+
+  // 미납자 조회: paid=0, exempt=0인 session_payments에서 user_id 추출
+  const unpaid = await c.env.DB.prepare(`
+    SELECT sp.player_id, sp.guest_name, p.user_id
+    FROM session_payments sp
+    LEFT JOIN players p ON sp.player_id = p.id
+    WHERE sp.session_id = ? AND sp.paid = 0 AND sp.exempt = 0
+  `).bind(sessionId).all()
+
+  const userIds = (unpaid.results as any[])
+    .filter((r: any) => r.user_id)
+    .map((r: any) => r.user_id)
+
+  if (userIds.length === 0) {
+    return c.json({ error: '미납자가 없거나 연동된 계정이 없습니다.' }, 400)
+  }
+
+  for (const userId of userIds) {
+    await c.env.DB.prepare(`
+      INSERT INTO notifications (user_id, type, title, message, link_url, is_read, created_at)
+      VALUES (?, ?, ?, ?, ?, 0, ?)
+    `).bind(userId, 'settlement_remind', '정산 리마인드', '아직 참가비가 정산되지 않았습니다. 확인해주세요!', `/sessions/${sessionId}`, now).run()
+  }
+
+  return c.json({ ok: true, sentCount: userIds.length })
+})
 
 export { sessionsRoutes }

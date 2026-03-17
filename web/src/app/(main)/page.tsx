@@ -5,9 +5,14 @@ import { Trophy, Calendar, Users, Star, ChevronRight } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { useQuery } from '@tanstack/react-query'
 import { sessionsApi, meApi } from '@/lib/api'
+import LandingPage from './LandingPage'
 
 export default function HomePage() {
   const { isLoggedIn, user, player, token } = useAuthStore()
+
+  if (!isLoggedIn) {
+    return <LandingPage />
+  }
 
   // 내 기록 조회 (로그인 + 선수 연동된 경우)
   const { data: myData, isLoading: myLoading } = useQuery({
