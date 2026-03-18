@@ -474,11 +474,11 @@ class _CreateModalState extends State<_CreateModal> {
         children: [
           const Text('클럽 만들기', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 16),
-          _field(controller: _nameCtrl, hint: '클럽 이름 (예: 킥킥 FC)'),
+          _field(controller: _nameCtrl, hint: '클럽 이름 (예: 코너킥스 FC)'),
           const SizedBox(height: 10),
           _field(
             controller: _slugCtrl,
-            hint: '클럽 ID (예: kickkick)',
+            hint: '클럽 ID (예: cornerkicks)',
             suffixIcon: _slugStatus == 'available'
                 ? const Icon(Icons.check_circle, color: AppColors.primary, size: 18)
                 : _slugStatus == 'taken'

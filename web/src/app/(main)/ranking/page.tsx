@@ -36,12 +36,10 @@ export default function RankingPage() {
 
   const rankings = data?.data?.rankings || []
 
-  // 검색 필터
   const filteredRankings = rankings.filter((player: any) =>
     player.name?.toLowerCase().includes(search.toLowerCase())
   )
 
-  // 정렬
   const sortedRankings = [...filteredRankings].sort((a: any, b: any) => {
     let aVal, bVal
     if (sortBy === 'ppm') {
@@ -57,10 +55,8 @@ export default function RankingPage() {
     return sortOrder === 'desc' ? bVal - aVal : aVal - bVal
   })
 
-  // 상위 3명
   const topThree = sortedRankings.slice(0, 3)
 
-  // 컬럼 클릭 핸들러
   const handleSort = (key: SortKey) => {
     if (sortBy === key) {
       setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')
@@ -90,54 +86,52 @@ export default function RankingPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* 헤더 */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            선수 / 랭킹
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-1 text-sm">
-            {selectedYear}년 시즌 • {getSortLabel()} 순
-          </p>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+              선수 / 랭킹
+            </h1>
+            <p className="text-slate-600 dark:text-slate-400 mt-1 text-sm">
+              {selectedYear}년 시즌 &bull; {getSortLabel()} 순
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {club?.isPro && (
+              <button
+                onClick={() => exportApi.download(token!, 'rankings', selectedYear)}
+                className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
+              >
+                CSV
+              </button>
+            )}
+            <div className="relative">
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="appearance-none pl-3 pr-8 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              >
+                {[2026, 2025, 2024].map((year) => (
+                  <option key={year} value={year}>
+                    {year}년
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* CSV 내보내기 */}
-          {club?.isPro && (
-            <button
-              onClick={() => exportApi.download(token!, 'rankings', selectedYear)}
-              className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1"
-            >
-              CSV 내보내기
-            </button>
-          )}
-
-          {/* 검색 */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input
-              type="text"
-              placeholder="선수 검색..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-52 pl-11 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
-
-          {/* 연도 선택 */}
-          <div className="relative">
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="appearance-none px-4 py-2 pr-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
-            >
-              {[2026, 2025, 2024].map((year) => (
-                <option key={year} value={year}>
-                  {year}년
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
-          </div>
+        {/* 검색 - 별도 줄 */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="선수 검색..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
         </div>
       </div>
 
@@ -149,117 +143,35 @@ export default function RankingPage() {
         <>
           {/* 상위 3명 포디움 */}
           {!search && topThree.length >= 3 && (
-            <div className="mb-10">
+            <div className="mb-8">
               <Podium topThree={topThree} sortBy={sortBy} />
             </div>
           )}
 
           {/* 테이블 */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-            {/* 테이블 헤더 */}
             <div className="overflow-auto max-h-[70vh]">
               <table className="w-full">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20">
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 w-12 sticky left-0 z-30 bg-slate-50 dark:bg-slate-800">
+                    <th className="px-2 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 w-10 sticky left-0 z-30 bg-slate-50 dark:bg-slate-800">
                       #
                     </th>
-                    <th className="px-3 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 min-w-[120px] sticky left-12 z-30 bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                    <th className="px-2 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 min-w-[100px] sticky left-10 z-30 bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                       선수
                     </th>
-                    <SortableHeader
-                      label="MVP"
-                      sortKey="mvpCount"
-                      currentSort={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                      icon={<Award className="w-4 h-4" />}
-                      color="emerald"
-                    />
-                    <SortableHeader
-                      label="득점"
-                      sortKey="goals"
-                      currentSort={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                      icon={<Target className="w-4 h-4" />}
-                      color="amber"
-                    />
-                    <SortableHeader
-                      label="도움"
-                      sortKey="assists"
-                      currentSort={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                      icon={<Handshake className="w-4 h-4" />}
-                      color="blue"
-                    />
-                    <SortableHeader
-                      label="공격P"
-                      sortKey="attackPoints"
-                      currentSort={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                      color="rose"
-                    />
-                    <SortableHeader
-                      label="수비"
-                      sortKey="defenses"
-                      currentSort={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                      icon={<Shield className="w-4 h-4" />}
-                      color="purple"
-                    />
-                    <SortableHeader
-                      label="경기"
-                      sortKey="games"
-                      currentSort={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                      color="slate"
-                    />
-                    <SortableHeader
-                      label="PPM"
-                      sortKey="ppm"
-                      currentSort={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                      color="orange"
-                    />
-                    <SortableHeader
-                      label="🥇"
-                      sortKey="rank1"
-                      currentSort={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                      color="yellow"
-                    />
-                    <SortableHeader
-                      label="🥈"
-                      sortKey="rank2"
-                      currentSort={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                      color="slate"
-                    />
-                    <SortableHeader
-                      label="🥉"
-                      sortKey="rank3"
-                      currentSort={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                      color="orange"
-                    />
-                    <SortableHeader
-                      label="승률"
-                      sortKey="winRate"
-                      currentSort={sortBy}
-                      sortOrder={sortOrder}
-                      onSort={handleSort}
-                      color="emerald"
-                    />
-                    <th className="px-4 py-4 w-12"></th>
+                    <SortableHeader label="MVP" sortKey="mvpCount" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Award className="w-3.5 h-3.5" />} color="emerald" />
+                    <SortableHeader label="득점" sortKey="goals" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Target className="w-3.5 h-3.5" />} color="amber" />
+                    <SortableHeader label="도움" sortKey="assists" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Handshake className="w-3.5 h-3.5" />} color="blue" />
+                    <SortableHeader label="공격P" sortKey="attackPoints" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="rose" hideOnMobile />
+                    <SortableHeader label="수비" sortKey="defenses" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Shield className="w-3.5 h-3.5" />} color="purple" hideOnMobile />
+                    <SortableHeader label="경기" sortKey="games" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="slate" hideOnSmall />
+                    <SortableHeader label="PPM" sortKey="ppm" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="orange" hideOnMobile />
+                    <SortableHeader label="🥇" sortKey="rank1" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="yellow" hideOnMobile />
+                    <SortableHeader label="🥈" sortKey="rank2" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="slate" hideOnMobile />
+                    <SortableHeader label="🥉" sortKey="rank3" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="orange" hideOnMobile />
+                    <SortableHeader label="승률" sortKey="winRate" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="emerald" hideOnMobile />
+                    <th className="px-2 py-2.5 w-8"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -289,6 +201,8 @@ function SortableHeader({
   onSort,
   icon,
   color,
+  hideOnMobile,
+  hideOnSmall,
 }: {
   label: string
   sortKey: SortKey
@@ -297,6 +211,8 @@ function SortableHeader({
   onSort: (key: SortKey) => void
   icon?: React.ReactNode
   color: string
+  hideOnMobile?: boolean
+  hideOnSmall?: boolean
 }) {
   const isActive = currentSort === sortKey
 
@@ -312,11 +228,15 @@ function SortableHeader({
   }
 
   return (
-    <th className="px-4 py-4 text-center">
+    <th className={cn(
+      'px-2 py-2.5 text-center',
+      hideOnMobile && 'hidden md:table-cell',
+      hideOnSmall && 'hidden sm:table-cell',
+    )}>
       <button
         onClick={() => onSort(sortKey)}
         className={cn(
-          'inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:text-emerald-600 dark:hover:text-emerald-400',
+          'inline-flex items-center gap-1 text-xs font-semibold transition-colors hover:text-emerald-600 dark:hover:text-emerald-400',
           isActive ? colorClasses[color] : 'text-slate-600 dark:text-slate-400'
         )}
       >
@@ -324,8 +244,8 @@ function SortableHeader({
         {label}
         {isActive && (
           sortOrder === 'desc'
-            ? <ChevronDown className="w-4 h-4" />
-            : <ChevronUp className="w-4 h-4" />
+            ? <ChevronDown className="w-3 h-3" />
+            : <ChevronUp className="w-3 h-3" />
         )}
       </button>
     </th>
@@ -347,65 +267,67 @@ function Podium({ topThree, sortBy }: { topThree: any[]; sortBy: SortKey }) {
   }
 
   const positions = [
-    { player: topThree[1], rank: 2, height: 'h-24', medal: '🥈' },
-    { player: topThree[0], rank: 1, height: 'h-32', medal: '🥇' },
-    { player: topThree[2], rank: 3, height: 'h-20', medal: '🥉' },
+    { player: topThree[1], rank: 2, medal: '🥈', size: 'w-14 h-14 sm:w-16 sm:h-16' },
+    { player: topThree[0], rank: 1, medal: '🥇', size: 'w-16 h-16 sm:w-20 sm:h-20' },
+    { player: topThree[2], rank: 3, medal: '🥉', size: 'w-14 h-14 sm:w-16 sm:h-16' },
   ]
 
   return (
-    <div className="flex items-end justify-center gap-4 py-6">
-      {positions.map(({ player, rank, height, medal }) => (
-        <Link
-          key={rank}
-          href={`/ranking/${player.id}`}
-          className="flex flex-col items-center group"
-        >
-          {/* 프로필 */}
-          <div className="relative mb-3">
-            <div className={cn(
-              'w-20 h-20 rounded-2xl flex items-center justify-center border-2 shadow-lg bg-slate-100 dark:bg-slate-800 transition-transform group-hover:scale-105',
-              rank === 1 ? 'border-amber-400 shadow-amber-200 dark:shadow-amber-900/30' : 'border-slate-300 dark:border-slate-600'
-            )}>
-              {player.photo_url ? (
-                <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover rounded-2xl" />
-              ) : (
-                <span className="text-3xl font-bold text-slate-600 dark:text-slate-300">{player.name?.charAt(0)}</span>
-              )}
-            </div>
-            {rank === 1 && (
-              <Crown className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 text-amber-500" />
+    <div className="bg-gradient-to-b from-slate-50 to-white dark:from-slate-800/30 dark:to-slate-900/30 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
+      <div className="flex items-end justify-center gap-4 sm:gap-8">
+        {positions.map(({ player, rank, medal, size }) => (
+          <Link
+            key={rank}
+            href={`/ranking/${player.id}`}
+            className={cn(
+              'flex flex-col items-center group transition-transform hover:scale-105',
+              rank === 1 ? 'mb-4' : 'mb-0'
             )}
-            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-2xl">{medal}</span>
-          </div>
+          >
+            <div className="relative mb-2">
+              {rank === 1 && (
+                <Crown className="absolute -top-4 left-1/2 -translate-x-1/2 w-6 h-6 text-amber-500 drop-shadow-sm" />
+              )}
+              <div className={cn(
+                size,
+                'rounded-xl flex items-center justify-center border-2 shadow-md bg-slate-100 dark:bg-slate-800',
+                rank === 1 ? 'border-amber-400 ring-2 ring-amber-200 dark:ring-amber-800' :
+                  rank === 2 ? 'border-slate-300 dark:border-slate-600' :
+                    'border-amber-600/50 dark:border-amber-700/50'
+              )}>
+                {player.photo_url ? (
+                  <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover rounded-xl" />
+                ) : (
+                  <span className={cn(
+                    'font-bold text-slate-600 dark:text-slate-300',
+                    rank === 1 ? 'text-2xl' : 'text-xl'
+                  )}>{player.name?.charAt(0)}</span>
+                )}
+              </div>
+              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-lg leading-none">{medal}</span>
+            </div>
 
-          {/* 이름 & 값 */}
-          <div className="text-center mb-2">
-            <p className="font-bold text-slate-900 dark:text-white text-lg">{player.name}</p>
-            <p className="text-emerald-600 dark:text-emerald-400 font-bold text-xl">{getValue(player)}</p>
-          </div>
-
-          {/* 포디움 */}
-          <div className={cn(
-            'w-24 rounded-t-xl flex items-center justify-center transition-colors',
-            height,
-            rank === 1 ? 'bg-gradient-to-t from-amber-500 to-yellow-400' :
-              rank === 2 ? 'bg-gradient-to-t from-slate-400 to-slate-300' :
-                'bg-gradient-to-t from-amber-700 to-amber-600'
-          )}>
-            <span className="text-3xl font-bold text-white/90">{rank}</span>
-          </div>
-        </Link>
-      ))}
+            <p className={cn(
+              'font-bold text-slate-900 dark:text-white mt-1',
+              rank === 1 ? 'text-base' : 'text-sm'
+            )}>{player.name}</p>
+            <p className={cn(
+              'font-bold text-emerald-600 dark:text-emerald-400',
+              rank === 1 ? 'text-xl' : 'text-lg'
+            )}>{getValue(player)}</p>
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }
 
 function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy: SortKey }) {
   const getRankBadge = () => {
-    if (rank === 1) return <span className="text-base">🥇</span>
-    if (rank === 2) return <span className="text-base">🥈</span>
-    if (rank === 3) return <span className="text-base">🥉</span>
-    return <span className="text-sm font-bold text-slate-400 dark:text-slate-500">{rank}</span>
+    if (rank === 1) return <span className="text-sm">🥇</span>
+    if (rank === 2) return <span className="text-sm">🥈</span>
+    if (rank === 3) return <span className="text-sm">🥉</span>
+    return <span className="text-xs font-bold text-slate-400 dark:text-slate-500">{rank}</span>
   }
 
   const getCellClass = (key: SortKey) => {
@@ -426,7 +348,6 @@ function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy
     return colors[key]
   }
 
-  // PPM 계산 (goals per game)
   const ppm = player.games > 0 ? (player.goals / player.games).toFixed(2) : '0.00'
   const attackPoints = (player.goals || 0) + (player.assists || 0)
 
@@ -436,62 +357,62 @@ function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy
       rank <= 3 && 'bg-amber-50/50 dark:bg-amber-900/10'
     )}>
       <td className={cn(
-        'px-3 py-3 text-center sticky left-0 z-10',
+        'px-2 py-2.5 text-center sticky left-0 z-10',
         rank <= 3 ? 'bg-amber-50 dark:bg-slate-900' : 'bg-white dark:bg-slate-900'
       )}>{getRankBadge()}</td>
       <td className={cn(
-        'px-3 py-3 sticky left-12 z-10 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]',
+        'px-2 py-2.5 sticky left-10 z-10 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]',
         rank <= 3 ? 'bg-amber-50 dark:bg-slate-900' : 'bg-white dark:bg-slate-900'
       )}>
-        <Link href={`/ranking/${player.id}`} className="flex items-center gap-2 group">
-          <div className="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700 shrink-0">
+        <Link href={`/ranking/${player.id}`} className="flex items-center gap-1.5 group">
+          <div className="w-7 h-7 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700 shrink-0">
             {player.photo_url ? (
               <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover rounded-lg" />
             ) : (
-              <span className="text-sm font-bold text-slate-500 dark:text-slate-400">{player.name?.charAt(0)}</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{player.name?.charAt(0)}</span>
             )}
           </div>
-          <span className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+          <span className="text-xs font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate max-w-[80px] sm:max-w-none">
             {player.name}
           </span>
         </Link>
       </td>
-      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('mvpCount'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('mvpCount'))}>
         {player.mvpCount || 0}
       </td>
-      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('goals'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('goals'))}>
         {player.goals || 0}
       </td>
-      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('assists'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('assists'))}>
         {player.assists || 0}
       </td>
-      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('attackPoints'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs hidden md:table-cell', getCellClass('attackPoints'))}>
         {attackPoints}
       </td>
-      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('defenses'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs hidden md:table-cell', getCellClass('defenses'))}>
         {player.defenses || 0}
       </td>
-      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('games'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs hidden sm:table-cell', getCellClass('games'))}>
         {player.games || 0}
       </td>
-      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('ppm'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs hidden md:table-cell', getCellClass('ppm'))}>
         {ppm}
       </td>
-      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('rank1'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs hidden md:table-cell', getCellClass('rank1'))}>
         {player.rank1 || 0}
       </td>
-      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('rank2'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs hidden md:table-cell', getCellClass('rank2'))}>
         {player.rank2 || 0}
       </td>
-      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('rank3'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs hidden md:table-cell', getCellClass('rank3'))}>
         {player.rank3 || 0}
       </td>
-      <td className={cn('px-3 py-3 text-center text-sm', getCellClass('winRate'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs hidden md:table-cell', getCellClass('winRate'))}>
         {player.attendance > 0 ? `${((player.rank1 || 0) / player.attendance * 100).toFixed(0)}%` : '-'}
       </td>
-      <td className="px-4 py-4">
+      <td className="px-2 py-2.5">
         <Link href={`/ranking/${player.id}`}>
-          <ChevronRight className="w-5 h-5 text-slate-400 hover:text-emerald-500 transition-colors" />
+          <ChevronRight className="w-4 h-4 text-slate-400 hover:text-emerald-500 transition-colors" />
         </Link>
       </td>
     </tr>
@@ -501,18 +422,20 @@ function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy
 function LoadingSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-center gap-4 py-8">
-        {[24, 32, 20].map((h, i) => (
-          <div key={i} className="flex flex-col items-center">
-            <div className="w-20 h-20 bg-slate-200 dark:bg-slate-800 rounded-2xl mb-3 animate-pulse" />
-            <div className="w-16 h-5 bg-slate-200 dark:bg-slate-800 rounded mb-2 animate-pulse" />
-            <div className="w-24 bg-slate-200 dark:bg-slate-800 rounded-t-xl animate-pulse" style={{ height: h * 3 }} />
-          </div>
-        ))}
+      <div className="bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
+        <div className="flex items-end justify-center gap-6">
+          {[16, 20, 16].map((s, i) => (
+            <div key={i} className="flex flex-col items-center">
+              <div className={`w-${s} h-${s} bg-slate-200 dark:bg-slate-700 rounded-xl mb-2 animate-pulse`} style={{ width: s * 4, height: s * 4 }} />
+              <div className="w-12 h-4 bg-slate-200 dark:bg-slate-700 rounded mb-1 animate-pulse" />
+              <div className="w-8 h-5 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
       </div>
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4">
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="h-16 bg-slate-100 dark:bg-slate-800 rounded-xl mb-3 animate-pulse" />
+          <div key={i} className="h-12 bg-slate-100 dark:bg-slate-800 rounded-xl mb-2 animate-pulse" />
         ))}
       </div>
     </div>
@@ -526,7 +449,7 @@ function EmptyState({ year, search }: { year: number; search: string }) {
         <Trophy className="w-10 h-10 text-slate-400" />
       </div>
       {search ? (
-        <p className="text-slate-600 dark:text-slate-400 text-lg">"{search}" 검색 결과가 없습니다.</p>
+        <p className="text-slate-600 dark:text-slate-400 text-lg">&quot;{search}&quot; 검색 결과가 없습니다.</p>
       ) : (
         <>
           <p className="text-slate-600 dark:text-slate-400 text-lg mb-2">{year}년 시즌 데이터가 없습니다.</p>

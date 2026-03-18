@@ -298,7 +298,7 @@ class _CreateTabState extends State<_CreateTab> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 24),
-          _buildInput(controller: _nameCtrl, label: '클럽 이름', hint: '예: 킥킥 FC'),
+          _buildInput(controller: _nameCtrl, label: '클럽 이름', hint: '예: 코너킥스 FC'),
           const SizedBox(height: 16),
           // 클럽 ID
           Column(
@@ -324,7 +324,7 @@ class _CreateTabState extends State<_CreateTab> {
                         _checkSlug(cleaned);
                       },
                       decoration: InputDecoration(
-                        hintText: '예: kickkick',
+                        hintText: '예: cornerkicks',
                         hintStyle: TextStyle(color: Colors.white.withAlpha(77)),
                         filled: true,
                         fillColor: Colors.white.withAlpha(10),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// 킥킥 앱 공통 컬러 상수
+/// 코너킥스 앱 공통 컬러 상수
 /// 웹(#2ECC71)과 브랜드 컬러 통일
 class AppColors {
   AppColors._();

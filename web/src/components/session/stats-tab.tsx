@@ -2,8 +2,9 @@
 
 import { useRef, useState } from 'react'
 import { useQueries } from '@tanstack/react-query'
-import { Trophy, Target, Shield, Award, Crown, Sparkles, Camera, Copy, Check, Download } from 'lucide-react'
+import { Trophy, Target, Shield, Award, Crown, Sparkles, Copy, Check, Download } from 'lucide-react'
 import { matchesApi } from '@/lib/api'
+import { useAuthStore } from '@/stores/auth'
 import html2canvas from 'html2canvas'
 
 interface Props {
@@ -19,11 +20,11 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
   const captureRef = useRef<HTMLDivElement>(null)
   const [copied, setCopied] = useState(false)
   const [capturing, setCapturing] = useState(false)
+  const { club } = useAuthStore()
+  const clubName = club?.name || 'CornerKicks'
 
-  // 전체 경기 이벤트 수집
   const completedMatches = matches.filter((m: any) => m.status === 'completed')
 
-  // 각 경기별 이벤트 조회 (useQueries 사용 - React Hooks 규칙 준수)
   const matchQueries = useQueries({
     queries: completedMatches.map((match: any) => ({
       queryKey: ['match', match.id],
@@ -48,7 +49,6 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
 
     const events = query.data.events || []
     events.forEach((event: any) => {
-      // 용병은 제외 (player_id가 없거나 guest_name이 있거나 is_guest인 경우)
       if (!event.player_id || event.guest_name || event.player_is_guest) return
 
       if (!playerStats.has(event.player_id)) {
@@ -72,7 +72,6 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
         stats.mvpScore += 0.5
       }
 
-      // 어시스트 (용병 제외)
       if (event.assister_id && !event.assister_is_guest && event.event_type === 'GOAL') {
         if (!playerStats.has(event.assister_id)) {
           playerStats.set(event.assister_id, {
@@ -91,7 +90,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
     })
   })
 
-  // 팀 순위 계산 (승점 기준) + 승무패 집계
+  // 팀 순위 계산
   const teamStandings = new Map<number, { points: number; goalsFor: number; wins: number; draws: number; losses: number; members: number[] }>()
 
   teams.forEach((team: any) => {
@@ -116,7 +115,6 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
     }
   })
 
-  // 팀 순위 정렬
   const rankedTeams = teams
     .map((team: any) => ({
       ...team,
@@ -127,12 +125,6 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
   const winningTeamId = rankedTeams[0]?.id
   const winningTeamMembers = new Set(rankedTeams[0]?.standing?.members || [])
 
-  // 정산 계산 (고정 회비)
-  const fixedFees = [6500, 7000, 7500]
-  const perPersonPrizes = rankedTeams.map((_: any, idx: number) => {
-    return fixedFees[idx] ?? 7500
-  })
-
   // 우승팀 멤버에게 1.5점 보너스
   playerStats.forEach((stats, playerId) => {
     if (winningTeamMembers.has(playerId)) {
@@ -142,13 +134,10 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
 
   const sortedStats = Array.from(playerStats.values()).sort((a, b) => b.mvpScore - a.mvpScore)
 
-  // 상위권 추출
   const topScorer = [...sortedStats].sort((a, b) => b.goals - a.goals)[0]
   const topAssister = [...sortedStats].sort((a, b) => b.assists - a.assists)[0]
   const topDefender = [...sortedStats].sort((a, b) => b.defenses - a.defenses)[0]
   const mvp = sortedStats[0]
-
-  // MVP 상위 3명
   const top3Mvp = sortedStats.slice(0, 3)
 
   if (isLoading) {
@@ -160,7 +149,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
     )
   }
 
-  // 이미지 캡처 함수
+  // 이미지 캡처
   const handleCaptureImage = async () => {
     if (!captureRef.current || capturing) return
     setCapturing(true)
@@ -172,7 +161,8 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
         logging: false,
       })
       const link = document.createElement('a')
-      link.download = `코너킥스_결과_${new Date().toISOString().slice(0, 10)}.png`
+      const dateStr = sessionDate ? new Date(sessionDate).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)
+      link.download = `${clubName}_결과_${dateStr}.png`
       link.href = canvas.toDataURL('image/png')
       link.click()
     } catch (err) {
@@ -182,17 +172,17 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
     }
   }
 
-  // 텍스트 복사 함수
+  // 텍스트 복사
   const handleCopyText = async () => {
     const lines: string[] = []
     const sd = sessionDate ? new Date(sessionDate) : new Date()
     const dateStr = `${String(sd.getFullYear()).slice(2)}년 ${sd.getMonth() + 1}월 ${sd.getDate()}일`
-    lines.push(`${dateStr} 코너킥스 축구`)
+    lines.push(`${dateStr} ${clubName} 경기결과`)
     lines.push('')
-    rankedTeams.forEach((team: any, idx: number) => {
+    rankedTeams.forEach((team: any) => {
       const memberNames = (team.members || []).map((m: any) => m.name || m.player_name || m.guest_name || '').filter(Boolean).join(' ')
-      const fee = perPersonPrizes[idx]
-      lines.push(`${team.name} ${fee > 0 ? fee.toLocaleString() + '원' : '무료'}`)
+      const s = team.standing
+      lines.push(`${team.name} (${s.wins}승${s.draws}무${s.losses}패 ${s.points}점)`)
       lines.push(memberNames)
     })
     lines.push('')
@@ -204,7 +194,6 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
       lines.push(`${medal} MVP${idx + 1}: ${p.name} - ${details.join(' ') || '우승팀'}`)
     })
     lines.push('')
-    lines.push('국민은행 801301-01-610282 박재형')
     lines.push('오늘도 고생하셨습니다!!!')
     try {
       await navigator.clipboard.writeText(lines.join('\n'))
@@ -217,10 +206,15 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
 
   // 팀 카드 색상
   const teamColors = [
-    { border: 'border-amber-400', bg: 'bg-amber-500/10', text: 'text-amber-400', badge: 'from-amber-400 to-yellow-500', priceBg: 'bg-amber-400 text-slate-900' },
-    { border: 'border-slate-400', bg: 'bg-slate-500/10', text: 'text-slate-300', badge: 'from-slate-400 to-slate-500', priceBg: 'bg-slate-400 text-slate-900' },
-    { border: 'border-purple-400', bg: 'bg-purple-500/10', text: 'text-purple-300', badge: 'from-purple-400 to-purple-500', priceBg: 'bg-purple-400 text-white' },
+    { border: 'border-amber-400/60', bg: 'bg-amber-500/10', accent: '#fbbf24' },
+    { border: 'border-slate-400/40', bg: 'bg-slate-500/10', accent: '#94a3b8' },
+    { border: 'border-purple-400/40', bg: 'bg-purple-500/10', accent: '#c084fc' },
   ]
+
+  const formatDate = () => {
+    const sd = sessionDate ? new Date(sessionDate) : new Date()
+    return `${sd.getFullYear().toString().slice(2)}년 ${sd.getMonth() + 1}월 ${sd.getDate()}일`
+  }
 
   return (
     <div className="space-y-6">
@@ -246,59 +240,59 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
       )}
 
       {/* 이미지 캡처 영역 - 공유 카드 */}
-      <div ref={captureRef} className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', position: 'absolute', left: '-9999px' }}>
-        <div className="p-5">
+      <div ref={captureRef} className="overflow-hidden" style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1a2744 50%, #0f172a 100%)', position: 'absolute', left: '-9999px', width: '420px' }}>
+        <div style={{ padding: '24px 20px' }}>
           {/* 헤더 */}
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
-                <span className="text-white text-lg">⚽</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, #10b981, #14b8a6)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '18px', lineHeight: '1' }}>⚽</span>
               </div>
               <div>
-                <p className="text-white font-bold text-sm">CornerKicks</p>
-                <p className="text-slate-400 text-xs">풋살 동호회</p>
+                <p style={{ color: '#ffffff', fontWeight: '700', fontSize: '15px', lineHeight: '1.2', margin: '0' }}>{clubName}</p>
+                <p style={{ color: '#64748b', fontSize: '11px', lineHeight: '1.2', margin: '2px 0 0 0' }}>MATCH DAY</p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-white font-bold text-xs">
-                {(() => { const sd = sessionDate ? new Date(sessionDate) : new Date(); return `${sd.getFullYear().toString().slice(2)}년 ${sd.getMonth() + 1}월 ${sd.getDate()}일` })()}
-              </p>
-              <p className="text-slate-400 text-xs">경기 결과</p>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ color: '#ffffff', fontWeight: '600', fontSize: '13px', lineHeight: '1.2', margin: '0' }}>{formatDate()}</p>
+              <p style={{ color: '#64748b', fontSize: '11px', lineHeight: '1.2', margin: '2px 0 0 0' }}>경기 결과</p>
             </div>
           </div>
 
+          {/* 구분선 */}
+          <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, #334155, transparent)', marginBottom: '16px' }} />
+
           {/* 팀 카드 */}
-          <div className="space-y-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {rankedTeams.map((team: any, idx: number) => {
               const colors = teamColors[idx] || teamColors[2]
               const s = team.standing
               const memberNames = (team.members || []).map((m: any) => m.name || m.player_name || m.guest_name || '').filter(Boolean)
-              const fee = perPersonPrizes[idx]
               const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'
 
               return (
-                <div key={team.id} className={`border ${colors.border} ${colors.bg} rounded-xl p-3 ${idx === 0 ? 'ring-1 ring-amber-400/30' : ''}`}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-8 h-8 bg-gradient-to-br ${colors.badge} rounded-lg flex items-center justify-center`}>
-                        <span className="text-sm">{medal}</span>
-                      </div>
-                      <span className="text-white font-bold text-sm">{team.name}</span>
+                <div key={team.id} style={{
+                  border: `1px solid ${idx === 0 ? 'rgba(251,191,36,0.4)' : idx === 1 ? 'rgba(148,163,184,0.3)' : 'rgba(192,132,252,0.3)'}`,
+                  background: idx === 0 ? 'rgba(251,191,36,0.08)' : idx === 1 ? 'rgba(148,163,184,0.06)' : 'rgba(192,132,252,0.06)',
+                  borderRadius: '12px',
+                  padding: '12px 14px',
+                  ...(idx === 0 ? { boxShadow: '0 0 20px rgba(251,191,36,0.1)' } : {}),
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '16px', lineHeight: '1' }}>{medal}</span>
+                      <span style={{ color: '#ffffff', fontWeight: '700', fontSize: '14px', lineHeight: '1.2' }}>{team.name}</span>
                     </div>
-                    <div className="text-right">
-                      <p className="text-white font-bold text-base">{s.points}<span className="text-xs text-slate-400">점</span></p>
-                      <p className="text-slate-400 text-xs">{s.wins}승 {s.draws}무 {s.losses}패</p>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                      <span style={{ color: '#94a3b8', fontSize: '11px', lineHeight: '1' }}>{s.wins}승 {s.draws}무 {s.losses}패</span>
+                      <span style={{ color: colors.accent, fontWeight: '800', fontSize: '18px', lineHeight: '1' }}>{s.points}</span>
+                      <span style={{ color: '#64748b', fontSize: '10px', lineHeight: '1' }}>점</span>
                     </div>
                   </div>
-                  <div className="flex items-end justify-between">
-                    <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-                      {memberNames.map((name: string, i: number) => (
-                        <span key={i} className="text-slate-300 text-xs">{name}</span>
-                      ))}
-                    </div>
-                    <span className={`${colors.priceBg} px-2 py-0.5 rounded text-xs font-bold shrink-0 ml-2`}>
-                      {fee > 0 ? `${fee.toLocaleString()}원` : '무료'}
-                    </span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 8px' }}>
+                    {memberNames.map((name: string, i: number) => (
+                      <span key={i} style={{ color: '#94a3b8', fontSize: '11px', lineHeight: '1.4' }}>{name}</span>
+                    ))}
                   </div>
                 </div>
               )
@@ -307,19 +301,23 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
 
           {/* MVP 상위 3명 */}
           {top3Mvp.length > 0 && (
-            <div className="mt-4 bg-slate-800/50 rounded-xl p-3">
+            <div style={{ marginTop: '14px', background: 'rgba(30,41,59,0.7)', borderRadius: '12px', padding: '12px 14px', border: '1px solid rgba(51,65,85,0.5)' }}>
+              <p style={{ color: '#94a3b8', fontSize: '10px', fontWeight: '600', letterSpacing: '1px', marginBottom: '8px', lineHeight: '1' }}>MVP</p>
               {top3Mvp.map((p, idx) => {
                 const medal = idx === 0 ? '🏆' : idx === 1 ? '🥈' : '🥉'
                 const details = []
                 if (p.goals > 0) details.push(`${p.goals}골`)
                 if (p.assists > 0) details.push(`${p.assists}도움`)
+                if (p.defenses > 0) details.push(`${p.defenses}수비`)
                 return (
-                  <div key={p.id} className={`flex items-center gap-2 ${idx > 0 ? 'mt-1.5' : ''}`}>
-                    <span className="text-sm">{medal}</span>
-                    <span className={`font-bold text-sm ${idx === 0 ? 'text-amber-400' : 'text-slate-300'}`}>
-                      MVP{idx === 0 ? '' : idx + 1}: {p.name}
+                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: idx > 0 ? '4px' : '0' }}>
+                    <span style={{ fontSize: '14px', lineHeight: '1' }}>{medal}</span>
+                    <span style={{ fontWeight: '700', fontSize: '13px', color: idx === 0 ? '#fbbf24' : '#cbd5e1', lineHeight: '1.2' }}>
+                      {p.name}
                     </span>
-                    <span className="text-slate-400 text-xs">- {details.join(' ') || '우승팀'}</span>
+                    <span style={{ color: '#64748b', fontSize: '11px', lineHeight: '1.2' }}>
+                      {p.mvpScore.toFixed(1)}점 {details.length > 0 ? `(${details.join(' ')})` : ''}
+                    </span>
                   </div>
                 )
               })}
@@ -327,18 +325,17 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
           )}
 
           {/* 푸터 */}
-          <div className="mt-4 flex items-center justify-center gap-2 text-slate-500 text-xs">
-            <span>코너킥스 풋살 동호회</span>
-            <span>🔥</span>
-            <span>매주 경기 진행</span>
+          <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+            <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, #334155)' }} />
+            <span style={{ color: '#475569', fontSize: '10px', letterSpacing: '0.5px', lineHeight: '1' }}>#{clubName.replace(/\s/g, '')} #경기결과</span>
+            <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, #334155, transparent)' }} />
           </div>
         </div>
       </div>
 
-      {/* 기존 하이라이트 + 테이블 */}
+      {/* 하이라이트 + 테이블 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          {/* 하이라이트 */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <HighlightCard
               icon={<Award className="w-6 h-6 text-yellow-500 dark:text-yellow-400" />}
@@ -370,7 +367,6 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
             />
           </div>
 
-          {/* 전체 스탯 테이블 */}
           <div className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
               <h3 className="font-semibold text-slate-900 dark:text-white">세션 기록</h3>
@@ -414,10 +410,9 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
           </div>
         </div>
 
-        {/* MVP 점수 사이드바 (기록 기반) */}
+        {/* MVP 점수 사이드바 */}
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-            {/* 헤더 */}
             <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-500/10 dark:to-yellow-500/10">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-lg flex items-center justify-center shadow-lg shadow-amber-500/20">
@@ -434,7 +429,6 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
               </div>
             </div>
 
-            {/* MVP 1위 표시 */}
             {mvp ? (
               <div className="p-4">
                 <div className="relative bg-gradient-to-br from-amber-100 via-yellow-50 to-amber-100 dark:from-amber-500/20 dark:via-yellow-500/10 dark:to-amber-500/20 rounded-xl p-4 text-center overflow-hidden">
@@ -466,7 +460,6 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
               </div>
             )}
 
-            {/* 순위 리스트 (2~5위) */}
             {sortedStats.length > 1 && (
               <div className="px-4 pb-4">
                 <div className="space-y-1.5">

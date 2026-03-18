@@ -257,7 +257,7 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
       }
     }
     buf.writeln();
-    buf.write('#킥킥 #풋살 #경기결과');
+    buf.write('#코너킥스 #풋살 #경기결과');
     return buf.toString();
   }
 
@@ -549,7 +549,7 @@ class _MatchResultCard extends StatelessWidget {
                   border: Border.all(color: AppColors.primary.withAlpha(40)),
                 ),
                 child: Text(
-                  '#킥킥  #풋살  #경기결과',
+                  '#코너킥스  #풋살  #경기결과',
                   style: TextStyle(fontSize: 11, color: AppColors.primary.withAlpha(179)),
                 ),
               ),

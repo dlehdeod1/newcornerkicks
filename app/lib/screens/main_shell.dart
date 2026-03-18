@@ -141,7 +141,7 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
-    final clubName = auth.club?['name'] ?? '킥킥';
+    final clubName = auth.club?['name'] ?? '코너킥스';
     final hasMultiClubs = auth.clubs.length > 1;
 
     return Scaffold(

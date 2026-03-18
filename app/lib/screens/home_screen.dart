@@ -150,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        player != null ? '안녕하세요, ${player['name']}님!' : (auth.user?['username'] ?? '킥킥'),
+                        player != null ? '안녕하세요, ${player['name']}님!' : (auth.user?['username'] ?? '코너킥스'),
                         style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                       const SizedBox(height: 2),
