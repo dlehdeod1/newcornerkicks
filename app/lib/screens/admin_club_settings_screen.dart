@@ -323,7 +323,7 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
           _buildTextField(
             controller: _nameCtrl,
             label: '클럽 이름',
-            hint: '예: 코너킥스 FC',
+            hint: '예: 킥킥 FC',
             icon: Icons.group_rounded,
           ),
           const SizedBox(height: 14),

@@ -134,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     child: const Center(child: Text('⚽', style: TextStyle(fontSize: 36))),
                   ),
                   const SizedBox(height: 20),
-                  const Text('CornerKicks', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
+                  const Text('KickKick', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
                   const SizedBox(height: 4),
                   Text('풋살 동호회 관리 플랫폼', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(128))),
                   const SizedBox(height: 32),

@@ -256,7 +256,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
     final s = _session!;
     final date = s['session_date'] ?? '';
     final dow = _dayOfWeek(date);
-    final title = s['title'] ?? '코너킥스 정기 풋살';
+    final title = s['title'] ?? '정기 풋살';
     final status = s['status'] ?? 'closed';
 
     Color statusColor;

@@ -11,18 +11,18 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (_) => AuthService()..init(),
-      child: const CornerKicksApp(),
+      child: const KickKickApp(),
     ),
   );
 }
 
-class CornerKicksApp extends StatelessWidget {
-  const CornerKicksApp({super.key});
+class KickKickApp extends StatelessWidget {
+  const KickKickApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '코너킥스',
+      title: '킥킥',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system,
       // 라이트 모드
