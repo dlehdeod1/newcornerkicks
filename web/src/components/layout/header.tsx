@@ -99,10 +99,7 @@ export function Header() {
               {/* 클럽 전환 드롭다운 */}
               {clubDropdownOpen && (
                 <div className="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl shadow-black/10 dark:shadow-black/30 overflow-hidden z-50">
-                  <div className="px-4 pt-3 pb-2">
-                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">내 클럽</p>
-                  </div>
-                  <div className="px-2 pb-2 max-h-[280px] overflow-y-auto">
+                  <div className="px-2 pt-2 pb-2 max-h-[280px] overflow-y-auto">
                     {clubs.map((c, i) => {
                       const isActive = club.id === c.id
                       return (

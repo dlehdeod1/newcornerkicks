@@ -122,6 +122,9 @@ export const sessionsApi = {
 
 // Players API
 export const playersApi = {
+  create: (data: { name: string; nickname?: string }, token: string) =>
+    api('/players', { method: 'POST', body: data, token }),
+
   list: (token?: string | null, options?: { all?: boolean }) =>
     api(`/players${options?.all ? '?all=1' : ''}`, token ? { token } : {}),
 

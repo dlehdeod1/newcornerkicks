@@ -86,26 +86,43 @@ export function AttendanceEditorModal({
     },
   })
 
-  // 파싱 결과 적용
-  const applyParseResult = () => {
-    if (!parseResult) return
+  // 파싱 결과 적용 (미등록 선수 자동 등록 포함)
+  const [applying, setApplying] = useState(false)
+  const applyParseResult = async () => {
+    if (!parseResult || !token) return
 
-    const newPlayerIds: number[] = []
-    const newGuests: string[] = []
+    setApplying(true)
+    try {
+      const newPlayerIds: number[] = []
+      const newGuests: string[] = []
 
-    parseResult.attendees.forEach((a: any) => {
-      if (a.playerId) {
-        newPlayerIds.push(a.playerId)
-      } else if (a.isGuest) {
-        newGuests.push(a.name)
+      for (const a of parseResult.attendees) {
+        if (a.playerId) {
+          newPlayerIds.push(a.playerId)
+        } else if (a.isGuest) {
+          newGuests.push(a.name)
+        } else {
+          // 미등록 선수 → 자동 신규 등록
+          try {
+            const result = await playersApi.create({ name: a.name }, token)
+            if (result.id) {
+              newPlayerIds.push(result.id)
+            }
+          } catch {
+            // 등록 실패 시 용병으로 대체
+            newGuests.push(a.name)
+          }
+        }
       }
-    })
 
-    setSelectedPlayerIds(newPlayerIds)
-    setGuestNames(newGuests)
-    setMode('manual')
-    setParseResult(null)
-    setKakaoText('')
+      setSelectedPlayerIds(newPlayerIds)
+      setGuestNames(newGuests)
+      setMode('manual')
+      setParseResult(null)
+      setKakaoText('')
+    } finally {
+      setApplying(false)
+    }
   }
 
   // 검색 필터링
@@ -401,8 +418,8 @@ export function AttendanceEditorModal({
                     ))}
                   </div>
                   {parseResult.unknownCount > 0 && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                      ⚠ 미등록 선수 {parseResult.unknownCount}명은 저장 시 제외됩니다.
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                      미등록 선수 {parseResult.unknownCount}명은 적용 시 자동으로 신규 등록됩니다.
                     </p>
                   )}
                 </div>
@@ -411,7 +428,7 @@ export function AttendanceEditorModal({
                   <Button variant="outline" className="flex-1" onClick={() => setParseResult(null)}>
                     다시 파싱
                   </Button>
-                  <Button className="flex-1" onClick={applyParseResult}>
+                  <Button className="flex-1" onClick={applyParseResult} loading={applying}>
                     <Check className="w-4 h-4" />
                     적용하기
                   </Button>

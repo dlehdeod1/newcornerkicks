@@ -74,6 +74,8 @@ export function TeamParserModal({ sessionId, isOpen, onClose, onSave }: Props) {
     const lines = text.trim().split('\n')
     const teams: ParsedTeam[] = []
     let currentTeam: ParsedTeam | null = null
+    // 전체 팀에 걸쳐 중복 이름 추적 (출석 파싱과 동일한 로직)
+    const seenCounts = new Map<string, number>()
 
     for (const line of lines) {
       const trimmed = line.trim()
@@ -117,10 +119,20 @@ export function TeamParserModal({ sessionId, isOpen, onClose, onSave }: Props) {
           return true
         })
 
-        for (const name of names) {
-          const player = findPlayer(name)
+        for (const rawName of names) {
+          // 중복 이름 처리: 준모→준모, 준모→준모용병, 준모→준모용병2 ...
+          const seen = seenCounts.get(rawName) || 0
+          let resolvedName = rawName
+          if (seen === 1) {
+            resolvedName = `${rawName}용병`
+          } else if (seen > 1) {
+            resolvedName = `${rawName}용병${seen}`
+          }
+          seenCounts.set(rawName, seen + 1)
+
+          const player = findPlayer(resolvedName)
           currentTeam.members.push({
-            name,
+            name: resolvedName,
             playerId: player?.id || null,
             isGuest: !player,
           })
