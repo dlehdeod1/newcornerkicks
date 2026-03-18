@@ -5,7 +5,7 @@ import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuthStore } from '@/stores/auth'
-import { sessionsApi } from '@/lib/api'
+import { sessionsApi, playersApi } from '@/lib/api'
 
 // 다음 수요일 날짜 계산
 function getNextWednesday(): string {
@@ -75,18 +75,32 @@ export function CreateSessionModal({ onClose, onCreated }: Props) {
     }
   }
 
-  // 3단계: 참석자 저장
+  // 3단계: 참석자 저장 (미등록 선수 자동 등록 포함)
   const handleSave = async () => {
     setLoading(true)
     setError('')
 
     try {
-      const attendees = parseResult.attendees.map((a: any) => ({
-        playerId: a.playerId,
-        isGuest: a.isGuest,
-        guestName: a.isGuest ? a.name : null,
-        name: a.name,
-      }))
+      const attendees: any[] = []
+
+      for (const a of parseResult.attendees) {
+        if (a.playerId) {
+          // 등록 선수
+          attendees.push({ playerId: a.playerId, isGuest: false, name: a.name })
+        } else if (a.isGuest) {
+          // 용병
+          attendees.push({ playerId: null, isGuest: true, guestName: a.name, name: a.name })
+        } else {
+          // 미등록 선수 → 자동 신규 등록
+          try {
+            const result = await playersApi.create({ name: a.name }, token!)
+            attendees.push({ playerId: result.id, isGuest: false, name: a.name })
+          } catch {
+            // 등록 실패 시 용병으로 대체
+            attendees.push({ playerId: null, isGuest: true, guestName: a.name, name: a.name })
+          }
+        }
+      }
 
       await sessionsApi.saveAttendance(sessionId!, attendees, token!)
       onCreated()
