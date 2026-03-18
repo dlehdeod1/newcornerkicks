@@ -10,22 +10,16 @@ import LandingPage from './LandingPage'
 export default function HomePage() {
   const { isLoggedIn, user, player, token } = useAuthStore()
 
-  if (!isLoggedIn) {
-    return <LandingPage />
-  }
-
-  // 내 기록 조회 (로그인 + 선수 연동된 경우)
+  // Hook은 조건부 return 전에 모두 호출해야 함 (React Rules of Hooks)
   const { data: myData, isLoading: myLoading } = useQuery({
     queryKey: ['me', 'stats', token],
     queryFn: () => meApi.getStats(token!),
-    enabled: !!token && !!player?.id,
+    enabled: isLoggedIn && !!token && !!player?.id,
   })
 
-  // 최근 세션 조회 (closed 또는 completed 상태 중 가장 최근)
   const { data: sessionsData, isLoading: sessionsLoading } = useQuery({
     queryKey: ['sessions', 'recent', 'highlight', token],
     queryFn: async () => {
-      // closed와 completed 모두 조회해서 가장 최근 세션 반환
       const [closedSessions, completedSessions] = await Promise.all([
         sessionsApi.list({ limit: 1, status: 'closed' }, token ?? undefined),
         sessionsApi.list({ limit: 1, status: 'completed' }, token ?? undefined),
@@ -35,10 +29,14 @@ export default function HomePage() {
       if (!closed && !completed) return { sessions: [] }
       if (!closed) return completedSessions
       if (!completed) return closedSessions
-      // 둘 다 있으면 날짜 비교해서 최신 반환
       return closed.session_date >= completed.session_date ? closedSessions : completedSessions
     },
+    enabled: isLoggedIn,
   })
+
+  if (!isLoggedIn) {
+    return <LandingPage />
+  }
 
   const recentSession = sessionsData?.sessions?.[0]
   const myStats = myData?.stats
