@@ -150,8 +150,8 @@ export default function RankingPage() {
 
           {/* 테이블 */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-            <div className="overflow-auto max-h-[70vh]">
-              <table className="w-full">
+            <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
+              <table className="w-max min-w-full">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20">
                     <th className="px-2 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 w-10 sticky left-0 z-30 bg-slate-50 dark:bg-slate-800">
@@ -163,14 +163,14 @@ export default function RankingPage() {
                     <SortableHeader label="MVP" sortKey="mvpCount" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Award className="w-3.5 h-3.5" />} color="emerald" />
                     <SortableHeader label="득점" sortKey="goals" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Target className="w-3.5 h-3.5" />} color="amber" />
                     <SortableHeader label="도움" sortKey="assists" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Handshake className="w-3.5 h-3.5" />} color="blue" />
-                    <SortableHeader label="공격P" sortKey="attackPoints" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="rose" hideOnMobile />
-                    <SortableHeader label="수비" sortKey="defenses" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Shield className="w-3.5 h-3.5" />} color="purple" hideOnMobile />
-                    <SortableHeader label="경기" sortKey="games" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="slate" hideOnSmall />
-                    <SortableHeader label="PPM" sortKey="ppm" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="orange" hideOnMobile />
-                    <SortableHeader label="🥇" sortKey="rank1" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="yellow" hideOnMobile />
-                    <SortableHeader label="🥈" sortKey="rank2" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="slate" hideOnMobile />
-                    <SortableHeader label="🥉" sortKey="rank3" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="orange" hideOnMobile />
-                    <SortableHeader label="승률" sortKey="winRate" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="emerald" hideOnMobile />
+                    <SortableHeader label="공격P" sortKey="attackPoints" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="rose" />
+                    <SortableHeader label="수비" sortKey="defenses" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Shield className="w-3.5 h-3.5" />} color="purple" />
+                    <SortableHeader label="경기" sortKey="games" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="slate" />
+                    <SortableHeader label="PPM" sortKey="ppm" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="orange" />
+                    <SortableHeader label="🥇" sortKey="rank1" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="yellow" />
+                    <SortableHeader label="🥈" sortKey="rank2" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="slate" />
+                    <SortableHeader label="🥉" sortKey="rank3" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="orange" />
+                    <SortableHeader label="승률" sortKey="winRate" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="emerald" />
                     <th className="px-2 py-2.5 w-8"></th>
                   </tr>
                 </thead>
@@ -201,8 +201,6 @@ function SortableHeader({
   onSort,
   icon,
   color,
-  hideOnMobile,
-  hideOnSmall,
 }: {
   label: string
   sortKey: SortKey
@@ -211,8 +209,6 @@ function SortableHeader({
   onSort: (key: SortKey) => void
   icon?: React.ReactNode
   color: string
-  hideOnMobile?: boolean
-  hideOnSmall?: boolean
 }) {
   const isActive = currentSort === sortKey
 
@@ -228,11 +224,7 @@ function SortableHeader({
   }
 
   return (
-    <th className={cn(
-      'px-2 py-2.5 text-center',
-      hideOnMobile && 'hidden md:table-cell',
-      hideOnSmall && 'hidden sm:table-cell',
-    )}>
+    <th className="px-2 py-2.5 text-center whitespace-nowrap">
       <button
         onClick={() => onSort(sortKey)}
         className={cn(
@@ -386,28 +378,28 @@ function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy
       <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('assists'))}>
         {player.assists || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs hidden md:table-cell', getCellClass('attackPoints'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('attackPoints'))}>
         {attackPoints}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs hidden md:table-cell', getCellClass('defenses'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('defenses'))}>
         {player.defenses || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs hidden sm:table-cell', getCellClass('games'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('games'))}>
         {player.games || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs hidden md:table-cell', getCellClass('ppm'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('ppm'))}>
         {ppm}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs hidden md:table-cell', getCellClass('rank1'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs ', getCellClass('rank1'))}>
         {player.rank1 || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs hidden md:table-cell', getCellClass('rank2'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs ', getCellClass('rank2'))}>
         {player.rank2 || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs hidden md:table-cell', getCellClass('rank3'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs ', getCellClass('rank3'))}>
         {player.rank3 || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs hidden md:table-cell', getCellClass('winRate'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs ', getCellClass('winRate'))}>
         {player.attendance > 0 ? `${((player.rank1 || 0) / player.attendance * 100).toFixed(0)}%` : '-'}
       </td>
       <td className="px-2 py-2.5">
