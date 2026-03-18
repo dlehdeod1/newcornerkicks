@@ -1,20 +1,24 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Coins,
   Trophy,
-  Award,
   Check,
+  X,
   Calculator,
   ChevronDown,
-  Sparkles,
   AlertCircle,
+  Plus,
+  Trash2,
+  Banknote,
+  Copy,
+  UserCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/auth'
-import { settlementsApi, matchesApi } from '@/lib/api'
+import { settlementsApi, paymentsApi, clubsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
 interface Props {
@@ -29,135 +33,85 @@ interface Props {
 export function SettlementTab({ sessionId, session, teams, matches, attendance, onRefetch }: Props) {
   const { isAdmin, token } = useAuthStore()
   const queryClient = useQueryClient()
-  const [showDetails, setShowDetails] = useState(false)
+  const [showAllPayments, setShowAllPayments] = useState(false)
+  const [newExpDesc, setNewExpDesc] = useState('')
+  const [newExpAmount, setNewExpAmount] = useState('')
+  const [addingExpense, setAddingExpense] = useState(false)
+  const [editingDepositor, setEditingDepositor] = useState<number | null>(null)
+  const [depositorInput, setDepositorInput] = useState('')
+  const [copiedBank, setCopiedBank] = useState(false)
 
-  const completedMatches = matches.filter((m: any) => m.status === 'completed')
-  const completedMatchIds = completedMatches.map((m: any) => m.id).sort().join(',')
-
-  // 완료된 경기들의 이벤트를 한 번에 조회
-  const { data: matchEventsData, isLoading } = useQuery({
-    queryKey: ['match-events', completedMatchIds],
-    queryFn: async () => {
-      const results = await Promise.all(
-        completedMatches.map((match: any) => matchesApi.get(match.id))
-      )
-      return results
-    },
-    enabled: completedMatches.length > 0,
+  // 세션 납부 상세 조회
+  const { data: paymentData, isLoading } = useQuery({
+    queryKey: ['session-payments', sessionId],
+    queryFn: () => paymentsApi.sessionDetail(sessionId, token!),
+    enabled: !!token && (session.status === 'ended' || session.status === 'completed' || session.status === 'closed'),
   })
 
-  // 정산 계산
-  const settlement = useMemo(() => {
-    const baseFee = session.base_fee || 10000
-    const totalPlayers = attendance.length
-    const totalPot = baseFee * totalPlayers
+  // 클럽 정보 (계좌번호)
+  const { data: clubData } = useQuery({
+    queryKey: ['club-me'],
+    queryFn: () => clubsApi.me(token!),
+    enabled: !!token,
+  })
 
-    // 팀별 승점 계산
-    const teamStats = new Map<number, { wins: number; draws: number; losses: number; points: number }>()
-    teams.forEach((team: any) => {
-      teamStats.set(team.id, { wins: 0, draws: 0, losses: 0, points: 0 })
-    })
+  const bankAccount = clubData?.club?.bankAccount
 
-    completedMatches.forEach((match: any) => {
-      const team1Stats = teamStats.get(match.team1_id)
-      const team2Stats = teamStats.get(match.team2_id)
+  const payments = (paymentData?.payments || []) as any[]
+  const summary = paymentData?.summary || { total: 0, paid: 0, exempt: 0, unpaidAmount: 0, totalAmount: 0, paidAmount: 0, totalExpenses: 0, netRevenue: 0 }
+  const expenses = (paymentData?.expenses || []) as any[]
 
-      if (team1Stats && team2Stats) {
-        if (match.team1_score > match.team2_score) {
-          team1Stats.wins++
-          team1Stats.points += 3
-          team2Stats.losses++
-        } else if (match.team1_score < match.team2_score) {
-          team2Stats.wins++
-          team2Stats.points += 3
-          team1Stats.losses++
-        } else {
-          team1Stats.draws++
-          team2Stats.draws++
-          team1Stats.points += 1
-          team2Stats.points += 1
-        }
-      }
-    })
-
-    // 순위 결정
-    const rankedTeams = [...teams]
-      .map((team: any) => ({
-        ...team,
-        stats: teamStats.get(team.id) || { wins: 0, draws: 0, losses: 0, points: 0 },
-      }))
-      .sort((a, b) => b.stats.points - a.stats.points)
-
-    // MVP 계산 (각 경기별 이벤트 수집)
-    const playerEvents = new Map<number, { goals: number; assists: number; defenses: number; score: number; name: string }>()
-
-    const matchResults = matchEventsData || []
-    matchResults.forEach((matchData: any) => {
-      if (!matchData) return
-      const events = matchData.events || []
-
-      events.forEach((event: any) => {
-        if (!event.player_id) return
-
-        if (!playerEvents.has(event.player_id)) {
-          playerEvents.set(event.player_id, {
-            goals: 0,
-            assists: 0,
-            defenses: 0,
-            score: 0,
-            name: event.player_name,
-          })
-        }
-
-        const stats = playerEvents.get(event.player_id)!
-
-        if (event.event_type === 'GOAL') {
-          stats.goals++
-          stats.score += 2
-        } else if (event.event_type === 'DEFENSE') {
-          stats.defenses++
-          stats.score += 0.5
-        }
-
-        // 어시스트
-        if (event.assister_id && event.event_type === 'GOAL') {
-          if (!playerEvents.has(event.assister_id)) {
-            playerEvents.set(event.assister_id, {
-              goals: 0,
-              assists: 0,
-              defenses: 0,
-              score: 0,
-              name: event.assister_name,
-            })
-          }
-          const assisterStats = playerEvents.get(event.assister_id)!
-          assisterStats.assists++
-          assisterStats.score += 1
-        }
-      })
-    })
-
-    const mvp = [...playerEvents.entries()]
-      .sort((a, b) => b[1].score - a[1].score)[0]
-
-    // 상금 분배 (예시: 1등 40%, 2등 25%, MVP 20%, 나머지 15% 운영비)
-    const prizes = {
-      first: Math.floor(totalPot * 0.4),
-      second: Math.floor(totalPot * 0.25),
-      mvp: Math.floor(totalPot * 0.2),
-      operations: totalPot - Math.floor(totalPot * 0.4) - Math.floor(totalPot * 0.25) - Math.floor(totalPot * 0.2),
+  // 팀별 순위 계산
+  const completedMatches = matches.filter((m: any) => m.status === 'completed')
+  const teamStats = new Map<number, { wins: number; draws: number; losses: number; points: number }>()
+  teams.forEach((team: any) => {
+    teamStats.set(team.id, { wins: 0, draws: 0, losses: 0, points: 0 })
+  })
+  completedMatches.forEach((match: any) => {
+    const t1 = teamStats.get(match.team1_id)
+    const t2 = teamStats.get(match.team2_id)
+    if (t1 && t2) {
+      if (match.team1_score > match.team2_score) { t1.wins++; t1.points += 3; t2.losses++ }
+      else if (match.team1_score < match.team2_score) { t2.wins++; t2.points += 3; t1.losses++ }
+      else { t1.draws++; t2.draws++; t1.points += 1; t2.points += 1 }
     }
+  })
+  const rankedTeams = [...teams]
+    .map((team: any) => ({ ...team, stats: teamStats.get(team.id) || { wins: 0, draws: 0, losses: 0, points: 0 } }))
+    .sort((a, b) => b.stats.points - a.stats.points)
 
-    return {
-      baseFee,
-      totalPlayers,
-      totalPot,
-      rankedTeams,
-      mvp: mvp ? { id: mvp[0], ...mvp[1] } : null,
-      prizes,
-      isComplete: completedMatches.length === matches.length && matches.length > 0,
-    }
-  }, [session, attendance, teams, matches, completedMatches, matchEventsData])
+  // 납부 확인 mutation
+  const paidMutation = useMutation({
+    mutationFn: ({ paymentId, paid, depositorName }: { paymentId: number; paid: boolean; depositorName?: string }) =>
+      paymentsApi.updatePaid(paymentId, paid, token!, depositorName),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['session-payments', sessionId] }),
+  })
+
+  // 면제 mutation
+  const exemptMutation = useMutation({
+    mutationFn: ({ paymentId, exempt }: { paymentId: number; exempt: boolean }) =>
+      paymentsApi.updateExempt(paymentId, exempt, token!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['session-payments', sessionId] }),
+  })
+
+  // 비용 추가 mutation
+  const addExpenseMutation = useMutation({
+    mutationFn: (data: { description: string; amount: number }) =>
+      paymentsApi.addExpense(sessionId, data, token!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['session-payments', sessionId] })
+      setNewExpDesc('')
+      setNewExpAmount('')
+      setAddingExpense(false)
+    },
+  })
+
+  // 비용 삭제 mutation
+  const deleteExpenseMutation = useMutation({
+    mutationFn: (expenseId: number) =>
+      paymentsApi.deleteExpense(sessionId, expenseId, token!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['session-payments', sessionId] }),
+  })
 
   // 정산 완료 mutation
   const completeMutation = useMutation({
@@ -173,6 +127,43 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
     completeMutation.mutate()
   }
 
+  const handlePaidToggle = (payment: any) => {
+    if (payment.paid) {
+      paidMutation.mutate({ paymentId: payment.id, paid: false })
+    } else {
+      setEditingDepositor(payment.id)
+      setDepositorInput(payment.depositor_name || '')
+    }
+  }
+
+  const handleConfirmPaid = (paymentId: number) => {
+    paidMutation.mutate({
+      paymentId,
+      paid: true,
+      depositorName: depositorInput || undefined,
+    })
+    setEditingDepositor(null)
+    setDepositorInput('')
+  }
+
+  const handleCopyBank = () => {
+    if (!bankAccount) return
+    const text = `${bankAccount.bankName} ${bankAccount.accountNumber} (${bankAccount.holderName})`
+    navigator.clipboard.writeText(text)
+    setCopiedBank(true)
+    setTimeout(() => setCopiedBank(false), 2000)
+  }
+
+  // 아직 정산 전이면 안내 표시
+  if (!['ended', 'completed', 'closed'].includes(session.status)) {
+    return (
+      <div className="text-center py-12">
+        <Calculator className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+        <p className="text-slate-500 dark:text-slate-400">세션이 종료되면 정산 정보가 표시됩니다.</p>
+      </div>
+    )
+  }
+
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-4">
@@ -182,161 +173,313 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
     )
   }
 
+  const paidPayments = payments.filter((p: any) => p.paid === 1 && !p.exempt)
+  const unpaidPayments = payments.filter((p: any) => p.paid === 0 && !p.exempt)
+  const exemptPayments = payments.filter((p: any) => p.exempt === 1)
+  const displayPayments = showAllPayments ? payments : unpaidPayments.concat(paidPayments.slice(0, 3))
+
   return (
     <div className="space-y-6">
-      {/* 총 상금 */}
-      <div className="bg-gradient-to-br from-amber-100 to-yellow-50 dark:from-amber-500/20 dark:to-yellow-500/10 rounded-2xl p-6 border border-amber-200 dark:border-amber-500/30">
-        <div className="flex items-center justify-between">
+      {/* 납부 요약 카드 */}
+      <div className="bg-gradient-to-br from-emerald-100 to-teal-50 dark:from-emerald-500/20 dark:to-teal-500/10 rounded-2xl p-6 border border-emerald-200 dark:border-emerald-500/30">
+        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-3">
+          <Coins className="w-5 h-5" />
+          <span className="font-medium">납부 현황</span>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
           <div>
-            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-2">
-              <Coins className="w-5 h-5" />
-              <span className="font-medium">총 상금 풀</span>
-            </div>
-            <p className="text-4xl font-bold text-slate-900 dark:text-white">
-              {settlement.totalPot.toLocaleString()}원
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">
+              {summary.paidAmount?.toLocaleString() ?? 0}원
             </p>
-            <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
-              {settlement.totalPlayers}명 × {settlement.baseFee.toLocaleString()}원
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
+              입금 완료 ({summary.paid}/{summary.total - summary.exempt}명)
             </p>
           </div>
-          <div className="text-6xl">💰</div>
-        </div>
-      </div>
-
-      {/* 순위 & 상금 */}
-      <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-          <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-amber-500" />
-            순위 & 상금
-          </h3>
-          <button
-            onClick={() => setShowDetails(!showDetails)}
-            className="text-sm text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center gap-1"
-          >
-            상세 보기
-            <ChevronDown className={cn('w-4 h-4 transition-transform', showDetails && 'rotate-180')} />
-          </button>
-        </div>
-
-        <div className="p-6">
-          {settlement.rankedTeams.length === 0 ? (
-            <p className="text-center text-slate-500 py-8">
-              아직 팀 편성이 완료되지 않았습니다.
+          <div>
+            <p className="text-2xl font-bold text-red-500">
+              {summary.unpaidAmount?.toLocaleString() ?? 0}원
             </p>
-          ) : (
-            <div className="space-y-4">
-              {settlement.rankedTeams.slice(0, showDetails ? undefined : 3).map((team: any, idx: number) => (
-                <div
-                  key={team.id}
-                  className={cn(
-                    'flex items-center justify-between p-4 rounded-xl border',
-                    idx === 0
-                      ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'
-                      : idx === 1
-                      ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'
-                      : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800'
-                  )}
-                >
-                  <div className="flex items-center gap-4 min-w-0 flex-1">
-                    <span className="text-2xl shrink-0">
-                      {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}위`}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-slate-900 dark:text-white truncate">{team.name}</p>
-                      <p className="text-sm text-slate-500 truncate">
-                        {team.stats.wins}승 {team.stats.draws}무 {team.stats.losses}패 ({team.stats.points}점)
-                      </p>
-                    </div>
-                  </div>
-                  {idx < 2 && (
-                    <div className="text-right">
-                      <p className={cn(
-                        'text-lg font-bold',
-                        idx === 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-300'
-                      )}>
-                        {(idx === 0 ? settlement.prizes.first : settlement.prizes.second).toLocaleString()}원
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        인당 {Math.floor((idx === 0 ? settlement.prizes.first : settlement.prizes.second) / (team.members?.length || 1)).toLocaleString()}원
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+            <p className="text-xs text-slate-500 mt-0.5">
+              미입금 ({summary.total - summary.exempt - summary.paid}명)
+            </p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white">
+              {summary.totalAmount?.toLocaleString() ?? 0}원
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5">총 참가비</p>
+          </div>
         </div>
       </div>
 
-      {/* MVP */}
-      {settlement.mvp && (
-        <div className="bg-gradient-to-br from-emerald-100 to-teal-50 dark:from-emerald-500/20 dark:to-teal-500/10 rounded-2xl p-6 border border-emerald-200 dark:border-emerald-500/30">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4 min-w-0 flex-1">
-              <div className="w-14 h-14 shrink-0 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
-                <Award className="w-7 h-7 text-white" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-1">
-                  <Sparkles className="w-4 h-4 shrink-0" />
-                  <span className="text-sm font-medium truncate">이 경기의 MVP</span>
-                </div>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white truncate">{settlement.mvp.name}</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
-                  {settlement.mvp.goals}골 {settlement.mvp.assists}도움 {settlement.mvp.defenses}수비
+      {/* 계좌 정보 */}
+      {bankAccount && bankAccount.accountNumber && (
+        <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Banknote className="w-5 h-5 text-blue-500" />
+              <div>
+                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  {bankAccount.bankName} {bankAccount.accountNumber}
                 </p>
+                <p className="text-xs text-slate-500">{bankAccount.holderName}</p>
               </div>
             </div>
-            <div className="text-right shrink-0">
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {settlement.prizes.mvp.toLocaleString()}원
-              </p>
-              <p className="text-sm text-slate-500">MVP 상금</p>
-            </div>
+            <button
+              onClick={handleCopyBank}
+              className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1"
+            >
+              {copiedBank ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              {copiedBank ? '복사됨' : '복사'}
+            </button>
           </div>
         </div>
       )}
 
-      {/* 상금 분배 요약 */}
-      <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-        <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-          <Calculator className="w-5 h-5 text-blue-500" />
-          상금 분배
-        </h3>
+      {/* 순위 */}
+      {rankedTeams.length > 0 && (
+        <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-amber-500" />
+              팀 순위
+            </h3>
+          </div>
+          <div className="p-4 space-y-2">
+            {rankedTeams.map((team: any, idx: number) => (
+              <div
+                key={team.id}
+                className={cn(
+                  'flex items-center justify-between p-3 rounded-xl',
+                  idx === 0 ? 'bg-amber-50 dark:bg-amber-500/10' : 'bg-slate-50 dark:bg-slate-800/50'
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}위`}</span>
+                  <div>
+                    <p className="font-medium text-sm text-slate-900 dark:text-white">{team.name}</p>
+                    <p className="text-xs text-slate-500">{team.stats.wins}승 {team.stats.draws}무 {team.stats.losses}패 ({team.stats.points}점)</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-        <div className="space-y-3">
-          <PrizeRow
-            icon={<Trophy className="w-5 h-5 text-amber-500" />}
-            label="1등 상금"
-            amount={settlement.prizes.first}
-            percentage={40}
-          />
-          <PrizeRow
-            icon={<Trophy className="w-5 h-5 text-slate-400" />}
-            label="2등 상금"
-            amount={settlement.prizes.second}
-            percentage={25}
-          />
-          <PrizeRow
-            icon={<Award className="w-5 h-5 text-emerald-500" />}
-            label="MVP 상금"
-            amount={settlement.prizes.mvp}
-            percentage={20}
-          />
-          <PrizeRow
-            icon={<Coins className="w-5 h-5 text-purple-500" />}
-            label="운영비"
-            amount={settlement.prizes.operations}
-            percentage={15}
-          />
+      {/* 개인별 납부 내역 */}
+      {payments.length > 0 && (
+        <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-blue-500" />
+              납부 내역
+            </h3>
+            {payments.length > 5 && (
+              <button
+                onClick={() => setShowAllPayments(!showAllPayments)}
+                className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1"
+              >
+                {showAllPayments ? '접기' : `전체 보기 (${payments.length}명)`}
+                <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', showAllPayments && 'rotate-180')} />
+              </button>
+            )}
+          </div>
+
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {displayPayments.map((payment: any) => (
+              <div key={payment.id} className="px-6 py-3 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                      {payment.player_name}
+                    </p>
+                    {payment.team_rank && (
+                      <span className="text-xs text-slate-400">{payment.team_rank}위</span>
+                    )}
+                    {payment.exempt === 1 && (
+                      <span className="text-xs px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded">면제</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-xs text-slate-500">
+                      {payment.amount?.toLocaleString()}원
+                    </p>
+                    {payment.depositor_name && (
+                      <span className="text-xs text-blue-500">입금자: {payment.depositor_name}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* 입금자명 입력 모달 (인라인) */}
+                {editingDepositor === payment.id ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={depositorInput}
+                      onChange={e => setDepositorInput(e.target.value)}
+                      placeholder="입금자명 (선택)"
+                      className="w-24 px-2 py-1 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      autoFocus
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleConfirmPaid(payment.id)
+                        if (e.key === 'Escape') { setEditingDepositor(null); setDepositorInput('') }
+                      }}
+                    />
+                    <button
+                      onClick={() => handleConfirmPaid(payment.id)}
+                      className="p-1.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => { setEditingDepositor(null); setDepositorInput('') }}
+                      className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {isAdmin && !payment.exempt && (
+                      <button
+                        onClick={() => handlePaidToggle(payment)}
+                        disabled={paidMutation.isPending}
+                        className={cn(
+                          'px-3 py-1.5 text-xs font-medium rounded-lg transition-colors',
+                          payment.paid
+                            ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30'
+                            : 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/30'
+                        )}
+                      >
+                        {payment.paid ? '입금됨' : '미입금'}
+                      </button>
+                    )}
+                    {isAdmin && !payment.exempt && !payment.paid && (
+                      <button
+                        onClick={() => exemptMutation.mutate({ paymentId: payment.id, exempt: true })}
+                        className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                      >
+                        면제
+                      </button>
+                    )}
+                    {!isAdmin && (
+                      <span className={cn(
+                        'px-2 py-1 text-xs rounded-lg',
+                        payment.paid
+                          ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                          : payment.exempt
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                          : 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'
+                      )}>
+                        {payment.paid ? '입금됨' : payment.exempt ? '면제' : '미입금'}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 비용 기록 */}
+      <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+            <Calculator className="w-5 h-5 text-purple-500" />
+            비용 기록
+          </h3>
+          {isAdmin && (
+            <button
+              onClick={() => setAddingExpense(!addingExpense)}
+              className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              비용 추가
+            </button>
+          )}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-          <span className="font-medium text-slate-600 dark:text-slate-400">총계</span>
-          <span className="text-lg font-bold text-slate-900 dark:text-white">
-            {settlement.totalPot.toLocaleString()}원
-          </span>
+        <div className="p-4 space-y-3">
+          {/* 비용 추가 폼 */}
+          {addingExpense && (
+            <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+              <input
+                type="text"
+                value={newExpDesc}
+                onChange={e => setNewExpDesc(e.target.value)}
+                placeholder="설명 (예: 구장비)"
+                className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+              />
+              <input
+                type="number"
+                value={newExpAmount}
+                onChange={e => setNewExpAmount(e.target.value)}
+                placeholder="금액"
+                className="w-28 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+              />
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (!newExpDesc || !newExpAmount) return
+                  addExpenseMutation.mutate({ description: newExpDesc, amount: Number(newExpAmount) })
+                }}
+                disabled={addExpenseMutation.isPending}
+              >
+                추가
+              </Button>
+            </div>
+          )}
+
+          {expenses.length === 0 && !addingExpense ? (
+            <p className="text-center text-sm text-slate-400 py-4">기록된 비용이 없습니다</p>
+          ) : (
+            expenses.map((exp: any) => (
+              <div key={exp.id} className="flex items-center justify-between py-2">
+                <div>
+                  <p className="text-sm text-slate-900 dark:text-white">{exp.description}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-slate-900 dark:text-white">
+                    {exp.amount?.toLocaleString()}원
+                  </span>
+                  {isAdmin && (
+                    <button
+                      onClick={() => {
+                        if (confirm('이 비용을 삭제할까요?')) deleteExpenseMutation.mutate(exp.id)
+                      }}
+                      className="text-slate-400 hover:text-red-500"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+
+          {/* 수입/지출 요약 */}
+          {(summary.totalAmount > 0 || expenses.length > 0) && (
+            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">총 수입 (참가비)</span>
+                <span className="text-slate-900 dark:text-white">{summary.totalAmount?.toLocaleString()}원</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">총 지출 (비용)</span>
+                <span className="text-red-500">-{summary.totalExpenses?.toLocaleString() ?? 0}원</span>
+              </div>
+              <div className="flex justify-between text-sm font-semibold pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                <span className="text-slate-700 dark:text-slate-300">순수익</span>
+                <span className={cn(
+                  (summary.netRevenue ?? 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
+                )}>
+                  {(summary.netRevenue ?? 0).toLocaleString()}원
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -351,7 +494,7 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
       )}
 
       {/* 정산 완료 버튼 - ended 상태에서만 표시 */}
-      {isAdmin && session.status === 'ended' && session.status !== 'completed' && (
+      {isAdmin && session.status === 'ended' && (
         <div className="bg-blue-50 dark:bg-blue-500/10 rounded-2xl p-6 border border-blue-200 dark:border-blue-500/30">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -384,31 +527,6 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
           </p>
         </div>
       )}
-    </div>
-  )
-}
-
-function PrizeRow({
-  icon,
-  label,
-  amount,
-  percentage,
-}: {
-  icon: React.ReactNode
-  label: string
-  amount: number
-  percentage: number
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        {icon}
-        <span className="text-slate-600 dark:text-slate-400">{label}</span>
-        <span className="text-xs text-slate-400">({percentage}%)</span>
-      </div>
-      <span className="font-semibold text-slate-900 dark:text-white">
-        {amount.toLocaleString()}원
-      </span>
     </div>
   )
 }

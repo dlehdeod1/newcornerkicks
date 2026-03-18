@@ -82,7 +82,13 @@ paymentsRoutes.get('/sessions/:sessionId', authMiddleware('ADMIN'), async (c) =>
     'SELECT * FROM settlements WHERE session_id = ?'
   ).bind(sessionId).first()
 
+  // 비용 목록
+  const expenses = await c.env.DB.prepare(
+    'SELECT * FROM session_expenses WHERE session_id = ? ORDER BY created_at DESC'
+  ).bind(sessionId).all()
+
   const nonExempt = (payments.results as any[]).filter((p: any) => !p.exempt)
+  const totalExpenses = (expenses.results as any[]).reduce((sum: number, e: any) => sum + (e.amount || 0), 0)
   const summary = {
     total: payments.results.length,
     paid: (payments.results as any[]).filter((p: any) => p.paid === 1).length,
@@ -95,30 +101,48 @@ paymentsRoutes.get('/sessions/:sessionId', authMiddleware('ADMIN'), async (c) =>
     paidAmount: nonExempt
       .filter((p: any) => p.paid === 1)
       .reduce((sum: number, p: any) => sum + (p.amount || 0), 0),
+    totalExpenses,
+    netRevenue: nonExempt
+      .reduce((sum: number, p: any) => sum + (p.amount || 0), 0) - totalExpenses,
   }
 
-  return c.json({ payments: payments.results, settlement, summary })
+  return c.json({ payments: payments.results, settlement, summary, expenses: expenses.results })
 })
 
-// 어드민: 납부 상태 토글
+// 어드민: 납부 상태 토글 + 입금자명 업데이트
 paymentsRoutes.put('/:id/paid', authMiddleware('ADMIN'), async (c) => {
   const id = c.req.param('id')
   const clubId = (c as any).clubId
   const body = await c.req.json()
-  const { paid } = body  // true/false
+  const { paid, depositorName } = body  // paid: true/false, depositorName: optional string
 
   // 이 클럽 소속 결제인지 확인
   const payment = await c.env.DB.prepare(`
-    SELECT sp.id FROM session_payments sp
+    SELECT sp.id, sp.player_id FROM session_payments sp
     JOIN sessions s ON sp.session_id = s.id
     WHERE sp.id = ? AND s.club_id = ?
-  `).bind(id, clubId).first()
+  `).bind(id, clubId).first<{ id: number; player_id: number | null }>()
   if (!payment) return c.json({ error: '납부 내역을 찾을 수 없습니다.' }, 404)
 
   const now = Math.floor(Date.now() / 1000)
+
+  // 입금자명이 있으면 session_payments에 저장 + players.default_depositor_name 업데이트
+  const updates = ['paid = ?', 'paid_at = ?']
+  const vals: any[] = [paid ? 1 : 0, paid ? now : null]
+  if (depositorName !== undefined) {
+    updates.push('depositor_name = ?')
+    vals.push(depositorName || null)
+    // player가 있으면 default_depositor_name도 업데이트
+    if (payment.player_id && depositorName) {
+      await c.env.DB.prepare(
+        'UPDATE players SET default_depositor_name = ? WHERE id = ?'
+      ).bind(depositorName, payment.player_id).run()
+    }
+  }
+  vals.push(id)
   await c.env.DB.prepare(
-    'UPDATE session_payments SET paid = ?, paid_at = ? WHERE id = ?'
-  ).bind(paid ? 1 : 0, paid ? now : null, id).run()
+    `UPDATE session_payments SET ${updates.join(', ')} WHERE id = ?`
+  ).bind(...vals).run()
 
   // 해당 세션의 미납(비면제) 건수 확인 → 0이면 세션 completed 로 전환
   const unpaid = await c.env.DB.prepare(`
@@ -245,6 +269,65 @@ paymentsRoutes.post('/membership/generate', authMiddleware('ADMIN'), async (c) =
   }
 
   return c.json({ message: `${created}명의 회비 레코드가 생성되었습니다.`, created })
+})
+
+// ─── 세션 비용 기록 (session_expenses) ─────────────────
+
+// 비용 목록 조회
+paymentsRoutes.get('/sessions/:sessionId/expenses', authMiddleware(), async (c) => {
+  const sessionId = c.req.param('sessionId')
+  const clubId = (c as any).clubId
+
+  const session = await c.env.DB.prepare(
+    'SELECT id FROM sessions WHERE id = ? AND club_id = ?'
+  ).bind(sessionId, clubId).first()
+  if (!session) return c.json({ error: '세션을 찾을 수 없습니다.' }, 404)
+
+  const expenses = await c.env.DB.prepare(
+    'SELECT * FROM session_expenses WHERE session_id = ? ORDER BY created_at DESC'
+  ).bind(sessionId).all()
+
+  return c.json({ expenses: expenses.results })
+})
+
+// 비용 추가 (admin)
+paymentsRoutes.post('/sessions/:sessionId/expenses', authMiddleware('ADMIN'), async (c) => {
+  const sessionId = c.req.param('sessionId')
+  const clubId = (c as any).clubId
+  const userId = (c as any).userId
+  const body = await c.req.json()
+  const { description, amount } = body
+
+  if (!description || amount == null) return c.json({ error: 'description, amount 필수' }, 400)
+
+  const session = await c.env.DB.prepare(
+    'SELECT id FROM sessions WHERE id = ? AND club_id = ?'
+  ).bind(sessionId, clubId).first()
+  if (!session) return c.json({ error: '세션을 찾을 수 없습니다.' }, 404)
+
+  const now = Math.floor(Date.now() / 1000)
+  const result = await c.env.DB.prepare(`
+    INSERT INTO session_expenses (session_id, club_id, description, amount, created_by, created_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).bind(sessionId, clubId, description, amount, userId, now).run()
+
+  return c.json({ id: result.meta.last_row_id, description, amount })
+})
+
+// 비용 삭제 (admin)
+paymentsRoutes.delete('/sessions/:sessionId/expenses/:expenseId', authMiddleware('ADMIN'), async (c) => {
+  const sessionId = c.req.param('sessionId')
+  const expenseId = c.req.param('expenseId')
+  const clubId = (c as any).clubId
+
+  const expense = await c.env.DB.prepare(
+    'SELECT id FROM session_expenses WHERE id = ? AND session_id = ? AND club_id = ?'
+  ).bind(expenseId, sessionId, clubId).first()
+  if (!expense) return c.json({ error: '비용 항목을 찾을 수 없습니다.' }, 404)
+
+  await c.env.DB.prepare('DELETE FROM session_expenses WHERE id = ?').bind(expenseId).run()
+
+  return c.json({ ok: true })
 })
 
 export { paymentsRoutes }

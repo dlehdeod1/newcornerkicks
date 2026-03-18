@@ -142,21 +142,14 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
 
   const sortedStats = Array.from(playerStats.values()).sort((a, b) => b.mvpScore - a.mvpScore)
 
-  // 최고 점수를 10점으로 환산 (상대 점수)
-  const maxScore = sortedStats[0]?.mvpScore || 1
-  const normalizedStats = sortedStats.map(player => ({
-    ...player,
-    normalizedScore: maxScore > 0 ? (player.mvpScore / maxScore) * 10 : 0
-  }))
-
   // 상위권 추출
   const topScorer = [...sortedStats].sort((a, b) => b.goals - a.goals)[0]
   const topAssister = [...sortedStats].sort((a, b) => b.assists - a.assists)[0]
   const topDefender = [...sortedStats].sort((a, b) => b.defenses - a.defenses)[0]
-  const mvp = normalizedStats[0]
+  const mvp = sortedStats[0]
 
   // MVP 상위 3명
-  const top3Mvp = normalizedStats.slice(0, 3)
+  const top3Mvp = sortedStats.slice(0, 3)
 
   if (isLoading) {
     return (
@@ -232,7 +225,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
   return (
     <div className="space-y-6">
       {/* 공유 버튼 */}
-      {normalizedStats.length > 0 && (
+      {sortedStats.length > 0 && (
         <div className="flex justify-end gap-2">
           <button
             onClick={handleCopyText}
@@ -351,7 +344,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
               icon={<Award className="w-6 h-6 text-yellow-500 dark:text-yellow-400" />}
               title="MVP"
               player={mvp?.name}
-              value={mvp ? `${mvp.normalizedScore.toFixed(1)}점` : '-'}
+              value={mvp ? `${mvp.mvpScore.toFixed(1)}점` : '-'}
               color="yellow"
             />
             <HighlightCard
@@ -395,14 +388,14 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
                   </tr>
                 </thead>
                 <tbody>
-                  {normalizedStats.length === 0 ? (
+                  {sortedStats.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
                         완료된 경기가 없습니다.
                       </td>
                     </tr>
                   ) : (
-                    normalizedStats.map((player, idx) => (
+                    sortedStats.map((player, idx) => (
                       <tr key={player.id} className="border-b border-slate-100 dark:border-slate-700/50">
                         <td className="px-4 py-3 text-slate-500">{idx + 1}</td>
                         <td className="px-4 py-3 font-medium text-slate-900 dark:text-white max-w-[120px] truncate">{player.name}</td>
@@ -410,7 +403,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
                         <td className="px-4 py-3 text-center text-blue-600 dark:text-blue-400">{player.assists}</td>
                         <td className="px-4 py-3 text-center text-purple-600 dark:text-purple-400">{player.defenses}</td>
                         <td className="px-4 py-3 text-center font-semibold text-yellow-600 dark:text-yellow-400">
-                          {player.normalizedScore.toFixed(1)}
+                          {player.mvpScore.toFixed(1)}
                         </td>
                       </tr>
                     ))
@@ -458,7 +451,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
                     {mvp.name}
                   </h4>
                   <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">
-                    {mvp.normalizedScore.toFixed(1)}점
+                    {mvp.mvpScore.toFixed(1)}점
                   </p>
                   <div className="flex justify-center gap-3 mt-2 text-xs text-slate-500">
                     {mvp.goals > 0 && <span className="text-green-600">{mvp.goals}골</span>}
@@ -474,10 +467,10 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
             )}
 
             {/* 순위 리스트 (2~5위) */}
-            {normalizedStats.length > 1 && (
+            {sortedStats.length > 1 && (
               <div className="px-4 pb-4">
                 <div className="space-y-1.5">
-                  {normalizedStats.slice(1, 5).map((player, index) => (
+                  {sortedStats.slice(1, 5).map((player, index) => (
                     <div
                       key={player.id}
                       className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg"
@@ -491,7 +484,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
                         </span>
                       </div>
                       <span className="text-sm font-bold text-slate-600 dark:text-slate-400">
-                        {player.normalizedScore.toFixed(1)}
+                        {player.mvpScore.toFixed(1)}
                       </span>
                     </div>
                   ))}

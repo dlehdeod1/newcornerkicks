@@ -13,8 +13,11 @@ class RankingScreen extends StatefulWidget {
   State<RankingScreen> createState() => _RankingScreenState();
 }
 
-class _RankingScreenState extends State<RankingScreen> {
+class _RankingScreenState extends State<RankingScreen> with SingleTickerProviderStateMixin {
   final ApiService _api = ApiService();
+  late TabController _tabController;
+
+  // 랭킹 데이터
   List<dynamic> _rankings = [];
   Map<String, dynamic>? _stats;
   bool _loading = true;
@@ -22,6 +25,10 @@ class _RankingScreenState extends State<RankingScreen> {
   String _sortBy = 'mvpCount';
   int _selectedYear = DateTime.now().year;
   String? _lastLoadedToken;
+
+  // 통계 데이터
+  Map<String, dynamic>? _funStats;
+  bool _funStatsLoading = false;
 
   static int _currentSeasonYear(int startMonth) {
     final now = DateTime.now();
@@ -40,21 +47,31 @@ class _RankingScreenState extends State<RankingScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.index == 1 && _funStats == null && !_funStatsLoading) {
+        _loadFunStats();
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthService>();
       _selectedYear = _currentSeasonYear(auth.seasonStartMonth);
       if (!auth.isLoading) {
         _loadRankings();
       }
-      // AuthService가 아직 로딩 중이면 didChangeDependencies에서 처리
     });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final auth = context.watch<AuthService>();
-    // token이 준비되거나 변경됐을 때 자동 재로드
     if (!auth.isLoading && auth.token != _lastLoadedToken) {
       _lastLoadedToken = auth.token;
       _loadRankings();
@@ -77,6 +94,16 @@ class _RankingScreenState extends State<RankingScreen> {
     }
   }
 
+  Future<void> _loadFunStats() async {
+    setState(() => _funStatsLoading = true);
+    try {
+      final token = context.read<AuthService>().token;
+      final res = await _api.getFunStats(year: _selectedYear, token: token);
+      if (mounted) setState(() => _funStats = res);
+    } catch (_) {}
+    if (mounted) setState(() => _funStatsLoading = false);
+  }
+
   List<dynamic> get _sorted {
     final list = List.from(_rankings.where((p) => (p[_sortBy] ?? 0) > 0));
     list.sort((a, b) {
@@ -89,33 +116,49 @@ class _RankingScreenState extends State<RankingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        setState(() => _loading = true);
-        await _loadRankings();
-      },
-      color: AppColors.primary,
-      child: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(child: _buildHeader()),
-                SliverToBoxAdapter(child: _buildStats()),
-                SliverToBoxAdapter(child: _buildCategoryChips()),
-                if (_sorted.length >= 3)
-                  SliverToBoxAdapter(child: _buildPodium()),
-                if (_sorted.isEmpty)
-                  SliverToBoxAdapter(child: _buildEmpty())
-                else
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (ctx, i) => _buildPlayerRow(_sorted[i], i + 1),
-                      childCount: _sorted.length,
-                    ),
-                  ),
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
-              ],
+    return Column(
+      children: [
+        // 헤더 + 연도 선택
+        _buildHeader(),
+        // 세그먼트 탭
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withAlpha(8),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            indicator: BoxDecoration(
+              color: AppColors.primary.withAlpha(30),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.primary.withAlpha(80)),
             ),
+            indicatorSize: TabBarIndicatorSize.tab,
+            dividerColor: Colors.transparent,
+            labelColor: AppColors.primary,
+            unselectedLabelColor: Colors.white54,
+            labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            unselectedLabelStyle: const TextStyle(fontSize: 13),
+            tabs: const [
+              Tab(text: '랭킹'),
+              Tab(text: '통계'),
+              Tab(text: '명예의전당'),
+            ],
+          ),
+        ),
+        // 탭 컨텐츠
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _buildRankingTab(),
+              _buildStatsTab(),
+              const HallOfFameScreen(embedded: true),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -124,7 +167,6 @@ class _RankingScreenState extends State<RankingScreen> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
         children: [
-          // 연도 선택
           GestureDetector(
             onTap: () => _showYearPicker(),
             child: Container(
@@ -137,10 +179,7 @@ class _RankingScreenState extends State<RankingScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '$_selectedYear시즌',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
+                  Text('$_selectedYear시즌', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
                   const SizedBox(width: 6),
                   Icon(Icons.expand_more, color: Colors.white.withAlpha(128), size: 18),
                 ],
@@ -148,21 +187,20 @@ class _RankingScreenState extends State<RankingScreen> {
             ),
           ),
           const Spacer(),
-          // 어드민: 랭킹 갱신
-          if (context.read<AuthService>().isAdmin) ...[
+          if (context.read<AuthService>().isAdmin)
             GestureDetector(
               onTap: _refreshing ? null : () async {
                 setState(() => _refreshing = true);
                 try {
                   await _api.refreshRankings(_selectedYear, context.read<AuthService>().token!);
                   await _loadRankings();
+                  _funStats = null; // 통계도 갱신 필요
                 } catch (_) {} finally {
                   if (mounted) setState(() => _refreshing = false);
                 }
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
                   color: Colors.white.withAlpha(10),
                   borderRadius: BorderRadius.circular(12),
@@ -173,33 +211,46 @@ class _RankingScreenState extends State<RankingScreen> {
                     : const Icon(Icons.refresh, size: 16, color: Colors.white54),
               ),
             ),
-          ],
-          // 명예의전당
-          GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HallOfFameScreen())),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.amber.withAlpha(20),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.amber.withAlpha(51)),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('🏆', style: TextStyle(fontSize: 14)),
-                  SizedBox(width: 6),
-                  Text('명예의전당', style: TextStyle(fontSize: 12, color: AppColors.amber, fontWeight: FontWeight.w600)),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildStats() {
+  // ─── 랭킹 탭 ───────────────────────────────────
+
+  Widget _buildRankingTab() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+    }
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        setState(() => _loading = true);
+        await _loadRankings();
+      },
+      color: AppColors.primary,
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: _buildRankingStats()),
+          SliverToBoxAdapter(child: _buildCategoryChips()),
+          if (_sorted.length >= 3)
+            SliverToBoxAdapter(child: _buildPodium()),
+          if (_sorted.isEmpty)
+            SliverToBoxAdapter(child: _buildEmpty())
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (ctx, i) => _buildPlayerRow(_sorted[i], i + 1),
+                childCount: _sorted.length,
+              ),
+            ),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRankingStats() {
     if (_stats == null) return const SizedBox.shrink();
 
     final items = [
@@ -300,11 +351,7 @@ class _RankingScreenState extends State<RankingScreen> {
           final medal = pos['medal'] as String;
           final height = pos['height'] as double;
           final isFirst = idx == 0;
-          final color = isFirst
-              ? AppColors.amber
-              : idx == 1
-                  ? AppColors.slateLight
-                  : AppColors.bronze;
+          final color = isFirst ? AppColors.amber : idx == 1 ? AppColors.slateLight : AppColors.bronze;
 
           return Expanded(
             child: GestureDetector(
@@ -326,24 +373,17 @@ class _RankingScreenState extends State<RankingScreen> {
                       child: Center(
                         child: Text(
                           name.toString().isNotEmpty ? name.toString()[0] : '?',
-                          style: TextStyle(
-                            fontSize: isFirst ? 22 : 18,
-                            fontWeight: FontWeight.bold,
-                            color: color,
-                          ),
+                          style: TextStyle(fontSize: isFirst ? 22 : 18, fontWeight: FontWeight.bold, color: color),
                         ),
                       ),
                     ),
                     const SizedBox(height: 6),
                     Text(medal, style: TextStyle(fontSize: isFirst ? 20 : 16)),
                     Text(
-                      name.toString().length > 4 ? '${name.toString().substring(0, 4)}…' : name.toString(),
+                      name.toString().length > 4 ? '${name.toString().substring(0, 4)}...' : name.toString(),
                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
-                    Text(
-                      '$val',
-                      style: TextStyle(fontSize: isFirst ? 18 : 15, fontWeight: FontWeight.bold, color: color),
-                    ),
+                    Text('$val', style: TextStyle(fontSize: isFirst ? 18 : 15, fontWeight: FontWeight.bold, color: color)),
                     const SizedBox(height: 6),
                     Container(
                       height: height,
@@ -353,10 +393,7 @@ class _RankingScreenState extends State<RankingScreen> {
                           end: Alignment.bottomCenter,
                           colors: [color, color.withAlpha(153)],
                         ),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(10),
-                          topRight: Radius.circular(10),
-                        ),
+                        borderRadius: const BorderRadius.only(topLeft: Radius.circular(10), topRight: Radius.circular(10)),
                       ),
                     ),
                   ],
@@ -452,13 +489,160 @@ class _RankingScreenState extends State<RankingScreen> {
                 color: color.withAlpha(20),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(
-                '$val',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: color),
-              ),
+              child: Text('$val', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: color)),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ─── 통계 탭 ───────────────────────────────────
+
+  Widget _buildStatsTab() {
+    if (_funStatsLoading) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+    }
+
+    if (_funStats == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.analytics_outlined, size: 48, color: Colors.white.withAlpha(51)),
+            const SizedBox(height: 16),
+            Text('통계를 불러오는 중...', style: TextStyle(color: Colors.white.withAlpha(102))),
+          ],
+        ),
+      );
+    }
+
+    final goalDuos = (_funStats!['goalDuos'] as List?) ?? [];
+    final bestPartners = (_funStats!['bestPartners'] as List?) ?? [];
+    final worstPartners = (_funStats!['worstPartners'] as List?) ?? [];
+    final rivals = (_funStats!['rivals'] as List?) ?? [];
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        _funStats = null;
+        await _loadFunStats();
+      },
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          if (goalDuos.isNotEmpty)
+            _buildDuoSection('⚽ 베스트 득점 듀오', goalDuos, AppColors.amber),
+          if (bestPartners.isNotEmpty)
+            _buildDuoSection('🤝 베스트 파트너', bestPartners, AppColors.primary),
+          if (worstPartners.isNotEmpty)
+            _buildDuoSection('💔 워스트 파트너', worstPartners, AppColors.red),
+          if (rivals.isNotEmpty)
+            _buildDuoSection('⚔️ 라이벌', rivals, AppColors.purple),
+          if (goalDuos.isEmpty && bestPartners.isEmpty && worstPartners.isEmpty && rivals.isEmpty)
+            SizedBox(
+              height: 300,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.analytics_outlined, size: 48, color: Colors.white.withAlpha(51)),
+                    const SizedBox(height: 16),
+                    Text('경기를 더 진행하면 통계가 생성됩니다', style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 14)),
+                  ],
+                ),
+              ),
+            ),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDuoSection(String title, List<dynamic> items, Color color) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withAlpha(20)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: color)),
+          const SizedBox(height: 12),
+          ...items.take(5).map((item) {
+            final p1 = item['player1Name'] ?? item['playerName'] ?? '?';
+            final p2 = item['player2Name'] ?? item['opponentName'] ?? '';
+            final value = item['goals'] ?? item['wins'] ?? item['totalGoals'] ?? item['count'] ?? 0;
+            final games = item['games'] ?? item['totalGames'] ?? 0;
+            final winRate = item['winRate'];
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  // 아바타 쌍
+                  SizedBox(
+                    width: 50,
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 32, height: 32,
+                          decoration: BoxDecoration(
+                            color: color.withAlpha(20),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: color.withAlpha(51)),
+                          ),
+                          child: Center(child: Text(p1.isNotEmpty ? p1[0] : '?', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color))),
+                        ),
+                        if (p2.isNotEmpty)
+                          Positioned(
+                            left: 18,
+                            child: Container(
+                              width: 32, height: 32,
+                              decoration: BoxDecoration(
+                                color: AppColors.bgCard,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: color.withAlpha(51)),
+                              ),
+                              child: Center(child: Text(p2[0], style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color))),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          p2.isNotEmpty ? '$p1 & $p2' : p1,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '${games}경기${winRate != null ? ' / 승률 ${(winRate * 100).toInt()}%' : ''}',
+                          style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: color.withAlpha(20),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('$value', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color)),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -487,7 +671,11 @@ class _RankingScreenState extends State<RankingScreen> {
               trailing: isSelected ? const Icon(Icons.check, color: AppColors.primary) : null,
               onTap: () {
                 Navigator.pop(context);
-                setState(() { _selectedYear = year; _loading = true; });
+                setState(() {
+                  _selectedYear = year;
+                  _loading = true;
+                  _funStats = null;
+                });
                 _loadRankings();
               },
             );

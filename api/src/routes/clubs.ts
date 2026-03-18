@@ -174,6 +174,9 @@ clubsRoutes.get('/me', authMiddleware(), async (c) => {
       seasonStartMonth: membership.season_start_month ?? 1,
       mvpVoteEnabled: membership.mvp_vote_enabled === 1,
       logoUrl: membership.logo_url ?? null,
+      bankAccount: JSON.parse(membership.bank_account ?? 'null'),
+      notificationConfig: JSON.parse(membership.notification_config ?? '{"sessionCreated":true,"sessionDayRemind":true,"settlementRemind":true}'),
+      feeConfig: JSON.parse(membership.fee_config ?? '{}'),
     },
   })
 })
@@ -216,6 +219,9 @@ clubsRoutes.put('/me', authMiddleware(), async (c) => {
   if (body.feeTiers !== undefined) { updates.push('fee_tiers = ?'); vals.push(JSON.stringify(body.feeTiers)) }
   if (body.seasonStartMonth !== undefined) { updates.push('season_start_month = ?'); vals.push(Number(body.seasonStartMonth)) }
   if (body.mvpVoteEnabled !== undefined) { updates.push('mvp_vote_enabled = ?'); vals.push(body.mvpVoteEnabled ? 1 : 0) }
+  if (body.bankAccount !== undefined) { updates.push('bank_account = ?'); vals.push(JSON.stringify(body.bankAccount)) }
+  if (body.notificationConfig !== undefined) { updates.push('notification_config = ?'); vals.push(JSON.stringify(body.notificationConfig)) }
+  if (body.feeConfig !== undefined) { updates.push('fee_config = ?'); vals.push(JSON.stringify(body.feeConfig)) }
 
   if (updates.length === 0) return c.json({ error: '변경할 내용이 없습니다.' }, 400)
 

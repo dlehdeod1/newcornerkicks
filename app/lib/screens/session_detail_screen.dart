@@ -64,6 +64,43 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
     }
   }
 
+  Future<void> _confirmDeleteSession() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        title: const Text('세션 삭제', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          '이 세션과 관련된 모든 데이터(경기, 팀, 출석, 정산 등)가 영구 삭제됩니다.\n\n이 작업은 되돌릴 수 없습니다.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('삭제', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final token = context.read<AuthService>().token;
+    if (token == null) return;
+    try {
+      await _api.deleteSession(widget.sessionId, token);
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('삭제 실패: $e'), backgroundColor: AppColors.red),
+        );
+      }
+    }
+  }
+
   Future<void> _showStatusSheet(String? current) async {
     final auth = context.read<AuthService>();
     if (auth.token == null) return;
@@ -168,6 +205,28 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('세션 상세', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
+        actions: [
+          if (context.read<AuthService>().isAdmin)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              color: AppColors.bgCard,
+              onSelected: (value) {
+                if (value == 'delete') _confirmDeleteSession();
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                      SizedBox(width: 8),
+                      Text('세션 삭제', style: TextStyle(color: Colors.redAccent)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))

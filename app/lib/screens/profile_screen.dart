@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
-import 'settlements_screen.dart';
-import 'admin_club_settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -17,10 +14,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final ApiService _api = ApiService();
-  Map<String, dynamic>? _playerStats;
-  Map<String, dynamic>? _clubDetail;
-  int? _myRank;
-  bool _loading = true;
   bool? _googleLinked;
   bool _googleLinking = false;
 
@@ -32,84 +25,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadProfile() async {
     final auth = context.read<AuthService>();
-    final player = auth.player;
     final token = auth.token;
 
-    final futures = <Future>[];
-
-    if (player != null && token != null) {
-      futures.add(_api.getRankings(year: DateTime.now().year, token: token).then((res) {
-        final rankings = (res['data']?['rankings'] as List?) ?? [];
-        rankings.sort((a, b) => ((b['mvpCount'] ?? 0) as num).compareTo((a['mvpCount'] ?? 0) as num));
-        final idx = rankings.indexWhere((p) => p['id'] == player['id']);
-        if (idx >= 0) {
-          _playerStats = rankings[idx];
-          _myRank = idx + 1;
-        }
-      }).catchError((_) {}));
-    }
-
     if (token != null) {
-      futures.add(_api.getMyClub(token).then((res) {
-        _clubDetail = res['club'] ?? res;
-      }).catchError((_) {}));
-    }
-
-    if (token != null) {
-      futures.add(_api.me(token).then((res) {
+      try {
+        final res = await _api.me(token);
         _googleLinked = res['user']?['googleLinked'] == true;
-      }).catchError((_) {}));
+      } catch (_) {}
     }
 
-    await Future.wait(futures);
-    if (mounted) setState(() => _loading = false);
-  }
-
-  Future<void> _regenerateInviteCode(AuthService auth) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        title: const Text('초대 코드 재생성', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-        content: const Text('기존 초대 코드는 더 이상 사용할 수 없게 됩니다. 계속할까요?', style: TextStyle(color: Colors.white70, fontSize: 13)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('취소', style: TextStyle(color: Colors.white.withAlpha(102))),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.bgBase,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('재생성', style: TextStyle(fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    try {
-      final res = await _api.request('/clubs/me/regenerate-invite', method: 'POST', token: auth.token);
-      final newCode = res['inviteCode'] as String?;
-      if (newCode != null && mounted) {
-        setState(() {
-          _clubDetail = {...?_clubDetail, 'inviteCode': newCode};
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('초대 코드가 재생성되었습니다'), backgroundColor: AppColors.primary, duration: Duration(seconds: 2)),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red),
-        );
-      }
-    }
+    if (mounted) setState(() {});
   }
 
   @override
@@ -120,7 +45,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return RefreshIndicator(
       onRefresh: () async {
-        setState(() => _loading = true);
         await _loadProfile();
       },
       child: SingleChildScrollView(
@@ -128,16 +52,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // 프로필 카드
             _buildProfileCard(user, player, auth),
             const SizedBox(height: 20),
-            // 클럽 정보
-            _buildClubCard(auth),
-            const SizedBox(height: 20),
-            // 시즌 스탯
-            if (player != null) _buildSeasonStats(),
-            const SizedBox(height: 20),
-            // 메뉴
             _buildMenuSection(auth),
           ],
         ),
@@ -160,7 +76,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          // 아바타
           Container(
             width: 80,
             height: 80,
@@ -194,7 +109,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Text('(${player!['nickname']})', style: TextStyle(fontSize: 14, color: Colors.white.withAlpha(128))),
             ),
           const SizedBox(height: 10),
-          // 뱃지
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -208,112 +122,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 14),
           Divider(color: Colors.white.withAlpha(20)),
           const SizedBox(height: 10),
-          // 정보
           _infoRow(Icons.mail_outline, email),
           const SizedBox(height: 6),
           _infoRow(Icons.person_outline, '@${user?['username'] ?? ''}'),
-          if (_myRank != null) ...[
-            const SizedBox(height: 6),
-            _infoRow(Icons.emoji_events_outlined, 'MVP 순위 $_myRank위'),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildClubCard(AuthService auth) {
-    final club = auth.club;
-    if (club == null) return const SizedBox.shrink();
-
-    final clubName = club['name'] ?? '';
-    final slug = club['slug'] ?? '';
-    final inviteCode = _clubDetail?['inviteCode'] ?? '';
-    final memberCount = _clubDetail?['memberCount'];
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withAlpha(30)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text('⚽', style: TextStyle(fontSize: 18)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(clubName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                    Text('@$slug', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
-                  ],
-                ),
-              ),
-              if (memberCount != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha(20),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text('$memberCount명', style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
-                ),
-            ],
-          ),
-          if (auth.isAdmin && inviteCode.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            Divider(color: Colors.white.withAlpha(15)),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Icon(Icons.link, size: 15, color: Colors.white.withAlpha(102)),
-                const SizedBox(width: 8),
-                Text('초대 코드', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
-                const Spacer(),
-                // 재생성 버튼
-                GestureDetector(
-                  onTap: () => _regenerateInviteCode(auth),
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(13),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.white.withAlpha(26)),
-                    ),
-                    child: Icon(Icons.refresh, size: 14, color: Colors.white.withAlpha(153)),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Clipboard.setData(ClipboardData(text: inviteCode));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('초대 코드가 복사되었습니다 ✅'), backgroundColor: AppColors.primary, duration: Duration(seconds: 2)),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(20),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.primary.withAlpha(51)),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(inviteCode, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primary, letterSpacing: 1.5)),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.copy, size: 13, color: AppColors.primary),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
         ],
       ),
     );
@@ -341,143 +152,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildSeasonStats() {
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-    }
-
-    if (_playerStats == null) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white.withAlpha(8),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withAlpha(20)),
-        ),
-        child: Column(
-          children: [
-            Icon(Icons.bar_chart, size: 32, color: Colors.white.withAlpha(51)),
-            const SizedBox(height: 8),
-            Text('시즌 기록이 없습니다', style: TextStyle(color: Colors.white.withAlpha(102))),
-          ],
-        ),
-      );
-    }
-
-    final stats = _playerStats!;
-    final year = DateTime.now().year;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withAlpha(20)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.trending_up, size: 18, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Text('$year년 시즌 스탯', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // 주요 스탯 4개
-          Row(
-            children: [
-              _statCard('⭐', 'MVP', '${stats['mvpCount'] ?? 0}회', AppColors.primary),
-              _statCard('⚽', '득점', '${stats['goals'] ?? 0}', AppColors.amber),
-              _statCard('⚡', '도움', '${stats['assists'] ?? 0}', AppColors.blue),
-              _statCard('🛡️', '수비', '${stats['defenses'] ?? 0}', AppColors.purple),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // 추가 스탯
-          Row(
-            children: [
-              Expanded(
-                child: _miniStat('경기', '${stats['games'] ?? 0}경기', Icons.sports_soccer),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _miniStat('1등', '${stats['rank1'] ?? 0}회', Icons.emoji_events),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _statCard(String icon, String label, String value, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        margin: const EdgeInsets.symmetric(horizontal: 3),
-        decoration: BoxDecoration(
-          color: color.withAlpha(20),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withAlpha(51)),
-        ),
-        child: Column(
-          children: [
-            Text(icon, style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 4),
-            Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
-            Text(label, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(153))),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _miniStat(String label, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(5),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withAlpha(13)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 15, color: Colors.white.withAlpha(102)),
-              const SizedBox(width: 6),
-              Text(label, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMenuSection(AuthService auth) {
     return Column(
       children: [
-        if (auth.isAdmin) ...[
-          _menuItem(
-            icon: Icons.tune_rounded,
-            label: '클럽 관리 설정',
-            color: AppColors.purple,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminClubSettingsScreen())),
-          ),
-          const SizedBox(height: 8),
-        ],
-        _menuItem(
-          icon: Icons.receipt_long,
-          label: '정산 내역',
-          color: AppColors.primary,
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettlementsScreen())),
-        ),
-        const SizedBox(height: 8),
         _menuItem(
           icon: Icons.lock_outline,
           label: '비밀번호 변경',
@@ -485,7 +162,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onTap: () => _showPasswordDialog(auth),
         ),
         const SizedBox(height: 8),
-        // 구글 계정 연동
         _googleLinked == true
           ? _menuItem(
               icon: Icons.link_off,
@@ -636,7 +312,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('비밀번호가 변경되었습니다 ✅'), backgroundColor: AppColors.primary),
+                    const SnackBar(content: Text('비밀번호가 변경되었습니다'), backgroundColor: AppColors.primary),
                   );
                 }
               } catch (e) {
@@ -697,7 +373,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (mounted) {
                   _loadProfile();
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('닉네임이 변경되었습니다 ✅'), backgroundColor: AppColors.primary));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('닉네임이 변경되었습니다'), backgroundColor: AppColors.primary));
                 }
               } catch (e) {
                 if (mounted) {

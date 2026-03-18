@@ -185,8 +185,39 @@ sessionsRoutes.post('/', authMiddleware('ADMIN'), async (c) => {
       now
     ).run()
 
+    const sessionId = result.meta.last_row_id
+
+    // 자동 알림: 세션 생성 시 클럽 전체 멤버에게 알림
+    try {
+      const notifConfig = await c.env.DB.prepare(
+        'SELECT notification_config FROM clubs WHERE id = ?'
+      ).bind(clubId).first<{ notification_config: string }>()
+      const config = JSON.parse(notifConfig?.notification_config ?? '{}')
+
+      if (config.sessionCreated !== false) {
+        const members = await c.env.DB.prepare(
+          'SELECT user_id FROM club_members WHERE club_id = ?'
+        ).bind(clubId).all()
+
+        const creatorId = (c as any).userId
+        for (const m of members.results as any[]) {
+          if (m.user_id === creatorId) continue
+          await c.env.DB.prepare(
+            `INSERT INTO notifications (user_id, type, title, message, link_url, is_read, created_at)
+             VALUES (?, 'session_created', ?, ?, ?, 0, ?)`
+          ).bind(
+            m.user_id,
+            '새 세션 생성',
+            `${data.sessionDate} 세션이 생성되었습니다. 참석 여부를 알려주세요!`,
+            `/sessions/${sessionId}`,
+            now
+          ).run()
+        }
+      }
+    } catch {}
+
     return c.json({
-      id: result.meta.last_row_id,
+      id: sessionId,
       message: '세션이 생성되었습니다.',
     }, 201)
   } catch (e: any) {
@@ -1703,17 +1734,22 @@ sessionsRoutes.post('/:id/rsvp', authMiddleware(), async (c) => {
 
 // ── 자동 정산: 세션 ended 시 순위별 참가비 session_payments 생성 ──────────────
 async function autoSettleSession(db: any, sessionId: number) {
-  // 1. 세션의 클럽 정보 및 fee_tiers 조회
+  // 1. 세션의 클럽 정보 및 fee_config 조회
   const session = await db.prepare(`
-    SELECT s.id, s.club_id, c.per_game_fee, c.fee_tiers
+    SELECT s.id, s.club_id, c.fee_config
     FROM sessions s
     JOIN clubs c ON c.id = s.club_id
     WHERE s.id = ?
   `).bind(sessionId).first() as any
   if (!session) return
 
-  const perGameFee: number = session.per_game_fee ?? 0
-  const feeTiers: Array<{ rank: number; amount: number }> = JSON.parse(session.fee_tiers ?? '[]')
+  const feeConfig = JSON.parse(session.fee_config ?? '{}')
+  const baseAmount: number = feeConfig.baseAmount ?? 0
+  const splitEnabled: boolean = feeConfig.splitEnabled ?? false
+  const splitTotal: number = feeConfig.splitTotal ?? 0
+  const splitRoundUp: number = feeConfig.splitRoundUp ?? 100
+  const rankDiffEnabled: boolean = feeConfig.rankDiffEnabled ?? false
+  const rankDiffAmount: number = feeConfig.rankDiffAmount ?? 500
 
   // 2. 해당 세션의 팀 목록
   const teams = await db.prepare(
@@ -1760,18 +1796,46 @@ async function autoSettleSession(db: any, sessionId: number) {
     })
     .map(([teamId], idx) => ({ teamId: Number(teamId), rank: idx + 1 }))
 
-  // 5. 팀별 멤버 조회
+  // 5. 팀별 멤버 조회 (default_depositor_name 포함)
   const members = await db.prepare(`
-    SELECT tm.player_id, tm.guest_name, tm.team_id, COALESCE(p.name, tm.guest_name) as name
+    SELECT tm.player_id, tm.guest_name, tm.team_id,
+           COALESCE(p.name, tm.guest_name) as name,
+           p.default_depositor_name
     FROM team_members tm
     LEFT JOIN players p ON p.id = tm.player_id
     WHERE tm.team_id IN (${teams.results.map(() => '?').join(',')})
   `).bind(...teams.results.map((t: any) => t.id)).all()
 
-  // 6. session_payments 생성 (중복 방지)
+  const participantCount = (members.results as any[]).length
+  if (participantCount === 0) return
+
+  // 6. 참가비 계산
+  const teamCount = ranked.length
+
+  // 기본 금액 결정
+  let baseFee: number
+  if (splitEnabled && splitTotal > 0) {
+    // 총액 분할: splitTotal / 참가자수, splitRoundUp 단위 올림
+    const raw = splitTotal / participantCount
+    baseFee = Math.ceil(raw / splitRoundUp) * splitRoundUp
+  } else {
+    baseFee = baseAmount
+  }
+
+  // 순위별 차등 계산 함수
+  // rankDiffEnabled: 중간 순위를 기준(baseFee)으로, 위는 +, 아래는 - rankDiffAmount
+  function calcAmount(teamRank: number): number {
+    if (!rankDiffEnabled || teamCount <= 1) return baseFee
+    // 중간 순위 기준점 (예: 3팀이면 2위가 기준)
+    const midRank = Math.ceil(teamCount / 2)
+    const diff = (teamRank - midRank) * rankDiffAmount
+    // 순위가 높을수록(1위) 더 적게, 낮을수록 더 많이
+    return Math.max(0, baseFee + diff)
+  }
+
+  // 7. session_payments 생성 (중복 방지)
   const now = Math.floor(Date.now() / 1000)
 
-  // 총 참가비 합계 계산 (settlements.total_pot용)
   let totalPot = 0
   const memberPayments: Array<{
     playerId: number | null
@@ -1779,12 +1843,12 @@ async function autoSettleSession(db: any, sessionId: number) {
     name: string
     amount: number
     teamRank: number
+    depositorName: string | null
   }> = []
 
   for (const member of members.results as any[]) {
     const teamRank = ranked.find(r => r.teamId === member.team_id)?.rank ?? 1
-    const tier = feeTiers.find(t => t.rank === teamRank)
-    const amount = tier ? tier.amount : perGameFee
+    const amount = calcAmount(teamRank)
     totalPot += amount
     memberPayments.push({
       playerId: member.player_id ?? null,
@@ -1792,6 +1856,7 @@ async function autoSettleSession(db: any, sessionId: number) {
       name: member.name ?? '?',
       amount,
       teamRank,
+      depositorName: member.default_depositor_name ?? null,
     })
   }
 
@@ -1820,8 +1885,8 @@ async function autoSettleSession(db: any, sessionId: number) {
 
     await db.prepare(`
       INSERT INTO session_payments
-        (settlement_id, session_id, player_id, guest_name, player_name, amount, team_rank, paid, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
+        (settlement_id, session_id, player_id, guest_name, player_name, amount, team_rank, paid, depositor_name, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
     `).bind(
       settlementId,
       sessionId,
@@ -1830,9 +1895,40 @@ async function autoSettleSession(db: any, sessionId: number) {
       mp.name,
       mp.amount,
       mp.teamRank,
+      mp.depositorName,
       now
     ).run()
   }
+
+  // 자동 정산 알림: 참가자에게 계좌 + 금액 포함 알림
+  try {
+    const notifConfig = await db.prepare(
+      'SELECT notification_config, bank_account FROM clubs WHERE id = ?'
+    ).bind(session.club_id).first<{ notification_config: string; bank_account: string }>()
+    const config = JSON.parse(notifConfig?.notification_config ?? '{}')
+
+    if (config.settlementRemind !== false) {
+      const bank = JSON.parse(notifConfig?.bank_account ?? 'null')
+      const bankInfo = bank ? `\n입금: ${bank.bankName} ${bank.accountNumber} (${bank.holderName})` : ''
+
+      for (const mp of memberPayments) {
+        if (!mp.playerId) continue
+        const player = await db.prepare('SELECT user_id FROM players WHERE id = ?').bind(mp.playerId).first<{ user_id: string }>()
+        if (!player?.user_id) continue
+
+        await db.prepare(
+          `INSERT INTO notifications (user_id, type, title, message, link_url, is_read, created_at)
+           VALUES (?, 'settlement_notify', ?, ?, ?, 0, ?)`
+        ).bind(
+          player.user_id,
+          '참가비 정산',
+          `참가비 ${mp.amount.toLocaleString()}원 (${mp.teamRank}위)${bankInfo}`,
+          `/sessions/${sessionId}`,
+          now
+        ).run()
+      }
+    }
+  } catch {}
 }
 
 // ── 관리자 알림 전송 (팀 편성 완료, 리마인더 등) ──────────────────────────
@@ -1926,6 +2022,85 @@ sessionsRoutes.post('/:id/settlement-remind', authMiddleware('ADMIN'), async (c)
   }
 
   return c.json({ ok: true, sentCount: userIds.length })
+})
+
+// 세션 삭제 (관리자만, hard delete)
+sessionsRoutes.delete('/:id', authMiddleware(), async (c) => {
+  const sessionId = Number(c.req.param('id'))
+  const userId = (c as any).userId
+  const clubId = (c as any).clubId
+
+  if (!clubId) return c.json({ error: '클럽을 선택해주세요.' }, 400)
+
+  // 관리자 확인
+  const member = await c.env.DB.prepare(
+    `SELECT role FROM club_members WHERE club_id = ? AND user_id = ?`
+  ).bind(clubId, userId).first<{ role: string }>()
+
+  if (!member || (member.role !== 'admin' && member.role !== 'owner')) {
+    return c.json({ error: '관리자만 세션을 삭제할 수 있습니다.' }, 403)
+  }
+
+  // 세션 존재 확인
+  const session = await c.env.DB.prepare(
+    `SELECT id FROM sessions WHERE id = ? AND club_id = ?`
+  ).bind(sessionId, clubId).first()
+
+  if (!session) return c.json({ error: '세션을 찾을 수 없습니다.' }, 404)
+
+  // 관련 데이터 순차 삭제 (D1은 트랜잭션 미지원이므로 batch 사용)
+  // 1. match_events, player_match_stats (match_id 기준)
+  const matchRows = await c.env.DB.prepare(
+    `SELECT id FROM matches WHERE session_id = ?`
+  ).bind(sessionId).all()
+  const matchIds = matchRows.results.map((m: any) => m.id)
+
+  const stmts: any[] = []
+
+  if (matchIds.length > 0) {
+    const placeholders = matchIds.map(() => '?').join(',')
+    stmts.push(
+      c.env.DB.prepare(`DELETE FROM match_events WHERE match_id IN (${placeholders})`).bind(...matchIds),
+      c.env.DB.prepare(`DELETE FROM player_match_stats WHERE match_id IN (${placeholders})`).bind(...matchIds),
+    )
+  }
+
+  // 2. matches
+  stmts.push(c.env.DB.prepare(`DELETE FROM matches WHERE session_id = ?`).bind(sessionId))
+
+  // 3. team_members (team_id 기준)
+  const teamRows = await c.env.DB.prepare(
+    `SELECT id FROM teams WHERE session_id = ?`
+  ).bind(sessionId).all()
+  const teamIds = teamRows.results.map((t: any) => t.id)
+
+  if (teamIds.length > 0) {
+    const placeholders = teamIds.map(() => '?').join(',')
+    stmts.push(
+      c.env.DB.prepare(`DELETE FROM team_members WHERE team_id IN (${placeholders})`).bind(...teamIds),
+    )
+  }
+
+  // 4. teams
+  stmts.push(c.env.DB.prepare(`DELETE FROM teams WHERE session_id = ?`).bind(sessionId))
+
+  // 5. 기타 세션 관련 테이블
+  stmts.push(
+    c.env.DB.prepare(`DELETE FROM session_mvp_votes WHERE session_id = ?`).bind(sessionId),
+    c.env.DB.prepare(`DELETE FROM session_mvp_results WHERE session_id = ?`).bind(sessionId),
+    c.env.DB.prepare(`DELETE FROM session_payments WHERE session_id = ?`).bind(sessionId),
+    c.env.DB.prepare(`DELETE FROM settlements WHERE session_id = ?`).bind(sessionId),
+    c.env.DB.prepare(`DELETE FROM attendance WHERE session_id = ?`).bind(sessionId),
+    c.env.DB.prepare(`DELETE FROM player_ratings WHERE session_id = ?`).bind(sessionId),
+    c.env.DB.prepare(`DELETE FROM session_rsvp WHERE session_id = ?`).bind(sessionId),
+  )
+
+  // 6. 세션 자체
+  stmts.push(c.env.DB.prepare(`DELETE FROM sessions WHERE id = ?`).bind(sessionId))
+
+  await c.env.DB.batch(stmts)
+
+  return c.json({ ok: true })
 })
 
 export { sessionsRoutes }

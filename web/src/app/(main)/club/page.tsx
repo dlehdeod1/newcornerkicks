@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import {
   Users,
@@ -10,28 +10,30 @@ import {
   Check,
   Settings,
   Crown,
-  RefreshCw,
   Calendar,
   Trophy,
   ChevronRight,
   AlertCircle,
   Zap,
-  Camera,
-  Trash2,
+  Target,
+  Handshake,
+  Shield,
+  Star,
+  Gamepad2,
+  TrendingUp,
 } from 'lucide-react'
-import { useAuthStore } from '@/stores/auth'
-import { clubsApi } from '@/lib/api'
+import { useAuthStore, useAuthHydrated } from '@/stores/auth'
+import { clubsApi, rankingsApi, subscriptionsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import Image from 'next/image'
 
 export default function ClubPage() {
   const router = useRouter()
-  const { isLoggedIn, club: storeClub, token, isAdmin, setClub } = useAuthStore()
-  const queryClient = useQueryClient()
+  const hydrated = useAuthHydrated()
+  const { isLoggedIn, club: storeClub, player, token, isAdmin } = useAuthStore()
   const [copied, setCopied] = useState(false)
-  const [regenerating, setRegenerating] = useState(false)
-  const [logoUploading, setLogoUploading] = useState(false)
-  const [mvpToggling, setMvpToggling] = useState(false)
+  const [subInfo, setSubInfo] = useState<any>(null)
+  const currentYear = new Date().getFullYear()
 
   const { data, isLoading } = useQuery({
     queryKey: ['club-me'],
@@ -39,7 +41,32 @@ export default function ClubPage() {
     enabled: !!token && isLoggedIn,
   })
 
+  const { data: rankingsData } = useQuery({
+    queryKey: ['rankings', currentYear],
+    queryFn: () => rankingsApi.get(currentYear, token ?? undefined),
+    enabled: !!player?.id,
+  })
+
+  useEffect(() => {
+    if (token) {
+      subscriptionsApi.me(token).then((d: any) => setSubInfo(d)).catch(() => {})
+    }
+  }, [token])
+
+  const rankings = rankingsData?.data?.rankings || []
+  const sortedRankings = [...rankings].sort((a: any, b: any) => (b.mvpCount || 0) - (a.mvpCount || 0))
+  const playerRank = player ? sortedRankings.findIndex((p: any) => p.id === player.id) + 1 : null
+  const playerStats = player ? rankings.find((p: any) => p.id === player.id) : null
+
   const club = data?.club ?? null
+
+  if (!hydrated) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   if (!isLoggedIn) {
     router.push('/login')
@@ -51,59 +78,6 @@ export default function ClubPage() {
     await navigator.clipboard.writeText(club.inviteCode)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !token) return
-    setLogoUploading(true)
-    try {
-      const res = await clubsApi.uploadLogo(file, token)
-      queryClient.invalidateQueries({ queryKey: ['club-me'] })
-      if (storeClub) setClub({ ...storeClub, logoUrl: res.logoUrl })
-    } catch (err: any) {
-      alert(err.message || '로고 업로드에 실패했습니다.')
-    } finally {
-      setLogoUploading(false)
-    }
-  }
-
-  const handleLogoDelete = async () => {
-    if (!confirm('로고를 삭제할까요?')) return
-    try {
-      await clubsApi.deleteLogo(token!)
-      queryClient.invalidateQueries({ queryKey: ['club-me'] })
-      if (storeClub) setClub({ ...storeClub, logoUrl: null })
-    } catch (err: any) {
-      alert(err.message || '삭제에 실패했습니다.')
-    }
-  }
-
-  const handleMvpToggle = async () => {
-    if (!token || !club) return
-    setMvpToggling(true)
-    try {
-      await clubsApi.updateSettings({ mvpVoteEnabled: !club.mvpVoteEnabled }, token)
-      queryClient.invalidateQueries({ queryKey: ['club-me'] })
-    } catch (err: any) {
-      alert(err.message || '설정 변경에 실패했습니다.')
-    } finally {
-      setMvpToggling(false)
-    }
-  }
-
-  const handleRegenerateCode = async () => {
-    if (!confirm('초대 코드를 새로 발급하면 기존 코드는 사용할 수 없게 됩니다. 계속할까요?')) return
-    setRegenerating(true)
-    try {
-      const res = await clubsApi.regenerateInviteCode(token!)
-      queryClient.invalidateQueries({ queryKey: ['club-me'] })
-      if (storeClub) setClub({ ...storeClub, inviteCode: res.inviteCode })
-    } catch (e: any) {
-      alert(e.message || '실패했습니다.')
-    } finally {
-      setRegenerating(false)
-    }
   }
 
   const roleLabel = (role: string) => {
@@ -218,83 +192,90 @@ export default function ClubPage() {
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
               이 코드를 공유하면 누구든 이 클럽에 가입할 수 있어요
             </p>
-            {isAdmin && (
-              <button
-                onClick={handleRegenerateCode}
-                disabled={regenerating}
-                className="mt-3 flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-              >
-                <RefreshCw className={cn('w-3.5 h-3.5', regenerating && 'animate-spin')} />
-                코드 재발급
-              </button>
-            )}
           </div>
 
-          {/* 로고 설정 (관리자만) */}
-          {isAdmin && (
+          {/* 내 시즌 스탯 */}
+          {player && (
             <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-              <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
-                클럽 로고
-              </h3>
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-2xl overflow-hidden border-2 border-dashed border-slate-300 dark:border-slate-600">
-                  {club.logoUrl ? (
-                    <Image src={`${process.env.NEXT_PUBLIC_API_URL}${club.logoUrl}`} alt="클럽 로고" width={64} height={64} className="object-cover w-full h-full" />
-                  ) : (
-                    <Camera className="w-6 h-6 text-slate-400" />
-                  )}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-emerald-500" />
+                  {currentYear}년 시즌 스탯
+                </h3>
+                {playerRank ? (
+                  <span className="px-2.5 py-1 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full text-xs font-medium">
+                    MVP {playerRank}위
+                  </span>
+                ) : null}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <MiniStatCard icon={<Star className="w-4 h-4" />} label="MVP" value={`${playerStats?.mvpCount || 0}회`} color="emerald" />
+                <MiniStatCard icon={<Target className="w-4 h-4" />} label="득점" value={playerStats?.goals || 0} color="amber" />
+                <MiniStatCard icon={<Handshake className="w-4 h-4" />} label="도움" value={playerStats?.assists || 0} color="blue" />
+                <MiniStatCard icon={<Shield className="w-4 h-4" />} label="수비" value={playerStats?.defenses || 0} color="purple" />
+              </div>
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 text-slate-500 mb-0.5">
+                    <Gamepad2 className="w-3.5 h-3.5" />
+                    <span className="text-xs">경기</span>
+                  </div>
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">{playerStats?.games || 0}</p>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className={cn(
-                    'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg cursor-pointer transition-colors',
-                    'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  )}>
-                    <Camera className="w-3.5 h-3.5" />
-                    {club.logoUrl ? '변경' : '업로드'}
-                    <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={logoUploading} />
-                  </label>
-                  {club.logoUrl && (
-                    <button
-                      onClick={handleLogoDelete}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      삭제
-                    </button>
-                  )}
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 text-slate-500 mb-0.5">
+                    <Trophy className="w-3.5 h-3.5" />
+                    <span className="text-xs">1등</span>
+                  </div>
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">{playerStats?.rank1 || 0}회</p>
                 </div>
               </div>
-              <p className="text-xs text-slate-400 mt-3">권장: 정사각형 이미지, 5MB 이하</p>
+              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <Link
+                  href={`/ranking/${player.id}`}
+                  className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 font-medium"
+                >
+                  상세 기록 보기 →
+                </Link>
+              </div>
             </div>
           )}
 
-          {/* 클럽 설정 (관리자만) */}
-          {isAdmin && (
-            <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-              <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
-                클럽 설정
-              </h3>
+          {/* 구독 플랜 */}
+          <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Crown className="w-4 h-4 text-emerald-500" />
+              플랜
+            </h3>
+            {club.isPro ? (
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-slate-900 dark:text-white">MVP 투표</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">세션 종료 후 24시간 내 MVP 투표 진행</p>
-                </div>
-                <button
-                  onClick={handleMvpToggle}
-                  disabled={mvpToggling}
-                  className={cn(
-                    'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                    club.mvpVoteEnabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 rounded-full text-sm font-medium border border-emerald-300 dark:border-emerald-500/30">
+                    <Zap className="w-3.5 h-3.5" />
+                    {club.planType === 'developer' ? 'Developer' : 'PRO'}
+                  </span>
+                  {subInfo?.subscription && club.planType !== 'developer' && (
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      {subInfo.subscription.billingCycle === 'yearly' ? '연간' : '월간'} · 만료: {new Date(subInfo.subscription.expiresAt * 1000).toLocaleDateString('ko-KR')}
+                    </p>
                   )}
-                >
-                  <span className={cn(
-                    'inline-block h-4 w-4 rounded-full bg-white transition-transform shadow-sm',
-                    club.mvpVoteEnabled ? 'translate-x-6' : 'translate-x-1'
-                  )} />
-                </button>
+                </div>
+                {club.planType !== 'developer' && (
+                  <Link href="/upgrade" className="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">관리 →</Link>
+                )}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="inline-flex px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full text-sm font-medium">FREE</span>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">AI 팀 편성 등 프리미엄 기능을 사용해보세요</p>
+                </div>
+                <Link href="/upgrade" className="ml-4 flex-shrink-0 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity">
+                  업그레이드
+                </Link>
+              </div>
+            )}
+          </div>
 
           {/* 바로가기 메뉴 */}
           <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
@@ -327,8 +308,8 @@ export default function ClubPage() {
                 <ClubMenuItem
                   icon={<Settings className="w-5 h-5" />}
                   label="클럽 설정"
-                  description="회비, 기록 항목, 클럽 정보 관리"
-                  href="/admin"
+                  description="로고, 초대코드, MVP 투표, 클럽 정보 관리"
+                  href="/admin/settings"
                   color="purple"
                 />
               )}
@@ -383,5 +364,24 @@ function ClubMenuItem({
       </div>
       <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 flex-shrink-0 transition-colors" />
     </Link>
+  )
+}
+
+function MiniStatCard({
+  icon, label, value, color,
+}: {
+  icon: React.ReactNode; label: string; value: string | number; color: 'emerald' | 'amber' | 'blue' | 'purple'
+}) {
+  const colorClasses = {
+    emerald: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30',
+    amber: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30',
+    blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/30',
+    purple: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-500/30',
+  }
+  return (
+    <div className={cn('rounded-xl p-3 border', colorClasses[color])}>
+      <div className="flex items-center gap-1.5 mb-0.5">{icon}<span className="text-xs">{label}</span></div>
+      <p className="text-xl font-bold">{value}</p>
+    </div>
   )
 }

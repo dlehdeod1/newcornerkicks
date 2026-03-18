@@ -5,7 +5,8 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 
 class HallOfFameScreen extends StatefulWidget {
-  const HallOfFameScreen({super.key});
+  final bool embedded;
+  const HallOfFameScreen({super.key, this.embedded = false});
   @override
   State<HallOfFameScreen> createState() => _HallOfFameScreenState();
 }
@@ -34,26 +35,20 @@ class _HallOfFameScreenState extends State<HallOfFameScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bgBase,
-      appBar: AppBar(
-        backgroundColor: AppColors.bgBase,
-        title: const Text('🏆 명예의 전당', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : _records.isEmpty
-              ? const Center(child: Text('기록이 없습니다', style: TextStyle(color: Colors.white38)))
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  color: AppColors.primary,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _records.length,
-                    itemBuilder: (ctx, i) {
+  Widget _buildBody() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+    }
+    if (_records.isEmpty) {
+      return const Center(child: Text('기록이 없습니다', style: TextStyle(color: Colors.white38)));
+    }
+    return RefreshIndicator(
+      onRefresh: _load,
+      color: AppColors.primary,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _records.length,
+        itemBuilder: (ctx, i) {
                       final r = _records[i];
                       final medal = i == 0 ? '🥇' : i == 1 ? '🥈' : i == 2 ? '🥉' : '🏅';
                       return Container(
@@ -112,6 +107,20 @@ class _HallOfFameScreenState extends State<HallOfFameScreen> {
                     },
                   ),
                 ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.embedded) return _buildBody();
+    return Scaffold(
+      backgroundColor: AppColors.bgBase,
+      appBar: AppBar(
+        backgroundColor: AppColors.bgBase,
+        title: const Text('🏆 명예의 전당', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: _buildBody(),
     );
   }
 

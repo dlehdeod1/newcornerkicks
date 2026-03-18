@@ -7,6 +7,23 @@ import { isClubPro } from '../utils/planUtils'
 
 const authRoutes = new Hono<{ Bindings: Env }>()
 
+// Google ID 토큰 검증 (JWKS 기반)
+const GOOGLE_JWKS = jose.createRemoteJWKSet(
+  new URL('https://www.googleapis.com/oauth2/v3/certs')
+)
+
+async function verifyGoogleIdToken(idToken: string): Promise<{ email: string; name?: string; sub: string }> {
+  const { payload } = await jose.jwtVerify(idToken, GOOGLE_JWKS, {
+    issuer: ['https://accounts.google.com', 'accounts.google.com'],
+  })
+  if (!payload.email) throw new Error('이메일 정보가 없습니다.')
+  return {
+    email: payload.email as string,
+    name: (payload.name as string) ?? undefined,
+    sub: payload.sub!,
+  }
+}
+
 // 로그인 스키마
 const loginSchema = z.object({
   identifier: z.string().min(1),
@@ -257,11 +274,15 @@ authRoutes.post('/link-google', async (c) => {
     const { idToken } = await c.req.json()
     if (!idToken) return c.json({ error: 'idToken이 필요합니다.' }, 400)
 
-    // Google 토큰 검증
-    const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`)
-    if (!verifyRes.ok) return c.json({ error: '유효하지 않은 Google 토큰입니다.' }, 401)
-    const googleUser = await verifyRes.json() as any
-    const { sub: googleId, email: googleEmail } = googleUser
+    // Google 토큰 검증 (JWKS)
+    let googleId: string, googleEmail: string
+    try {
+      const gUser = await verifyGoogleIdToken(idToken)
+      googleId = gUser.sub
+      googleEmail = gUser.email
+    } catch {
+      return c.json({ error: '유효하지 않은 Google 토큰입니다.' }, 401)
+    }
 
     const db = c.env.DB
     const now = Math.floor(Date.now() / 1000)
@@ -486,17 +507,16 @@ authRoutes.post('/google', async (c) => {
     const { idToken } = await c.req.json()
     if (!idToken) return c.json({ error: 'idToken이 필요합니다.' }, 400)
 
-    // Google tokeninfo endpoint로 토큰 검증
-    const verifyRes = await fetch(
-      `https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`
-    )
-    if (!verifyRes.ok) {
+    // Google 토큰 검증 (JWKS)
+    let email: string, name: string | undefined, googleId: string
+    try {
+      const gUser = await verifyGoogleIdToken(idToken)
+      email = gUser.email
+      name = gUser.name
+      googleId = gUser.sub
+    } catch {
       return c.json({ error: '유효하지 않은 Google 토큰입니다.' }, 401)
     }
-    const googleUser = await verifyRes.json() as any
-    const { email, name, sub: googleId } = googleUser
-
-    if (!email) return c.json({ error: '이메일 정보를 가져올 수 없습니다.' }, 400)
 
     const now = Math.floor(Date.now() / 1000)
     const db = c.env.DB

@@ -118,6 +118,9 @@ export const sessionsApi = {
 
   aiAnalysis: (id: number, token: string) =>
     api(`/sessions/${id}/ai-analysis`, { method: 'POST', token }),
+
+  delete: (id: number, token: string) =>
+    api(`/sessions/${id}`, { method: 'DELETE', token }),
 }
 
 // Players API
@@ -363,6 +366,35 @@ export const clubsApi = {
 
   deleteLogo: (token: string) =>
     api('/clubs/me/logo', { method: 'DELETE', token }),
+}
+
+// Payments API (납부/비용)
+export const paymentsApi = {
+  sessions: (token: string) =>
+    api('/payments/sessions', { token }),
+
+  sessionDetail: (sessionId: number, token: string) =>
+    api(`/payments/sessions/${sessionId}`, { token }),
+
+  updatePaid: (paymentId: number, paid: boolean, token: string, depositorName?: string) =>
+    api(`/payments/${paymentId}/paid`, { method: 'PUT', body: { paid, depositorName }, token }),
+
+  updateExempt: (paymentId: number, exempt: boolean, token: string) =>
+    api(`/payments/${paymentId}/exempt`, { method: 'PUT', body: { exempt }, token }),
+
+  // 비용 기록
+  getExpenses: (sessionId: number, token: string) =>
+    api(`/payments/sessions/${sessionId}/expenses`, { token }),
+
+  addExpense: (sessionId: number, data: { description: string; amount: number }, token: string) =>
+    api(`/payments/sessions/${sessionId}/expenses`, { method: 'POST', body: data, token }),
+
+  deleteExpense: (sessionId: number, expenseId: number, token: string) =>
+    api(`/payments/sessions/${sessionId}/expenses/${expenseId}`, { method: 'DELETE', token }),
+
+  // 정기 회비
+  membership: (token: string) =>
+    api('/payments/membership', { token }),
 }
 
 // Export API (CSV 내보내기)

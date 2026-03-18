@@ -186,11 +186,54 @@ async function finalizeMvpVotes(env: Env) {
   }
 }
 
+// 매시간 실행: 세션 당일 리마인더 (오전 9시 KST ≈ UTC 0시)
+async function sendSessionDayReminders(env: Env) {
+  const now = Math.floor(Date.now() / 1000)
+  // KST 기준 현재 시각
+  const kstHour = new Date(now * 1000).getUTCHours() + 9
+  // UTC 0시 = KST 9시에만 실행
+  if (kstHour % 24 !== 9) return
+
+  const today = new Date(now * 1000 + 9 * 3600 * 1000).toISOString().slice(0, 10)
+
+  // 오늘 세션 조회 (recruiting/진행 전 상태)
+  const sessions = await env.DB.prepare(`
+    SELECT s.id, s.club_id, s.title, s.session_date, c.notification_config
+    FROM sessions s
+    JOIN clubs c ON s.club_id = c.id
+    WHERE s.session_date = ? AND s.status = 'recruiting'
+  `).bind(today).all()
+
+  for (const session of sessions.results as any[]) {
+    const config = JSON.parse(session.notification_config ?? '{}')
+    if (config.sessionDayRemind === false) continue
+
+    // 클럽 전체 멤버에게 알림
+    const members = await env.DB.prepare(
+      'SELECT user_id FROM club_members WHERE club_id = ?'
+    ).bind(session.club_id).all()
+
+    for (const m of members.results as any[]) {
+      await env.DB.prepare(
+        `INSERT INTO notifications (user_id, type, title, message, link_url, is_read, created_at)
+         VALUES (?, 'session_day_remind', ?, ?, ?, 0, ?)`
+      ).bind(
+        m.user_id,
+        '오늘 세션이 있어요!',
+        `${session.title || '정기 풋살'} - 오늘 예정된 세션을 확인하세요.`,
+        `/sessions/${session.id}`,
+        now
+      ).run()
+    }
+  }
+}
+
 export default {
   fetch: app.fetch.bind(app),
   async scheduled(_event: any, env: Env, _ctx: any) {
     await autoTransitionSessions(env)
     await expireSubscriptions(env)
     await finalizeMvpVotes(env)
+    await sendSessionDayReminders(env)
   },
 }

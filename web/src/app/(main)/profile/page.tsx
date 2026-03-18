@@ -2,31 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import {
   User,
   Mail,
-  Shield,
-  Trophy,
-  Target,
-  Handshake,
   Edit3,
   Save,
   X,
   Key,
-  Star,
-  Gamepad2,
-  TrendingUp,
-  Crown,
-  Zap,
-  Users,
-  ChevronRight,
-  Link2,
   Unlink,
 } from 'lucide-react'
-import { useAuthStore } from '@/stores/auth'
-import { authApi, rankingsApi, subscriptionsApi } from '@/lib/api'
+import { useAuthStore, useAuthHydrated } from '@/stores/auth'
+import { authApi } from '@/lib/api'
 import { GoogleLogin } from '@react-oauth/google'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -34,7 +21,8 @@ import { cn } from '@/lib/cn'
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { isLoggedIn, user, player, club, token, logout, setPlayer } = useAuthStore()
+  const hydrated = useAuthHydrated()
+  const { isLoggedIn, user, player, token, logout, setPlayer } = useAuthStore()
   const [isEditing, setIsEditing] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -54,36 +42,20 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
-  const currentYear = new Date().getFullYear()
-  const isPro = club?.isPro
-  const [subInfo, setSubInfo] = useState<any>(null)
   const [googleLinked, setGoogleLinked] = useState<boolean | null>(null)
   const [googleLoading, setGoogleLoading] = useState(false)
 
   useEffect(() => {
     if (token) {
       authApi.me(token).then((d: any) => setGoogleLinked(!!d.user?.googleLinked)).catch(() => {})
-      subscriptionsApi.me(token).then((d: any) => setSubInfo(d)).catch(() => {})
     }
   }, [token])
 
-  // 랭킹 데이터
-  const { data: rankingsData } = useQuery({
-    queryKey: ['rankings', currentYear],
-    queryFn: () => rankingsApi.get(currentYear, token ?? undefined),
-    enabled: !!player?.id,
-  })
-
-  const rankings = rankingsData?.data?.rankings || []
-  const sortedRankings = [...rankings].sort((a: any, b: any) => (b.mvpCount || 0) - (a.mvpCount || 0))
-  const playerRank = player ? sortedRankings.findIndex((p: any) => p.id === player.id) + 1 : null
-  const playerStats = player ? rankings.find((p: any) => p.id === player.id) : null
-
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (hydrated && !isLoggedIn) {
       router.push('/login')
     }
-  }, [isLoggedIn, router])
+  }, [hydrated, isLoggedIn, router])
 
   useEffect(() => {
     if (player?.nickname) {
@@ -169,6 +141,14 @@ export default function ProfilePage() {
     router.push('/')
   }
 
+  if (!hydrated) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   if (!isLoggedIn || !user) {
     return null
   }
@@ -178,7 +158,7 @@ export default function ProfilePage() {
       {/* 헤더 */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">내 프로필</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">계정 정보와 경기 기록을 확인하세요</p>
+        <p className="text-slate-600 dark:text-slate-400 mt-2">계정 정보를 관리하세요</p>
       </div>
 
       {/* 알림 */}
@@ -193,9 +173,8 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 왼쪽: 프로필 카드 */}
-        <div className="lg:col-span-1">
+      <div className="max-w-lg mx-auto">
+        <div>
           <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
             {/* 프로필 이미지 */}
             <div className="flex flex-col items-center mb-6">
@@ -328,169 +307,6 @@ export default function ProfilePage() {
               </Button>
             </div>
           </div>
-        </div>
-
-        {/* 오른쪽: 통계 & 기록 */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* 시즌 스탯 */}
-          {player && (
-            <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-emerald-500" />
-                  {currentYear}년 시즌 스탯
-                </h3>
-                {playerRank && (
-                  <span className="px-3 py-1 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full text-sm font-medium">
-                    MVP 순위 {playerRank}위
-                  </span>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard
-                  icon={<Star className="w-5 h-5" />}
-                  label="MVP"
-                  value={`${playerStats?.mvpCount || 0}회`}
-                  color="emerald"
-                />
-                <StatCard
-                  icon={<Target className="w-5 h-5" />}
-                  label="득점"
-                  value={playerStats?.goals || 0}
-                  color="amber"
-                />
-                <StatCard
-                  icon={<Handshake className="w-5 h-5" />}
-                  label="도움"
-                  value={playerStats?.assists || 0}
-                  color="blue"
-                />
-                <StatCard
-                  icon={<Shield className="w-5 h-5" />}
-                  label="수비"
-                  value={playerStats?.defenses || 0}
-                  color="purple"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
-                  <div className="flex items-center gap-2 text-slate-500 mb-1">
-                    <Gamepad2 className="w-4 h-4" />
-                    <span className="text-sm">경기 참여</span>
-                  </div>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {playerStats?.games || 0}경기
-                  </p>
-                </div>
-                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
-                  <div className="flex items-center gap-2 text-slate-500 mb-1">
-                    <Trophy className="w-4 h-4" />
-                    <span className="text-sm">1등</span>
-                  </div>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {playerStats?.rank1 || 0}회
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <Link
-                  href={`/ranking/${player.id}`}
-                  className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 font-medium"
-                >
-                  상세 기록 보기 →
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {/* 선수 미연동 시 */}
-          {!player && (
-            <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm text-center">
-              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <User className="w-8 h-8 text-slate-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                선수 프로필이 연동되지 않았습니다
-              </h3>
-              <p className="text-slate-500 mb-4">
-                관리자에게 문의하여 선수 코드를 받아 연동하세요.
-              </p>
-            </div>
-          )}
-
-          {/* 내 클럽 바로가기 */}
-          {club && (
-            <Link
-              href="/club"
-              className="flex items-center gap-4 bg-white dark:bg-slate-900/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm hover:border-emerald-300 dark:hover:border-emerald-500/40 transition-colors group"
-            >
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-xl flex-shrink-0 shadow-md shadow-emerald-500/20">
-                ⚽
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-slate-900 dark:text-white truncate">{club.name}</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
-                  <Users className="w-3.5 h-3.5" />
-                  초대 코드 · 클럽 정보 보기
-                </p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors flex-shrink-0" />
-            </Link>
-          )}
-
-          {/* 구독 현황 */}
-          {club && (
-            <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                <Crown className="w-5 h-5 text-emerald-500" />
-                플랜
-              </h3>
-              {isPro ? (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 rounded-full text-sm font-medium border border-emerald-300 dark:border-emerald-500/30">
-                        <Zap className="w-3.5 h-3.5" />
-                        {club.planType === 'developer' ? 'Developer' : 'PRO'}
-                      </span>
-                    </div>
-                    {subInfo?.subscription && club.planType !== 'developer' && (
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                        {subInfo.subscription.billingCycle === 'yearly' ? '연간' : '월간'} ·{' '}
-                        {subInfo.subscription.status === 'cancelled' ? '취소됨 · ' : ''}
-                        만료: {new Date(subInfo.subscription.expiresAt * 1000).toLocaleDateString('ko-KR')}
-                      </p>
-                    )}
-                  </div>
-                  {club.planType !== 'developer' && (
-                    <Link href="/upgrade" className="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
-                      관리 →
-                    </Link>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="inline-flex px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full text-sm font-medium">
-                      FREE
-                    </span>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-                      AI 팀 편성, 다중 관리자 등 프리미엄 기능을 사용해보세요
-                    </p>
-                  </div>
-                  <Link
-                    href="/upgrade"
-                    className="ml-4 flex-shrink-0 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity"
-                  >
-                    업그레이드
-                  </Link>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
 
@@ -643,35 +459,6 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string | number
-  color: 'emerald' | 'amber' | 'blue' | 'purple'
-}) {
-  const colorClasses = {
-    emerald: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30',
-    amber: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30',
-    blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/30',
-    purple: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-500/30',
-  }
-
-  return (
-    <div className={cn('rounded-xl p-4 border', colorClasses[color])}>
-      <div className="flex items-center gap-2 mb-1">
-        {icon}
-        <span className="text-sm">{label}</span>
-      </div>
-      <p className="text-2xl font-bold">{value}</p>
     </div>
   )
 }

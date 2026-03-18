@@ -2,10 +2,10 @@
 
 export const runtime = 'edge'
 
-import { useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useState, useCallback } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { Calendar, MapPin, Users, Trophy, BarChart3, Clock, Settings, Coins } from 'lucide-react'
+import { Calendar, MapPin, Users, Trophy, BarChart3, Clock, Settings, Coins, Trash2 } from 'lucide-react'
 import { sessionsApi } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { cn } from '@/lib/cn'
@@ -25,6 +25,9 @@ export default function SessionDetailPage() {
   const { isAdmin, token } = useAuthStore()
   const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const router = useRouter()
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['session', sessionId],
     queryFn: () => sessionsApi.get(sessionId, token ?? undefined),
@@ -86,14 +89,25 @@ export default function SessionDetailPage() {
             </span>
           </div>
           {isAdmin && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditModalOpen(true)}
-            >
-              <Settings className="w-4 h-4 mr-1.5" />
-              수정
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditModalOpen(true)}
+              >
+                <Settings className="w-4 h-4 mr-1.5" />
+                수정
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsDeleteConfirmOpen(true)}
+                className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 border-red-200 dark:border-red-500/30"
+              >
+                <Trash2 className="w-4 h-4 mr-1.5" />
+                삭제
+              </Button>
+            </div>
           )}
         </div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
@@ -120,6 +134,45 @@ export default function SessionDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* 삭제 확인 모달 */}
+      {isDeleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setIsDeleteConfirmOpen(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-6 max-w-sm mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">세션 삭제</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+              이 세션과 관련된 모든 데이터(경기, 팀, 출석, 정산 등)가 영구 삭제됩니다.
+            </p>
+            <p className="text-sm font-medium text-red-500 mb-4">이 작업은 되돌릴 수 없습니다.</p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setIsDeleteConfirmOpen(false)}>
+                취소
+              </Button>
+              <Button
+                size="sm"
+                disabled={isDeleting}
+                onClick={async () => {
+                  if (!token) return
+                  setIsDeleting(true)
+                  try {
+                    await sessionsApi.delete(sessionId, token)
+                    router.push('/sessions')
+                  } catch (err) {
+                    console.error('세션 삭제 실패:', err)
+                    alert('세션 삭제에 실패했습니다.')
+                  } finally {
+                    setIsDeleting(false)
+                    setIsDeleteConfirmOpen(false)
+                  }
+                }}
+                className="bg-red-500 hover:bg-red-600 text-white"
+              >
+                {isDeleting ? '삭제 중...' : '삭제'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 세션 수정 모달 */}
       <SessionEditModal

@@ -116,6 +116,9 @@ class ApiService {
 
   Future<dynamic> getSession(int id, {String? token}) => request('/sessions/$id', token: token);
 
+  Future<dynamic> deleteSession(int id, String token) =>
+      request('/sessions/$id', method: 'DELETE', token: token);
+
   // Rankings
   Future<dynamic> getRankings({int? year, String? token}) =>
       request('/rankings${year != null ? '?year=$year' : ''}', token: token);
@@ -237,14 +240,30 @@ class ApiService {
   Future<dynamic> getSessionPaymentDetail(int sessionId, String token) =>
       request('/payments/sessions/$sessionId', token: token);
 
-  Future<dynamic> updatePaymentPaid(int paymentId, bool paid, String token) =>
-      request('/payments/$paymentId/paid', method: 'PUT', body: {'paid': paid}, token: token);
+  Future<dynamic> updatePaymentPaid(int paymentId, bool paid, String token, {String? depositorName}) =>
+      request('/payments/$paymentId/paid', method: 'PUT', body: {
+        'paid': paid,
+        if (depositorName != null) 'depositorName': depositorName,
+      }, token: token);
 
   Future<dynamic> updatePaymentExempt(int paymentId, bool exempt, String token) =>
       request('/payments/$paymentId/exempt', method: 'PUT', body: {'exempt': exempt}, token: token);
 
   Future<dynamic> getMembershipPayments(String token) =>
       request('/payments/membership', token: token);
+
+  // 비용 기록
+  Future<dynamic> getSessionExpenses(int sessionId, String token) =>
+      request('/payments/sessions/$sessionId/expenses', token: token);
+
+  Future<dynamic> addSessionExpense(int sessionId, String description, int amount, String token) =>
+      request('/payments/sessions/$sessionId/expenses', method: 'POST', body: {
+        'description': description,
+        'amount': amount,
+      }, token: token);
+
+  Future<dynamic> deleteSessionExpense(int sessionId, int expenseId, String token) =>
+      request('/payments/sessions/$sessionId/expenses/$expenseId', method: 'DELETE', token: token);
 }
 
 class ApiException implements Exception {
