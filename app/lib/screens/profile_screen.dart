@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
+import '../widgets/tip_banner.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -52,6 +53,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            if (player != null && player['nickname'] == null)
+              const TipBanner(
+                tipId: 'profile_nickname',
+                text: '닉네임을 설정하면 다른 멤버에게 표시돼요! 이름 옆 연필 아이콘을 눌러보세요.',
+                icon: Icons.badge,
+                color: AppColors.purple,
+              ),
             _buildProfileCard(user, player, auth),
             const SizedBox(height: 20),
             _buildMenuSection(auth),

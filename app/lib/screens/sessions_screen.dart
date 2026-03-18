@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'session_detail_screen.dart';
+import '../widgets/tip_banner.dart';
 
 class SessionsScreen extends StatefulWidget {
   const SessionsScreen({super.key});
@@ -283,8 +284,18 @@ class _SessionsScreenState extends State<SessionsScreen> {
                 ? _buildEmpty()
                 : ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
-                    itemCount: _sessions.length,
-                    itemBuilder: (ctx, i) => _buildSessionCard(_sessions[i]),
+                    itemCount: _sessions.length + 1,
+                    itemBuilder: (ctx, i) {
+                      if (i == 0) {
+                        return const TipBanner(
+                          tipId: 'sessions_intro',
+                          text: '세션을 눌러서 경기 기록, 팀 편성, 정산을 확인하세요!',
+                          icon: Icons.touch_app,
+                          color: AppColors.blue,
+                        );
+                      }
+                      return _buildSessionCard(_sessions[i - 1]);
+                    },
                   ),
       ),
     );

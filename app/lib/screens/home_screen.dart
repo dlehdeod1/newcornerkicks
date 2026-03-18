@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import 'main_shell.dart';
+import '../widgets/tip_banner.dart';
 import 'session_detail_screen.dart';
 import 'players_screen.dart';
 import 'hall_of_fame_screen.dart';
@@ -115,6 +116,11 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const TipBanner(
+              tipId: 'home_intro',
+              text: '클럽 탭에서 멤버 능력치 평가, 초대 코드 공유 등을 할 수 있어요!',
+              icon: Icons.sports_soccer,
+            ),
             // 클럽 헤더
             Row(
               children: [

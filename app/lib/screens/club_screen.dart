@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import 'player_detail_screen.dart';
 import 'settlements_screen.dart';
+import '../widgets/tip_banner.dart';
 
 class ClubScreen extends StatefulWidget {
   const ClubScreen({super.key});
@@ -81,6 +82,12 @@ class _ClubScreenState extends State<ClubScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            const TipBanner(
+              tipId: 'club_invite',
+              text: '초대 코드를 공유해서 멤버를 초대하세요! 멤버를 눌러 능력치도 평가할 수 있어요.',
+              icon: Icons.group_add,
+              color: AppColors.teal,
+            ),
             _buildClubHero(auth),
             const SizedBox(height: 20),
             _buildSeasonStats(),

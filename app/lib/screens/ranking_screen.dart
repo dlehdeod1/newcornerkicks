@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'player_detail_screen.dart';
 import 'hall_of_fame_screen.dart';
+import '../widgets/tip_banner.dart';
 
 class RankingScreen extends StatefulWidget {
   const RankingScreen({super.key});
@@ -231,6 +232,17 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
       color: AppColors.primary,
       child: CustomScrollView(
         slivers: [
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: TipBanner(
+                tipId: 'ranking_stats',
+                text: '통계 탭에서 베스트 듀오, 라이벌 등 재미있는 통계를 확인하세요!',
+                icon: Icons.analytics,
+                color: AppColors.amber,
+              ),
+            ),
+          ),
           SliverToBoxAdapter(child: _buildRankingStats()),
           SliverToBoxAdapter(child: _buildCategoryChips()),
           if (_sorted.length >= 3)

@@ -49,64 +49,67 @@ class _HallOfFameScreenState extends State<HallOfFameScreen> {
         padding: const EdgeInsets.all(16),
         itemCount: _records.length,
         itemBuilder: (ctx, i) {
-                      final r = _records[i];
-                      final medal = i == 0 ? '🥇' : i == 1 ? '🥈' : i == 2 ? '🥉' : '🏅';
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: i < 3
-                              ? LinearGradient(
-                                  colors: [
-                                    i == 0 ? AppColors.amberLight.withAlpha(26) : i == 1 ? AppColors.slateLight.withAlpha(26) : AppColors.orange.withAlpha(26),
-                                    AppColors.bgCard,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                )
-                              : null,
-                          color: i >= 3 ? AppColors.bgCard : null,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: i == 0 ? AppColors.amberLight.withAlpha(51) : Colors.white.withAlpha(13),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Text(medal, style: const TextStyle(fontSize: 28)),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${r['year'] ?? ''}년 시즌',
-                                    style: const TextStyle(color: Colors.white54, fontSize: 12),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    r['playerName'] ?? r['player_name'] ?? '알 수 없음',
-                                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      _tag('MVP ${r['mvpCount'] ?? r['mvp_count'] ?? 0}회', AppColors.primary),
-                                      const SizedBox(width: 8),
-                                      _tag('${r['goals'] ?? 0}골', AppColors.amberLight),
-                                      const SizedBox(width: 8),
-                                      _tag('${r['assists'] ?? 0}도움', AppColors.blueLight),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+          final r = _records[i];
+          final medal = i == 0 ? '🥇' : i == 1 ? '🥈' : i == 2 ? '🥉' : '🏅';
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: i < 3
+                  ? LinearGradient(
+                      colors: [
+                        i == 0
+                            ? AppColors.amberLight.withAlpha(26)
+                            : i == 1
+                                ? AppColors.slateLight.withAlpha(26)
+                                : AppColors.orange.withAlpha(26),
+                        AppColors.bgCard,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              color: i >= 3 ? AppColors.bgCard : null,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: i == 0 ? AppColors.amberLight.withAlpha(51) : Colors.white.withAlpha(13),
+              ),
+            ),
+            child: Row(
+              children: [
+                Text(medal, style: const TextStyle(fontSize: 28)),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${r['year'] ?? ''}년 시즌',
+                        style: const TextStyle(color: Colors.white54, fontSize: 12),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        r['playerName'] ?? r['player_name'] ?? '알 수 없음',
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          _tag('MVP ${r['mvpCount'] ?? r['mvp_count'] ?? 0}회', AppColors.primary),
+                          const SizedBox(width: 8),
+                          _tag('${r['goals'] ?? 0}골', AppColors.amberLight),
+                          const SizedBox(width: 8),
+                          _tag('${r['assists'] ?? 0}도움', AppColors.blueLight),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
