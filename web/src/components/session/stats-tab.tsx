@@ -85,7 +85,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
         }
         const assisterStats = playerStats.get(event.assister_id)!
         assisterStats.assists++
-        assisterStats.mvpScore += 1
+        assisterStats.mvpScore += 1.5
       }
     })
   })

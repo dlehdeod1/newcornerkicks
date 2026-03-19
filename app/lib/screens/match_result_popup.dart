@@ -124,7 +124,7 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
             'name': aname ?? '?', 'byType': <String, int>{}, 'score': 0.0, 'assists': 0,
           });
           playerStats[akey]!['assists'] = (playerStats[akey]!['assists'] as int) + 1;
-          playerStats[akey]!['score'] = (playerStats[akey]!['score'] as double) + 1.0;
+          playerStats[akey]!['score'] = (playerStats[akey]!['score'] as double) + 1.5;
         }
       }
     }

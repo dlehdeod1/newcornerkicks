@@ -1027,7 +1027,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
             'mvpScore': 0.0,
           });
           playerStats[aKey]!['assists'] = (playerStats[aKey]!['assists'] as int) + 1;
-          playerStats[aKey]!['mvpScore'] = (playerStats[aKey]!['mvpScore'] as double) + 1.0;
+          playerStats[aKey]!['mvpScore'] = (playerStats[aKey]!['mvpScore'] as double) + 1.5;
         }
       }
     }
