@@ -76,48 +76,33 @@ meRoutes.get('/stats', authMiddleware(), async (c) => {
     const goals = Number(statsQuery?.goals) || 0
     const assists = Number(assistQuery?.assists) || 0
     const defenses = Number(statsQuery?.defenses) || 0
-    const myRawScore = goals * 2 + assists * 1 + defenses * 0.5
+    // 우승팀 가점 조회 (rankings.ts와 동일 공식)
+    const sessionWinResult = await c.env.DB.prepare(`
+      WITH team_standings AS (
+        SELECT t.id as team_id,
+          SUM(CASE WHEN (t.id = m.team1_id AND m.team1_score > m.team2_score) OR (t.id = m.team2_id AND m.team2_score > m.team1_score) THEN 3 WHEN m.team1_score = m.team2_score THEN 1 ELSE 0 END) as points,
+          SUM(CASE WHEN t.id = m.team1_id THEN m.team1_score ELSE m.team2_score END) as goals_for
+        FROM teams t JOIN matches m ON t.id = m.team1_id OR t.id = m.team2_id
+        WHERE t.session_id = ? AND m.status = 'completed' GROUP BY t.id
+      ),
+      winning_team AS (
+        SELECT team_id FROM team_standings ORDER BY points DESC, goals_for DESC LIMIT 1
+      )
+      SELECT COUNT(*) as is_winner FROM winning_team wt
+      JOIN team_members tm ON wt.team_id = tm.team_id
+      WHERE tm.player_id = ?
+    `).bind(recentSession.id, playerId).first()
+    const sessionWinBonus = ((sessionWinResult?.is_winner as number) || 0) > 0 ? 1.5 : 0
 
-    // 해당 세션 전체 선수 점수 조회 (1등=10점 정규화를 위해)
-    const allStatsQuery = await c.env.DB.prepare(`
-      SELECT
-        me.player_id,
-        COALESCE(SUM(CASE WHEN me.event_type = 'GOAL' THEN 2.0 ELSE 0 END), 0) +
-        COALESCE(SUM(CASE WHEN me.event_type = 'DEFENSE' THEN 0.5 ELSE 0 END), 0) as raw_score
-      FROM match_events me
-      JOIN matches m ON me.match_id = m.id
-      WHERE m.session_id = ? AND me.player_id IS NOT NULL
-      GROUP BY me.player_id
-    `).bind(recentSession.id).all()
-
-    // 어시스트 점수 합산
-    const assistScores = await c.env.DB.prepare(`
-      SELECT me.assister_id, COUNT(*) as cnt
-      FROM match_events me
-      JOIN matches m ON me.match_id = m.id
-      WHERE m.session_id = ? AND me.event_type = 'GOAL' AND me.assister_id IS NOT NULL
-      GROUP BY me.assister_id
-    `).bind(recentSession.id).all()
-
-    const assistMap = new Map<number, number>()
-    for (const a of assistScores.results as any[]) {
-      assistMap.set(a.assister_id, Number(a.cnt))
-    }
-
-    const allScores = (allStatsQuery.results as any[]).map((r: any) => {
-      return Number(r.raw_score) + (assistMap.get(r.player_id) || 0)
-    })
-
-    const maxScore = allScores.length > 0 ? Math.max(...allScores) : 0
-    // 1등=10점, 나머지는 비례
-    const rating = maxScore > 0 ? Math.round((myRawScore / maxScore) * 10 * 10) / 10 : 0
+    // rankings.ts와 동일 공식: goals*2 + assists*1.5 + defenses*0.5 + sessionWin*1.5
+    const mvpScore = Math.round((goals * 2 + assists * 1.5 + defenses * 0.5 + sessionWinBonus) * 10) / 10
 
     return c.json({
       stats: {
         goals,
         assists,
         defenses,
-        mvpScore: rating,  // 정규화된 평점 (1등=10점)
+        mvpScore,  // 원시 점수 (rankings.ts와 동일 공식)
         sessionId: recentSession.id,
         sessionDate: recentSession.session_date,
         sessionTitle: recentSession.title,
