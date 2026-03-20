@@ -114,4 +114,101 @@ meRoutes.get('/stats', authMiddleware(), async (c) => {
   }
 })
 
+// 내 프로필 요약 (능력치 + 시즌 스탯 + 선호 선수)
+meRoutes.get('/profile-summary', authMiddleware(), async (c) => {
+  try {
+    const userId = (c as any).userId
+    const clubId = (c as any).clubId
+    if (!clubId) return c.json({ error: '클럽에 소속되어 있지 않습니다.' }, 403)
+
+    const player = await c.env.DB.prepare(
+      'SELECT id, name, nickname, photo_url FROM players WHERE user_id = ? AND club_id = ?'
+    ).bind(userId, clubId).first()
+
+    if (!player) {
+      return c.json({ player: null, abilities: null, seasonStats: null, preferences: [] })
+    }
+
+    const playerId = player.id as number
+
+    // 능력치 평균
+    const ratings = await c.env.DB.prepare(`
+      SELECT
+        AVG(shooting) as shooting, AVG(off_the_ball) as off_the_ball,
+        AVG(ball_keeping) as ball_keeping, AVG(passing) as passing,
+        AVG(linking_play) as linking_play, AVG(intercept) as intercept,
+        AVG(marking) as marking, AVG(stamina) as stamina,
+        AVG(speed) as speed, AVG(physical) as physical,
+        COUNT(*) as rater_count
+      FROM player_ratings WHERE player_id = ?
+    `).bind(playerId).first()
+
+    let abilities = null
+    if (ratings && (ratings.rater_count as number) > 0) {
+      const vals = [
+        ratings.shooting, ratings.off_the_ball, ratings.ball_keeping,
+        ratings.passing, ratings.linking_play, ratings.intercept,
+        ratings.marking, ratings.stamina, ratings.speed, ratings.physical,
+      ].map(v => Math.round(v as number))
+      abilities = {
+        shooting: vals[0], offTheBall: vals[1], ballKeeping: vals[2],
+        passing: vals[3], linkingPlay: vals[4], intercept: vals[5],
+        marking: vals[6], stamina: vals[7], speed: vals[8], physical: vals[9],
+        overall: Math.round(vals.reduce((a, b) => a + b, 0) / vals.length),
+        raterCount: ratings.rater_count,
+      }
+    }
+
+    // 시즌 스탯 (올해)
+    const year = new Date().getFullYear()
+    const yearStart = `${year}-01-01`
+    const yearEnd = `${year}-12-31`
+
+    const seasonStats = await c.env.DB.prepare(`
+      SELECT
+        COALESCE(SUM(pms.goals), 0) as goals,
+        COALESCE(SUM(pms.assists), 0) as assists,
+        COALESCE(SUM(pms.blocks), 0) as defenses,
+        COUNT(DISTINCT pms.match_id) as games
+      FROM player_match_stats pms
+      JOIN matches m ON pms.match_id = m.id
+      JOIN sessions s ON m.session_id = s.id
+      WHERE pms.player_id = ? AND s.session_date BETWEEN ? AND ?
+        AND s.status IN ('completed', 'closed')
+    `).bind(playerId, yearStart, yearEnd).first()
+
+    const attendance = await c.env.DB.prepare(`
+      SELECT COUNT(*) as cnt FROM attendance a
+      JOIN sessions s ON a.session_id = s.id
+      WHERE a.player_id = ? AND s.session_date BETWEEN ? AND ? AND s.club_id = ?
+    `).bind(playerId, yearStart, yearEnd, clubId).first()
+
+    // 선호 선수
+    const prefs = await c.env.DB.prepare(`
+      SELECT pp.target_player_id as id, p.name, p.nickname, p.photo_url
+      FROM player_preferences pp
+      JOIN players p ON pp.target_player_id = p.id
+      WHERE pp.player_id = ?
+      ORDER BY pp.created_at ASC
+    `).bind(playerId).all()
+
+    return c.json({
+      player: { id: playerId, name: player.name, nickname: player.nickname, photoUrl: player.photo_url },
+      abilities,
+      seasonStats: {
+        goals: seasonStats?.goals || 0,
+        assists: seasonStats?.assists || 0,
+        defenses: seasonStats?.defenses || 0,
+        games: seasonStats?.games || 0,
+        attendance: attendance?.cnt || 0,
+        year,
+      },
+      preferences: prefs.results,
+    })
+  } catch (err: any) {
+    console.error('Profile summary error:', err)
+    return c.json({ error: err.message }, 500)
+  }
+})
+
 export { meRoutes }

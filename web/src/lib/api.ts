@@ -328,9 +328,20 @@ export const teamsApi = {
 
 // Me API (내 정보)
 export const meApi = {
-  // 내 통계 조회
   getStats: (token: string) =>
     api('/me/stats', { token }),
+  getProfileSummary: (token: string) =>
+    api('/me/profile-summary', { token }),
+}
+
+// Preferences API (선호 선수)
+export const preferencesApi = {
+  list: (token: string) =>
+    api('/players/preferences/mine', { token }),
+  add: (targetId: number, token: string) =>
+    api(`/players/preferences/${targetId}`, { method: 'POST', token }),
+  remove: (targetId: number, token: string) =>
+    api(`/players/preferences/${targetId}`, { method: 'DELETE', token }),
 }
 
 // Clubs API

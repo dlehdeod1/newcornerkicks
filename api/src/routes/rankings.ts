@@ -584,7 +584,7 @@ async function buildAndCacheRankings(db: D1Database, clubId: number, year: numbe
     LEFT JOIN sessions s ON m.session_id = s.id
     WHERE p.is_guest = 0
       AND p.club_id = ?
-      AND (s.session_date IS NULL OR s.session_date BETWEEN ? AND ?)
+      AND (s.session_date IS NULL OR (s.session_date BETWEEN ? AND ? AND s.status IN ('completed', 'closed')))
     GROUP BY p.id
     ORDER BY goals DESC, assists DESC, defenses DESC
   `).bind(yearStart, yearEnd, clubId, clubId, yearStart, yearEnd).all()
@@ -600,8 +600,8 @@ async function buildAndCacheRankings(db: D1Database, clubId: number, year: numbe
         FROM team_members tm
         JOIN matches m ON (tm.team_id = m.team1_id OR tm.team_id = m.team2_id)
         JOIN sessions s ON m.session_id = s.id
-        WHERE tm.player_id = ? AND m.status = 'completed' AND s.session_date BETWEEN ? AND ?
-      `).bind(player.id, yearStart, yearEnd).first()
+        WHERE tm.player_id = ? AND m.status = 'completed' AND s.session_date BETWEEN ? AND ? AND s.club_id = ?
+      `).bind(player.id, yearStart, yearEnd, clubId).first()
 
       const totalGames = (matchResults?.total_games as number) || 0
       const wins = (matchResults?.wins as number) || 0
@@ -615,11 +615,11 @@ async function buildAndCacheRankings(db: D1Database, clubId: number, year: numbe
             SUM(CASE WHEN (t.id = m.team1_id AND m.team1_score > m.team2_score) OR (t.id = m.team2_id AND m.team2_score > m.team1_score) THEN 3 WHEN m.team1_score = m.team2_score THEN 1 ELSE 0 END) as points,
             SUM(CASE WHEN t.id = m.team1_id THEN m.team1_score ELSE m.team2_score END) as goals_for
           FROM teams t JOIN matches m ON t.id = m.team1_id OR t.id = m.team2_id JOIN sessions s ON t.session_id = s.id
-          WHERE s.session_date BETWEEN ? AND ? AND m.status = 'completed' GROUP BY t.session_id, t.id
+          WHERE s.session_date BETWEEN ? AND ? AND s.club_id = ? AND m.status = 'completed' GROUP BY t.session_id, t.id
         ),
         winning_teams AS (SELECT ts.session_id, ts.team_id FROM team_standings ts WHERE (ts.session_id, ts.points, ts.goals_for) IN (SELECT session_id, MAX(points), MAX(goals_for) FROM team_standings GROUP BY session_id))
         SELECT COUNT(*) as session_wins FROM winning_teams wt JOIN team_members tm ON wt.team_id = tm.team_id WHERE tm.player_id = ?
-      `).bind(yearStart, yearEnd, player.id).first()
+      `).bind(yearStart, yearEnd, clubId, player.id).first()
       const sessionWins = (sessionWinsResult?.session_wins as number) || 0
 
       const mvpScore = player.goals * 2 + player.assists * 1.5 + player.defenses * 0.5 + sessionWins * 1.5
@@ -632,17 +632,17 @@ async function buildAndCacheRankings(db: D1Database, clubId: number, year: numbe
             SUM(CASE WHEN (t.id = m.team1_id AND m.team1_score > m.team2_score) OR (t.id = m.team2_id AND m.team2_score > m.team1_score) THEN 3 WHEN m.team1_score = m.team2_score THEN 1 ELSE 0 END) as points,
             SUM(CASE WHEN t.id = m.team1_id THEN m.team1_score ELSE m.team2_score END) as goals_for
           FROM teams t JOIN matches m ON t.id = m.team1_id OR t.id = m.team2_id JOIN sessions s ON t.session_id = s.id
-          WHERE s.session_date BETWEEN ? AND ? AND m.status = 'completed' GROUP BY t.session_id, t.id
+          WHERE s.session_date BETWEEN ? AND ? AND s.club_id = ? AND m.status = 'completed' GROUP BY t.session_id, t.id
         ),
         ranked_teams AS (SELECT session_id, team_id, RANK() OVER (PARTITION BY session_id ORDER BY points DESC, goals_for DESC) as team_rank FROM team_standings)
         SELECT SUM(CASE WHEN rt.team_rank = 1 THEN 1 ELSE 0 END) as rank1, SUM(CASE WHEN rt.team_rank = 2 THEN 1 ELSE 0 END) as rank2, SUM(CASE WHEN rt.team_rank = 3 THEN 1 ELSE 0 END) as rank3
         FROM ranked_teams rt JOIN team_members tm ON rt.team_id = tm.team_id WHERE tm.player_id = ?
-      `).bind(yearStart, yearEnd, player.id).first()
+      `).bind(yearStart, yearEnd, clubId, player.id).first()
 
       const mvpCountResult = await db.prepare(`
         SELECT COUNT(*) as mvp_count FROM session_mvp_results smr JOIN sessions s ON smr.session_id = s.id
-        WHERE smr.player_id = ? AND s.session_date BETWEEN ? AND ?
-      `).bind(player.id, yearStart, yearEnd).first()
+        WHERE smr.player_id = ? AND s.session_date BETWEEN ? AND ? AND s.club_id = ?
+      `).bind(player.id, yearStart, yearEnd, clubId).first()
       const mvpCount = (mvpCountResult?.mvp_count as number) || 0
 
       return {

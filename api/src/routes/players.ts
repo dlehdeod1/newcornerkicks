@@ -974,4 +974,87 @@ playersRoutes.get('/:id/event-logs', optionalAuthMiddleware, async (c) => {
   })
 })
 
+// ── 선호 선수 ──────────────────────────────────
+
+// 내 선호 선수 목록 조회
+playersRoutes.get('/preferences/mine', authMiddleware(), async (c) => {
+  const userId = (c as any).userId
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽에 소속되어 있지 않습니다.' }, 403)
+
+  const player = await c.env.DB.prepare(
+    'SELECT id FROM players WHERE user_id = ? AND club_id = ?'
+  ).bind(userId, clubId).first()
+  if (!player) return c.json({ preferences: [] })
+
+  const prefs = await c.env.DB.prepare(`
+    SELECT pp.target_player_id, p.name, p.nickname, p.photo_url
+    FROM player_preferences pp
+    JOIN players p ON pp.target_player_id = p.id
+    WHERE pp.player_id = ?
+    ORDER BY pp.created_at ASC
+  `).bind(player.id).all()
+
+  return c.json({ preferences: prefs.results })
+})
+
+// 선호 선수 등록 (최대 3명)
+playersRoutes.post('/preferences/:targetId', authMiddleware(), async (c) => {
+  const targetId = Number(c.req.param('targetId'))
+  const userId = (c as any).userId
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽에 소속되어 있지 않습니다.' }, 403)
+
+  const player = await c.env.DB.prepare(
+    'SELECT id FROM players WHERE user_id = ? AND club_id = ?'
+  ).bind(userId, clubId).first()
+  if (!player) return c.json({ error: '선수 연동이 필요합니다.' }, 400)
+
+  const playerId = player.id as number
+  if (playerId === targetId) return c.json({ error: '자기 자신은 선택할 수 없습니다.' }, 400)
+
+  // 대상 선수가 같은 클럽인지 확인
+  const target = await c.env.DB.prepare(
+    'SELECT id FROM players WHERE id = ? AND club_id = ? AND is_guest = 0'
+  ).bind(targetId, clubId).first()
+  if (!target) return c.json({ error: '유효하지 않은 선수입니다.' }, 404)
+
+  // 현재 등록 수 확인
+  const count = await c.env.DB.prepare(
+    'SELECT COUNT(*) as cnt FROM player_preferences WHERE player_id = ?'
+  ).bind(playerId).first()
+  if ((count?.cnt as number) >= 3) return c.json({ error: '최대 3명까지 선택 가능합니다.' }, 400)
+
+  // 중복 확인
+  const exists = await c.env.DB.prepare(
+    'SELECT id FROM player_preferences WHERE player_id = ? AND target_player_id = ?'
+  ).bind(playerId, targetId).first()
+  if (exists) return c.json({ error: '이미 선호 선수로 등록되어 있습니다.' }, 409)
+
+  await c.env.DB.prepare(
+    'INSERT INTO player_preferences (player_id, target_player_id, created_at) VALUES (?, ?, ?)'
+  ).bind(playerId, targetId, Date.now()).run()
+
+  return c.json({ message: '선호 선수로 등록되었습니다.' })
+})
+
+// 선호 선수 해제
+playersRoutes.delete('/preferences/:targetId', authMiddleware(), async (c) => {
+  const targetId = Number(c.req.param('targetId'))
+  const userId = (c as any).userId
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽에 소속되어 있지 않습니다.' }, 403)
+
+  const player = await c.env.DB.prepare(
+    'SELECT id FROM players WHERE user_id = ? AND club_id = ?'
+  ).bind(userId, clubId).first()
+  if (!player) return c.json({ error: '선수 연동이 필요합니다.' }, 400)
+
+  await c.env.DB.prepare(
+    'DELETE FROM player_preferences WHERE player_id = ? AND target_player_id = ?'
+  ).bind(player.id, targetId).run()
+
+  return c.json({ message: '선호 선수에서 해제되었습니다.' })
+})
+
 export { playersRoutes }

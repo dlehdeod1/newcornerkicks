@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../widgets/tip_banner.dart';
+import 'player_detail_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -18,10 +19,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool? _googleLinked;
   bool _googleLinking = false;
 
+  // 프로필 요약 데이터
+  Map<String, dynamic>? _summary;
+  bool _summaryLoading = true;
+
   @override
   void initState() {
     super.initState();
     _loadProfile();
+    _loadSummary();
   }
 
   Future<void> _loadProfile() async {
@@ -38,6 +44,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _loadSummary() async {
+    final auth = context.read<AuthService>();
+    final token = auth.token;
+    if (token == null || auth.player == null) {
+      setState(() => _summaryLoading = false);
+      return;
+    }
+    try {
+      final res = await _api.getProfileSummary(token);
+      if (mounted) setState(() { _summary = res; _summaryLoading = false; });
+    } catch (_) {
+      if (mounted) setState(() => _summaryLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
@@ -46,7 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return RefreshIndicator(
       onRefresh: () async {
-        await _loadProfile();
+        await Future.wait([_loadProfile(), _loadSummary()]);
       },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -61,11 +82,407 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: AppColors.purple,
               ),
             _buildProfileCard(user, player, auth),
+            if (player != null && !_summaryLoading) ...[
+              const SizedBox(height: 16),
+              _buildSeasonStats(),
+              const SizedBox(height: 16),
+              _buildAbilitiesAndPrefs(),
+            ],
             const SizedBox(height: 20),
             _buildMenuSection(auth),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSeasonStats() {
+    final ss = _summary?['seasonStats'];
+    if (ss == null) return const SizedBox.shrink();
+    final year = ss['year'] ?? DateTime.now().year;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withAlpha(20)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('$year 시즌 기록', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(153), letterSpacing: 1)),
+              if (_summary?['player'] != null)
+                GestureDetector(
+                  onTap: () {
+                    final pid = _summary!['player']['id'];
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => PlayerDetailScreen(playerId: pid)));
+                  },
+                  child: Row(
+                    children: [
+                      Text('자세히 보기', style: const TextStyle(fontSize: 12, color: AppColors.primary)),
+                      const SizedBox(width: 2),
+                      const Icon(Icons.chevron_right, size: 14, color: AppColors.primary),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _statItem(Icons.calendar_today, '출석', ss['attendance']),
+              _statItem(Icons.sports_soccer, '경기', ss['games']),
+              _statItem(Icons.flash_on, '득점', ss['goals'], color: AppColors.primary),
+              _statItem(Icons.emoji_events, '도움', ss['assists'], color: AppColors.amber),
+              _statItem(Icons.shield, '수비', ss['defenses'], color: AppColors.purple),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statItem(IconData icon, String label, dynamic value, {Color color = AppColors.blue}) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(height: 6),
+          Text('${value ?? 0}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(128))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAbilitiesAndPrefs() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: _buildAbilities()),
+        const SizedBox(width: 12),
+        Expanded(child: _buildPreferences()),
+      ],
+    );
+  }
+
+  Widget _buildAbilities() {
+    final ab = _summary?['abilities'];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withAlpha(20)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('능력치', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(153), letterSpacing: 1)),
+          const SizedBox(height: 12),
+          if (ab != null) ...[
+            Row(
+              children: [
+                Container(
+                  width: 44, height: 44,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [AppColors.primary, AppColors.teal]),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(child: Text('${ab['overall']}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white))),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('종합', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                      Text('${ab['raterCount']}명 평가', style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(102))),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _abilityBar('슈팅', ab['shooting'], AppColors.red),
+            _abilityBar('패스', ab['passing'], AppColors.amber),
+            _abilityBar('수비', ab['marking'], AppColors.blue),
+            _abilityBar('체력', ab['stamina'], AppColors.primary),
+          ] else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text('평가 데이터 없음', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _abilityBar(String label, dynamic value, Color color) {
+    final v = (value ?? 0) is int ? (value as int).toDouble() : ((value ?? 0) as num).toDouble();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          SizedBox(width: 28, child: Text(label, style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(153)))),
+          const SizedBox(width: 6),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: v / 100,
+                minHeight: 6,
+                backgroundColor: Colors.white.withAlpha(20),
+                valueColor: AlwaysStoppedAnimation(color),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          SizedBox(width: 22, child: Text('${v.round()}', textAlign: TextAlign.right, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(204)))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPreferences() {
+    final prefs = (_summary?['preferences'] as List?) ?? [];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withAlpha(20)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.favorite, size: 14, color: AppColors.red),
+              const SizedBox(width: 4),
+              Text('선호 선수 (${prefs.length}/3)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(153), letterSpacing: 1)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (prefs.isNotEmpty)
+            ...prefs.map<Widget>((p) => _prefItem(p))
+          else ...[
+            const SizedBox(height: 12),
+            Center(
+              child: Column(
+                children: [
+                  Icon(Icons.favorite_border, size: 28, color: Colors.white.withAlpha(51)),
+                  const SizedBox(height: 6),
+                  Text('같이 뛰고 싶은\n선수를 선택하세요', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102))),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          if (prefs.length < 3)
+            GestureDetector(
+              onTap: () => _showPrefModal(),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withAlpha(20),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.primary.withAlpha(51)),
+                ),
+                child: const Center(
+                  child: Text('+ 추가', style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _prefItem(Map<String, dynamic> p) {
+    final name = p['name'] ?? '?';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withAlpha(10),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 30, height: 30,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFFF472B6), AppColors.red]),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(child: Text(name[0], style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white))),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white), overflow: TextOverflow.ellipsis),
+                  if (p['nickname'] != null)
+                    Text(p['nickname'], style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(102)), overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ),
+            GestureDetector(
+              onTap: () => _removePref(p['id']),
+              child: const Icon(Icons.favorite, size: 16, color: AppColors.red),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _removePref(int targetId) async {
+    final auth = context.read<AuthService>();
+    try {
+      await _api.removePreference(targetId, auth.token!);
+      await _loadSummary();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: AppColors.red));
+      }
+    }
+  }
+
+  void _showPrefModal() async {
+    final auth = context.read<AuthService>();
+    if (auth.token == null) return;
+
+    // 선수 목록 불러오기
+    List<dynamic> players = [];
+    try {
+      final res = await _api.request('/players', token: auth.token);
+      players = (res is List) ? res : (res['players'] ?? res['data'] ?? []);
+    } catch (_) {}
+
+    final myPlayerId = _summary?['player']?['id'];
+    final currentPrefs = Set<int>.from(
+      ((_summary?['preferences'] as List?) ?? []).map((p) => p['id'] as int),
+    );
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.bgCard,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        String search = '';
+        return StatefulBuilder(builder: (ctx2, setModalState) {
+          final filtered = players.where((p) {
+            if (p['id'] == myPlayerId) return false;
+            if (p['is_guest'] == 1) return false;
+            if (search.isEmpty) return true;
+            return (p['name'] ?? '').toString().contains(search) || (p['nickname'] ?? '').toString().contains(search);
+          }).toList();
+
+          return DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            maxChildSize: 0.9,
+            minChildSize: 0.4,
+            expand: false,
+            builder: (_, scrollCtrl) => Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                  child: Row(
+                    children: [
+                      const Text('선호 선수 선택', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx2),
+                        child: const Icon(Icons.close, color: Colors.white54),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: TextField(
+                    style: const TextStyle(color: Colors.white),
+                    onChanged: (v) => setModalState(() => search = v),
+                    decoration: InputDecoration(
+                      hintText: '선수 이름으로 검색...',
+                      hintStyle: const TextStyle(color: Colors.white38),
+                      filled: true,
+                      fillColor: AppColors.bgBase,
+                      prefixIcon: const Icon(Icons.search, color: Colors.white38, size: 20),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: ListView.builder(
+                    controller: scrollCtrl,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: filtered.length,
+                    itemBuilder: (_, i) {
+                      final p = filtered[i];
+                      final isFav = currentPrefs.contains(p['id']);
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        leading: Container(
+                          width: 36, height: 36,
+                          decoration: BoxDecoration(
+                            color: isFav ? AppColors.red.withAlpha(26) : Colors.white.withAlpha(13),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(child: Text((p['name'] ?? '?')[0], style: TextStyle(fontWeight: FontWeight.bold, color: isFav ? AppColors.red : Colors.white70))),
+                        ),
+                        title: Text(p['name'] ?? '?', style: const TextStyle(fontSize: 14, color: Colors.white)),
+                        subtitle: p['nickname'] != null ? Text(p['nickname'], style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102))) : null,
+                        trailing: GestureDetector(
+                          onTap: () async {
+                            if (isFav) {
+                              await _api.removePreference(p['id'], auth.token!);
+                              currentPrefs.remove(p['id']);
+                            } else {
+                              if (currentPrefs.length >= 3) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('최대 3명까지 등록 가능합니다'), backgroundColor: AppColors.red),
+                                );
+                                return;
+                              }
+                              await _api.addPreference(p['id'], auth.token!);
+                              currentPrefs.add(p['id']);
+                            }
+                            setModalState(() {});
+                            _loadSummary();
+                          },
+                          child: Icon(
+                            isFav ? Icons.favorite : Icons.favorite_border,
+                            color: isFav ? AppColors.red : Colors.white38,
+                            size: 22,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        });
+      },
     );
   }
 

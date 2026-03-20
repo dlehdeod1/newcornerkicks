@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { Trophy, Calendar, Users, Star, ChevronRight } from 'lucide-react'
+import { Trophy, Calendar, Users, Star, ChevronRight, Clock, MapPin } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { useQuery } from '@tanstack/react-query'
-import { sessionsApi, meApi } from '@/lib/api'
+import { sessionsApi, meApi, rankingsApi } from '@/lib/api'
+import { cn } from '@/lib/cn'
 import LandingPage from './LandingPage'
 
 export default function HomePage() {
@@ -34,12 +35,28 @@ export default function HomePage() {
     enabled: isLoggedIn,
   })
 
+  // 랭킹 Top 5
+  const { data: rankingData } = useQuery({
+    queryKey: ['rankings', 'dashboard', token],
+    queryFn: () => rankingsApi.get(undefined, token ?? undefined),
+    enabled: isLoggedIn,
+  })
+
+  // 다음 예정 세션
+  const { data: upcomingSessions } = useQuery({
+    queryKey: ['sessions', 'upcoming', token],
+    queryFn: () => sessionsApi.list({ limit: 1, status: 'recruiting' }, token ?? undefined),
+    enabled: isLoggedIn,
+  })
+
   if (!isLoggedIn) {
     return <LandingPage />
   }
 
   const recentSession = sessionsData?.sessions?.[0]
   const myStats = myData?.stats
+  const rankings = (rankingData?.data?.rankings || rankingData?.rankings || []).slice(0, 5)
+  const nextSession = upcomingSessions?.sessions?.[0]
 
   // 내 최근 기록 표시 로직
   const getMyRecordDisplay = () => {
@@ -188,6 +205,99 @@ export default function HomePage() {
             description="시즌 챔피언 보기"
             color="purple"
           />
+        </div>
+      </section>
+
+      {/* 랭킹 Top 5 + 다음 세션 */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 랭킹 Top 5 */}
+          <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
+                <Trophy className="w-5 h-5 text-amber-500" />
+                시즌 랭킹
+              </h2>
+              <Link href="/ranking" className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 flex items-center gap-1">
+                전체 보기 <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            {rankings.length > 0 ? (
+              <div className="space-y-2">
+                {rankings.map((r: any, i: number) => (
+                  <div key={r.player_id} className={cn(
+                    'flex items-center gap-3 p-3 rounded-xl transition-colors',
+                    i === 0 ? 'bg-amber-50 dark:bg-amber-500/10' : 'bg-slate-50 dark:bg-slate-800/30'
+                  )}>
+                    <span className={cn(
+                      'w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold',
+                      i === 0 ? 'bg-amber-400 text-white' : i === 1 ? 'bg-slate-300 dark:bg-slate-600 text-white' : i === 2 ? 'bg-amber-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                    )}>
+                      {i + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium text-sm text-slate-900 dark:text-white truncate block">{r.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">{Number(r.mvp_score).toFixed(1)}</span>
+                      <span className="text-xs text-slate-400 ml-1">점</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-sm text-slate-400 py-8">랭킹 데이터가 없습니다</p>
+            )}
+          </div>
+
+          {/* 다음 세션 */}
+          <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white mb-4">
+              <Calendar className="w-5 h-5 text-emerald-500" />
+              다음 일정
+            </h2>
+            {nextSession ? (
+              <Link href={`/sessions/${nextSession.id}`} className="block group">
+                <div className="p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 border border-emerald-200 dark:border-emerald-500/20 group-hover:border-emerald-300 dark:group-hover:border-emerald-500/30 transition-colors">
+                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-3">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm font-medium">
+                      {(() => {
+                        const d = new Date(nextSession.session_date)
+                        const days = ['일', '월', '화', '수', '목', '금', '토']
+                        return `${d.getMonth() + 1}월 ${d.getDate()}일 (${days[d.getDay()]})`
+                      })()}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-2">
+                    {nextSession.title || '정기 풋살'}
+                  </h3>
+                  {nextSession.location && (
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <MapPin className="w-4 h-4" />
+                      {nextSession.location}
+                    </div>
+                  )}
+                  <div className="mt-4 flex items-center gap-2">
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                      모집중
+                    </span>
+                    {nextSession.attendee_count != null && (
+                      <span className="text-xs text-slate-500">
+                        <Users className="w-3.5 h-3.5 inline -mt-0.5 mr-1" />
+                        {nextSession.attendee_count}명 참석
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <div className="text-center py-12">
+                <Calendar className="w-10 h-10 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
+                <p className="text-sm text-slate-400">예정된 일정이 없습니다</p>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

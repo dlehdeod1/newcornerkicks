@@ -11,13 +11,21 @@ import {
   X,
   Key,
   Unlink,
+  Trophy,
+  Target,
+  Shield,
+  Zap,
+  Heart,
+  ChevronRight,
+  Swords,
 } from 'lucide-react'
 import { useAuthStore, useAuthHydrated } from '@/stores/auth'
-import { authApi } from '@/lib/api'
+import { authApi, meApi, preferencesApi, playersApi } from '@/lib/api'
 import { GoogleLogin } from '@react-oauth/google'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/cn'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -44,6 +52,25 @@ export default function ProfilePage() {
 
   const [googleLinked, setGoogleLinked] = useState<boolean | null>(null)
   const [googleLoading, setGoogleLoading] = useState(false)
+
+  // 선호 선수 모달
+  const [showPrefModal, setShowPrefModal] = useState(false)
+  const [prefSearch, setPrefSearch] = useState('')
+  const queryClient = useQueryClient()
+
+  // 프로필 요약 (능력치 + 시즌스탯 + 선호선수)
+  const { data: summary } = useQuery({
+    queryKey: ['profile-summary', token],
+    queryFn: () => meApi.getProfileSummary(token!),
+    enabled: !!token && !!player,
+  })
+
+  // 선수 목록 (선호 선수 추가용)
+  const { data: allPlayers } = useQuery({
+    queryKey: ['players-list', token],
+    queryFn: () => playersApi.list(token),
+    enabled: !!token && showPrefModal,
+  })
 
   useEffect(() => {
     if (token) {
@@ -153,12 +180,36 @@ export default function ProfilePage() {
     return null
   }
 
+  const prefIds = new Set((summary?.preferences || []).map((p: any) => p.id))
+
+  const handleAddPref = async (targetId: number) => {
+    try {
+      await preferencesApi.add(targetId, token!)
+      queryClient.invalidateQueries({ queryKey: ['profile-summary'] })
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }
+
+  const handleRemovePref = async (targetId: number) => {
+    try {
+      await preferencesApi.remove(targetId, token!)
+      queryClient.invalidateQueries({ queryKey: ['profile-summary'] })
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }
+
+  const abilities = summary?.abilities
+  const seasonStats = summary?.seasonStats
+  const preferences = summary?.preferences || []
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* 헤더 */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">내 프로필</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">계정 정보를 관리하세요</p>
+        <p className="text-slate-600 dark:text-slate-400 mt-2">내 정보와 기록을 확인하세요</p>
       </div>
 
       {/* 알림 */}
@@ -170,6 +221,122 @@ export default function ProfilePage() {
       {success && (
         <div className="mb-6 p-4 bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
           <p className="text-sm text-emerald-600 dark:text-emerald-400">{success}</p>
+        </div>
+      )}
+
+      {/* 내 기록 섹션 */}
+      {player && summary?.player && (
+        <div className="mb-8 space-y-4">
+          {/* 시즌 스탯 */}
+          {seasonStats && (
+            <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{seasonStats.year} 시즌 기록</h3>
+                <Link href={`/players/${summary.player.id}`} className="text-xs text-emerald-500 hover:text-emerald-600 flex items-center gap-1">
+                  자세히 보기 <ChevronRight className="w-3 h-3" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-5 gap-3">
+                {[
+                  { label: '출석', value: seasonStats.attendance, icon: Target, color: 'text-blue-500' },
+                  { label: '경기', value: seasonStats.games, icon: Swords, color: 'text-slate-500' },
+                  { label: '득점', value: seasonStats.goals, icon: Zap, color: 'text-emerald-500' },
+                  { label: '도움', value: seasonStats.assists, icon: Trophy, color: 'text-amber-500' },
+                  { label: '수비', value: seasonStats.defenses, icon: Shield, color: 'text-purple-500' },
+                ].map(({ label, value, icon: Icon, color }) => (
+                  <div key={label} className="text-center">
+                    <Icon className={cn('w-5 h-5 mx-auto mb-1', color)} />
+                    <div className="text-2xl font-bold text-slate-900 dark:text-white">{value}</div>
+                    <div className="text-xs text-slate-500">{label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 능력치 요약 + 선호 선수 — 2열 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* 능력치 */}
+            <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">능력치</h3>
+                <Link href={`/abilities/${summary.player.id}`} className="text-xs text-emerald-500 hover:text-emerald-600 flex items-center gap-1">
+                  상세 <ChevronRight className="w-3 h-3" />
+                </Link>
+              </div>
+              {abilities ? (
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+                      <span className="text-xl font-bold text-white">{abilities.overall}</span>
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900 dark:text-white">종합 능력치</div>
+                      <div className="text-xs text-slate-500">{abilities.raterCount}명 평가</div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { label: '슈팅', value: abilities.shooting, color: 'bg-red-500' },
+                      { label: '패스', value: abilities.passing, color: 'bg-amber-500' },
+                      { label: '수비', value: abilities.marking, color: 'bg-blue-500' },
+                      { label: '체력', value: abilities.stamina, color: 'bg-emerald-500' },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500 w-8">{label}</span>
+                        <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                          <div className={cn('h-full rounded-full', color)} style={{ width: `${value}%` }} />
+                        </div>
+                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300 w-8 text-right">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-400">아직 평가 데이터가 없습니다</p>
+              )}
+            </div>
+
+            {/* 선호 선수 */}
+            <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <Heart className="w-4 h-4 inline -mt-0.5 mr-1 text-red-400" />
+                  선호 선수 ({preferences.length}/3)
+                </h3>
+                {preferences.length < 3 && (
+                  <button onClick={() => setShowPrefModal(true)} className="text-xs text-emerald-500 hover:text-emerald-600">+ 추가</button>
+                )}
+              </div>
+              {preferences.length > 0 ? (
+                <div className="space-y-3">
+                  {preferences.map((p: any) => (
+                    <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-400 to-red-400 flex items-center justify-center text-white font-bold text-sm">
+                        {(p.name || '?')[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm text-slate-900 dark:text-white truncate">{p.name}</div>
+                        {p.nickname && <div className="text-xs text-slate-500 truncate">{p.nickname}</div>}
+                      </div>
+                      <button
+                        onClick={() => handleRemovePref(p.id)}
+                        className="text-red-400 hover:text-red-500 transition-colors"
+                      >
+                        <Heart className="w-4 h-4 fill-current" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <Heart className="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                  <p className="text-sm text-slate-400">같이 뛰고 싶은 선수를 선택하세요</p>
+                  <button onClick={() => setShowPrefModal(true)} className="mt-2 text-sm text-emerald-500 hover:text-emerald-600">선수 선택하기</button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -402,6 +569,84 @@ export default function ProfilePage() {
               <Button onClick={handleSaveProfile} loading={loading}>
                 <Save className="w-4 h-4" />
                 저장
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 선호 선수 선택 모달 */}
+      {showPrefModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                선호 선수 선택
+              </h2>
+              <button
+                onClick={() => { setShowPrefModal(false); setPrefSearch('') }}
+                className="text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+              <Input
+                id="prefSearch"
+                placeholder="선수 이름으로 검색..."
+                value={prefSearch}
+                onChange={(e) => setPrefSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {(allPlayers || [])
+                .filter((p: any) => p.id !== summary?.player?.id)
+                .filter((p: any) =>
+                  !prefSearch || (p.name || '').includes(prefSearch) || (p.nickname || '').includes(prefSearch)
+                )
+                .map((p: any) => {
+                  const isFav = prefIds.has(p.id)
+                  return (
+                    <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-slate-300 to-slate-400 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center text-white font-bold text-sm">
+                        {(p.name || '?')[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm text-slate-900 dark:text-white truncate">{p.name}</div>
+                        {p.nickname && <div className="text-xs text-slate-500 truncate">{p.nickname}</div>}
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (isFav) {
+                            await handleRemovePref(p.id)
+                          } else {
+                            if (prefIds.size >= 3) {
+                              setError('선호 선수는 최대 3명까지 등록 가능합니다.')
+                              return
+                            }
+                            await handleAddPref(p.id)
+                          }
+                        }}
+                        className={cn(
+                          'transition-colors p-1',
+                          isFav ? 'text-red-400 hover:text-red-500' : 'text-slate-300 hover:text-red-400'
+                        )}
+                      >
+                        <Heart className={cn('w-5 h-5', isFav && 'fill-current')} />
+                      </button>
+                    </div>
+                  )
+                })}
+              {allPlayers && allPlayers.length === 0 && (
+                <p className="text-center text-sm text-slate-400 py-8">선수 목록이 없습니다</p>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+              <Button variant="secondary" className="w-full" onClick={() => { setShowPrefModal(false); setPrefSearch('') }}>
+                닫기
               </Button>
             </div>
           </div>

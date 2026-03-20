@@ -131,15 +131,63 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
 
     if (playerStats.isEmpty) return {};
 
+    // 우승팀 보너스 (+1.5) — 팀 순위 계산 후 1위 팀 멤버에게 가산
+    final teamStandings = <int, Map<String, dynamic>>{};
+    for (final team in widget.teams) {
+      final tid = team['id'] as int;
+      final members = (team['members'] as List?) ?? [];
+      teamStandings[tid] = {
+        'points': 0,
+        'goalsFor': 0,
+        'memberKeys': members.map((m) {
+          final pid = m['player_id'];
+          return pid != null ? 'p_$pid' : 'g_${m['name'] ?? m['guest_name']}';
+        }).toSet(),
+      };
+    }
+    for (final match in completed) {
+      final t1id = match['team1_id'] as int?;
+      final t2id = match['team2_id'] as int?;
+      if (t1id == null || t2id == null) continue;
+      final t1 = teamStandings[t1id];
+      final t2 = teamStandings[t2id];
+      if (t1 == null || t2 == null) continue;
+      final events = (match['events'] as List?) ?? [];
+      final s1 = events.where((e) => e['event_type'] == 'GOAL' && e['team_id'] == t1id).length;
+      final s2 = events.where((e) => e['event_type'] == 'GOAL' && e['team_id'] == t2id).length;
+      t1['goalsFor'] = (t1['goalsFor'] as int) + s1;
+      t2['goalsFor'] = (t2['goalsFor'] as int) + s2;
+      if (s1 > s2) {
+        t1['points'] = (t1['points'] as int) + 3;
+      } else if (s2 > s1) {
+        t2['points'] = (t2['points'] as int) + 3;
+      } else {
+        t1['points'] = (t1['points'] as int) + 1;
+        t2['points'] = (t2['points'] as int) + 1;
+      }
+    }
+    int? winningTeamId;
+    int maxPoints = -1;
+    for (final entry in teamStandings.entries) {
+      final pts = entry.value['points'] as int;
+      if (pts > maxPoints) {
+        maxPoints = pts;
+        winningTeamId = entry.key;
+      }
+    }
+    if (winningTeamId != null && maxPoints > 0) {
+      final winnerKeys = teamStandings[winningTeamId]!['memberKeys'] as Set;
+      for (final entry in playerStats.entries) {
+        if (winnerKeys.contains(entry.key)) {
+          entry.value['score'] = (entry.value['score'] as double) + 1.5;
+        }
+      }
+    }
+
     final all = playerStats.values.toList();
     final sorted = List.from(all)..sort((a, b) => (b['score'] as double).compareTo(a['score'] as double));
     final mvp = sorted.first;
-    final maxScore = mvp['score'] as double;
-    final mvpNorm = maxScore > 0 ? (maxScore / maxScore) * 10 : 0.0;
-    // 정규화: mvp는 항상 10점, 나머지 상대적으로
-    for (final p in all) {
-      p['normScore'] = maxScore > 0 ? ((p['score'] as double) / maxScore) * 10.0 : 0.0;
-    }
+    final mvpScore = mvp['score'] as double;
 
     // 이벤트 타입별 1위
     final topByType = <String, Map<String, dynamic>>{};
@@ -162,7 +210,7 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
     }
 
     return {
-      'mvp': mvp, 'mvpScore': mvpNorm,
+      'mvp': mvp, 'mvpScore': mvpScore,
       'topByType': topByType,
       'topAssister': topAssister,
     };
@@ -628,8 +676,8 @@ class _MatchResultCard extends StatelessWidget {
                 Text(mvp['name'] as String? ?? '?', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white)),
               ]),
               const Spacer(),
-              Text('${(mvp['normScore'] as double? ?? mvpScore).toStringAsFixed(1)}', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: Colors.white)),
-              Text('/10', style: TextStyle(fontSize: 14, color: Colors.white.withAlpha(179))),
+              Text(mvpScore.toStringAsFixed(1), style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: Colors.white)),
+              Text('점', style: TextStyle(fontSize: 14, color: Colors.white.withAlpha(179))),
             ],
           ),
         ),

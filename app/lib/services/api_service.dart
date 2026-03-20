@@ -78,6 +78,20 @@ class ApiService {
   Future<dynamic> changePassword(String oldPassword, String newPassword, String token) =>
       request('/auth/password', method: 'PUT', body: {'oldPassword': oldPassword, 'newPassword': newPassword}, token: token);
 
+  // Me (프로필 요약)
+  Future<dynamic> getProfileSummary(String token) =>
+      request('/me/profile-summary', token: token);
+
+  // 선호 선수
+  Future<dynamic> getPreferences(String token) =>
+      request('/players/preferences/mine', token: token);
+
+  Future<dynamic> addPreference(int targetId, String token) =>
+      request('/players/preferences/$targetId', method: 'POST', token: token);
+
+  Future<dynamic> removePreference(int targetId, String token) =>
+      request('/players/preferences/$targetId', method: 'DELETE', token: token);
+
   // Clubs
   Future<dynamic> checkSlug(String slug) =>
       request('/clubs/check-slug?slug=$slug');
