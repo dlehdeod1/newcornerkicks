@@ -16,6 +16,8 @@ import { paymentsRoutes } from './routes/payments'
 import { subscriptionsRoutes } from './routes/subscriptions'
 import { photosRoutes } from './routes/photos'
 import { exportRoutes } from './routes/export'
+import { uploadsRoutes } from './routes/uploads'
+import { announcementsRoutes } from './routes/announcements'
 
 export type Env = {
   DB: D1Database
@@ -25,6 +27,7 @@ export type Env = {
   TOSS_CLIENT_KEY?: string
   TOSS_WEBHOOK_SECRET?: string
   PHOTOS: R2Bucket
+  SYSTEM_ADMIN_IDS?: string
 }
 
 const app = new Hono<{ Bindings: Env }>()
@@ -79,6 +82,8 @@ app.route('/payments', paymentsRoutes)
 app.route('/subscriptions', subscriptionsRoutes)
 app.route('/photos', photosRoutes)
 app.route('/export', exportRoutes)
+app.route('/uploads', uploadsRoutes)
+app.route('/announcements', announcementsRoutes)
 
 // 404
 app.notFound((c) => {

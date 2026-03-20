@@ -37,4 +37,19 @@ photosRoutes.get('/clubs/:clubId/:file', async (c) => {
   return new Response(obj.body, { headers })
 })
 
+// GET /photos/announcements/:file
+photosRoutes.get('/announcements/:file', async (c) => {
+  const file = c.req.param('file')
+  const key = `announcements/${file}`
+
+  const obj = await c.env.PHOTOS.get(key)
+  if (!obj) return c.notFound()
+
+  const headers = new Headers()
+  obj.writeHttpMetadata(headers)
+  headers.set('Cache-Control', 'public, max-age=86400')
+
+  return new Response(obj.body, { headers })
+})
+
 export { photosRoutes }
