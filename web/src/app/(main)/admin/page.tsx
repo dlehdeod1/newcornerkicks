@@ -286,6 +286,12 @@ export default function AdminDashboardPage() {
                 description="공지 발송, 알림 템플릿"
                 href="/admin/notifications"
               />
+              <AdminMenuItem
+                icon={<Bell className="w-5 h-5" />}
+                label="공지 관리"
+                description="공지사항 작성, 수정, 삭제"
+                href="/admin/announcements"
+              />
             </div>
           </div>
         </div>

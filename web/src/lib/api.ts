@@ -411,6 +411,57 @@ export const paymentsApi = {
     api('/payments/membership', { token }),
 }
 
+// Announcements API (공지)
+export const announcementsApi = {
+  list: (token: string, options?: { limit?: number; offset?: number }) => {
+    const params = new URLSearchParams()
+    if (options?.limit) params.set('limit', String(options.limit))
+    if (options?.offset) params.set('offset', String(options.offset))
+    return api(`/announcements${params.toString() ? `?${params}` : ''}`, { token })
+  },
+
+  get: (id: number, token: string) =>
+    api(`/announcements/${id}`, { token }),
+
+  unreadCount: (token: string) =>
+    api('/announcements/unread-count', { token }),
+
+  create: (data: { title: string; content: string; imageUrl?: string; isPinned?: boolean; isSystem?: boolean }, token: string) =>
+    api('/announcements', { method: 'POST', body: data, token }),
+
+  update: (id: number, data: { title?: string; content?: string; imageUrl?: string | null; isPinned?: boolean }, token: string) =>
+    api(`/announcements/${id}`, { method: 'PUT', body: data, token }),
+
+  delete: (id: number, token: string) =>
+    api(`/announcements/${id}`, { method: 'DELETE', token }),
+}
+
+// Uploads API (이미지 업로드)
+export const uploadsApi = {
+  uploadImage: async (file: File, prefix: string, token: string) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('prefix', prefix)
+
+    const activeClubId = getActiveClubId()
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${token}`,
+    }
+    if (activeClubId) {
+      headers['X-Club-Id'] = String(activeClubId)
+    }
+
+    const res = await fetch(`${API_BASE}/uploads`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || '업로드 실패')
+    return data
+  },
+}
+
 // Export API (CSV 내보내기)
 export const exportApi = {
   download: async (token: string, type: string, season?: number) => {

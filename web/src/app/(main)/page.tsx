@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { Trophy, Calendar, Users, Star, ChevronRight, Clock, MapPin } from 'lucide-react'
+import { Trophy, Calendar, Users, Star, ChevronRight, Clock, MapPin, Bell, Pin } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { useQuery } from '@tanstack/react-query'
-import { sessionsApi, meApi, rankingsApi } from '@/lib/api'
+import { sessionsApi, meApi, rankingsApi, announcementsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import LandingPage from './LandingPage'
 
@@ -49,6 +49,19 @@ export default function HomePage() {
     enabled: isLoggedIn,
   })
 
+  // 공지사항
+  const { data: announcementsData } = useQuery({
+    queryKey: ['announcements', 'home'],
+    queryFn: () => announcementsApi.list(token!, { limit: 3 }),
+    enabled: isLoggedIn && !!token,
+  })
+
+  const { data: unreadCountData } = useQuery({
+    queryKey: ['announcements', 'unread-count'],
+    queryFn: () => announcementsApi.unreadCount(token!),
+    enabled: isLoggedIn && !!token,
+  })
+
   if (!isLoggedIn) {
     return <LandingPage />
   }
@@ -57,6 +70,8 @@ export default function HomePage() {
   const myStats = myData?.stats
   const rankings = (rankingData?.data?.rankings || rankingData?.rankings || []).slice(0, 5)
   const nextSession = upcomingSessions?.sessions?.[0]
+  const homeAnnouncements = (announcementsData?.announcements || []).slice(0, 2)
+  const announcementUnread = unreadCountData?.unreadCount || 0
 
   // 내 최근 기록 표시 로직
   const getMyRecordDisplay = () => {
@@ -169,6 +184,57 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* 공지사항 */}
+      {homeAnnouncements.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
+              <Bell className="w-5 h-5 text-emerald-500" />
+              공지사항
+              {announcementUnread > 0 && (
+                <span className="px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full">
+                  {announcementUnread}
+                </span>
+              )}
+            </h2>
+            <Link
+              href="/announcements"
+              className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 flex items-center gap-1"
+            >
+              전체 보기 <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {homeAnnouncements.map((a: any) => (
+              <Link
+                key={a.id}
+                href={`/announcements/${a.id}`}
+                className="group bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 shadow-sm hover:shadow-md transition-all"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  {a.is_pinned === 1 && <Pin className="w-3.5 h-3.5 text-amber-500" />}
+                  {a.club_id === null ? (
+                    <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-full">
+                      시스템
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 text-xs font-medium bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full">
+                      클럽
+                    </span>
+                  )}
+                  <span className="text-xs text-slate-400 ml-auto">
+                    {(() => { const d = new Date(a.created_at * 1000); return `${d.getMonth() + 1}월 ${d.getDate()}일` })()}
+                  </span>
+                </div>
+                <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
+                  {a.title}
+                </h3>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 빠른 메뉴 */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
