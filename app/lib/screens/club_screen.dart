@@ -8,6 +8,7 @@ import '../config/api_config.dart';
 import 'player_detail_screen.dart';
 import 'settlements_screen.dart';
 import 'announcements_screen.dart';
+import 'board_screen.dart';
 import '../widgets/tip_banner.dart';
 
 class ClubScreen extends StatefulWidget {
@@ -352,29 +353,36 @@ class _ClubScreenState extends State<ClubScreen> {
 
   Widget _buildQuickLinks() {
     final auth = context.watch<AuthService>();
-    return Row(
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
       children: [
         _quickLink(Icons.receipt_long, '정산', AppColors.primary, () {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const SettlementsScreen()));
         }),
-        const SizedBox(width: 10),
-        _quickLink(Icons.people_outline, '멤버', AppColors.blue, () {
+        _quickLink(Icons.forum_rounded, '게시판', AppColors.blue, () {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const BoardScreen()));
+        }),
+        _quickLink(Icons.people_outline, '멤버', AppColors.teal, () {
           // 이미 아래에 멤버 목록이 있으므로 스크롤
         }),
-        if (auth.isAdmin) ...[
-          const SizedBox(width: 10),
+        if (auth.isAdmin)
           _quickLink(Icons.campaign, '공지 관리', AppColors.amber, () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const AnnouncementsScreen(isAdmin: true)));
           }),
-        ],
       ],
     );
   }
 
   Widget _quickLink(IconData icon, String label, Color color, VoidCallback onTap) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
+    // Calculate width: 4 items per row when admin, 3 otherwise
+    final screenWidth = MediaQuery.of(context).size.width;
+    final itemWidth = (screenWidth - 40 - 30) / 4; // 40 padding, 30 spacing for 4 items
+
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: itemWidth,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
@@ -386,7 +394,7 @@ class _ClubScreenState extends State<ClubScreen> {
             children: [
               Icon(icon, color: color, size: 24),
               const SizedBox(height: 6),
-              Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color)),
+              Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
             ],
           ),
         ),

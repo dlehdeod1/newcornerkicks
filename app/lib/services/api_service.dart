@@ -311,6 +311,34 @@ class ApiService {
   Future<dynamic> deleteAnnouncement(int id, String token) =>
       request('/announcements/$id', method: 'DELETE', token: token);
 
+  // Posts (게시판)
+  Future<dynamic> getPosts(String token, {String? category, int? limit, int? offset}) {
+    final params = <String>[];
+    if (category != null) params.add('category=$category');
+    if (limit != null) params.add('limit=$limit');
+    if (offset != null) params.add('offset=$offset');
+    final qs = params.isNotEmpty ? '?${params.join('&')}' : '';
+    return request('/posts$qs', token: token);
+  }
+
+  Future<dynamic> getPost(int id, String token) =>
+      request('/posts/$id', token: token);
+
+  Future<dynamic> createPost(Map<String, dynamic> data, String token) =>
+      request('/posts', method: 'POST', body: data, token: token);
+
+  Future<dynamic> updatePost(int id, Map<String, dynamic> data, String token) =>
+      request('/posts/$id', method: 'PUT', body: data, token: token);
+
+  Future<dynamic> deletePost(int id, String token) =>
+      request('/posts/$id', method: 'DELETE', token: token);
+
+  Future<dynamic> addComment(int postId, String content, String token) =>
+      request('/posts/$postId/comments', method: 'POST', body: {'content': content}, token: token);
+
+  Future<dynamic> deleteComment(int postId, int commentId, String token) =>
+      request('/posts/$postId/comments/$commentId', method: 'DELETE', token: token);
+
   // 이미지 업로드 (범용 multipart)
   Future<dynamic> uploadImage(File file, String prefix, String token) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/uploads');
