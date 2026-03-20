@@ -25,6 +25,7 @@ const navItems = [
   { href: '/abilities', label: '능력치' },
   { href: '/stats', label: '통계' },
   { href: '/hall-of-fame', label: '명예의 전당' },
+  { href: '/community', label: '커뮤니티' },
 ]
 
 export function Header() {

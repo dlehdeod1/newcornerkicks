@@ -468,6 +468,40 @@ export const postsApi = {
     api(`/posts/${postId}/comments/${commentId}`, { method: 'DELETE', token }),
 }
 
+// Community API (전체 커뮤니티)
+export const communityApi = {
+  list: (token: string, options?: { category?: string; region?: string; dayOfWeek?: string; timeSlot?: string; skillLevel?: string; status?: string; limit?: number; offset?: number }) => {
+    const params = new URLSearchParams()
+    if (options?.category) params.set('category', options.category)
+    if (options?.region) params.set('region', options.region)
+    if (options?.dayOfWeek) params.set('dayOfWeek', options.dayOfWeek)
+    if (options?.timeSlot) params.set('timeSlot', options.timeSlot)
+    if (options?.skillLevel) params.set('skillLevel', options.skillLevel)
+    if (options?.status) params.set('status', options.status)
+    if (options?.limit) params.set('limit', String(options.limit))
+    if (options?.offset) params.set('offset', String(options.offset))
+    return api(`/community${params.toString() ? `?${params}` : ''}`, { token })
+  },
+
+  get: (id: number, token: string) =>
+    api(`/community/${id}`, { token }),
+
+  create: (data: any, token: string) =>
+    api('/community', { method: 'POST', body: data, token }),
+
+  update: (id: number, data: any, token: string) =>
+    api(`/community/${id}`, { method: 'PUT', body: data, token }),
+
+  delete: (id: number, token: string) =>
+    api(`/community/${id}`, { method: 'DELETE', token }),
+
+  addComment: (postId: number, content: string, token: string) =>
+    api(`/community/${postId}/comments`, { method: 'POST', body: { content }, token }),
+
+  deleteComment: (postId: number, commentId: number, token: string) =>
+    api(`/community/${postId}/comments/${commentId}`, { method: 'DELETE', token }),
+}
+
 // Uploads API (이미지 업로드)
 export const uploadsApi = {
   uploadImage: async (file: File, prefix: string, token: string) => {

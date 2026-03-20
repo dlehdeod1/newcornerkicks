@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Trophy, Calendar, Users, Star, ChevronRight, Clock, MapPin, Bell, Pin } from 'lucide-react'
+import { Trophy, Calendar, Users, Star, ChevronRight, Clock, MapPin, Bell, Pin, Globe } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { useQuery } from '@tanstack/react-query'
 import { sessionsApi, meApi, rankingsApi, announcementsApi } from '@/lib/api'
@@ -242,7 +242,7 @@ export default function HomePage() {
           <span className="text-yellow-500">⚡</span>
           빠른 메뉴
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <QuickMenuCard
             href="/sessions"
             icon={<Calendar className="w-6 h-6" />}
@@ -270,6 +270,13 @@ export default function HomePage() {
             title="명예의 전당"
             description="시즌 챔피언 보기"
             color="purple"
+          />
+          <QuickMenuCard
+            href="/community"
+            icon={<Globe className="w-6 h-6" />}
+            title="커뮤니티"
+            description="팀 모집 & 매칭"
+            color="teal"
           />
         </div>
       </section>
@@ -564,13 +571,14 @@ function QuickMenuCard({
   icon: React.ReactNode
   title: string
   description: string
-  color: 'emerald' | 'amber' | 'blue' | 'purple'
+  color: 'emerald' | 'amber' | 'blue' | 'purple' | 'teal'
 }) {
   const colorClasses = {
     emerald: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-500/20',
     amber: 'bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-200 dark:group-hover:bg-amber-500/20',
     blue: 'bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-200 dark:group-hover:bg-blue-500/20',
     purple: 'bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:bg-purple-200 dark:group-hover:bg-purple-500/20',
+    teal: 'bg-teal-100 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 group-hover:bg-teal-200 dark:group-hover:bg-teal-500/20',
   }
 
   return (
