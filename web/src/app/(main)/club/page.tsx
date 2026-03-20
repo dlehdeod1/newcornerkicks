@@ -47,6 +47,12 @@ export default function ClubPage() {
     enabled: !!player?.id,
   })
 
+  const { data: membersData } = useQuery({
+    queryKey: ['club-members'],
+    queryFn: () => clubsApi.members(token!),
+    enabled: !!token && isLoggedIn,
+  })
+
   useEffect(() => {
     if (token) {
       subscriptionsApi.me(token).then((d: any) => setSubInfo(d)).catch(() => {})
@@ -59,6 +65,13 @@ export default function ClubPage() {
   const playerStats = player ? rankings.find((p: any) => p.id === player.id) : null
 
   const club = data?.club ?? null
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://cornerkicks-api.conerkicks.workers.dev'
+
+  const rawMembers: Array<{ user_id: string; username: string; name: string; role: string; photo_url?: string | null; player_id?: number | null }> = membersData?.members || []
+  const sortedMembers = [...rawMembers].sort((a, b) => {
+    const order = { owner: 0, admin: 1, member: 2 }
+    return (order[a.role as keyof typeof order] ?? 2) - (order[b.role as keyof typeof order] ?? 2)
+  })
 
   if (!hydrated) {
     return (
@@ -275,6 +288,66 @@ export default function ClubPage() {
                 </Link>
               </div>
             )}
+          </div>
+
+          {/* 멤버 목록 */}
+          <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <Users className="w-4 h-4 text-emerald-500" />
+              <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                멤버
+              </h3>
+              {sortedMembers.length > 0 && (
+                <span className="ml-auto text-xs text-slate-400">{sortedMembers.length}명</span>
+              )}
+            </div>
+            <div className="space-y-2">
+              {sortedMembers.map((member) => {
+                const content = (
+                  <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {member.photo_url ? (
+                        <Image
+                          src={`${API_BASE}${member.photo_url}`}
+                          alt={member.name}
+                          width={40}
+                          height={40}
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                          {member.name.charAt(0)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">{member.name}</p>
+                      <p className="text-xs text-slate-500 truncate">@{member.username}</p>
+                    </div>
+                    {member.role === 'owner' && (
+                      <span className="flex-shrink-0 text-xs px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 font-medium">
+                        👑 오너
+                      </span>
+                    )}
+                    {member.role === 'admin' && (
+                      <span className="flex-shrink-0 text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-medium">
+                        🛡️ 관리자
+                      </span>
+                    )}
+                  </div>
+                )
+                return member.player_id ? (
+                  <Link key={member.user_id} href={`/players/${member.player_id}`}>
+                    {content}
+                  </Link>
+                ) : (
+                  <div key={member.user_id}>{content}</div>
+                )
+              })}
+              {sortedMembers.length === 0 && (
+                <p className="text-sm text-slate-400 text-center py-4">멤버 정보를 불러오는 중...</p>
+              )}
+            </div>
           </div>
 
           {/* 바로가기 메뉴 */}

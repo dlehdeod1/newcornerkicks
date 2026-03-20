@@ -349,6 +349,9 @@ export const clubsApi = {
   me: (token: string) =>
     api('/clubs/me', { token }),
 
+  members: (token: string) =>
+    api('/clubs/me/members', { token }),
+
   regenerateInviteCode: (token: string) =>
     api('/clubs/me/regenerate-invite', { method: 'POST', token }),
 
