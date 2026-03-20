@@ -377,6 +377,9 @@ export const clubsApi = {
 
   deleteLogo: (token: string) =>
     api('/clubs/me/logo', { method: 'DELETE', token }),
+
+  deleteClub: (token: string) =>
+    api('/clubs/me', { method: 'DELETE', token }),
 }
 
 // Payments API (납부/비용)

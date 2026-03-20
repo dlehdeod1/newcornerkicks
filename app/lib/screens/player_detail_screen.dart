@@ -22,18 +22,70 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
   bool _streakLoading = false;
   late TabController _tabController;
   int _logTab = 0; // 0=goals, 1=assists, 2=defenses, 3=mvp, 4=placements
+  bool _isFav = false;
+  bool _favLoading = false;
+  int _prefCount = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _load();
+    _loadFavStatus();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadFavStatus() async {
+    final auth = context.read<AuthService>();
+    final token = auth.token;
+    if (token == null) return;
+    try {
+      final res = await ApiService().getProfileSummary(token);
+      final prefs = (res['preferences'] as List?) ?? [];
+      if (mounted) {
+        setState(() {
+          _prefCount = prefs.length;
+          _isFav = prefs.any((p) => p['id'] == widget.playerId);
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _toggleFav() async {
+    final auth = context.read<AuthService>();
+    final token = auth.token;
+    if (token == null || _favLoading) return;
+    setState(() => _favLoading = true);
+    try {
+      if (_isFav) {
+        await ApiService().removePreference(widget.playerId, token);
+        setState(() { _isFav = false; _prefCount--; });
+      } else {
+        if (_prefCount >= 3) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('선호 선수는 최대 3명까지 등록 가능합니다'), backgroundColor: AppColors.red),
+            );
+          }
+          return;
+        }
+        await ApiService().addPreference(widget.playerId, token);
+        setState(() { _isFav = true; _prefCount++; });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', '')), backgroundColor: AppColors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _favLoading = false);
+    }
   }
 
   Future<void> _load() async {
@@ -92,6 +144,17 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
         backgroundColor: AppColors.bgBase,
         title: Text(_player?['player']?['name'] ?? '선수 정보', style: const TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          if (!_loading)
+            IconButton(
+              onPressed: _favLoading ? null : _toggleFav,
+              icon: Icon(
+                _isFav ? Icons.favorite : Icons.favorite_border,
+                color: _isFav ? AppColors.red : Colors.white38,
+              ),
+              tooltip: _isFav ? '선호 선수 해제' : '선호 선수 등록',
+            ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.primary,

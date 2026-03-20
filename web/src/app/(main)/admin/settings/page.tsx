@@ -27,6 +27,18 @@ export default function AdminSettingsPage() {
   const [regenerating, setRegenerating] = useState(false)
   const [logoUploading, setLogoUploading] = useState(false)
   const [mvpToggling, setMvpToggling] = useState(false)
+  const [notifToggling, setNotifToggling] = useState<string | null>(null)
+
+  // 클럽 정보 수정
+  const [clubName, setClubName] = useState('')
+  const [clubDesc, setClubDesc] = useState('')
+  const [seasonMonth, setSeasonMonth] = useState(1)
+  const [infoSaving, setInfoSaving] = useState(false)
+  const [infoSaved, setInfoSaved] = useState(false)
+
+  // 클럽 삭제
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   // 계좌 정보
   const [bankName, setBankName] = useState('')
@@ -62,6 +74,9 @@ export default function AdminSettingsPage() {
       setAccountNumber(ba.accountNumber || '')
       setHolderName(ba.holderName || '')
     }
+    setClubName(club.name || '')
+    setClubDesc(club.description || '')
+    setSeasonMonth(club.seasonStartMonth ?? 1)
     const fc = club.feeConfig || {}
     setBaseAmount(fc.baseAmount ?? 0)
     setSplitEnabled(fc.splitEnabled ?? false)
@@ -161,6 +176,48 @@ export default function AdminSettingsPage() {
       alert(e.message || '실패했습니다.')
     } finally {
       setRegenerating(false)
+    }
+  }
+
+  const handleNotifToggle = async (key: string) => {
+    if (!token || !club) return
+    setNotifToggling(key)
+    try {
+      const nc = club.notificationConfig || { sessionCreated: true, sessionDayRemind: true, settlementRemind: true }
+      const updated = { ...nc, [key]: !nc[key] }
+      await clubsApi.updateSettings({ notificationConfig: updated }, token)
+      queryClient.invalidateQueries({ queryKey: ['club-me'] })
+    } catch (err: any) {
+      alert(err.message || '설정 변경에 실패했습니다.')
+    } finally {
+      setNotifToggling(null)
+    }
+  }
+
+  const handleSaveClubInfo = async () => {
+    if (!token) return
+    setInfoSaving(true)
+    try {
+      await clubsApi.updateSettings({ name: clubName, description: clubDesc, seasonStartMonth: seasonMonth }, token)
+      queryClient.invalidateQueries({ queryKey: ['club-me'] })
+      setInfoSaved(true)
+      setTimeout(() => setInfoSaved(false), 2000)
+    } catch (err: any) {
+      alert(err.message || '저장에 실패했습니다.')
+    } finally {
+      setInfoSaving(false)
+    }
+  }
+
+  const handleDeleteClub = async () => {
+    if (!token || deleteConfirm !== club?.name) return
+    setDeleting(true)
+    try {
+      await clubsApi.deleteClub(token)
+      window.location.href = '/'
+    } catch (err: any) {
+      alert(err.message || '클럽 삭제에 실패했습니다.')
+      setDeleting(false)
     }
   }
 
@@ -445,24 +502,112 @@ export default function AdminSettingsPage() {
           <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
             기능 설정
           </h3>
-          <div className="flex items-center justify-between">
+          <div className="space-y-4">
+            {[
+              { key: 'mvp', label: 'MVP 투표', desc: '세션 종료 후 24시간 내 MVP 투표 진행', value: club.mvpVoteEnabled, handler: handleMvpToggle, loading: mvpToggling },
+              { key: 'sessionCreated', label: '세션 생성 알림', desc: '새 세션이 생성되면 멤버에게 알림', value: club.notificationConfig?.sessionCreated ?? true, handler: () => handleNotifToggle('sessionCreated'), loading: notifToggling === 'sessionCreated' },
+              { key: 'settlementRemind', label: '자동 정산 알림', desc: '세션 종료 후 정산 알림 발송', value: club.notificationConfig?.settlementRemind ?? true, handler: () => handleNotifToggle('settlementRemind'), loading: notifToggling === 'settlementRemind' },
+              { key: 'sessionDayRemind', label: '경기일 리마인드', desc: '경기 당일 참석 리마인드 알림', value: club.notificationConfig?.sessionDayRemind ?? true, handler: () => handleNotifToggle('sessionDayRemind'), loading: notifToggling === 'sessionDayRemind' },
+            ].map(({ key, label, desc, value, handler, loading }) => (
+              <div key={key} className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-slate-900 dark:text-white">{label}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{desc}</p>
+                </div>
+                <button
+                  onClick={handler}
+                  disabled={!!loading}
+                  className={cn(
+                    'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+                    value ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                  )}
+                >
+                  <span className={cn(
+                    'inline-block h-4 w-4 rounded-full bg-white transition-transform shadow-sm',
+                    value ? 'translate-x-6' : 'translate-x-1'
+                  )} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 클럽 정보 수정 */}
+        <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
+            클럽 정보
+          </h3>
+          <div className="space-y-4">
             <div>
-              <p className="font-medium text-slate-900 dark:text-white">MVP 투표</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">세션 종료 후 24시간 내 MVP 투표 진행</p>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">클럽 이름</label>
+              <input
+                type="text"
+                value={clubName}
+                onChange={e => setClubName(e.target.value)}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+              />
             </div>
-            <button
-              onClick={handleMvpToggle}
-              disabled={mvpToggling}
-              className={cn(
-                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                club.mvpVoteEnabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
-              )}
+            <div>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">설명</label>
+              <textarea
+                value={clubDesc}
+                onChange={e => setClubDesc(e.target.value)}
+                rows={2}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">시즌 시작월</label>
+              <select
+                value={seasonMonth}
+                onChange={e => setSeasonMonth(Number(e.target.value))}
+                className="w-32 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+              >
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>{i + 1}월</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex justify-end">
+              <Button size="sm" onClick={handleSaveClubInfo} disabled={infoSaving}>
+                {infoSaved ? <><Check className="w-4 h-4" /> 저장됨</> : infoSaving ? '저장 중...' : '저장'}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* 위험 구역 */}
+        <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-red-200 dark:border-red-500/20 shadow-sm">
+          <h3 className="text-sm font-semibold text-red-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" />
+            위험 구역
+          </h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+            클럽을 삭제하면 모든 데이터(세션, 경기, 랭킹, 멤버 등)가 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+          </p>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                확인을 위해 클럽 이름 <span className="font-bold text-slate-900 dark:text-white">{club.name}</span>을 입력하세요
+              </label>
+              <input
+                type="text"
+                value={deleteConfirm}
+                onChange={e => setDeleteConfirm(e.target.value)}
+                placeholder={club.name}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-red-200 dark:border-red-500/30 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+              />
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDeleteClub}
+              disabled={deleteConfirm !== club.name || deleting}
+              className="text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-40"
             >
-              <span className={cn(
-                'inline-block h-4 w-4 rounded-full bg-white transition-transform shadow-sm',
-                club.mvpVoteEnabled ? 'translate-x-6' : 'translate-x-1'
-              )} />
-            </button>
+              <Trash2 className="w-4 h-4" />
+              {deleting ? '삭제 중...' : '클럽 영구 삭제'}
+            </Button>
           </div>
         </div>
       </div>

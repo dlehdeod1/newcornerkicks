@@ -5,11 +5,12 @@ export const runtime = 'edge'
 import { use, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { ArrowLeft, Star, Target, Shield, Zap, Activity, User, Lock } from 'lucide-react'
-import { playersApi } from '@/lib/api'
+import { ArrowLeft, Star, Target, Shield, Zap, Activity, User, Lock, Heart } from 'lucide-react'
+import { playersApi, meApi, preferencesApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import { PlayerRadarChart } from '@/components/ui/radar-chart'
 import { useAuthStore } from '@/stores/auth'
+import { useQueryClient } from '@tanstack/react-query'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://cornerkicks-api.conerkicks.workers.dev'
 
@@ -20,6 +21,45 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
 
   const [chemistry, setChemistry] = useState<any>(null)
   const [streaks, setStreaks] = useState<any>(null)
+  const [isFav, setIsFav] = useState(false)
+  const [favLoading, setFavLoading] = useState(false)
+  const [prefCount, setPrefCount] = useState(0)
+  const queryClient = useQueryClient()
+
+  // 선호 선수 여부 확인
+  useEffect(() => {
+    if (!token) return
+    meApi.getProfileSummary(token).then((res: any) => {
+      const prefs = res?.preferences || []
+      setPrefCount(prefs.length)
+      setIsFav(prefs.some((p: any) => p.id === Number(id)))
+    }).catch(() => {})
+  }, [token, id])
+
+  const toggleFav = async () => {
+    if (!token || favLoading) return
+    setFavLoading(true)
+    try {
+      if (isFav) {
+        await preferencesApi.remove(Number(id), token)
+        setIsFav(false)
+        setPrefCount(c => c - 1)
+      } else {
+        if (prefCount >= 3) {
+          alert('선호 선수는 최대 3명까지 등록 가능합니다.')
+          return
+        }
+        await preferencesApi.add(Number(id), token)
+        setIsFav(true)
+        setPrefCount(c => c + 1)
+      }
+      queryClient.invalidateQueries({ queryKey: ['profile-summary'] })
+    } catch (err: any) {
+      alert(err.message || '오류가 발생했습니다.')
+    } finally {
+      setFavLoading(false)
+    }
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ['player', id],
@@ -117,6 +157,19 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
               <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{player.name}</h1>
               {player.nickname && (
                 <span className="text-lg text-slate-500">({player.nickname})</span>
+              )}
+              {token && (
+                <button
+                  onClick={toggleFav}
+                  disabled={favLoading}
+                  className={cn(
+                    'p-1.5 rounded-lg transition-colors',
+                    isFav ? 'text-red-400 hover:text-red-500' : 'text-slate-300 dark:text-slate-600 hover:text-red-400'
+                  )}
+                  title={isFav ? '선호 선수 해제' : '선호 선수 등록'}
+                >
+                  <Heart className={cn('w-5 h-5', isFav && 'fill-current')} />
+                </button>
               )}
               {/* Futsal DNA 뱃지 */}
               {player.futsalDna && (

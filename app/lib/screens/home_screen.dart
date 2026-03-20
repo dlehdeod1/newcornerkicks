@@ -23,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ApiService _api = ApiService();
   Map<String, dynamic>? _myStats;
   Map<String, dynamic>? _recentSession;
+  Map<String, dynamic>? _seasonSummary;
   bool _loading = true;
 
   @override
@@ -42,6 +43,11 @@ class _HomeScreenState extends State<HomeScreen> {
           _myStats = stats['stats'];
         } catch (_) {}
       }
+
+      try {
+        final summary = await _api.getSeasonSummary(token!);
+        _seasonSummary = summary;
+      } catch (_) {}
 
       try {
         final closedRes = await _api.getSessions(status: 'closed', limit: 1, token: token);
@@ -281,6 +287,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
+            // 시즌 요약
+            if (_seasonSummary != null) ...[
+              const SizedBox(height: 24),
+              Text(
+                '시즌 요약',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(204), letterSpacing: 0.5),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _SummaryStat(icon: Icons.calendar_month, label: '총 세션', value: '${_seasonSummary!['totalSessions'] ?? 0}', color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  _SummaryStat(icon: Icons.people, label: '평균 참석', value: '${(_seasonSummary!['averageAttendance'] as num?)?.round() ?? 0}명', color: AppColors.blue),
+                  const SizedBox(width: 8),
+                  _SummaryStat(icon: Icons.sports_soccer, label: '총 골', value: '${_seasonSummary!['totalGoals'] ?? 0}', color: AppColors.amber),
+                  const SizedBox(width: 8),
+                  _SummaryStat(icon: Icons.sports, label: '총 경기', value: '${_seasonSummary!['totalMatches'] ?? 0}', color: AppColors.purple),
+                ],
+              ),
+            ],
+
             const SizedBox(height: 24),
 
             // 지난 세션
@@ -464,6 +491,38 @@ class _QuickMenu extends StatelessWidget {
             const SizedBox(height: 8),
             Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
             Text(subtitle, style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(102))),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryStat extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  const _SummaryStat({required this.icon, required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+        decoration: BoxDecoration(
+          color: color.withAlpha(15),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withAlpha(30)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(height: 6),
+            Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+            const SizedBox(height: 2),
+            Text(label, style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(128))),
           ],
         ),
       ),

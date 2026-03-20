@@ -122,7 +122,7 @@ meRoutes.get('/profile-summary', authMiddleware(), async (c) => {
     if (!clubId) return c.json({ error: '클럽에 소속되어 있지 않습니다.' }, 403)
 
     const player = await c.env.DB.prepare(
-      'SELECT id, name, nickname, photo_url FROM players WHERE user_id = ? AND club_id = ?'
+      'SELECT id, name, nickname, photo_url, height_cm, weight_kg, birth_year FROM players WHERE user_id = ? AND club_id = ?'
     ).bind(userId, clubId).first()
 
     if (!player) {
@@ -193,7 +193,7 @@ meRoutes.get('/profile-summary', authMiddleware(), async (c) => {
     `).bind(playerId).all()
 
     return c.json({
-      player: { id: playerId, name: player.name, nickname: player.nickname, photoUrl: player.photo_url },
+      player: { id: playerId, name: player.name, nickname: player.nickname, photoUrl: player.photo_url, heightCm: player.height_cm, weightKg: player.weight_kg, birthYear: player.birth_year },
       abilities,
       seasonStats: {
         goals: seasonStats?.goals || 0,

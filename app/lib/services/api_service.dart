@@ -205,6 +205,14 @@ class ApiService {
   Future<dynamic> getMyStats(String token) =>
       request('/me/stats', token: token);
 
+  // Stats
+  Future<dynamic> getSeasonSummary(String token, {int? year}) =>
+      request('/stats/season-summary${year != null ? '?year=$year' : ''}', token: token);
+
+  // Subscriptions
+  Future<dynamic> getSubscription(String token) =>
+      request('/subscriptions/me', token: token);
+
   // Matches
   Future<dynamic> getMatch(int id) => request('/matches/$id');
 

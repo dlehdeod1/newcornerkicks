@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
+import '../config/api_config.dart';
 import 'player_detail_screen.dart';
 import 'settlements_screen.dart';
 import '../widgets/tip_banner.dart';
@@ -21,6 +22,7 @@ class _ClubScreenState extends State<ClubScreen> {
   Map<String, dynamic>? _playerStats;
   int? _myRank;
   List<dynamic> _players = [];
+  Map<String, dynamic>? _subscription;
   bool _loading = true;
 
   @override
@@ -43,6 +45,10 @@ class _ClubScreenState extends State<ClubScreen> {
 
     futures.add(_api.getPlayers(token: token).then((data) {
       _players = (data['players'] as List?)?.where((p) => p['is_guest'] != 1).toList() ?? [];
+    }).catchError((_) {}));
+
+    futures.add(_api.getSubscription(token).then((res) {
+      _subscription = res;
     }).catchError((_) {}));
 
     if (player != null) {
@@ -94,6 +100,8 @@ class _ClubScreenState extends State<ClubScreen> {
             const SizedBox(height: 20),
             _buildQuickLinks(),
             const SizedBox(height: 20),
+            _buildSubscriptionCard(),
+            const SizedBox(height: 20),
             _buildMemberList(),
           ],
         ),
@@ -122,7 +130,7 @@ class _ClubScreenState extends State<ClubScreen> {
       ),
       child: Column(
         children: [
-          // 클럽 아바타
+          // 클럽 아바타 / 로고
           Container(
             width: 64,
             height: 64,
@@ -130,12 +138,20 @@ class _ClubScreenState extends State<ClubScreen> {
               gradient: const LinearGradient(colors: [AppColors.primary, AppColors.teal]),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Center(
-              child: Text(
-                clubName.isNotEmpty ? clubName[0] : '?',
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-            ),
+            clipBehavior: Clip.antiAlias,
+            child: _clubDetail?['logoUrl'] != null
+                ? Image.network(
+                    '${ApiConfig.baseUrl}${_clubDetail!['logoUrl']}',
+                    width: 64, height: 64, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Center(
+                      child: Text(clubName.isNotEmpty ? clubName[0] : '?',
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  )
+                : Center(
+                    child: Text(clubName.isNotEmpty ? clubName[0] : '?',
+                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
           ),
           const SizedBox(height: 12),
           Text(clubName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -278,7 +294,7 @@ class _ClubScreenState extends State<ClubScreen> {
             children: [
               Expanded(child: _miniStat('경기', '${stats['games'] ?? 0}경기', Icons.sports_soccer)),
               const SizedBox(width: 10),
-              Expanded(child: _miniStat('1등', '${stats['rank1'] ?? 0}회', Icons.emoji_events)),
+              Expanded(child: _miniStat('우승', '${stats['sessionWins'] ?? stats['rank1'] ?? 0}회', Icons.emoji_events)),
             ],
           ),
         ],
@@ -366,6 +382,76 @@ class _ClubScreenState extends State<ClubScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSubscriptionCard() {
+    final isPro = _subscription?['isPro'] == true;
+    final sub = _subscription?['subscription'];
+    final expiresAt = sub?['expiresAt'];
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isPro
+              ? [AppColors.amber.withAlpha(20), AppColors.amber.withAlpha(10)]
+              : [Colors.white.withAlpha(8), Colors.white.withAlpha(5)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isPro ? AppColors.amber.withAlpha(51) : Colors.white.withAlpha(20)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              color: isPro ? AppColors.amber.withAlpha(30) : Colors.white.withAlpha(13),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              isPro ? Icons.workspace_premium : Icons.star_border,
+              color: isPro ? AppColors.amber : Colors.white54,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isPro ? 'PRO 플랜' : 'FREE 플랜',
+                  style: TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.bold,
+                    color: isPro ? AppColors.amber : Colors.white,
+                  ),
+                ),
+                if (isPro && expiresAt != null)
+                  Text(
+                    '만료: $expiresAt',
+                    style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102)),
+                  )
+                else if (!isPro)
+                  Text(
+                    'PRO로 업그레이드하면 케미스트리, 스트릭 등을 이용할 수 있어요',
+                    style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102)),
+                  ),
+              ],
+            ),
+          ),
+          if (!isPro)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withAlpha(20),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.primary.withAlpha(51)),
+              ),
+              child: const Text('업그레이드', style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600)),
+            ),
+        ],
       ),
     );
   }

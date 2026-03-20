@@ -471,6 +471,65 @@ clubsRoutes.delete('/me/logo', authMiddleware(), async (c) => {
   return c.json({ message: '로고가 삭제되었습니다.' })
 })
 
+// 클럽 삭제 (owner만 가능)
+clubsRoutes.delete('/me', authMiddleware(), async (c) => {
+  try {
+    const userId = (c as any).userId
+    const clubId = (c as any).clubId
+    if (!clubId) return c.json({ error: '클럽이 선택되지 않았습니다.' }, 400)
+
+    // owner 확인
+    const club = await c.env.DB.prepare(
+      'SELECT owner_user_id FROM clubs WHERE id = ?'
+    ).bind(clubId).first()
+    if (!club || club.owner_user_id !== userId) {
+      return c.json({ error: '클럽 소유자만 삭제할 수 있습니다.' }, 403)
+    }
+
+    // 관련 데이터 삭제 (순서 중요 - FK 의존성)
+    const tables = [
+      'player_ratings', 'player_preferences', 'match_events', 'player_match_stats',
+      'team_members', 'teams', 'matches', 'attendance', 'session_payments',
+      'sessions', 'rankings_cache', 'club_members', 'players',
+    ]
+    for (const table of tables) {
+      if (['player_ratings', 'player_preferences', 'player_match_stats'].includes(table)) {
+        await c.env.DB.prepare(
+          `DELETE FROM ${table} WHERE player_id IN (SELECT id FROM players WHERE club_id = ?)`
+        ).bind(clubId).run()
+      } else if (['match_events'].includes(table)) {
+        await c.env.DB.prepare(
+          `DELETE FROM ${table} WHERE match_id IN (SELECT m.id FROM matches m JOIN sessions s ON m.session_id = s.id WHERE s.club_id = ?)`
+        ).bind(clubId).run()
+      } else if (['team_members'].includes(table)) {
+        await c.env.DB.prepare(
+          `DELETE FROM ${table} WHERE team_id IN (SELECT t.id FROM teams t JOIN sessions s ON t.session_id = s.id WHERE s.club_id = ?)`
+        ).bind(clubId).run()
+      } else if (['teams', 'matches'].includes(table)) {
+        await c.env.DB.prepare(
+          `DELETE FROM ${table} WHERE session_id IN (SELECT id FROM sessions WHERE club_id = ?)`
+        ).bind(clubId).run()
+      } else if (['attendance', 'session_payments', 'sessions'].includes(table)) {
+        await c.env.DB.prepare(
+          `DELETE FROM ${table} WHERE ${table === 'sessions' ? 'club_id' : 'session_id IN (SELECT id FROM sessions WHERE club_id'} = ?${table === 'sessions' ? '' : ')'}`
+        ).bind(clubId).run()
+      } else if (table === 'rankings_cache') {
+        await c.env.DB.prepare('DELETE FROM rankings_cache WHERE club_id = ?').bind(clubId).run()
+      } else {
+        await c.env.DB.prepare(`DELETE FROM ${table} WHERE club_id = ?`).bind(clubId).run()
+      }
+    }
+
+    // 클럽 삭제
+    await c.env.DB.prepare('DELETE FROM clubs WHERE id = ?').bind(clubId).run()
+
+    return c.json({ message: '클럽이 삭제되었습니다.' })
+  } catch (err: any) {
+    console.error('Club delete error:', err)
+    return c.json({ error: err.message }, 500)
+  }
+})
+
 function generateInviteCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   let code = ''

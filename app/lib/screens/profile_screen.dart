@@ -84,6 +84,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildProfileCard(user, player, auth),
             if (player != null && !_summaryLoading) ...[
               const SizedBox(height: 16),
+              _buildBodyInfo(),
+              const SizedBox(height: 16),
               _buildSeasonStats(),
               const SizedBox(height: 16),
               _buildAbilitiesAndPrefs(),
@@ -92,6 +94,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildMenuSection(auth),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildBodyInfo() {
+    final p = _summary?['player'];
+    if (p == null) return const SizedBox.shrink();
+
+    final height = p['heightCm'];
+    final weight = p['weightKg'];
+    final birthYear = p['birthYear'];
+
+    if (height == null && weight == null && birthYear == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(8),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withAlpha(20)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('신체 정보', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(153), letterSpacing: 1)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              if (height != null)
+                _bodyInfoItem(Icons.height, '키', '${height}cm'),
+              if (weight != null)
+                _bodyInfoItem(Icons.fitness_center, '몸무게', '${weight}kg'),
+              if (birthYear != null)
+                _bodyInfoItem(Icons.cake, '출생', '$birthYear'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bodyInfoItem(IconData icon, String label, String value) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, size: 18, color: Colors.white.withAlpha(128)),
+          const SizedBox(height: 6),
+          Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102))),
+        ],
       ),
     );
   }
