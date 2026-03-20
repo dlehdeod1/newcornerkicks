@@ -288,6 +288,28 @@ export const announcementReads = sqliteTable('announcement_reads', {
   readAt: integer('read_at', { mode: 'timestamp' }).notNull(),
 })
 
+export const posts = sqliteTable('posts', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  clubId: integer('club_id').notNull().references(() => clubs.id),
+  authorId: text('author_id').notNull().references(() => users.id),
+  category: text('category').notNull().default('free'),
+  title: text('title').notNull(),
+  content: text('content').notNull(),
+  imageUrl: text('image_url'),
+  isPinned: integer('is_pinned').default(0),
+  commentCount: integer('comment_count').default(0),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+})
+
+export const postComments = sqliteTable('post_comments', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  postId: integer('post_id').notNull().references(() => posts.id),
+  authorId: text('author_id').notNull().references(() => users.id),
+  content: text('content').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+})
+
 export const chemistryEdges = sqliteTable('chemistry_edges', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   playerAId: integer('player_a_id').notNull().references(() => players.id),
