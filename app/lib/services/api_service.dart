@@ -286,6 +286,49 @@ class ApiService {
 
   Future<dynamic> deleteSessionExpense(int sessionId, int expenseId, String token) =>
       request('/payments/sessions/$sessionId/expenses/$expenseId', method: 'DELETE', token: token);
+
+  // Announcements (공지)
+  Future<dynamic> getAnnouncements(String token, {int? limit, int? offset}) {
+    final params = <String>[];
+    if (limit != null) params.add('limit=$limit');
+    if (offset != null) params.add('offset=$offset');
+    final qs = params.isNotEmpty ? '?${params.join('&')}' : '';
+    return request('/announcements$qs', token: token);
+  }
+
+  Future<dynamic> getAnnouncement(int id, String token) =>
+      request('/announcements/$id', token: token);
+
+  Future<dynamic> getAnnouncementUnreadCount(String token) =>
+      request('/announcements/unread-count', token: token);
+
+  Future<dynamic> createAnnouncement(Map<String, dynamic> data, String token) =>
+      request('/announcements', method: 'POST', body: data, token: token);
+
+  Future<dynamic> updateAnnouncement(int id, Map<String, dynamic> data, String token) =>
+      request('/announcements/$id', method: 'PUT', body: data, token: token);
+
+  Future<dynamic> deleteAnnouncement(int id, String token) =>
+      request('/announcements/$id', method: 'DELETE', token: token);
+
+  // 이미지 업로드 (범용 multipart)
+  Future<dynamic> uploadImage(File file, String prefix, String token) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/uploads');
+    final req = http.MultipartRequest('POST', url);
+    req.headers['Authorization'] = 'Bearer $token';
+    if (activeClubId != null) {
+      req.headers['X-Club-Id'] = activeClubId.toString();
+    }
+    req.fields['prefix'] = prefix;
+    req.files.add(await http.MultipartFile.fromPath('file', file.path));
+    final streamed = await req.send();
+    final body = await streamed.stream.bytesToString();
+    final data = jsonDecode(body);
+    if (streamed.statusCode >= 400) {
+      throw ApiException(data['error'] ?? '업로드 실패', streamed.statusCode);
+    }
+    return data;
+  }
 }
 
 class ApiException implements Exception {
