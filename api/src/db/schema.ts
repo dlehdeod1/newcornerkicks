@@ -310,6 +310,33 @@ export const postComments = sqliteTable('post_comments', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 })
 
+export const communityPosts = sqliteTable('community_posts', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  authorId: text('author_id').notNull().references(() => users.id),
+  clubId: integer('club_id').references(() => clubs.id),
+  category: text('category').notNull().default('free'),
+  title: text('title').notNull(),
+  content: text('content').notNull(),
+  imageUrl: text('image_url'),
+  region: text('region'),
+  dayOfWeek: text('day_of_week'),
+  timeSlot: text('time_slot'),
+  skillLevel: text('skill_level'),
+  headcount: integer('headcount'),
+  status: text('status').default('open'),
+  commentCount: integer('comment_count').default(0),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+})
+
+export const communityComments = sqliteTable('community_comments', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  postId: integer('post_id').notNull().references(() => communityPosts.id),
+  authorId: text('author_id').notNull().references(() => users.id),
+  content: text('content').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+})
+
 export const chemistryEdges = sqliteTable('chemistry_edges', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   playerAId: integer('player_a_id').notNull().references(() => players.id),
