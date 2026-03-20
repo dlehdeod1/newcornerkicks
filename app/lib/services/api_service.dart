@@ -339,6 +339,39 @@ class ApiService {
   Future<dynamic> deleteComment(int postId, int commentId, String token) =>
       request('/posts/$postId/comments/$commentId', method: 'DELETE', token: token);
 
+  // Community (전체 커뮤니티)
+  Future<dynamic> getCommunityPosts(String token, {String? category, String? region, String? dayOfWeek, String? timeSlot, String? skillLevel, String? status, int? limit, int? offset}) {
+    final params = <String>[];
+    if (category != null) params.add('category=$category');
+    if (region != null) params.add('region=$region');
+    if (dayOfWeek != null) params.add('dayOfWeek=$dayOfWeek');
+    if (timeSlot != null) params.add('timeSlot=$timeSlot');
+    if (skillLevel != null) params.add('skillLevel=$skillLevel');
+    if (status != null) params.add('status=$status');
+    if (limit != null) params.add('limit=$limit');
+    if (offset != null) params.add('offset=$offset');
+    final qs = params.isNotEmpty ? '?${params.join('&')}' : '';
+    return request('/community$qs', token: token);
+  }
+
+  Future<dynamic> getCommunityPost(int id, String token) =>
+      request('/community/$id', token: token);
+
+  Future<dynamic> createCommunityPost(Map<String, dynamic> data, String token) =>
+      request('/community', method: 'POST', body: data, token: token);
+
+  Future<dynamic> updateCommunityPost(int id, Map<String, dynamic> data, String token) =>
+      request('/community/$id', method: 'PUT', body: data, token: token);
+
+  Future<dynamic> deleteCommunityPost(int id, String token) =>
+      request('/community/$id', method: 'DELETE', token: token);
+
+  Future<dynamic> addCommunityComment(int postId, String content, String token) =>
+      request('/community/$postId/comments', method: 'POST', body: {'content': content}, token: token);
+
+  Future<dynamic> deleteCommunityComment(int postId, int commentId, String token) =>
+      request('/community/$postId/comments/$commentId', method: 'DELETE', token: token);
+
   // 이미지 업로드 (범용 multipart)
   Future<dynamic> uploadImage(File file, String prefix, String token) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/uploads');

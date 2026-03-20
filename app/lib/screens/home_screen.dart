@@ -13,6 +13,7 @@ import 'settlements_screen.dart';
 import 'match_result_popup.dart';
 import 'announcements_screen.dart';
 import 'announcement_detail_screen.dart';
+import 'community_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -353,6 +354,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   subtitle: '회비 납부 현황',
                   color: AppColors.teal,
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettlementsScreen())),
+                ),
+                _QuickMenu(
+                  icon: Icons.public_rounded,
+                  title: '커뮤니티',
+                  subtitle: '팀 모집 · 매칭 · 자유글',
+                  color: AppColors.teal,
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityScreen())),
                 ),
               ],
             ),
