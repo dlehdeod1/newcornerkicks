@@ -7,6 +7,7 @@ import '../services/api_service.dart';
 import '../config/api_config.dart';
 import 'player_detail_screen.dart';
 import 'settlements_screen.dart';
+import 'announcements_screen.dart';
 import '../widgets/tip_banner.dart';
 
 class ClubScreen extends StatefulWidget {
@@ -266,7 +267,7 @@ class _ClubScreenState extends State<ClubScreen> {
             children: [
               const Icon(Icons.trending_up, size: 18, color: AppColors.primary),
               const SizedBox(width: 8),
-              Text('$year년 시즌 스탯', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+              Text('${year}년 시즌 스탯', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
               if (_myRank != null) ...[
                 const Spacer(),
                 Container(
@@ -350,6 +351,7 @@ class _ClubScreenState extends State<ClubScreen> {
   }
 
   Widget _buildQuickLinks() {
+    final auth = context.watch<AuthService>();
     return Row(
       children: [
         _quickLink(Icons.receipt_long, '정산', AppColors.primary, () {
@@ -359,6 +361,12 @@ class _ClubScreenState extends State<ClubScreen> {
         _quickLink(Icons.people_outline, '멤버', AppColors.blue, () {
           // 이미 아래에 멤버 목록이 있으므로 스크롤
         }),
+        if (auth.isAdmin) ...[
+          const SizedBox(width: 10),
+          _quickLink(Icons.campaign, '공지 관리', AppColors.amber, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AnnouncementsScreen(isAdmin: true)));
+          }),
+        ],
       ],
     );
   }

@@ -11,6 +11,8 @@ import 'players_screen.dart';
 import 'hall_of_fame_screen.dart';
 import 'settlements_screen.dart';
 import 'match_result_popup.dart';
+import 'announcements_screen.dart';
+import 'announcement_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,6 +26,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? _myStats;
   Map<String, dynamic>? _recentSession;
   Map<String, dynamic>? _seasonSummary;
+  List<dynamic> _announcements = [];
+  int _unreadCount = 0;
   bool _loading = true;
 
   @override
@@ -60,6 +64,24 @@ class _HomeScreenState extends State<HomeScreen> {
         } else {
           _recentSession = closed ?? completed;
         }
+      } catch (_) {}
+
+      // Load announcements
+      try {
+        final annRes = await _api.getAnnouncements(token!, limit: 3);
+        _announcements = (annRes['data'] as List?) ?? [];
+        // Sort pinned first
+        _announcements.sort((a, b) {
+          final aPin = a['is_pinned'] == 1 || a['is_pinned'] == true ? 1 : 0;
+          final bPin = b['is_pinned'] == 1 || b['is_pinned'] == true ? 1 : 0;
+          if (aPin != bPin) return bPin - aPin;
+          return ((b['created_at'] ?? 0) as int).compareTo((a['created_at'] ?? 0) as int);
+        });
+      } catch (_) {}
+
+      try {
+        final ucRes = await _api.getAnnouncementUnreadCount(token!);
+        _unreadCount = (ucRes['data']?['count'] ?? ucRes['count'] ?? 0) as int;
       } catch (_) {}
     } finally {
       if (mounted) {
@@ -102,6 +124,12 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     } catch (_) {}
+  }
+
+  String _formatAnnouncementDate(dynamic ts) {
+    if (ts == null) return '';
+    final dt = DateTime.fromMillisecondsSinceEpoch((ts as int) * 1000);
+    return '${dt.month}/${dt.day} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -170,6 +198,47 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             const SizedBox(height: 24),
+
+            // 공지사항 섹션
+            if (_announcements.isNotEmpty) ...[
+              Row(
+                children: [
+                  Text(
+                    '공지사항',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(204), letterSpacing: 0.5),
+                  ),
+                  if (_unreadCount > 0) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.red.withAlpha(26),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text('$_unreadCount', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.red)),
+                    ),
+                  ],
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () async {
+                      await Navigator.push(context, MaterialPageRoute(builder: (_) => const AnnouncementsScreen()));
+                      setState(() => _loading = true);
+                      _loadData();
+                    },
+                    child: Row(
+                      children: [
+                        Text('전체 보기', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
+                        const SizedBox(width: 2),
+                        Icon(Icons.chevron_right, size: 16, color: Colors.white.withAlpha(102)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...(_announcements.take(2).map((a) => _buildAnnouncementCard(a))),
+              const SizedBox(height: 24),
+            ],
 
             // 내 최근 기록 카드
             Container(
@@ -340,6 +409,67 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
             ),
             const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnnouncementCard(Map<String, dynamic> a) {
+    final isPinned = a['is_pinned'] == 1 || a['is_pinned'] == true;
+    final isRead = a['is_read'] == 1 || a['is_read'] == true;
+    final title = a['title'] ?? '';
+
+    return GestureDetector(
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => AnnouncementDetailScreen(announcementId: a['id'] as int)),
+        );
+        setState(() => _loading = true);
+        _loadData();
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white.withAlpha(8),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isRead ? Colors.white.withAlpha(15) : AppColors.primary.withAlpha(80),
+          ),
+        ),
+        child: Row(
+          children: [
+            if (isPinned) ...[
+              Icon(Icons.push_pin, size: 14, color: AppColors.amber),
+              const SizedBox(width: 8),
+            ],
+            if (!isRead) ...[
+              Container(
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 8),
+            ],
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isRead ? FontWeight.w400 : FontWeight.w600,
+                  color: isRead ? Colors.white.withAlpha(153) : Colors.white,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              _formatAnnouncementDate(a['created_at']),
+              style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(64)),
+            ),
           ],
         ),
       ),
