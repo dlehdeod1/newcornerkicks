@@ -270,14 +270,22 @@ export const clubMembers = sqliteTable('club_members', {
 // 기타 도메인
 // ============================================
 
-export const notices = sqliteTable('notices', {
+export const announcements = sqliteTable('announcements', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  clubId: integer('club_id').references(() => clubs.id),
   title: text('title').notNull(),
   content: text('content').notNull(),
+  imageUrl: text('image_url'),
   isPinned: integer('is_pinned').default(0),
-  createdBy: text('created_by').references(() => users.id),
-  createdAt: integer('created_at', { mode: 'timestamp' }),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }),
+  createdBy: text('created_by').notNull().references(() => users.id),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+})
+
+export const announcementReads = sqliteTable('announcement_reads', {
+  announcementId: integer('announcement_id').notNull().references(() => announcements.id),
+  userId: text('user_id').notNull().references(() => users.id),
+  readAt: integer('read_at', { mode: 'timestamp' }).notNull(),
 })
 
 export const chemistryEdges = sqliteTable('chemistry_edges', {
