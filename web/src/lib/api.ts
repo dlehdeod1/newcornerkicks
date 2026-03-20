@@ -439,6 +439,35 @@ export const announcementsApi = {
     api(`/announcements/${id}`, { method: 'DELETE', token }),
 }
 
+// Posts API (게시판)
+export const postsApi = {
+  list: (token: string, options?: { category?: string; limit?: number; offset?: number }) => {
+    const params = new URLSearchParams()
+    if (options?.category) params.set('category', options.category)
+    if (options?.limit) params.set('limit', String(options.limit))
+    if (options?.offset) params.set('offset', String(options.offset))
+    return api(`/posts${params.toString() ? `?${params}` : ''}`, { token })
+  },
+
+  get: (id: number, token: string) =>
+    api(`/posts/${id}`, { token }),
+
+  create: (data: { title: string; content: string; category?: string; imageUrl?: string; isPinned?: boolean }, token: string) =>
+    api('/posts', { method: 'POST', body: data, token }),
+
+  update: (id: number, data: { title?: string; content?: string; imageUrl?: string | null; isPinned?: boolean; category?: string }, token: string) =>
+    api(`/posts/${id}`, { method: 'PUT', body: data, token }),
+
+  delete: (id: number, token: string) =>
+    api(`/posts/${id}`, { method: 'DELETE', token }),
+
+  addComment: (postId: number, content: string, token: string) =>
+    api(`/posts/${postId}/comments`, { method: 'POST', body: { content }, token }),
+
+  deleteComment: (postId: number, commentId: number, token: string) =>
+    api(`/posts/${postId}/comments/${commentId}`, { method: 'DELETE', token }),
+}
+
 // Uploads API (이미지 업로드)
 export const uploadsApi = {
   uploadImage: async (file: File, prefix: string, token: string) => {
