@@ -8,8 +8,8 @@ const announcementsRoutes = new Hono<{ Bindings: Env }>()
 announcementsRoutes.get('/', authMiddleware(), async (c) => {
   const userId = (c as any).userId
   const clubId = (c as any).clubId
-  const limit = Number(c.req.query('limit')) || 20
-  const offset = Number(c.req.query('offset')) || 0
+  const limit = Math.min(Math.max(Number(c.req.query('limit')) || 20, 1), 100)
+  const offset = Math.max(Number(c.req.query('offset')) || 0, 0)
 
   const { results } = await c.env.DB.prepare(`
     SELECT a.*,
@@ -113,14 +113,15 @@ announcementsRoutes.post('/', authMiddleware(), async (c) => {
   }
 
   if (members.results.length > 0) {
-    const values = members.results.map(() => '(?, ?, ?, ?, ?, ?)').join(',')
-    const binds = members.results.flatMap((m: any) => [
-      m.user_id, 'ANNOUNCEMENT', '새 공지사항', title, `/announcements/${id}`, now
-    ])
-    await c.env.DB.prepare(`
-      INSERT INTO notifications (user_id, type, title, message, link_url, created_at)
-      VALUES ${values}
-    `).bind(...binds).run()
+    const stmts = members.results.map((m: any) =>
+      c.env.DB.prepare(
+        'INSERT INTO notifications (user_id, type, title, message, link_url, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+      ).bind(m.user_id, 'ANNOUNCEMENT', '새 공지사항', title, `/announcements/${id}`, now)
+    )
+    // D1 batch는 최대 ~100개 권장, 초과 시 청크 분할
+    for (let i = 0; i < stmts.length; i += 100) {
+      await c.env.DB.batch(stmts.slice(i, i + 100))
+    }
   }
 
   return c.json({ data: { id } }, 201)

@@ -8,8 +8,8 @@ const postsRoutes = new Hono<{ Bindings: Env }>()
 postsRoutes.get('/', authMiddleware(), async (c) => {
   const clubId = (c as any).clubId
   const category = c.req.query('category') || null
-  const limit = Number(c.req.query('limit')) || 20
-  const offset = Number(c.req.query('offset')) || 0
+  const limit = Math.min(Math.max(Number(c.req.query('limit')) || 20, 1), 100)
+  const offset = Math.max(Number(c.req.query('offset')) || 0, 0)
 
   let sql = `
     SELECT p.*, u.username as author_name
@@ -113,7 +113,13 @@ postsRoutes.put('/:id', authMiddleware(), async (c) => {
   if (body.isPinned !== undefined && (clubRole === 'admin' || clubRole === 'owner')) {
     updates.push('is_pinned = ?'); binds.push(body.isPinned ? 1 : 0)
   }
-  if (body.category !== undefined) { updates.push('category = ?'); binds.push(body.category) }
+  if (body.category !== undefined) {
+    const validCats = ['free', 'review', 'schedule']
+    if (!validCats.includes(body.category)) {
+      return c.json({ error: '유효하지 않은 카테고리입니다.' }, 400)
+    }
+    updates.push('category = ?'); binds.push(body.category)
+  }
 
   binds.push(id)
   await c.env.DB.prepare(

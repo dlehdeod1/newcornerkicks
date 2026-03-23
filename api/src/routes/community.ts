@@ -12,8 +12,8 @@ communityRoutes.get('/', authMiddleware(), async (c) => {
   const timeSlot = c.req.query('timeSlot') || null
   const skillLevel = c.req.query('skillLevel') || null
   const status = c.req.query('status') || null
-  const limit = Number(c.req.query('limit')) || 20
-  const offset = Number(c.req.query('offset')) || 0
+  const limit = Math.min(Math.max(Number(c.req.query('limit')) || 20, 1), 100)
+  const offset = Math.max(Number(c.req.query('offset')) || 0, 0)
 
   let sql = `
     SELECT cp.*, u.username as author_name, cl.name as club_name
@@ -115,13 +115,25 @@ communityRoutes.put('/:id', authMiddleware(), async (c) => {
   if (body.title !== undefined) { updates.push('title = ?'); binds.push(body.title) }
   if (body.content !== undefined) { updates.push('content = ?'); binds.push(body.content) }
   if ('imageUrl' in body) { updates.push('image_url = ?'); binds.push(body.imageUrl) }
-  if (body.category !== undefined) { updates.push('category = ?'); binds.push(body.category) }
+  if (body.category !== undefined) {
+    const validCats = ['free', 'recruit', 'match', 'review']
+    if (!validCats.includes(body.category)) {
+      return c.json({ error: '유효하지 않은 카테고리입니다.' }, 400)
+    }
+    updates.push('category = ?'); binds.push(body.category)
+  }
   if (body.region !== undefined) { updates.push('region = ?'); binds.push(body.region) }
   if (body.dayOfWeek !== undefined) { updates.push('day_of_week = ?'); binds.push(body.dayOfWeek) }
   if (body.timeSlot !== undefined) { updates.push('time_slot = ?'); binds.push(body.timeSlot) }
   if (body.skillLevel !== undefined) { updates.push('skill_level = ?'); binds.push(body.skillLevel) }
   if (body.headcount !== undefined) { updates.push('headcount = ?'); binds.push(body.headcount) }
-  if (body.status !== undefined) { updates.push('status = ?'); binds.push(body.status) }
+  if (body.status !== undefined) {
+    const validStatuses = ['open', 'closed']
+    if (!validStatuses.includes(body.status)) {
+      return c.json({ error: '유효하지 않은 상태값입니다.' }, 400)
+    }
+    updates.push('status = ?'); binds.push(body.status)
+  }
 
   binds.push(id)
   await c.env.DB.prepare(
