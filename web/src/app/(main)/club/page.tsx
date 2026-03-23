@@ -21,6 +21,8 @@ import {
   Star,
   Gamepad2,
   TrendingUp,
+  MessageSquare,
+  Bell,
 } from 'lucide-react'
 import { useAuthStore, useAuthHydrated } from '@/stores/auth'
 import { clubsApi, rankingsApi, subscriptionsApi } from '@/lib/api'
@@ -356,6 +358,20 @@ export default function ClubPage() {
               <h3 className="font-semibold text-slate-900 dark:text-white">바로가기</h3>
             </div>
             <div className="p-2">
+              <ClubMenuItem
+                icon={<Bell className="w-5 h-5" />}
+                label="공지사항"
+                description="클럽 및 시스템 공지"
+                href="/announcements"
+                color="purple"
+              />
+              <ClubMenuItem
+                icon={<MessageSquare className="w-5 h-5" />}
+                label="게시판"
+                description="클럽 내 커뮤니티"
+                href="/board"
+                color="emerald"
+              />
               <ClubMenuItem
                 icon={<Users className="w-5 h-5" />}
                 label="선수 목록"

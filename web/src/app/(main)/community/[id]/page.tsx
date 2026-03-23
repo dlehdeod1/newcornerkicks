@@ -81,7 +81,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
     )
   }
 
-  const post = data?.post
+  const post = data?.data
   if (!post) {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
@@ -96,7 +96,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
 
   const cat = categories.find(c => c.key === post.category)
   const colors = cat ? categoryColorMap[cat.color] : categoryColorMap.emerald
-  const isAuthor = user?.id === post.user_id
+  const isAuthor = user?.id === post.author_id
   const isRecruitOrMatch = post.category === 'recruit' || post.category === 'match'
   const comments = post.comments || []
 
@@ -276,7 +276,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{c.author_name}</span>
                     <span className="text-xs text-slate-400">{formatDate(c.created_at)}</span>
-                    {user?.id === c.user_id && (
+                    {user?.id === c.author_id && (
                       <button
                         onClick={() => {
                           if (confirm('댓글을 삭제하시겠습니까?')) {

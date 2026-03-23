@@ -54,8 +54,8 @@ function BoardWriteContent() {
   })
 
   useEffect(() => {
-    if (editData?.post) {
-      const p = editData.post
+    if (editData?.data) {
+      const p = editData.data
       setTitle(p.title)
       setContent(p.content)
       setCategory(p.category || 'free')
@@ -120,7 +120,7 @@ function BoardWriteContent() {
     if (isAdmin) payload.isPinned = isPinned
 
     if (editId) {
-      if (!imageUrl && editData?.post?.image_url) {
+      if (!imageUrl && editData?.data?.image_url) {
         payload.imageUrl = null
       }
       updateMutation.mutate(payload)

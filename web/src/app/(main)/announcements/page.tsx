@@ -30,8 +30,8 @@ export default function AnnouncementsPage() {
     enabled: isLoggedIn && !!token,
   })
 
-  const announcements = data?.announcements || []
-  const unreadCount = unreadData?.unreadCount || 0
+  const announcements = data?.data || []
+  const unreadCount = unreadData?.data?.count || 0
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">

@@ -59,8 +59,8 @@ function AdminAnnouncementsContent() {
   })
 
   useEffect(() => {
-    if (editData?.announcement) {
-      const a = editData.announcement
+    if (editData?.data) {
+      const a = editData.data
       setTitle(a.title)
       setContent(a.content)
       setImageUrl(a.image_url || null)
@@ -161,7 +161,7 @@ function AdminAnnouncementsContent() {
     )
   }
 
-  const announcements = data?.announcements || []
+  const announcements = data?.data || []
   const isSaving = createMutation.isPending || updateMutation.isPending
 
   return (

@@ -46,7 +46,7 @@ export default function AnnouncementDetailPage() {
     )
   }
 
-  const announcement = data?.announcement
+  const announcement = data?.data
   if (!announcement) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">

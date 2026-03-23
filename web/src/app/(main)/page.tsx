@@ -70,8 +70,8 @@ export default function HomePage() {
   const myStats = myData?.stats
   const rankings = (rankingData?.data?.rankings || rankingData?.rankings || []).slice(0, 5)
   const nextSession = upcomingSessions?.sessions?.[0]
-  const homeAnnouncements = (announcementsData?.announcements || []).slice(0, 2)
-  const announcementUnread = unreadCountData?.unreadCount || 0
+  const homeAnnouncements = (announcementsData?.data || []).slice(0, 2)
+  const announcementUnread = unreadCountData?.data?.count || 0
 
   // 내 최근 기록 표시 로직
   const getMyRecordDisplay = () => {

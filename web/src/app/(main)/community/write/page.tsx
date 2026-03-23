@@ -66,8 +66,8 @@ function WriteContent() {
   })
 
   useEffect(() => {
-    if (editData?.post) {
-      const p = editData.post
+    if (editData?.data) {
+      const p = editData.data
       setTitle(p.title)
       setContent(p.content)
       setCategory(p.category)

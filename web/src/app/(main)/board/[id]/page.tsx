@@ -89,7 +89,7 @@ export default function PostDetailPage() {
     )
   }
 
-  const post = data?.post
+  const post = data?.data
   if (!post) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">

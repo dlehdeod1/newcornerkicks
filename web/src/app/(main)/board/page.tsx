@@ -124,9 +124,9 @@ function BoardContent() {
           <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : isNoticeTab ? (
-        <NoticeList announcements={announcementsData?.announcements || []} />
+        <NoticeList announcements={announcementsData?.data || []} />
       ) : (
-        <PostList posts={postsData?.posts || []} />
+        <PostList posts={postsData?.data || []} />
       )}
     </div>
   )

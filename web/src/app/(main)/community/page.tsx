@@ -54,7 +54,7 @@ function CommunityContent() {
     enabled: !!token,
   })
 
-  const posts = data?.posts || []
+  const posts = data?.data || []
   const currentCategory = categories.find(c => c.key === activeTab)
 
   const toggleDay = (day: string) => {
