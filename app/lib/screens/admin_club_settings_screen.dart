@@ -232,10 +232,10 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
                   const SizedBox(height: 12),
                   _buildEventTypeSection(),
                   const SizedBox(height: 28),
-                  _buildSectionTitle(Icons.tune_rounded, 'MVP 가중치 설정'),
+                  _buildSectionTitle(Icons.tune_rounded, '평점 가중치 설정'),
                   const SizedBox(height: 6),
                   Text(
-                    'MVP 점수 계산 시 각 기록 항목별 가중치를 설정합니다. 값이 클수록 해당 기록의 비중이 높아집니다.',
+                    '평점 계산 시 각 기록 항목별 가중치를 설정합니다. 값이 클수록 해당 기록의 비중이 높아집니다.',
                     style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102)),
                   ),
                   const SizedBox(height: 12),
@@ -806,7 +806,7 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'MVP 점수 = 각 기록 x 가중치의 합. 기록 항목이 비활성이면 가중치도 숨겨집니다.',
+                    '평점 합계 = 각 기록 x 가중치의 합. 기록 항목이 비활성이면 가중치도 숨겨집니다.',
                     style: TextStyle(fontSize: 11, color: AppColors.primary.withAlpha(179)),
                   ),
                 ),

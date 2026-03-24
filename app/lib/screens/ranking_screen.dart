@@ -40,7 +40,7 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
   List<Map<String, dynamic>> get _categories {
     final events = context.read<AuthService>().enabledEvents;
     final cats = <Map<String, dynamic>>[
-      {'key': 'mvpScore', 'label': 'MVP점수', 'icon': '⭐', 'color': AppColors.primary},
+      {'key': 'mvpScore', 'label': '평점합계', 'icon': '⭐', 'color': AppColors.primary},
       {'key': 'mvpCount', 'label': 'MVP', 'icon': '🏅', 'color': AppColors.amber},
       {'key': 'goals', 'label': '득점', 'icon': '⚽', 'color': AppColors.amber},
       {'key': 'assists', 'label': '도움', 'icon': '⚡', 'color': AppColors.blue},

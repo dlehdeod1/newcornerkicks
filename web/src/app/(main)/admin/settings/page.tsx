@@ -63,7 +63,7 @@ export default function AdminSettingsPage() {
   const [eventsSaving, setEventsSaving] = useState(false)
   const [eventsSaved, setEventsSaved] = useState(false)
 
-  // MVP 점수 가중치
+  // 평점 가중치
   const [mvpWeights, setMvpWeights] = useState<Record<string, number>>({
     GOAL: 2, ASSIST: 1.5, DEFENSE: 0.5,
     TACKLE: 0.3, INTERCEPTION: 0.3, CLEARANCE: 0.3,
@@ -712,13 +712,13 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        {/* MVP 점수 가중치 */}
+        {/* 평점 가중치 */}
         <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
           <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
             <BarChart3 className="w-4 h-4" />
-            MVP 점수 가중치
+            평점 가중치
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">각 이벤트별 MVP 점수 반영 비율을 설정하세요</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">각 이벤트별 평점 반영 비율을 설정하세요</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
               { key: 'GOAL', label: '\u26BD 골', always: true },

@@ -88,7 +88,7 @@ export default function RankingPage() {
       dribbles: '돌파',
       shotsOn: '유효슈팅',
       shotsOff: '무효슈팅',
-      mvpScore: 'MVP점수',
+      mvpScore: '평점합계',
     }
     return labels[sortBy]
   }
@@ -205,7 +205,7 @@ export default function RankingPage() {
                     <SortableHeader label="승" sortKey="sessionWins" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="emerald" />
                     <SortableHeader label="패" sortKey="sessionLosses" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="red" />
                     <SortableHeader label="승률" sortKey="winRate" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="emerald" />
-                    <SortableHeader label="MVP점수" sortKey="mvpScore" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="amber" />
+                    <SortableHeader label="평점합계" sortKey="mvpScore" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="amber" />
                     <th className="px-2 py-2.5 w-8"></th>
                   </tr>
                 </thead>
@@ -262,7 +262,7 @@ function SortableHeader({
   }
 
   return (
-    <th className="px-2 py-2.5 text-center whitespace-nowrap">
+    <th className="px-2 py-2.5 text-center whitespace-nowrap min-w-[52px]">
       <button
         onClick={() => onSort(sortKey)}
         className={cn(
@@ -417,76 +417,76 @@ function PlayerRow({ player, rank, sortBy, enabledEvents }: { player: any; rank:
           </span>
         </Link>
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('mvpCount'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('mvpCount'))}>
         {player.mvpCount || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('goals'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('goals'))}>
         {player.goals || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('assists'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('assists'))}>
         {player.assists || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('attackPoints'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('attackPoints'))}>
         {attackPoints}
       </td>
       {enabledEvents.includes('DEFENSE') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('defenses'))}>
+        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('defenses'))}>
           {player.defenses || 0}
         </td>
       )}
       {enabledEvents.includes('TACKLE') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('tackles'))}>
+        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('tackles'))}>
           {player.tackles || 0}
         </td>
       )}
       {enabledEvents.includes('INTERCEPTION') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('interceptions'))}>
+        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('interceptions'))}>
           {player.interceptions || 0}
         </td>
       )}
       {enabledEvents.includes('CLEARANCE') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('clearances'))}>
+        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('clearances'))}>
           {player.clearances || 0}
         </td>
       )}
       {enabledEvents.includes('SAVE') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('saves'))}>
+        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('saves'))}>
           {player.saves || 0}
         </td>
       )}
       {enabledEvents.includes('KEY_PASS') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('keyPasses'))}>
+        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('keyPasses'))}>
           {player.keyPasses || 0}
         </td>
       )}
       {enabledEvents.includes('DRIBBLE') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('dribbles'))}>
+        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('dribbles'))}>
           {player.dribbles || 0}
         </td>
       )}
       {enabledEvents.includes('SHOT_ON') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('shotsOn'))}>
+        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('shotsOn'))}>
           {player.shotsOn || 0}
         </td>
       )}
       {enabledEvents.includes('SHOT_OFF') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('shotsOff'))}>
+        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('shotsOff'))}>
           {player.shotsOff || 0}
         </td>
       )}
-      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('games'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('games'))}>
         {player.games || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('sessionWins'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('sessionWins'))}>
         {player.sessionWins || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('sessionLosses'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('sessionLosses'))}>
         {player.sessionLosses || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('winRate'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('winRate'))}>
         {player.winRate ? player.winRate + '%' : '-'}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('mvpScore'))}>
+      <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('mvpScore'))}>
         {player.mvpScore != null ? Number(player.mvpScore).toFixed(1) : '0.0'}
       </td>
       <td className="px-2 py-2.5">
