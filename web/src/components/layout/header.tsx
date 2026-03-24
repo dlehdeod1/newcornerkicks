@@ -91,17 +91,15 @@ export function Header() {
                   <span className="text-[10px] text-slate-400 leading-none mt-0.5">코너킥스</span>
                 </div>
               </Link>
-              {clubs.length > 1 && (
-                <button
-                  onClick={() => setClubDropdownOpen(!clubDropdownOpen)}
-                  className="p-1.5 -ml-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
-                >
-                  <ChevronDown className={cn(
-                    'w-4 h-4 text-slate-400 transition-transform',
-                    clubDropdownOpen && 'rotate-180'
-                  )} />
-                </button>
-              )}
+              <button
+                onClick={() => setClubDropdownOpen(!clubDropdownOpen)}
+                className="p-1.5 -ml-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+              >
+                <ChevronDown className={cn(
+                  'w-4 h-4 text-slate-400 transition-transform',
+                  clubDropdownOpen && 'rotate-180'
+                )} />
+              </button>
 
               {/* 클럽 전환 드롭다운 */}
               {clubDropdownOpen && (
