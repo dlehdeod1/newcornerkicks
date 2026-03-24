@@ -292,6 +292,12 @@ export default function AdminDashboardPage() {
                 description="공지사항 작성, 수정, 삭제"
                 href="/admin/announcements"
               />
+              <AdminMenuItem
+                icon={<Settings className="w-5 h-5" />}
+                label="클럽 설정"
+                description="참가비, 기록 이벤트, 계좌, 알림"
+                href="/admin/settings"
+              />
             </div>
           </div>
         </div>

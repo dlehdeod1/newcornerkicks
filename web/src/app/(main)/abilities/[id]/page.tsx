@@ -302,31 +302,13 @@ export default function AbilityDetailPage({ params }: { params: Promise<{ id: st
         </div>
       )}
 
-      {/* 레이더 차트 영역 (추후 구현) */}
+      {/* 레이더 차트 */}
       <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
           <Star className="w-5 h-5 text-amber-500 dark:text-amber-400" />
           능력치 분포
         </h2>
-        <div className="flex items-center justify-center py-12">
-          <div className="relative w-64 h-64">
-            {/* 레이더 차트 배경 */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-full h-full border-2 border-slate-300 dark:border-slate-700 rounded-full opacity-20" />
-              <div className="absolute w-3/4 h-3/4 border-2 border-slate-300 dark:border-slate-700 rounded-full opacity-30" />
-              <div className="absolute w-1/2 h-1/2 border-2 border-slate-300 dark:border-slate-700 rounded-full opacity-40" />
-              <div className="absolute w-1/4 h-1/4 border-2 border-slate-300 dark:border-slate-700 rounded-full opacity-50" />
-            </div>
-            {/* 능력치 라벨 */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4 text-xs text-red-600 dark:text-red-400">공격 {attackStats.toFixed(1)}</div>
-            <div className="absolute right-0 top-1/2 translate-x-4 -translate-y-1/2 text-xs text-amber-600 dark:text-amber-400">창의 {creativityStats.toFixed(1)}</div>
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-4 text-xs text-blue-600 dark:text-blue-400">수비 {defenseStats.toFixed(1)}</div>
-            <div className="absolute left-0 top-1/2 -translate-x-4 -translate-y-1/2 text-xs text-emerald-600 dark:text-emerald-400">피지컬 {physicalStats.toFixed(1)}</div>
-          </div>
-        </div>
-        <p className="text-center text-slate-500 dark:text-slate-600 text-sm">
-          레이더 차트 시각화 (추후 구현 예정)
-        </p>
+        <RadarChart player={player} />
       </div>
     </div>
   )
@@ -468,6 +450,133 @@ function calculateDefense(player: any): number {
 
 function calculatePhysical(player: any): number {
   return ((player.stamina || DEFAULT_STAT) + (player.speed || DEFAULT_STAT) + (player.physical || DEFAULT_STAT)) / 3
+}
+
+const RADAR_STATS = [
+  { key: 'shooting', label: '슈팅', color: '#ef4444' },
+  { key: 'offball_run', label: '오프더볼', color: '#f97316' },
+  { key: 'ball_keeping', label: '볼키핑', color: '#f59e0b' },
+  { key: 'passing', label: '패스', color: '#eab308' },
+  { key: 'linkup', label: '연계', color: '#84cc16' },
+  { key: 'intercept', label: '인터셉트', color: '#22c55e' },
+  { key: 'marking', label: '마킹', color: '#06b6d4' },
+  { key: 'stamina', label: '체력', color: '#3b82f6' },
+  { key: 'speed', label: '스피드', color: '#8b5cf6' },
+  { key: 'physical', label: '피지컬', color: '#a855f7' },
+]
+
+function RadarChart({ player }: { player: any }) {
+  const cx = 160
+  const cy = 160
+  const maxR = 120
+  const levels = 4
+  const count = RADAR_STATS.length
+
+  const angleStep = (2 * Math.PI) / count
+  const startAngle = -Math.PI / 2
+
+  const getPoint = (index: number, value: number) => {
+    const angle = startAngle + index * angleStep
+    const r = (value / 100) * maxR
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) }
+  }
+
+  const getLabelPoint = (index: number) => {
+    const angle = startAngle + index * angleStep
+    const r = maxR + 28
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) }
+  }
+
+  // 격자 다각형
+  const gridPolygons = Array.from({ length: levels }, (_, lvl) => {
+    const r = ((lvl + 1) / levels) * maxR
+    return RADAR_STATS.map((_, i) => {
+      const angle = startAngle + i * angleStep
+      return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`
+    }).join(' ')
+  })
+
+  // 축선
+  const axisLines = RADAR_STATS.map((_, i) => {
+    const angle = startAngle + i * angleStep
+    return { x2: cx + maxR * Math.cos(angle), y2: cy + maxR * Math.sin(angle) }
+  })
+
+  // 데이터 다각형
+  const dataPoints = RADAR_STATS.map((stat, i) => {
+    const value = player[stat.key] || DEFAULT_STAT
+    const pt = getPoint(i, value)
+    return `${pt.x},${pt.y}`
+  }).join(' ')
+
+  return (
+    <div className="flex justify-center">
+      <svg viewBox="0 0 320 320" className="w-full max-w-[400px]">
+        {/* 격자 */}
+        {gridPolygons.map((points, i) => (
+          <polygon
+            key={i}
+            points={points}
+            fill="none"
+            stroke="currentColor"
+            className="text-slate-200 dark:text-slate-700"
+            strokeWidth={i === levels - 1 ? 1.5 : 0.8}
+          />
+        ))}
+
+        {/* 축선 */}
+        {axisLines.map((line, i) => (
+          <line
+            key={i}
+            x1={cx} y1={cy}
+            x2={line.x2} y2={line.y2}
+            stroke="currentColor"
+            className="text-slate-200 dark:text-slate-700"
+            strokeWidth={0.8}
+          />
+        ))}
+
+        {/* 데이터 영역 */}
+        <polygon
+          points={dataPoints}
+          fill="rgba(16, 185, 129, 0.2)"
+          stroke="#10b981"
+          strokeWidth={2}
+          strokeLinejoin="round"
+        />
+
+        {/* 데이터 점 */}
+        {RADAR_STATS.map((stat, i) => {
+          const value = player[stat.key] || DEFAULT_STAT
+          const pt = getPoint(i, value)
+          return (
+            <circle key={i} cx={pt.x} cy={pt.y} r={3.5} fill="#10b981" stroke="white" strokeWidth={1.5} />
+          )
+        })}
+
+        {/* 라벨 */}
+        {RADAR_STATS.map((stat, i) => {
+          const lp = getLabelPoint(i)
+          const value = player[stat.key] || DEFAULT_STAT
+          return (
+            <text
+              key={i}
+              x={lp.x}
+              y={lp.y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="fill-slate-600 dark:fill-slate-400"
+              fontSize={10}
+              fontWeight={500}
+            >
+              <tspan x={lp.x} dy="-0.4em">{stat.label}</tspan>
+              <tspan x={lp.x} dy="1.2em" fontWeight={700} fontSize={11} className="fill-slate-800 dark:fill-slate-200">{value}</tspan>
+            </text>
+          )
+        })}
+      </svg>
+    </div>
+  )
 }
 
 // overall이 null인 경우 각 항목 평균으로 계산
