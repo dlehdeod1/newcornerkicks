@@ -65,10 +65,11 @@ export default function ProfilePage() {
   const queryClient = useQueryClient()
 
   // 프로필 요약 (능력치 + 시즌스탯 + 선호선수)
+  // player가 store에 없어도 API에서 user_id+club_id로 조회하므로 token만 있으면 시도
   const { data: summary } = useQuery({
     queryKey: ['profile-summary', token],
     queryFn: () => meApi.getProfileSummary(token!),
-    enabled: !!token && !!player,
+    enabled: !!token,
   })
 
   // 선수 목록 (선호 선수 추가용)
@@ -278,7 +279,7 @@ export default function ProfilePage() {
       </div>
 
       {/* 선수 미연동 안내 */}
-      {!player && (
+      {!player && !summaryPlayer && (
         <div className="bg-amber-50 dark:bg-amber-500/10 rounded-2xl p-5 border border-amber-200 dark:border-amber-500/25">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0">
@@ -326,7 +327,7 @@ export default function ProfilePage() {
       )}
 
       {/* 시즌 스탯 */}
-      {player && seasonStats && (
+      {summaryPlayer && seasonStats && (
         <div className="bg-white dark:bg-white/[0.03] rounded-2xl p-5 border border-slate-200 dark:border-white/[0.08]">
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs font-semibold text-slate-400 dark:text-white/40 uppercase tracking-wider">
@@ -357,7 +358,7 @@ export default function ProfilePage() {
       )}
 
       {/* 능력치 + 선호 선수 (2열) */}
-      {player && summary?.player && (
+      {summaryPlayer && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* 능력치 */}
           <div className="bg-white dark:bg-white/[0.03] rounded-2xl p-5 border border-slate-200 dark:border-white/[0.08]">
