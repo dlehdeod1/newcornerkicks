@@ -21,16 +21,19 @@ export default function HomePage() {
   const { data: sessionsData, isLoading: sessionsLoading } = useQuery({
     queryKey: ['sessions', 'recent', 'highlight', token],
     queryFn: async () => {
-      const [closedSessions, completedSessions] = await Promise.all([
+      const [endedSessions, closedSessions, completedSessions] = await Promise.all([
+        sessionsApi.list({ limit: 1, status: 'ended' }, token ?? undefined),
         sessionsApi.list({ limit: 1, status: 'closed' }, token ?? undefined),
         sessionsApi.list({ limit: 1, status: 'completed' }, token ?? undefined),
       ])
-      const closed = closedSessions?.sessions?.[0]
-      const completed = completedSessions?.sessions?.[0]
-      if (!closed && !completed) return { sessions: [] }
-      if (!closed) return completedSessions
-      if (!completed) return closedSessions
-      return closed.session_date >= completed.session_date ? closedSessions : completedSessions
+      const candidates = [
+        endedSessions?.sessions?.[0],
+        closedSessions?.sessions?.[0],
+        completedSessions?.sessions?.[0],
+      ].filter(Boolean)
+      if (candidates.length === 0) return { sessions: [] }
+      candidates.sort((a: any, b: any) => (b.session_date || '').localeCompare(a.session_date || ''))
+      return { sessions: [candidates[0]] }
     },
     enabled: isLoggedIn,
   })

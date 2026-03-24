@@ -204,7 +204,7 @@ export function SessionEditModal({ session, isOpen, onClose, onSave }: Props) {
             <div className="grid grid-cols-3 gap-2">
               {[
                 { value: 'recruiting', label: '모집중', color: 'emerald' },
-                { value: 'closed', label: '마감', color: 'amber' },
+                { value: 'ended', label: '마감', color: 'amber' },
                 { value: 'completed', label: '완료', color: 'slate' },
               ].map((opt) => (
                 <button

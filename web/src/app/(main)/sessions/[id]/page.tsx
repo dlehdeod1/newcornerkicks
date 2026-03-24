@@ -59,7 +59,7 @@ export default function SessionDetailPage() {
   const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()]
   const hasTeams = teams && teams.length > 0
 
-  const isEndedOrCompleted = session.status === 'ended' || session.status === 'completed'
+  const isEndedOrCompleted = session.status === 'ended' || session.status === 'completed' || session.status === 'closed'
 
   const tabs = [
     { id: 'overview' as Tab, label: '개요/참석', icon: Users },
@@ -85,7 +85,7 @@ export default function SessionDetailPage() {
                     : 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400'
               )}
             >
-              {session.status === 'recruiting' ? '모집중' : session.status === 'completed' ? '완료' : '마감'}
+              {session.status === 'recruiting' ? '모집중' : session.status === 'completed' ? '완료' : session.status === 'closed' ? '종료' : '마감'}
             </span>
           </div>
           {isAdmin && (
