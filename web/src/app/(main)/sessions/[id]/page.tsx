@@ -4,9 +4,9 @@ export const runtime = 'edge'
 
 import { useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Calendar, MapPin, Users, Trophy, BarChart3, Clock, Settings, Coins, Trash2 } from 'lucide-react'
-import { sessionsApi } from '@/lib/api'
+import { sessionsApi, paymentsApi, clubsApi } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/button'
@@ -28,9 +28,23 @@ export default function SessionDetailPage() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['session', sessionId],
     queryFn: () => sessionsApi.get(sessionId, token ?? undefined),
+  })
+
+  // 정산탭 데이터 prefetch (세션 로드 후 ended/completed/closed이면 미리 가져옴)
+  const sessionStatus = data?.session?.status
+  useQuery({
+    queryKey: ['session-payments', sessionId],
+    queryFn: () => paymentsApi.sessionDetail(sessionId, token!),
+    enabled: !!token && !!sessionStatus && ['ended', 'completed', 'closed'].includes(sessionStatus),
+  })
+  useQuery({
+    queryKey: ['club-me'],
+    queryFn: () => clubsApi.me(token!),
+    enabled: !!token,
   })
 
   if (isLoading) {
