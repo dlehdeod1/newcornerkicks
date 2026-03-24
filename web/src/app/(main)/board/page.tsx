@@ -1,8 +1,7 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { MessageSquare, Pin, Plus, MessageCircle, ChevronRight, Globe, Filter, Users } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
@@ -64,33 +63,35 @@ function formatRelativeDate(ts: number) {
   return `${d.getMonth() + 1}/${d.getDate()}`
 }
 
-export default function BoardPage() {
-  return (
-    <Suspense fallback={
-      <div className="flex justify-center items-center py-20">
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
-      <BoardContent />
-    </Suspense>
-  )
-}
-
 type Scope = 'club' | 'community'
 
-function BoardContent() {
-  const searchParams = useSearchParams()
-  const { isLoggedIn, token } = useAuthStore()
+const SCOPE_STORAGE_KEY = 'cornerkicks-board-scope'
 
-  const initialScope = (searchParams.get('scope') as Scope) || 'club'
-  const [scope, setScope] = useState<Scope>(initialScope)
+function getInitialScope(): Scope {
+  if (typeof window === 'undefined') return 'club'
+  try {
+    const params = new URLSearchParams(window.location.search)
+    const urlScope = params.get('scope')
+    if (urlScope === 'club' || urlScope === 'community') return urlScope
+    const stored = localStorage.getItem(SCOPE_STORAGE_KEY)
+    if (stored === 'club' || stored === 'community') return stored
+  } catch {}
+  return 'club'
+}
+
+export default function BoardPage() {
+  const { isLoggedIn, token } = useAuthStore()
+  const [scope, setScope] = useState<Scope>('club')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setScope(getInitialScope())
+    setMounted(true)
+  }, [])
 
   const handleScopeChange = (s: Scope) => {
     setScope(s)
-    const url = new URL(window.location.href)
-    url.searchParams.set('scope', s)
-    url.searchParams.delete('tab')
-    window.history.replaceState(null, '', url.toString())
+    try { localStorage.setItem(SCOPE_STORAGE_KEY, s) } catch {}
   }
 
   return (
@@ -133,19 +134,19 @@ function BoardContent() {
         </button>
       </div>
 
-      {scope === 'club' ? (
-        <ClubBoardSection token={token} isLoggedIn={isLoggedIn} initialTab={searchParams.get('tab') as ClubCategoryKey} />
+      {mounted && (scope === 'club' ? (
+        <ClubBoardSection token={token} isLoggedIn={isLoggedIn} />
       ) : (
-        <CommunitySection token={token} initialTab={searchParams.get('tab') as CommunityCategoryKey} />
-      )}
+        <CommunitySection token={token} />
+      ))}
     </div>
   )
 }
 
 // ===================== Club Board Section =====================
 
-function ClubBoardSection({ token, isLoggedIn, initialTab }: { token: string | null; isLoggedIn: boolean; initialTab?: ClubCategoryKey | null }) {
-  const [activeTab, setActiveTab] = useState<ClubCategoryKey>(initialTab || 'free')
+function ClubBoardSection({ token, isLoggedIn }: { token: string | null; isLoggedIn: boolean }) {
+  const [activeTab, setActiveTab] = useState<ClubCategoryKey>('free')
   const isNoticeTab = activeTab === 'notice'
 
   const { data: announcementsData, isLoading: announcementsLoading } = useQuery({
@@ -164,9 +165,6 @@ function ClubBoardSection({ token, isLoggedIn, initialTab }: { token: string | n
 
   const handleTabChange = (key: ClubCategoryKey) => {
     setActiveTab(key)
-    const url = new URL(window.location.href)
-    url.searchParams.set('tab', key)
-    window.history.replaceState(null, '', url.toString())
   }
 
   return (
@@ -213,8 +211,8 @@ function ClubBoardSection({ token, isLoggedIn, initialTab }: { token: string | n
 
 // ===================== Community Section =====================
 
-function CommunitySection({ token, initialTab }: { token: string | null; initialTab?: CommunityCategoryKey | null }) {
-  const [activeTab, setActiveTab] = useState<CommunityCategoryKey>(initialTab || 'free')
+function CommunitySection({ token }: { token: string | null }) {
+  const [activeTab, setActiveTab] = useState<CommunityCategoryKey>('free')
   const [region, setRegion] = useState('')
   const [selectedDays, setSelectedDays] = useState<string[]>([])
   const [onlyOpen, setOnlyOpen] = useState(false)
@@ -242,9 +240,6 @@ function CommunitySection({ token, initialTab }: { token: string | null; initial
 
   const handleTabChange = (key: CommunityCategoryKey) => {
     setActiveTab(key)
-    const url = new URL(window.location.href)
-    url.searchParams.set('tab', key)
-    window.history.replaceState(null, '', url.toString())
   }
 
   return (
