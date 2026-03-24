@@ -22,6 +22,16 @@ import { rankingsApi, settlementsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import { useAuthStore } from '@/stores/auth'
 
+// 한국어 주격 조사: 받침 있으면 "이", 없으면 "가"
+function subjectParticle(name: string) {
+  if (!name) return name
+  const lastChar = name.charCodeAt(name.length - 1)
+  // 한글 범위: 0xAC00 ~ 0xD7A3
+  if (lastChar < 0xAC00 || lastChar > 0xD7A3) return `${name}이(가)`
+  const hasBatchim = (lastChar - 0xAC00) % 28 !== 0
+  return hasBatchim ? `${name}이` : `${name}가`
+}
+
 export default function StatsPage() {
   const currentYear = new Date().getFullYear()
   const [selectedYear, setSelectedYear] = useState(currentYear)
@@ -255,7 +265,7 @@ export default function StatsPage() {
                   description="상대팀에서 만났을 때 골을 많이 넣은 선수"
                   icon={<Swords className="w-5 h-5 text-purple-500" />}
                   items={(funStats.rivals || []).map((d: any) => ({
-                    label: `${d.scorer}이 ${d.opponent} 상대로`,
+                    label: `${subjectParticle(d.scorer)} ${d.opponent} 상대로`,
                     value: `${d.goals_against}골 (${d.matches_faced}경기)`,
                     highlight: d.goals_against >= 5,
                   }))}
