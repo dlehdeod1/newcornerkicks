@@ -93,6 +93,9 @@ recruiting → (진행 중) → ended → completed → closed
 | `api/src/routes/sessions.ts` | 세션 CRUD, 팀 편성, 출석, 자동 정산 |
 | `api/src/routes/matches.ts` | 경기/이벤트, `player_match_stats` 업데이트 |
 | `api/src/routes/rankings.ts` | 랭킹 캐시, `buildAndCacheRankings()` |
+| `api/src/routes/clubs.ts` | 클럽 CRUD, 설정(enabledEvents, mvpWeights) |
+| `api/src/routes/announcements.ts` | 공지사항 CRUD |
+| `api/src/routes/posts.ts` | 클럽 게시판 + 커뮤니티 게시글 |
 | `api/src/middleware/auth.ts` | JWT 검증 + X-Club-Id 처리 |
 | `api/src/utils/season.ts` | 시즌 날짜 범위 계산 |
 | `app/lib/services/auth_service.dart` | 토큰/유저/클럽 상태 관리 |
@@ -168,6 +171,13 @@ Tailwind에서 시맨틱 컬러: `bg-background`, `text-foreground`, `bg-card`, 
 - 다크: `scaffoldBg #0F172A`, `surface #1E293B`
 - 라이트: `scaffoldBg #F8FAFC`
 
+## 랭킹 / 평점(MVP) 시스템
+
+- 랭킹 표시 컬럼은 클럽의 `enabled_events`에 따라 동적 표시
+- **평점 가중치**: `clubs.mvp_weights` (JSON) — 관리자가 클럽별 커스텀 가능
+- 기본 가중치: GOAL 2.0, ASSIST 1.5, SESSION_WIN 3.0, DEFENSE 0.5, TACKLE/CLEARANCE 0.6, INTERCEPTION 0.6, SAVE 0.8, KEY_PASS 0.7, DRIBBLE 0.5, SHOT_ON 0.4, SHOT_OFF 0.1
+- 승/패: 세션 내 1등팀=승, 꼴찌팀=패, 중간=무 (3팀+ 세션)
+
 ## 마이그레이션 파일 순서
 
 ```
@@ -182,4 +192,13 @@ Tailwind에서 시맨틱 컬러: `bg-background`, `text-foreground`, `bg-card`, 
 0012_subscriptions.sql       ← subscriptions 테이블, clubs.owner_user_id
 0013_bm_redesign.sql         ← tags, chemistry_cache, AI 카운터, MVP vote_bonus
 0014_club_logo.sql           ← clubs.logo_url
+0015_fee_system_v2.sql       ← 정산 시스템 v2
+0016_announcements.sql       ← 공지사항
+0017_posts.sql               ← 클럽 게시판
+0018_community.sql           ← 전체 커뮤니티
+0019_post_polls.sql          ← 게시글 투표
+0020_club_reviews.sql        ← 클럽 리뷰
+0021_defense_detail_events.sql ← TACKLE/INTERCEPTION/CLEARANCE 컬럼
+0022_attack_gk_events.sql    ← DRIBBLE/SHOT_ON/SHOT_OFF 컬럼
+0023_rankings_expansion.sql  ← clubs.mvp_weights
 ```

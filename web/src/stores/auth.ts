@@ -26,6 +26,7 @@ export interface Club {
   planType?: string
   inviteCode?: string
   logoUrl?: string | null
+  mvpWeights?: Record<string, number>
   player?: Player | null
 }
 

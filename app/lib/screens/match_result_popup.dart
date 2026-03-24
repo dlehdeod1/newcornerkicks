@@ -219,7 +219,16 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
   double _eventWeight(String type) {
     switch (type) {
       case 'GOAL': return 2.0;
+      case 'ASSIST': return 1.5;
       case 'DEFENSE': return 0.5;
+      case 'TACKLE': return 0.6;
+      case 'INTERCEPTION': return 0.6;
+      case 'CLEARANCE': return 0.5;
+      case 'SAVE': return 0.8;
+      case 'KEY_PASS': return 0.7;
+      case 'DRIBBLE': return 0.5;
+      case 'SHOT_ON': return 0.4;
+      case 'SHOT_OFF': return 0.1;
       default: return 1.0;
     }
   }
@@ -228,9 +237,14 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
     switch (type) {
       case 'GOAL': return '⚽';
       case 'DEFENSE': return '🛡️';
-      case 'YELLOW_CARD': return '🟨';
-      case 'RED_CARD': return '🟥';
+      case 'TACKLE': return '🦶';
+      case 'INTERCEPTION': return '✋';
+      case 'CLEARANCE': return '🧹';
       case 'SAVE': return '🧤';
+      case 'KEY_PASS': return '🎯';
+      case 'DRIBBLE': return '💨';
+      case 'SHOT_ON': return '🎯';
+      case 'SHOT_OFF': return '💫';
       default: return '📌';
     }
   }
@@ -239,9 +253,14 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
     switch (type) {
       case 'GOAL': return '득점왕';
       case 'DEFENSE': return '수비왕';
-      case 'YELLOW_CARD': return '경고왕';
-      case 'RED_CARD': return '퇴장왕';
+      case 'TACKLE': return '태클왕';
+      case 'INTERCEPTION': return '인터셉트왕';
+      case 'CLEARANCE': return '클리어런스왕';
       case 'SAVE': return '선방왕';
+      case 'KEY_PASS': return '키패스왕';
+      case 'DRIBBLE': return '드리블왕';
+      case 'SHOT_ON': return '유효슈팅왕';
+      case 'SHOT_OFF': return '슈팅왕';
       default: return '${type}왕';
     }
   }
@@ -250,9 +269,14 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
     switch (type) {
       case 'GOAL': return '골';
       case 'DEFENSE': return '수비';
-      case 'YELLOW_CARD': return '경고';
-      case 'RED_CARD': return '퇴장';
+      case 'TACKLE': return '태클';
+      case 'INTERCEPTION': return '인터셉트';
+      case 'CLEARANCE': return '클리어런스';
       case 'SAVE': return '선방';
+      case 'KEY_PASS': return '키패스';
+      case 'DRIBBLE': return '드리블';
+      case 'SHOT_ON': return '유효슈팅';
+      case 'SHOT_OFF': return '슈팅';
       default: return '회';
     }
   }
@@ -693,9 +717,14 @@ class _MatchResultCard extends StatelessWidget {
     switch (type) {
       case 'GOAL': return AppColors.primary;
       case 'DEFENSE': return AppColors.purple;
+      case 'TACKLE': return AppColors.orange;
+      case 'INTERCEPTION': return AppColors.teal;
+      case 'CLEARANCE': return AppColors.indigo;
       case 'SAVE': return AppColors.blueSky;
-      case 'YELLOW_CARD': return AppColors.amber;
-      case 'RED_CARD': return AppColors.red;
+      case 'KEY_PASS': return AppColors.amber;
+      case 'DRIBBLE': return AppColors.pink;
+      case 'SHOT_ON': return AppColors.red;
+      case 'SHOT_OFF': return AppColors.slate;
       default: return AppColors.indigo;
     }
   }

@@ -297,7 +297,7 @@ class _ClubScreenState extends State<ClubScreen> {
             children: [
               Expanded(child: _miniStat('경기', '${stats['games'] ?? 0}경기', Icons.sports_soccer)),
               const SizedBox(width: 10),
-              Expanded(child: _miniStat('우승', '${stats['sessionWins'] ?? stats['rank1'] ?? 0}회', Icons.emoji_events)),
+              Expanded(child: _miniStat('우승', '${stats['sessionWins'] ?? 0}회', Icons.emoji_events)),
             ],
           ),
         ],

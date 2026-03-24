@@ -240,9 +240,9 @@ export default function ClubPage() {
                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
                   <div className="flex items-center gap-1.5 text-slate-500 mb-0.5">
                     <Trophy className="w-3.5 h-3.5" />
-                    <span className="text-xs">1등</span>
+                    <span className="text-xs">우승</span>
                   </div>
-                  <p className="text-xl font-bold text-slate-900 dark:text-white">{playerStats?.rank1 || 0}회</p>
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">{playerStats?.sessionWins || 0}회</p>
                 </div>
               </div>
               <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">

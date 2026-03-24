@@ -44,7 +44,7 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
     {'key': 'SAVE', 'label': '선방', 'icon': '🧤', 'desc': '골키퍼 선방 기록', 'category': 'gk'},
   ];
 
-  Set<String> _enabledEvents = {'GOAL', 'ASSIST'};
+  Set<String> _enabledEvents = {'GOAL', 'DEFENSE'};
   int _seasonStartMonth = 1;
   bool _loading = true;
   bool _saving = false;
