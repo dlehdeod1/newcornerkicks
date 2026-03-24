@@ -74,7 +74,7 @@ communityRoutes.post('/', authMiddleware(), async (c) => {
     return c.json({ error: '제목과 내용은 필수입니다.' }, 400)
   }
 
-  const validCategories = ['free', 'recruit', 'match', 'review']
+  const validCategories = ['free', 'recruit', 'match', 'review', 'mercenary']
   if (category && !validCategories.includes(category)) {
     return c.json({ error: '유효하지 않은 카테고리입니다.' }, 400)
   }
@@ -116,7 +116,7 @@ communityRoutes.put('/:id', authMiddleware(), async (c) => {
   if (body.content !== undefined) { updates.push('content = ?'); binds.push(body.content) }
   if ('imageUrl' in body) { updates.push('image_url = ?'); binds.push(body.imageUrl) }
   if (body.category !== undefined) {
-    const validCats = ['free', 'recruit', 'match', 'review']
+    const validCats = ['free', 'recruit', 'match', 'review', 'mercenary']
     if (!validCats.includes(body.category)) {
       return c.json({ error: '유효하지 않은 카테고리입니다.' }, 400)
     }

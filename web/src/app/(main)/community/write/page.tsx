@@ -14,6 +14,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://cornerkicks-api.con
 const categories = [
   { key: 'free', label: '자유' },
   { key: 'recruit', label: '팀 모집' },
+  { key: 'mercenary', label: '용병 모집' },
   { key: 'match', label: '매칭' },
   { key: 'review', label: '경기 후기' },
 ]
@@ -56,7 +57,7 @@ function WriteContent() {
   const [skillLevel, setSkillLevel] = useState('')
   const [headcount, setHeadcount] = useState<number | ''>('')
 
-  const showExtraFields = category === 'recruit' || category === 'match'
+  const showExtraFields = category === 'recruit' || category === 'match' || category === 'mercenary'
 
   // Load existing post for edit
   const { data: editData } = useQuery({

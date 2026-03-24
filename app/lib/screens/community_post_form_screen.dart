@@ -7,7 +7,7 @@ import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../config/api_config.dart';
 
-const _categoryLabels = {'free': '자유', 'recruit': '팀 모집', 'match': '매칭', 'review': '경기 후기'};
+const _categoryLabels = {'free': '자유', 'recruit': '팀 모집', 'mercenary': '용병 모집', 'match': '매칭', 'review': '경기 후기'};
 const _regionOptions = ['서울', '경기', '인천', '부산', '대구', '대전', '광주', '울산', '세종', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주'];
 const _dayLabels = {'mon': '월', 'tue': '화', 'wed': '수', 'thu': '목', 'fri': '금', 'sat': '토', 'sun': '일'};
 const _timeSlotLabels = {'morning': '오전', 'afternoon': '오후', 'evening': '저녁', 'night': '심야'};
@@ -39,7 +39,7 @@ class _CommunityPostFormScreenState extends State<CommunityPostFormScreen> {
   bool _saving = false;
 
   bool get _isEdit => widget.existing != null;
-  bool get _isRecruitOrMatch => _category == 'recruit' || _category == 'match';
+  bool get _isRecruitOrMatch => _category == 'recruit' || _category == 'match' || _category == 'mercenary';
 
   @override
   void initState() {
@@ -210,7 +210,7 @@ class _CommunityPostFormScreenState extends State<CommunityPostFormScreen> {
             const SizedBox(height: 8),
             _buildImagePicker(),
 
-            // Recruit/match extra fields
+            // Recruit/match/mercenary extra fields
             if (_isRecruitOrMatch) ...[
               const SizedBox(height: 24),
               Container(

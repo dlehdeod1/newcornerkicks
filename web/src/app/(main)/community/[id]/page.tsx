@@ -16,6 +16,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://cornerkicks-api.con
 const categories = [
   { key: 'free', label: '자유', color: 'emerald' },
   { key: 'recruit', label: '팀 모집', color: 'amber' },
+  { key: 'mercenary', label: '용병 모집', color: 'rose' },
   { key: 'match', label: '매칭', color: 'blue' },
   { key: 'review', label: '경기 후기', color: 'purple' },
 ] as const
@@ -29,6 +30,7 @@ const categoryColorMap: Record<string, { badge: string; text: string }> = {
   amber: { badge: 'bg-amber-100 dark:bg-amber-500/20', text: 'text-amber-600 dark:text-amber-400' },
   blue: { badge: 'bg-blue-100 dark:bg-blue-500/20', text: 'text-blue-600 dark:text-blue-400' },
   purple: { badge: 'bg-purple-100 dark:bg-purple-500/20', text: 'text-purple-600 dark:text-purple-400' },
+  rose: { badge: 'bg-rose-100 dark:bg-rose-500/20', text: 'text-rose-600 dark:text-rose-400' },
 }
 
 export default function CommunityDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -99,7 +101,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
   const cat = categories.find(c => c.key === post.category)
   const colors = cat ? categoryColorMap[cat.color] : categoryColorMap.emerald
   const isAuthor = user?.id === post.author_id
-  const isRecruitOrMatch = post.category === 'recruit' || post.category === 'match'
+  const isRecruitOrMatch = post.category === 'recruit' || post.category === 'match' || post.category === 'mercenary'
   const comments = post.comments || []
 
   const handleDelete = () => {

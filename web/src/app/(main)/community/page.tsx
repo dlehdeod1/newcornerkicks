@@ -13,6 +13,7 @@ import { useState } from 'react'
 const categories = [
   { key: 'free', label: '자유', color: 'emerald' },
   { key: 'recruit', label: '팀 모집', color: 'amber' },
+  { key: 'mercenary', label: '용병 모집', color: 'rose' },
   { key: 'match', label: '매칭', color: 'blue' },
   { key: 'review', label: '경기 후기', color: 'purple' },
 ] as const
@@ -28,6 +29,7 @@ const categoryColorMap: Record<string, { badge: string; text: string }> = {
   amber: { badge: 'bg-amber-100 dark:bg-amber-500/20', text: 'text-amber-600 dark:text-amber-400' },
   blue: { badge: 'bg-blue-100 dark:bg-blue-500/20', text: 'text-blue-600 dark:text-blue-400' },
   purple: { badge: 'bg-purple-100 dark:bg-purple-500/20', text: 'text-purple-600 dark:text-purple-400' },
+  rose: { badge: 'bg-rose-100 dark:bg-rose-500/20', text: 'text-rose-600 dark:text-rose-400' },
 }
 
 function CommunityContent() {
@@ -40,7 +42,7 @@ function CommunityContent() {
   const [selectedDays, setSelectedDays] = useState<string[]>([])
   const [onlyOpen, setOnlyOpen] = useState(false)
 
-  const showFilters = activeTab === 'recruit' || activeTab === 'match'
+  const showFilters = activeTab === 'recruit' || activeTab === 'match' || activeTab === 'mercenary'
 
   const { data, isLoading } = useQuery({
     queryKey: ['community', activeTab, region, selectedDays, onlyOpen, token],
@@ -186,7 +188,7 @@ function CommunityContent() {
           {posts.map((post: any) => {
             const cat = categories.find(c => c.key === post.category)
             const colors = cat ? categoryColorMap[cat.color] : categoryColorMap.emerald
-            const isRecruitOrMatch = post.category === 'recruit' || post.category === 'match'
+            const isRecruitOrMatch = post.category === 'recruit' || post.category === 'match' || post.category === 'mercenary'
 
             return (
               <Link

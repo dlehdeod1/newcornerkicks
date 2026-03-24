@@ -6,8 +6,8 @@ import '../services/api_service.dart';
 import 'community_post_detail_screen.dart';
 import 'community_post_form_screen.dart';
 
-const categoryLabels = {'free': '자유', 'recruit': '팀 모집', 'match': '매칭', 'review': '경기 후기'};
-const categoryColors = {'free': AppColors.primary, 'recruit': AppColors.amber, 'match': AppColors.blue, 'review': AppColors.purple};
+const categoryLabels = {'free': '자유', 'recruit': '팀 모집', 'mercenary': '용병 모집', 'match': '매칭', 'review': '경기 후기'};
+const categoryColors = {'free': AppColors.primary, 'recruit': AppColors.amber, 'mercenary': Color(0xFFF43F5E), 'match': AppColors.blue, 'review': AppColors.purple};
 const regionOptions = ['서울', '경기', '인천', '부산', '대구', '대전', '광주', '울산', '세종', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주'];
 const dayLabels = {'mon': '월', 'tue': '화', 'wed': '수', 'thu': '목', 'fri': '금', 'sat': '토', 'sun': '일'};
 const timeSlotLabels = {'morning': '오전', 'afternoon': '오후', 'evening': '저녁', 'night': '심야'};
@@ -22,12 +22,12 @@ class CommunityScreen extends StatefulWidget {
 
 class _CommunityScreenState extends State<CommunityScreen> with TickerProviderStateMixin {
   late TabController _tabController;
-  final _categoryKeys = ['free', 'recruit', 'match', 'review'];
+  final _categoryKeys = ['free', 'recruit', 'mercenary', 'match', 'review'];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -45,7 +45,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
         title: const Text('커뮤니티', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         bottom: TabBar(
           controller: _tabController,
-          isScrollable: false,
+          isScrollable: true,
           indicatorColor: AppColors.primary,
           indicatorWeight: 3,
           labelColor: Colors.white,
@@ -89,7 +89,7 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
   List<dynamic> _posts = [];
   bool _loading = true;
 
-  // Filters (recruit/match only)
+  // Filters (recruit/match/mercenary only)
   String? _selectedRegion;
   String? _selectedDay;
   bool _openOnly = false;
@@ -110,7 +110,7 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
     if (token == null) return;
 
     try {
-      final hasFilters = widget.categoryKey == 'recruit' || widget.categoryKey == 'match';
+      final hasFilters = widget.categoryKey == 'recruit' || widget.categoryKey == 'match' || widget.categoryKey == 'mercenary';
       final res = await _api.getCommunityPosts(
         token,
         category: widget.categoryKey,
@@ -128,7 +128,7 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final hasFilters = widget.categoryKey == 'recruit' || widget.categoryKey == 'match';
+    final hasFilters = widget.categoryKey == 'recruit' || widget.categoryKey == 'match' || widget.categoryKey == 'mercenary';
 
     return RefreshIndicator(
       onRefresh: _loadPosts,
@@ -286,7 +286,7 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
     final dayOfWeek = post['day_of_week'] as String?;
     final skillLevel = post['skill_level'] as String?;
     final headcount = post['headcount'];
-    final isRecruit = cat == 'recruit' || cat == 'match';
+    final isRecruit = cat == 'recruit' || cat == 'match' || cat == 'mercenary';
 
     String dateStr = '';
     if (createdAt != null) {
@@ -353,7 +353,7 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
                 Text(dateStr, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(77))),
               ],
             ),
-            // Recruit/match metadata chips
+            // Recruit/match/mercenary metadata chips
             if (isRecruit) ...[
               const SizedBox(height: 10),
               Wrap(
