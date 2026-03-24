@@ -23,6 +23,7 @@ import {
   Cake,
   LogOut,
   LinkIcon,
+  BarChart3,
   AlertCircle,
 } from 'lucide-react'
 import { useAuthStore, useAuthHydrated } from '@/stores/auth'
@@ -297,6 +298,78 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* 내 기록 바로가기 */}
+      {summaryPlayer && (
+        <div className="grid grid-cols-2 gap-3">
+          <Link
+            href={`/players/${summaryPlayer.id}`}
+            className="group relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:scale-[1.02] transition-all"
+          >
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-3">
+                <BarChart3 className="w-5 h-5 text-white/80" />
+                <span className="text-sm font-semibold text-white">내 기록</span>
+              </div>
+              {seasonStats ? (
+                <div className="flex items-end gap-3">
+                  <div>
+                    <div className="text-2xl font-bold text-white">{seasonStats.goals ?? 0}</div>
+                    <div className="text-xs text-white/60">득점</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-white">{seasonStats.assists ?? 0}</div>
+                    <div className="text-xs text-white/60">도움</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-white">{seasonStats.games ?? 0}</div>
+                    <div className="text-xs text-white/60">경기</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-white/70">기록을 확인하세요</div>
+              )}
+            </div>
+            <div className="absolute -right-3 -bottom-3 w-20 h-20 rounded-full bg-white/10" />
+            <ChevronRight className="absolute right-3 top-4 w-4 h-4 text-white/50 group-hover:text-white/80 transition-colors" />
+          </Link>
+
+          <Link
+            href={`/abilities/${summaryPlayer.id}`}
+            className="group relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/20 hover:shadow-violet-500/30 hover:scale-[1.02] transition-all"
+          >
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-3">
+                <Target className="w-5 h-5 text-white/80" />
+                <span className="text-sm font-semibold text-white">능력치</span>
+              </div>
+              {abilities ? (
+                <div className="flex items-end gap-3">
+                  <div>
+                    <div className="text-3xl font-bold text-white">{abilities.overall}</div>
+                    <div className="text-xs text-white/60">종합</div>
+                  </div>
+                  <div className="flex-1 space-y-1 pb-1">
+                    {[
+                      { v: abilities.shooting, c: 'bg-red-400' },
+                      { v: abilities.passing, c: 'bg-amber-400' },
+                      { v: abilities.marking, c: 'bg-blue-400' },
+                    ].map(({ v, c }, i) => (
+                      <div key={i} className="h-1 bg-white/20 rounded-full overflow-hidden">
+                        <div className={cn('h-full rounded-full', c)} style={{ width: `${v}%` }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-white/70">능력치를 확인하세요</div>
+              )}
+            </div>
+            <div className="absolute -right-3 -bottom-3 w-20 h-20 rounded-full bg-white/10" />
+            <ChevronRight className="absolute right-3 top-4 w-4 h-4 text-white/50 group-hover:text-white/80 transition-colors" />
+          </Link>
+        </div>
+      )}
+
       {/* 신체 정보 */}
       {summaryPlayer && (summaryPlayer.heightCm || summaryPlayer.weightKg || summaryPlayer.birthYear) && (
         <div className="bg-white dark:bg-white/[0.03] rounded-2xl p-5 border border-slate-200 dark:border-white/[0.08]">
@@ -329,16 +402,17 @@ export default function ProfilePage() {
 
       {/* 시즌 스탯 */}
       {summaryPlayer && seasonStats && (
-        <div className="bg-white dark:bg-white/[0.03] rounded-2xl p-5 border border-slate-200 dark:border-white/[0.08]">
+        <Link
+          href={`/players/${summaryPlayer.id}`}
+          className="block bg-white dark:bg-white/[0.03] rounded-2xl p-5 border border-slate-200 dark:border-white/[0.08] hover:border-emerald-300 dark:hover:border-emerald-500/30 transition-colors group"
+        >
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs font-semibold text-slate-400 dark:text-white/40 uppercase tracking-wider">
               {seasonStats.year} 시즌 기록
             </p>
-            {summaryPlayer && (
-              <Link href={`/players/${summaryPlayer.id}`} className="text-xs text-emerald-500 hover:text-emerald-600 flex items-center gap-0.5">
-                자세히 보기 <ChevronRight className="w-3 h-3" />
-              </Link>
-            )}
+            <span className="text-xs text-emerald-500 group-hover:text-emerald-600 flex items-center gap-0.5">
+              자세히 보기 <ChevronRight className="w-3 h-3" />
+            </span>
           </div>
           <div className="flex">
             {[
@@ -355,19 +429,22 @@ export default function ProfilePage() {
               </div>
             ))}
           </div>
-        </div>
+        </Link>
       )}
 
       {/* 능력치 + 선호 선수 (2열) */}
       {summaryPlayer && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* 능력치 */}
-          <div className="bg-white dark:bg-white/[0.03] rounded-2xl p-5 border border-slate-200 dark:border-white/[0.08]">
+          <Link
+            href={`/abilities/${summaryPlayer.id}`}
+            className="block bg-white dark:bg-white/[0.03] rounded-2xl p-5 border border-slate-200 dark:border-white/[0.08] hover:border-violet-300 dark:hover:border-violet-500/30 transition-colors group"
+          >
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-semibold text-slate-400 dark:text-white/40 uppercase tracking-wider">능력치</p>
-              <Link href={`/abilities/${summary.player.id}`} className="text-xs text-emerald-500 hover:text-emerald-600 flex items-center gap-0.5">
+              <span className="text-xs text-emerald-500 group-hover:text-emerald-600 flex items-center gap-0.5">
                 상세 <ChevronRight className="w-3 h-3" />
-              </Link>
+              </span>
             </div>
             {abilities ? (
               <>
@@ -400,7 +477,7 @@ export default function ProfilePage() {
             ) : (
               <p className="text-sm text-slate-400 dark:text-white/40 py-4">평가 데이터 없음</p>
             )}
-          </div>
+          </Link>
 
           {/* 선호 선수 */}
           <div className="bg-white dark:bg-white/[0.03] rounded-2xl p-5 border border-slate-200 dark:border-white/[0.08]">
@@ -427,7 +504,7 @@ export default function ProfilePage() {
                       {p.nickname && <div className="text-xs text-slate-500 dark:text-white/40 truncate">{p.nickname}</div>}
                     </div>
                     <button
-                      onClick={() => handleRemovePref(p.id)}
+                      onClick={(e) => { e.preventDefault(); handleRemovePref(p.id) }}
                       className="text-red-400 hover:text-red-500 transition-colors"
                     >
                       <Heart className="w-4 h-4 fill-current" />
