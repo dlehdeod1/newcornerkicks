@@ -9,6 +9,7 @@ import 'player_detail_screen.dart';
 import 'settlements_screen.dart';
 import 'announcements_screen.dart';
 import 'board_screen.dart';
+import 'admin_exemptions_screen.dart';
 import '../widgets/tip_banner.dart';
 
 class ClubScreen extends StatefulWidget {
@@ -366,10 +367,14 @@ class _ClubScreenState extends State<ClubScreen> {
         _quickLink(Icons.people_outline, '멤버', AppColors.teal, () {
           // 이미 아래에 멤버 목록이 있으므로 스크롤
         }),
-        if (auth.isAdmin)
+        if (auth.isAdmin) ...[
           _quickLink(Icons.campaign, '공지 관리', AppColors.amber, () {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const AnnouncementsScreen(isAdmin: true)));
           }),
+          _quickLink(Icons.shield_outlined, '회비 면제', AppColors.violet, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminExemptionsScreen()));
+          }),
+        ],
       ],
     );
   }

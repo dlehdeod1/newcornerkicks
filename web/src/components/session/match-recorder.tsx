@@ -15,8 +15,18 @@ interface Props {
   onRefetch: () => void
 }
 
+const DEFENSE_EVENTS = ['DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE'] as const
+type DefenseEventType = typeof DEFENSE_EVENTS[number]
+
+const defenseEventLabels: Record<DefenseEventType, { label: string; icon: string; color: string; badgeColor: string; bgColor: string; borderColor: string }> = {
+  DEFENSE: { label: '수비', icon: '🛡️', color: 'text-indigo-700 dark:text-indigo-400', badgeColor: 'bg-indigo-500', bgColor: 'bg-indigo-50 dark:bg-indigo-900/20', borderColor: 'border-indigo-200 dark:border-indigo-800' },
+  TACKLE: { label: '태클', icon: '🦶', color: 'text-violet-700 dark:text-violet-400', badgeColor: 'bg-violet-500', bgColor: 'bg-violet-50 dark:bg-violet-900/20', borderColor: 'border-violet-200 dark:border-violet-800' },
+  INTERCEPTION: { label: '인터셉트', icon: '✋', color: 'text-cyan-700 dark:text-cyan-400', badgeColor: 'bg-cyan-500', bgColor: 'bg-cyan-50 dark:bg-cyan-900/20', borderColor: 'border-cyan-200 dark:border-cyan-800' },
+  CLEARANCE: { label: '클리어런스', icon: '🧹', color: 'text-amber-700 dark:text-amber-400', badgeColor: 'bg-amber-500', bgColor: 'bg-amber-50 dark:bg-amber-900/20', borderColor: 'border-amber-200 dark:border-amber-800' },
+}
+
 export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
-  const { token } = useAuthStore()
+  const { token, club } = useAuthStore()
 
   const { data, refetch } = useQuery({
     queryKey: ['match', match.id],
@@ -113,9 +123,9 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
     setAssistMode(null)
   }
 
-  const handleDefenseClick = (member: any, teamId: number) => {
+  const handleDefenseClick = (member: any, teamId: number, eventType: DefenseEventType = 'DEFENSE') => {
     addEventMutation.mutate({
-      eventType: 'DEFENSE',
+      eventType,
       playerId: member.player_id,
       guestName: member.guest_name,
       teamId: teamId,
@@ -144,9 +154,10 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
     ).length
   }
 
-  const getPlayerDefense = (playerId: number | null, guestName?: string) => {
+  const getPlayerDefenseCount = (playerId: number | null, guestName?: string, eventType?: string) => {
+    const types = eventType ? [eventType] : DEFENSE_EVENTS as readonly string[]
     return events.filter((e: any) =>
-      e.event_type === 'DEFENSE' &&
+      types.includes(e.event_type) &&
       (playerId ? e.player_id === playerId : e.guest_name === guestName)
     ).length
   }
@@ -170,51 +181,64 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
     )
   }
 
+  // 활성화된 수비 이벤트 목록
+  const enabledDefenseEvents = (club?.enabledEvents || ['GOAL', 'DEFENSE']).filter(
+    (e) => (DEFENSE_EVENTS as readonly string[]).includes(e)
+  ) as DefenseEventType[]
+
   // 선수 버튼 렌더링
   const PlayerButton = ({
     member,
     type,
     teamId,
     color,
+    defenseType,
   }: {
     member: any
     type: 'goal' | 'defense'
     teamId: number
-    color: 'green' | 'blue' | 'orange' | 'sky'
+    color: 'green' | 'blue' | 'orange' | 'sky' | 'violet' | 'cyan' | 'amber'
+    defenseType?: DefenseEventType
   }) => {
     const count = type === 'goal'
       ? getPlayerGoals(member.player_id, member.guest_name)
-      : getPlayerDefense(member.player_id, member.guest_name)
+      : getPlayerDefenseCount(member.player_id, member.guest_name, defenseType)
 
-    const colorClasses = {
+    const colorClasses: Record<string, string> = {
       green: 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-100 hover:bg-emerald-100 dark:hover:bg-emerald-800',
       orange: 'bg-orange-50 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700 text-orange-900 dark:text-orange-100 hover:bg-orange-100 dark:hover:bg-orange-800',
       blue: 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-700 text-indigo-900 dark:text-indigo-100 hover:bg-indigo-100 dark:hover:bg-indigo-800',
       sky: 'bg-sky-50 dark:bg-sky-900/30 border-sky-300 dark:border-sky-700 text-sky-900 dark:text-sky-100 hover:bg-sky-100 dark:hover:bg-sky-800',
-    }[color]
+      violet: 'bg-violet-50 dark:bg-violet-900/30 border-violet-300 dark:border-violet-700 text-violet-900 dark:text-violet-100 hover:bg-violet-100 dark:hover:bg-violet-800',
+      cyan: 'bg-cyan-50 dark:bg-cyan-900/30 border-cyan-300 dark:border-cyan-700 text-cyan-900 dark:text-cyan-100 hover:bg-cyan-100 dark:hover:bg-cyan-800',
+      amber: 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-100 hover:bg-amber-100 dark:hover:bg-amber-800',
+    }
 
-    const badgeColor = {
+    const badgeColors: Record<string, string> = {
       green: 'bg-emerald-500',
       orange: 'bg-orange-500',
       blue: 'bg-indigo-500',
       sky: 'bg-sky-500',
-    }[color]
+      violet: 'bg-violet-500',
+      cyan: 'bg-cyan-500',
+      amber: 'bg-amber-500',
+    }
 
     return (
       <button
         onClick={() => type === 'goal'
           ? handleGoalClick(member, teamId)
-          : handleDefenseClick(member, teamId)
+          : handleDefenseClick(member, teamId, defenseType || 'DEFENSE')
         }
         disabled={addEventMutation.isPending}
         className={cn(
           'flex items-center justify-center gap-1 px-2 py-3 rounded-lg border text-xs font-medium transition-all active:scale-95 disabled:opacity-50 min-w-0',
-          colorClasses
+          colorClasses[color]
         )}
       >
         {shortName(member.name || member.guest_name)}
         {count > 0 && (
-          <span className={cn('shrink-0 text-[10px] text-white px-1 rounded', badgeColor)}>
+          <span className={cn('shrink-0 text-[10px] text-white px-1 rounded', badgeColors[color])}>
             {count}
           </span>
         )}
@@ -358,29 +382,40 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
           </div>
 
           {/* 수비 기록 섹션 */}
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-3">
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 block">🛡️ 수비 기록</span>
-            <div className="flex gap-2">
-              {/* 팀1 (왼쪽) - 인디고 */}
-              <div className="flex-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-2 border border-indigo-200 dark:border-indigo-800">
-                <p className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 mb-2 truncate text-center">{team1?.name}</p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {team1Members.map((member: any) => (
-                    <PlayerButton key={member.id} member={member} type="defense" teamId={match.team1_id} color="blue" />
-                  ))}
+          {enabledDefenseEvents.map((defType) => {
+            const meta = defenseEventLabels[defType]
+            const team1Color = defType === 'DEFENSE' ? 'blue' as const
+              : defType === 'TACKLE' ? 'violet' as const
+              : defType === 'INTERCEPTION' ? 'cyan' as const
+              : 'amber' as const
+            const team2Color = defType === 'DEFENSE' ? 'sky' as const
+              : defType === 'TACKLE' ? 'violet' as const
+              : defType === 'INTERCEPTION' ? 'cyan' as const
+              : 'amber' as const
+            return (
+              <div key={defType} className="rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 block">{meta.icon} {meta.label} 기록</span>
+                <div className="flex gap-2">
+                  <div className={cn('flex-1 rounded-lg p-2 border', meta.bgColor, meta.borderColor)}>
+                    <p className={cn('text-[10px] font-bold mb-2 truncate text-center', meta.color)}>{team1?.name}</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {team1Members.map((member: any) => (
+                        <PlayerButton key={member.id} member={member} type="defense" teamId={match.team1_id} color={team1Color} defenseType={defType} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className={cn('flex-1 rounded-lg p-2 border', meta.bgColor, meta.borderColor)}>
+                    <p className={cn('text-[10px] font-bold mb-2 truncate text-center', meta.color)}>{team2?.name}</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {team2Members.map((member: any) => (
+                        <PlayerButton key={member.id} member={member} type="defense" teamId={match.team2_id} color={team2Color} defenseType={defType} />
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
-              {/* 팀2 (오른쪽) - 스카이 */}
-              <div className="flex-1 bg-sky-50 dark:bg-sky-900/20 rounded-lg p-2 border border-sky-200 dark:border-sky-800">
-                <p className="text-[10px] font-bold text-sky-700 dark:text-sky-400 mb-2 truncate text-center">{team2?.name}</p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {team2Members.map((member: any) => (
-                    <PlayerButton key={member.id} member={member} type="defense" teamId={match.team2_id} color="sky" />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+            )
+          })}
         </div>
       )}
 
@@ -430,11 +465,17 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
                     <div className="shrink-0 flex flex-col items-center z-10 w-14">
                       <div className={cn(
                         'w-5 h-5 rounded-full flex items-center justify-center text-[10px]',
-                        event.event_type === 'GOAL'
-                          ? 'bg-green-100 dark:bg-green-900/50'
+                        event.event_type === 'GOAL' ? 'bg-green-100 dark:bg-green-900/50'
+                          : event.event_type === 'TACKLE' ? 'bg-violet-100 dark:bg-violet-900/50'
+                          : event.event_type === 'INTERCEPTION' ? 'bg-cyan-100 dark:bg-cyan-900/50'
+                          : event.event_type === 'CLEARANCE' ? 'bg-amber-100 dark:bg-amber-900/50'
                           : 'bg-blue-100 dark:bg-blue-900/50'
                       )}>
-                        {event.event_type === 'GOAL' ? '⚽' : '🛡️'}
+                        {event.event_type === 'GOAL' ? '⚽'
+                          : event.event_type === 'TACKLE' ? '🦶'
+                          : event.event_type === 'INTERCEPTION' ? '✋'
+                          : event.event_type === 'CLEARANCE' ? '🧹'
+                          : '🛡️'}
                       </div>
                       <span className="text-[9px] text-slate-400 font-mono mt-0.5">
                         {formatTime(event.event_time || 0)}

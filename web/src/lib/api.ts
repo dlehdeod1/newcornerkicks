@@ -383,6 +383,12 @@ export const clubsApi = {
 
   deleteClub: (token: string) =>
     api('/clubs/me', { method: 'DELETE', token }),
+
+  getExemptions: (token: string) =>
+    api('/clubs/me/members/exemptions', { token }),
+
+  updateExemption: (userId: string, data: { sessionFeeExempt?: boolean; membershipFeeExempt?: boolean; exemptReason?: string }, token: string) =>
+    api(`/clubs/me/members/${userId}/exemption`, { method: 'PUT', body: data, token }),
 }
 
 // Payments API (납부/비용)

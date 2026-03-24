@@ -290,7 +290,7 @@ matchesRoutes.post('/:id/events', authMiddleware(), async (c) => {
     }
 
     const schema = z.object({
-      eventType: z.enum(['GOAL', 'DEFENSE']),
+      eventType: z.enum(['GOAL', 'DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE']),
       playerId: z.number().nullable(),
       guestName: z.string().nullable().optional(),
       teamId: z.number(),
@@ -443,6 +443,9 @@ async function updatePlayerMatchStats(db: D1Database, matchId: number, playerId:
     let field = ''
     if (eventType === 'GOAL') field = 'goals'
     else if (eventType === 'DEFENSE') field = 'blocks'
+    else if (eventType === 'TACKLE') field = 'tackles'
+    else if (eventType === 'INTERCEPTION') field = 'interceptions'
+    else if (eventType === 'CLEARANCE') field = 'clearances'
     else if (eventType === 'ASSIST') field = 'assists'
 
     if (field) {
@@ -453,13 +456,16 @@ async function updatePlayerMatchStats(db: D1Database, matchId: number, playerId:
   } else {
     const goals = eventType === 'GOAL' ? 1 : 0
     const blocks = eventType === 'DEFENSE' ? 1 : 0
+    const tackles = eventType === 'TACKLE' ? 1 : 0
+    const interceptions = eventType === 'INTERCEPTION' ? 1 : 0
+    const clearances = eventType === 'CLEARANCE' ? 1 : 0
     const assists = eventType === 'ASSIST' ? 1 : 0
 
     // created_at 없이 삽입 (remote DB 호환)
     await db.prepare(`
-      INSERT INTO player_match_stats (match_id, player_id, goals, assists, blocks)
-      VALUES (?, ?, ?, ?, ?)
-    `).bind(matchId, playerId, goals, assists, blocks).run()
+      INSERT INTO player_match_stats (match_id, player_id, goals, assists, blocks, tackles, interceptions, clearances)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(matchId, playerId, goals, assists, blocks, tackles, interceptions, clearances).run()
   }
 }
 
@@ -474,31 +480,32 @@ async function recalculateMatchStats(db: D1Database, matchId: number) {
     WHERE match_id = ? AND player_id IS NOT NULL
   `).bind(matchId).all()
 
-  const stats = new Map<number, { goals: number; assists: number; blocks: number }>()
+  const stats = new Map<number, { goals: number; assists: number; blocks: number; tackles: number; interceptions: number; clearances: number }>()
+
+  const getOrCreate = (pid: number) => {
+    if (!stats.has(pid)) stats.set(pid, { goals: 0, assists: 0, blocks: 0, tackles: 0, interceptions: 0, clearances: 0 })
+    return stats.get(pid)!
+  }
 
   for (const event of events.results as any[]) {
-    if (!stats.has(event.player_id)) {
-      stats.set(event.player_id, { goals: 0, assists: 0, blocks: 0 })
-    }
-    const s = stats.get(event.player_id)!
+    const s = getOrCreate(event.player_id)
 
     if (event.event_type === 'GOAL') s.goals++
-    if (event.event_type === 'DEFENSE') s.blocks++
+    else if (event.event_type === 'DEFENSE') s.blocks++
+    else if (event.event_type === 'TACKLE') s.tackles++
+    else if (event.event_type === 'INTERCEPTION') s.interceptions++
+    else if (event.event_type === 'CLEARANCE') s.clearances++
 
     if (event.assister_id) {
-      if (!stats.has(event.assister_id)) {
-        stats.set(event.assister_id, { goals: 0, assists: 0, blocks: 0 })
-      }
-      stats.get(event.assister_id)!.assists++
+      getOrCreate(event.assister_id).assists++
     }
   }
 
-  // created_at 없이 삽입 (remote DB 호환)
   for (const [playerId, s] of stats) {
     await db.prepare(`
-      INSERT INTO player_match_stats (match_id, player_id, goals, assists, blocks)
-      VALUES (?, ?, ?, ?, ?)
-    `).bind(matchId, playerId, s.goals, s.assists, s.blocks).run()
+      INSERT INTO player_match_stats (match_id, player_id, goals, assists, blocks, tackles, interceptions, clearances)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(matchId, playerId, s.goals, s.assists, s.blocks, s.tackles, s.interceptions, s.clearances).run()
   }
 }
 

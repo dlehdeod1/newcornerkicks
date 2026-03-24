@@ -59,7 +59,7 @@ export default function AdminSettingsPage() {
   const [feeSaved, setFeeSaved] = useState(false)
 
   // 기록 이벤트 설정
-  const [enabledEvents, setEnabledEvents] = useState<string[]>(['GOAL', 'SAVE'])
+  const [enabledEvents, setEnabledEvents] = useState<string[]>(['GOAL', 'DEFENSE'])
   const [eventsSaving, setEventsSaving] = useState(false)
   const [eventsSaved, setEventsSaved] = useState(false)
 
@@ -83,7 +83,7 @@ export default function AdminSettingsPage() {
     setClubName(club.name || '')
     setClubDesc(club.description || '')
     setSeasonMonth(club.seasonStartMonth ?? 1)
-    setEnabledEvents(club.enabledEvents ?? ['GOAL', 'SAVE'])
+    setEnabledEvents(club.enabledEvents ?? ['GOAL', 'DEFENSE'])
     const fc = club.feeConfig || {}
     setBaseAmount(fc.baseAmount ?? 0)
     setSplitEnabled(fc.splitEnabled ?? false)
@@ -359,7 +359,7 @@ export default function AdminSettingsPage() {
                 type="text"
                 value={accountNumber}
                 onChange={e => setAccountNumber(e.target.value)}
-                placeholder="801301-01-610282"
+                placeholder="000-000000-00-000"
                 className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
               />
             </div>
@@ -567,12 +567,12 @@ export default function AdminSettingsPage() {
             기록 이벤트
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">현황판에서 기록할 이벤트 종류를 선택하세요</p>
-          <div className="grid grid-cols-2 gap-3">
+
+          {/* 공격 이벤트 */}
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">공격</p>
+          <div className="grid grid-cols-2 gap-3 mb-4">
             {[
-              { key: 'GOAL', label: '득점', icon: '⚽', desc: '골 기록' },
-              { key: 'SAVE', label: '선방', icon: '🧤', desc: '골키퍼 세이브' },
-              { key: 'SHOT', label: '슈팅', icon: '🎯', desc: '유효 슈팅 기록' },
-              { key: 'KEY_PASS', label: '키패스', icon: '⚡', desc: '결정적 패스' },
+              { key: 'GOAL', label: '득점', icon: '⚽', desc: '골 + 어시스트 기록' },
             ].map(({ key, label, icon, desc }) => {
               const active = enabledEvents.includes(key)
               return (
@@ -584,6 +584,49 @@ export default function AdminSettingsPage() {
                     active
                       ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
                       : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                  )}
+                >
+                  <span className="text-xl">{icon}</span>
+                  <div>
+                    <p className={cn(
+                      'text-sm font-medium',
+                      active ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'
+                    )}>{label}</p>
+                    <p className="text-xs text-slate-400">{desc}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* 수비 이벤트 */}
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">수비</p>
+          <p className="text-xs text-slate-400 mb-2">간편(수비 1개로 통합) 또는 상세(태클/인터셉트/클리어런스 개별 기록) 중 선택</p>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { key: 'DEFENSE', label: '수비 (간편)', icon: '🛡️', desc: '수비 기록 통합' },
+              { key: 'TACKLE', label: '태클', icon: '🦶', desc: '볼 탈취 시도' },
+              { key: 'INTERCEPTION', label: '인터셉트', icon: '✋', desc: '패스 차단' },
+              { key: 'CLEARANCE', label: '클리어런스', icon: '🧹', desc: '위험 지역 걷어내기' },
+            ].map(({ key, label, icon, desc }) => {
+              const active = enabledEvents.includes(key)
+              const isDetail = key === 'TACKLE' || key === 'INTERCEPTION' || key === 'CLEARANCE'
+              const isSimple = key === 'DEFENSE'
+              const hasSimple = enabledEvents.includes('DEFENSE')
+              const hasDetail = enabledEvents.some(e => ['TACKLE', 'INTERCEPTION', 'CLEARANCE'].includes(e))
+              // 간편과 상세는 동시에 쓸 수 없음
+              const disabled = (isSimple && hasDetail) || (isDetail && hasSimple)
+              return (
+                <button
+                  key={key}
+                  onClick={() => !disabled && toggleEvent(key)}
+                  className={cn(
+                    'flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left',
+                    disabled
+                      ? 'opacity-40 cursor-not-allowed border-slate-200 dark:border-slate-700'
+                      : active
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                   )}
                 >
                   <span className="text-xl">{icon}</span>

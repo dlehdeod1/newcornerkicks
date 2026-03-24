@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn'
 
 interface MatchEvent {
   id: number
-  event_type: 'GOAL' | 'ASSIST' | 'BLOCK' | 'DEFENSE'
+  event_type: 'GOAL' | 'ASSIST' | 'BLOCK' | 'DEFENSE' | 'TACKLE' | 'INTERCEPTION' | 'CLEARANCE'
   player_id: number
   player_name: string
   team_id: number
@@ -38,25 +38,34 @@ interface MatchTimelineProps {
   className?: string
 }
 
-const eventIcons = {
+const eventIcons: Record<string, any> = {
   GOAL: Goal,
   ASSIST: Users,
   BLOCK: Shield,
   DEFENSE: Shield,
+  TACKLE: Shield,
+  INTERCEPTION: Shield,
+  CLEARANCE: Shield,
 }
 
-const eventColors = {
+const eventColors: Record<string, string> = {
   GOAL: 'text-red-500 bg-red-100 dark:bg-red-500/20',
   ASSIST: 'text-blue-500 bg-blue-100 dark:bg-blue-500/20',
   BLOCK: 'text-green-500 bg-green-100 dark:bg-green-500/20',
   DEFENSE: 'text-green-500 bg-green-100 dark:bg-green-500/20',
+  TACKLE: 'text-violet-500 bg-violet-100 dark:bg-violet-500/20',
+  INTERCEPTION: 'text-cyan-500 bg-cyan-100 dark:bg-cyan-500/20',
+  CLEARANCE: 'text-amber-500 bg-amber-100 dark:bg-amber-500/20',
 }
 
-const eventLabels = {
+const eventLabels: Record<string, string> = {
   GOAL: '골',
   ASSIST: '어시스트',
   BLOCK: '수비',
   DEFENSE: '수비',
+  TACKLE: '태클',
+  INTERCEPTION: '인터셉트',
+  CLEARANCE: '클리어런스',
 }
 
 export function MatchTimeline({ match, teams, events, className }: MatchTimelineProps) {
@@ -276,9 +285,24 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
                     <Shield className="w-3 h-3 text-green-500" />
                   </div>
                   <span className="text-sm text-slate-600 dark:text-slate-400">
-                    수비: {team1Events.filter(e => e.event_type === 'DEFENSE').length}
+                    수비: {team1Events.filter(e => ['DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE'].includes(e.event_type)).length}
                   </span>
                 </div>
+                {team1Events.some(e => e.event_type === 'TACKLE') && (
+                  <div className="flex items-center gap-2 ml-8">
+                    <span className="text-xs text-slate-500">태클: {team1Events.filter(e => e.event_type === 'TACKLE').length}</span>
+                  </div>
+                )}
+                {team1Events.some(e => e.event_type === 'INTERCEPTION') && (
+                  <div className="flex items-center gap-2 ml-8">
+                    <span className="text-xs text-slate-500">인터셉트: {team1Events.filter(e => e.event_type === 'INTERCEPTION').length}</span>
+                  </div>
+                )}
+                {team1Events.some(e => e.event_type === 'CLEARANCE') && (
+                  <div className="flex items-center gap-2 ml-8">
+                    <span className="text-xs text-slate-500">클리어런스: {team1Events.filter(e => e.event_type === 'CLEARANCE').length}</span>
+                  </div>
+                )}
               </div>
 
               {/* Team 2 Stats */}
@@ -307,9 +331,24 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
                     <Shield className="w-3 h-3 text-green-500" />
                   </div>
                   <span className="text-sm text-slate-600 dark:text-slate-400">
-                    수비: {team2Events.filter(e => e.event_type === 'DEFENSE').length}
+                    수비: {team2Events.filter(e => ['DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE'].includes(e.event_type)).length}
                   </span>
                 </div>
+                {team2Events.some(e => e.event_type === 'TACKLE') && (
+                  <div className="flex items-center gap-2 ml-8">
+                    <span className="text-xs text-slate-500">태클: {team2Events.filter(e => e.event_type === 'TACKLE').length}</span>
+                  </div>
+                )}
+                {team2Events.some(e => e.event_type === 'INTERCEPTION') && (
+                  <div className="flex items-center gap-2 ml-8">
+                    <span className="text-xs text-slate-500">인터셉트: {team2Events.filter(e => e.event_type === 'INTERCEPTION').length}</span>
+                  </div>
+                )}
+                {team2Events.some(e => e.event_type === 'CLEARANCE') && (
+                  <div className="flex items-center gap-2 ml-8">
+                    <span className="text-xs text-slate-500">클리어런스: {team2Events.filter(e => e.event_type === 'CLEARANCE').length}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

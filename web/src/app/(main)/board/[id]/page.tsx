@@ -10,6 +10,7 @@ import { MessageSquare, Pin, ArrowLeft, Pencil, Trash2, X, Send, BarChart3, Chec
 import { useAuthStore } from '@/stores/auth'
 import { postsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import { RichContent } from '@/components/ui/rich-content'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://cornerkicks-api.conerkicks.workers.dev'
 
@@ -166,9 +167,7 @@ export default function PostDetailPage() {
         )}
 
         {/* Content */}
-        <div className="prose prose-slate dark:prose-invert max-w-none whitespace-pre-wrap text-slate-700 dark:text-slate-300 leading-relaxed">
-          {post.content}
-        </div>
+        <RichContent content={post.content} className="prose prose-slate dark:prose-invert max-w-none whitespace-pre-wrap text-slate-700 dark:text-slate-300 leading-relaxed" />
 
         {/* Poll */}
         {poll && (

@@ -119,6 +119,12 @@ class ApiService {
   Future<dynamic> getClubMembers(String token) =>
       request('/clubs/me/members', token: token);
 
+  Future<dynamic> getExemptions(String token) =>
+      request('/clubs/me/members/exemptions', token: token);
+
+  Future<dynamic> updateExemption(String userId, Map<String, dynamic> data, String token) =>
+      request('/clubs/me/members/$userId/exemption', method: 'PUT', body: data, token: token);
+
   // Sessions
   Future<dynamic> getSessions({String? status, int? limit, String? token}) {
     final params = <String>[];

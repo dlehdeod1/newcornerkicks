@@ -16,6 +16,7 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  ShieldOff,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useAuthStore, useAuthHydrated } from '@/stores/auth'
@@ -291,6 +292,12 @@ export default function AdminDashboardPage() {
                 label="공지 관리"
                 description="공지사항 작성, 수정, 삭제"
                 href="/admin/announcements"
+              />
+              <AdminMenuItem
+                icon={<ShieldOff className="w-5 h-5" />}
+                label="회비 면제"
+                description="멤버별 참가비/월회비 면제 설정"
+                href="/admin/exemptions"
               />
               <AdminMenuItem
                 icon={<Settings className="w-5 h-5" />}

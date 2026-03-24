@@ -1536,14 +1536,21 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Builder(builder: (ctx) {
                             final enabled = ctx.watch<AuthService>().enabledEvents;
+                            final defenseTypes = <String, Map<String, dynamic>>{
+                              'DEFENSE': {'label': '수비', 'icon': '🛡️', 'color': AppColors.indigo, 'color2': AppColors.blueSky},
+                              'TACKLE': {'label': '태클', 'icon': '🦶', 'color': AppColors.violet, 'color2': AppColors.violet},
+                              'INTERCEPTION': {'label': '인터셉트', 'icon': '✋', 'color': AppColors.cyan, 'color2': AppColors.cyan},
+                              'CLEARANCE': {'label': '클리어런스', 'icon': '🧹', 'color': AppColors.amber, 'color2': AppColors.amber},
+                            };
+                            final activeDefense = enabled.where((e) => defenseTypes.containsKey(e)).toList();
                             return Column(
                               children: [
                                 if (enabled.contains('GOAL')) ...[
                                   _buildGoalSection(team1, team2, team1Id, team2Id),
                                   const SizedBox(height: 12),
                                 ],
-                                if (enabled.contains('DEFENSE')) ...[
-                                  _buildDefenseSection(team1, team2, team1Id, team2Id),
+                                for (final dt in activeDefense) ...[
+                                  _buildDefenseSectionTyped(team1, team2, team1Id, team2Id, dt, defenseTypes[dt]!),
                                   const SizedBox(height: 12),
                                 ],
                                 _buildEventLog(team1Id, team2Id),
@@ -1803,7 +1810,11 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
     );
   }
 
-  Widget _buildDefenseSection(dynamic team1, dynamic team2, int team1Id, int team2Id) {
+  Widget _buildDefenseSectionTyped(dynamic team1, dynamic team2, int team1Id, int team2Id, String eventType, Map<String, dynamic> meta) {
+    final label = meta['label'] as String;
+    final icon = meta['icon'] as String;
+    final color1 = meta['color'] as Color;
+    final color2 = meta['color2'] as Color;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -1813,14 +1824,14 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('🛡️ 수비 기록', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text('$icon $label 기록', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 10),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: _teamDefenseButtons(_team1Members, team1Id, AppColors.indigo, team1['name'] ?? 'A팀')),
+              Expanded(child: _teamDefenseButtons(_team1Members, team1Id, color1, team1['name'] ?? 'A팀', eventType)),
               const SizedBox(width: 8),
-              Expanded(child: _teamDefenseButtons(_team2Members, team2Id, AppColors.blueSky, team2['name'] ?? 'B팀')),
+              Expanded(child: _teamDefenseButtons(_team2Members, team2Id, color2, team2['name'] ?? 'B팀', eventType)),
             ],
           ),
         ],
@@ -1828,7 +1839,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
     );
   }
 
-  Widget _teamDefenseButtons(List<dynamic> members, int teamId, Color color, String teamName) {
+  Widget _teamDefenseButtons(List<dynamic> members, int teamId, Color color, String teamName, String eventType) {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -1844,12 +1855,12 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
             spacing: 4, runSpacing: 4,
             children: members.map((m) {
               final name = m['name'] ?? m['guest_name'] ?? '?';
-              final defenses = _events.where((e) =>
-                e['event_type'] == 'DEFENSE' &&
+              final count = _events.where((e) =>
+                e['event_type'] == eventType &&
                 (m['player_id'] != null ? e['player_id'] == m['player_id'] : e['guest_name'] == m['guest_name'])
               ).length;
               return GestureDetector(
-                onTap: _busy ? null : () => _addEvent('DEFENSE', m['player_id'], m['guest_name'], teamId),
+                onTap: _busy ? null : () => _addEvent(eventType, m['player_id'], m['guest_name'], teamId),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   decoration: BoxDecoration(
@@ -1861,12 +1872,12 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(_shortName(name), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: color)),
-                      if (defenses > 0) ...[
+                      if (count > 0) ...[
                         const SizedBox(width: 3),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                           decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4)),
-                          child: Text('$defenses', style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold)),
+                          child: Text('$count', style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ],
@@ -1908,7 +1919,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
             ..._events.reversed.take(15).map((e) {
               final type = e['event_type'] ?? '';
               final isGoal = type == 'GOAL';
-              final icon = isGoal ? '⚽' : '🛡️';
+              final icon = isGoal ? '⚽' : type == 'TACKLE' ? '🦶' : type == 'INTERCEPTION' ? '✋' : type == 'CLEARANCE' ? '🧹' : '🛡️';
               final name = e['player_name'] ?? e['guest_name'] ?? '?';
               final assister = e['assister_name'];
               final eventTeamId = e['team_id'];

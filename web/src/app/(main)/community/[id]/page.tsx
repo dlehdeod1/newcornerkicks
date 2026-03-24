@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth'
 import { communityApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import { RichContent } from '@/components/ui/rich-content'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://cornerkicks-api.conerkicks.workers.dev'
 
@@ -205,9 +206,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
         )}
 
         {/* Content */}
-        <div className="prose prose-slate dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-          {post.content}
-        </div>
+        <RichContent content={post.content} className="prose prose-slate dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 whitespace-pre-wrap" />
 
         {/* Author actions */}
         {isAuthor && (

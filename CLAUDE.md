@@ -82,7 +82,8 @@ recruiting → (진행 중) → ended → completed → closed
 - `${...}` 템플릿 리터럴 포함 파일은 Edit 도구 실패 → Write로 전체 재작성
 
 ### enabled_events
-- 클럽 허용 이벤트 타입: `'GOAL'` | `'SAVE'` | `'SHOT'` | `'KEY_PASS'` (ASSIST, YELLOW_CARD 없음)
+- 클럽 허용 이벤트 타입: `'GOAL'` | `'DEFENSE'` | `'TACKLE'` | `'INTERCEPTION'` | `'CLEARANCE'`
+- DEFENSE(간편 수비)와 TACKLE/INTERCEPTION/CLEARANCE(상세 수비)는 동시 사용 불가 — 설정에서 택1
 
 ## 주요 파일
 
