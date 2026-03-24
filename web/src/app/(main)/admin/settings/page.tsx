@@ -573,6 +573,41 @@ export default function AdminSettingsPage() {
           <div className="grid grid-cols-2 gap-3 mb-4">
             {[
               { key: 'GOAL', label: '득점', icon: '⚽', desc: '골 + 어시스트 기록' },
+              { key: 'KEY_PASS', label: '키패스', icon: '⚡', desc: '결정적 패스' },
+              { key: 'DRIBBLE', label: '돌파', icon: '💨', desc: '드리블 돌파 성공' },
+              { key: 'SHOT_ON', label: '유효슈팅', icon: '🎯', desc: '골대 방향 슈팅' },
+              { key: 'SHOT_OFF', label: '무효슈팅', icon: '💫', desc: '빗나간 슈팅' },
+            ].map(({ key, label, icon, desc }) => {
+              const active = enabledEvents.includes(key)
+              return (
+                <button
+                  key={key}
+                  onClick={() => toggleEvent(key)}
+                  className={cn(
+                    'flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left',
+                    active
+                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+                      : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                  )}
+                >
+                  <span className="text-xl">{icon}</span>
+                  <div>
+                    <p className={cn(
+                      'text-sm font-medium',
+                      active ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'
+                    )}>{label}</p>
+                    <p className="text-xs text-slate-400">{desc}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* 골키퍼 이벤트 */}
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">골키퍼</p>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {[
+              { key: 'SAVE', label: '선방', icon: '🧤', desc: '골키퍼 세이브' },
             ].map(({ key, label, icon, desc }) => {
               const active = enabledEvents.includes(key)
               return (

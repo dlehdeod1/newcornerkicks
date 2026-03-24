@@ -7,6 +7,15 @@ import '../services/auth_service.dart';
 import 'admin_team_setup_screen.dart';
 import 'match_result_popup.dart';
 
+String _eventIcon(String type) {
+  const icons = {
+    'GOAL': '⚽', 'DEFENSE': '🛡️', 'TACKLE': '🦶', 'INTERCEPTION': '✋',
+    'CLEARANCE': '🧹', 'SAVE': '🧤', 'KEY_PASS': '⚡', 'DRIBBLE': '💨',
+    'SHOT_ON': '🎯', 'SHOT_OFF': '💫',
+  };
+  return icons[type] ?? '📌';
+}
+
 class SessionDetailScreen extends StatefulWidget {
   final int sessionId;
   const SessionDetailScreen({super.key, required this.sessionId});
@@ -953,7 +962,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                 final type = e['event_type'] ?? '';
                 final playerName = e['player_name'] ?? e['guest_name'] ?? '?';
                 final assisterName = e['assister_name'] ?? e['assister_guest_name'];
-                final icon = type == 'GOAL' ? '⚽' : type == 'DEFENSE' ? '🛡️' : '📌';
+                final icon = _eventIcon(type);
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 3),
                   child: Row(
@@ -1536,21 +1545,26 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Builder(builder: (ctx) {
                             final enabled = ctx.watch<AuthService>().enabledEvents;
-                            final defenseTypes = <String, Map<String, dynamic>>{
+                            final extraTypes = <String, Map<String, dynamic>>{
                               'DEFENSE': {'label': '수비', 'icon': '🛡️', 'color': AppColors.indigo, 'color2': AppColors.blueSky},
                               'TACKLE': {'label': '태클', 'icon': '🦶', 'color': AppColors.violet, 'color2': AppColors.violet},
                               'INTERCEPTION': {'label': '인터셉트', 'icon': '✋', 'color': AppColors.cyan, 'color2': AppColors.cyan},
                               'CLEARANCE': {'label': '클리어런스', 'icon': '🧹', 'color': AppColors.amber, 'color2': AppColors.amber},
+                              'SAVE': {'label': '선방', 'icon': '🧤', 'color': AppColors.amber, 'color2': AppColors.amber},
+                              'KEY_PASS': {'label': '키패스', 'icon': '⚡', 'color': AppColors.pink, 'color2': AppColors.pink},
+                              'DRIBBLE': {'label': '돌파', 'icon': '💨', 'color': AppColors.teal, 'color2': AppColors.teal},
+                              'SHOT_ON': {'label': '유효슈팅', 'icon': '🎯', 'color': AppColors.red, 'color2': AppColors.red},
+                              'SHOT_OFF': {'label': '무효슈팅', 'icon': '💫', 'color': AppColors.slate, 'color2': AppColors.slate},
                             };
-                            final activeDefense = enabled.where((e) => defenseTypes.containsKey(e)).toList();
+                            final activeExtra = enabled.where((e) => extraTypes.containsKey(e)).toList();
                             return Column(
                               children: [
                                 if (enabled.contains('GOAL')) ...[
                                   _buildGoalSection(team1, team2, team1Id, team2Id),
                                   const SizedBox(height: 12),
                                 ],
-                                for (final dt in activeDefense) ...[
-                                  _buildDefenseSectionTyped(team1, team2, team1Id, team2Id, dt, defenseTypes[dt]!),
+                                for (final dt in activeExtra) ...[
+                                  _buildDefenseSectionTyped(team1, team2, team1Id, team2Id, dt, extraTypes[dt]!),
                                   const SizedBox(height: 12),
                                 ],
                                 _buildEventLog(team1Id, team2Id),
@@ -1918,8 +1932,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
           else
             ..._events.reversed.take(15).map((e) {
               final type = e['event_type'] ?? '';
-              final isGoal = type == 'GOAL';
-              final icon = isGoal ? '⚽' : type == 'TACKLE' ? '🦶' : type == 'INTERCEPTION' ? '✋' : type == 'CLEARANCE' ? '🧹' : '🛡️';
+              final icon = _eventIcon(type);
               final name = e['player_name'] ?? e['guest_name'] ?? '?';
               final assister = e['assister_name'];
               final eventTeamId = e['team_id'];

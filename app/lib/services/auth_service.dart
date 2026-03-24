@@ -30,7 +30,7 @@ class AuthService extends ChangeNotifier {
   List<String> get enabledEvents {
     final events = _club?['enabledEvents'];
     if (events is List) return events.cast<String>();
-    return ['GOAL', 'SAVE'];
+    return ['GOAL', 'DEFENSE'];
   }
 
   /// clubs 응답에서 첫 번째 클럽(또는 저장된 activeClubId에 해당하는 클럽)을 활성 클럽으로 설정

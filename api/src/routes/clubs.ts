@@ -42,7 +42,7 @@ const createClubSchema = z.object({
   slug: z.string().min(2).max(30).regex(/^[a-z0-9-_]+$/, '영문 소문자, 숫자, -, _ 만 사용 가능'),
   name: z.string().min(1).max(50),
   description: z.string().max(200).optional(),
-  enabledEvents: z.array(z.enum(['GOAL', 'DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE'])).default(['GOAL', 'DEFENSE']),
+  enabledEvents: z.array(z.enum(['GOAL', 'DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE', 'SAVE', 'KEY_PASS', 'DRIBBLE', 'SHOT_ON', 'SHOT_OFF'])).default(['GOAL', 'DEFENSE']),
 })
 
 clubsRoutes.post('/', authMiddleware(), async (c) => {

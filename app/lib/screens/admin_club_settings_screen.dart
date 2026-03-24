@@ -29,12 +29,19 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
 
   // Recording event types
   static const _allEventTypes = [
-    {'key': 'GOAL', 'label': '득점', 'icon': '⚽', 'desc': '골을 넣을 때 기록'},
-    {'key': 'ASSIST', 'label': '어시스트', 'icon': '⚡', 'desc': '골 도움을 기록'},
-    {'key': 'DEFENSE', 'label': '수비 / 선방', 'icon': '🛡️', 'desc': '방어 성공 시 기록'},
-    {'key': 'YELLOW_CARD', 'label': '경고', 'icon': '🟡', 'desc': '옐로우 카드 기록'},
-    {'key': 'RED_CARD', 'label': '퇴장', 'icon': '🔴', 'desc': '레드 카드 기록'},
-    {'key': 'SHOT', 'label': '슈팅', 'icon': '🎯', 'desc': '슈팅 횟수 기록'},
+    // 공격
+    {'key': 'GOAL', 'label': '득점', 'icon': '⚽', 'desc': '골을 넣을 때 기록', 'category': 'attack'},
+    {'key': 'KEY_PASS', 'label': '키패스', 'icon': '⚡', 'desc': '결정적 패스 기록', 'category': 'attack'},
+    {'key': 'DRIBBLE', 'label': '돌파', 'icon': '💨', 'desc': '돌파 성공 시 기록', 'category': 'attack'},
+    {'key': 'SHOT_ON', 'label': '유효슈팅', 'icon': '🎯', 'desc': '골대 안 슈팅 기록', 'category': 'attack'},
+    {'key': 'SHOT_OFF', 'label': '무효슈팅', 'icon': '💫', 'desc': '골대 밖 슈팅 기록', 'category': 'attack'},
+    // 수비
+    {'key': 'DEFENSE', 'label': '수비 (간편)', 'icon': '🛡️', 'desc': '간편 수비 기록 (상세와 동시 사용 불가)', 'category': 'defense'},
+    {'key': 'TACKLE', 'label': '태클', 'icon': '🦶', 'desc': '태클 성공 시 기록', 'category': 'defense_detail'},
+    {'key': 'INTERCEPTION', 'label': '인터셉트', 'icon': '✋', 'desc': '패스 차단 시 기록', 'category': 'defense_detail'},
+    {'key': 'CLEARANCE', 'label': '클리어런스', 'icon': '🧹', 'desc': '위험 제거 시 기록', 'category': 'defense_detail'},
+    // 골키퍼
+    {'key': 'SAVE', 'label': '선방', 'icon': '🧤', 'desc': '골키퍼 선방 기록', 'category': 'gk'},
   ];
 
   Set<String> _enabledEvents = {'GOAL', 'ASSIST'};
@@ -575,14 +582,34 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
     );
   }
 
+  static const _defenseDetailKeys = ['TACKLE', 'INTERCEPTION', 'CLEARANCE'];
+
   Widget _buildEventTypeSection() {
+    final categories = <String, String>{
+      'attack': '공격',
+      'defense': '수비 (간편)',
+      'defense_detail': '수비 (상세)',
+      'gk': '골키퍼',
+    };
+    String? lastCategory;
+
     return Column(
-      children: _allEventTypes.map((type) {
+      children: _allEventTypes.expand((type) {
         final key = type['key'] as String;
+        final category = type['category'] as String;
         final enabled = _enabledEvents.contains(key);
         final isRequired = key == 'GOAL';
 
-        return Container(
+        final widgets = <Widget>[];
+        if (category != lastCategory) {
+          lastCategory = category;
+          widgets.add(Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 6, left: 4),
+            child: Text(categories[category] ?? category, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white.withAlpha(128))),
+          ));
+        }
+
+        widgets.add(Container(
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
             color: enabled ? AppColors.primary.withAlpha(13) : Colors.white.withAlpha(6),
@@ -630,6 +657,12 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
                 setState(() {
                   if (val) {
                     _enabledEvents.add(key);
+                    // 간편 수비 ↔ 상세 수비 상호 배타
+                    if (key == 'DEFENSE') {
+                      _enabledEvents.removeAll(_defenseDetailKeys);
+                    } else if (_defenseDetailKeys.contains(key)) {
+                      _enabledEvents.remove('DEFENSE');
+                    }
                   } else {
                     _enabledEvents.remove(key);
                   }
@@ -641,7 +674,8 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
               inactiveTrackColor: Colors.white.withAlpha(26),
             ),
           ),
-        );
+        ));
+        return widgets;
       }).toList(),
     );
   }

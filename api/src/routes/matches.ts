@@ -290,7 +290,7 @@ matchesRoutes.post('/:id/events', authMiddleware(), async (c) => {
     }
 
     const schema = z.object({
-      eventType: z.enum(['GOAL', 'DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE']),
+      eventType: z.enum(['GOAL', 'DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE', 'SAVE', 'KEY_PASS', 'DRIBBLE', 'SHOT_ON', 'SHOT_OFF']),
       playerId: z.number().nullable(),
       guestName: z.string().nullable().optional(),
       teamId: z.number(),
@@ -446,6 +446,11 @@ async function updatePlayerMatchStats(db: D1Database, matchId: number, playerId:
     else if (eventType === 'TACKLE') field = 'tackles'
     else if (eventType === 'INTERCEPTION') field = 'interceptions'
     else if (eventType === 'CLEARANCE') field = 'clearances'
+    else if (eventType === 'SAVE') field = 'saves'
+    else if (eventType === 'KEY_PASS') field = 'key_passes'
+    else if (eventType === 'DRIBBLE') field = 'dribbles'
+    else if (eventType === 'SHOT_ON') field = 'shots_on'
+    else if (eventType === 'SHOT_OFF') field = 'shots_off'
     else if (eventType === 'ASSIST') field = 'assists'
 
     if (field) {
@@ -459,13 +464,17 @@ async function updatePlayerMatchStats(db: D1Database, matchId: number, playerId:
     const tackles = eventType === 'TACKLE' ? 1 : 0
     const interceptions = eventType === 'INTERCEPTION' ? 1 : 0
     const clearances = eventType === 'CLEARANCE' ? 1 : 0
+    const saves = eventType === 'SAVE' ? 1 : 0
+    const keyPasses = eventType === 'KEY_PASS' ? 1 : 0
+    const dribbles = eventType === 'DRIBBLE' ? 1 : 0
+    const shotsOn = eventType === 'SHOT_ON' ? 1 : 0
+    const shotsOff = eventType === 'SHOT_OFF' ? 1 : 0
     const assists = eventType === 'ASSIST' ? 1 : 0
 
-    // created_at 없이 삽입 (remote DB 호환)
     await db.prepare(`
-      INSERT INTO player_match_stats (match_id, player_id, goals, assists, blocks, tackles, interceptions, clearances)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(matchId, playerId, goals, assists, blocks, tackles, interceptions, clearances).run()
+      INSERT INTO player_match_stats (match_id, player_id, goals, assists, blocks, tackles, interceptions, clearances, saves, key_passes, dribbles, shots_on, shots_off)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(matchId, playerId, goals, assists, blocks, tackles, interceptions, clearances, saves, keyPasses, dribbles, shotsOn, shotsOff).run()
   }
 }
 
@@ -480,21 +489,24 @@ async function recalculateMatchStats(db: D1Database, matchId: number) {
     WHERE match_id = ? AND player_id IS NOT NULL
   `).bind(matchId).all()
 
-  const stats = new Map<number, { goals: number; assists: number; blocks: number; tackles: number; interceptions: number; clearances: number }>()
+  const empty = () => ({ goals: 0, assists: 0, blocks: 0, tackles: 0, interceptions: 0, clearances: 0, saves: 0, keyPasses: 0, dribbles: 0, shotsOn: 0, shotsOff: 0 })
+  const stats = new Map<number, ReturnType<typeof empty>>()
 
   const getOrCreate = (pid: number) => {
-    if (!stats.has(pid)) stats.set(pid, { goals: 0, assists: 0, blocks: 0, tackles: 0, interceptions: 0, clearances: 0 })
+    if (!stats.has(pid)) stats.set(pid, empty())
     return stats.get(pid)!
+  }
+
+  const fieldMap: Record<string, keyof ReturnType<typeof empty>> = {
+    GOAL: 'goals', DEFENSE: 'blocks', TACKLE: 'tackles', INTERCEPTION: 'interceptions',
+    CLEARANCE: 'clearances', SAVE: 'saves', KEY_PASS: 'keyPasses', DRIBBLE: 'dribbles',
+    SHOT_ON: 'shotsOn', SHOT_OFF: 'shotsOff',
   }
 
   for (const event of events.results as any[]) {
     const s = getOrCreate(event.player_id)
-
-    if (event.event_type === 'GOAL') s.goals++
-    else if (event.event_type === 'DEFENSE') s.blocks++
-    else if (event.event_type === 'TACKLE') s.tackles++
-    else if (event.event_type === 'INTERCEPTION') s.interceptions++
-    else if (event.event_type === 'CLEARANCE') s.clearances++
+    const f = fieldMap[event.event_type]
+    if (f) (s as any)[f]++
 
     if (event.assister_id) {
       getOrCreate(event.assister_id).assists++
@@ -503,9 +515,9 @@ async function recalculateMatchStats(db: D1Database, matchId: number) {
 
   for (const [playerId, s] of stats) {
     await db.prepare(`
-      INSERT INTO player_match_stats (match_id, player_id, goals, assists, blocks, tackles, interceptions, clearances)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(matchId, playerId, s.goals, s.assists, s.blocks, s.tackles, s.interceptions, s.clearances).run()
+      INSERT INTO player_match_stats (match_id, player_id, goals, assists, blocks, tackles, interceptions, clearances, saves, key_passes, dribbles, shots_on, shots_off)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(matchId, playerId, s.goals, s.assists, s.blocks, s.tackles, s.interceptions, s.clearances, s.saves, s.keyPasses, s.dribbles, s.shotsOn, s.shotsOff).run()
   }
 }
 

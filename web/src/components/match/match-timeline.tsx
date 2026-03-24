@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn'
 
 interface MatchEvent {
   id: number
-  event_type: 'GOAL' | 'ASSIST' | 'BLOCK' | 'DEFENSE' | 'TACKLE' | 'INTERCEPTION' | 'CLEARANCE'
+  event_type: 'GOAL' | 'ASSIST' | 'BLOCK' | 'DEFENSE' | 'TACKLE' | 'INTERCEPTION' | 'CLEARANCE' | 'SAVE' | 'KEY_PASS' | 'DRIBBLE' | 'SHOT_ON' | 'SHOT_OFF'
   player_id: number
   player_name: string
   team_id: number
@@ -46,6 +46,11 @@ const eventIcons: Record<string, any> = {
   TACKLE: Shield,
   INTERCEPTION: Shield,
   CLEARANCE: Shield,
+  SAVE: Shield,
+  KEY_PASS: Zap,
+  DRIBBLE: Zap,
+  SHOT_ON: Goal,
+  SHOT_OFF: Goal,
 }
 
 const eventColors: Record<string, string> = {
@@ -56,6 +61,11 @@ const eventColors: Record<string, string> = {
   TACKLE: 'text-violet-500 bg-violet-100 dark:bg-violet-500/20',
   INTERCEPTION: 'text-cyan-500 bg-cyan-100 dark:bg-cyan-500/20',
   CLEARANCE: 'text-amber-500 bg-amber-100 dark:bg-amber-500/20',
+  SAVE: 'text-yellow-500 bg-yellow-100 dark:bg-yellow-500/20',
+  KEY_PASS: 'text-pink-500 bg-pink-100 dark:bg-pink-500/20',
+  DRIBBLE: 'text-teal-500 bg-teal-100 dark:bg-teal-500/20',
+  SHOT_ON: 'text-rose-500 bg-rose-100 dark:bg-rose-500/20',
+  SHOT_OFF: 'text-slate-500 bg-slate-100 dark:bg-slate-500/20',
 }
 
 const eventLabels: Record<string, string> = {
@@ -66,6 +76,11 @@ const eventLabels: Record<string, string> = {
   TACKLE: '태클',
   INTERCEPTION: '인터셉트',
   CLEARANCE: '클리어런스',
+  SAVE: '선방',
+  KEY_PASS: '키패스',
+  DRIBBLE: '돌파',
+  SHOT_ON: '유효슈팅',
+  SHOT_OFF: '무효슈팅',
 }
 
 export function MatchTimeline({ match, teams, events, className }: MatchTimelineProps) {
@@ -303,6 +318,28 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
                     <span className="text-xs text-slate-500">클리어런스: {team1Events.filter(e => e.event_type === 'CLEARANCE').length}</span>
                   </div>
                 )}
+                {team1Events.some(e => e.event_type === 'SAVE') && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">🧤 선방: {team1Events.filter(e => e.event_type === 'SAVE').length}</span>
+                  </div>
+                )}
+                {team1Events.some(e => e.event_type === 'KEY_PASS') && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">⚡ 키패스: {team1Events.filter(e => e.event_type === 'KEY_PASS').length}</span>
+                  </div>
+                )}
+                {team1Events.some(e => e.event_type === 'DRIBBLE') && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">💨 돌파: {team1Events.filter(e => e.event_type === 'DRIBBLE').length}</span>
+                  </div>
+                )}
+                {team1Events.some(e => ['SHOT_ON', 'SHOT_OFF'].includes(e.event_type)) && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      🎯 슈팅: {team1Events.filter(e => e.event_type === 'SHOT_ON').length}유효 / {team1Events.filter(e => e.event_type === 'SHOT_OFF').length}무효
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Team 2 Stats */}
@@ -347,6 +384,28 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
                 {team2Events.some(e => e.event_type === 'CLEARANCE') && (
                   <div className="flex items-center gap-2 ml-8">
                     <span className="text-xs text-slate-500">클리어런스: {team2Events.filter(e => e.event_type === 'CLEARANCE').length}</span>
+                  </div>
+                )}
+                {team2Events.some(e => e.event_type === 'SAVE') && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">🧤 선방: {team2Events.filter(e => e.event_type === 'SAVE').length}</span>
+                  </div>
+                )}
+                {team2Events.some(e => e.event_type === 'KEY_PASS') && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">⚡ 키패스: {team2Events.filter(e => e.event_type === 'KEY_PASS').length}</span>
+                  </div>
+                )}
+                {team2Events.some(e => e.event_type === 'DRIBBLE') && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">💨 돌파: {team2Events.filter(e => e.event_type === 'DRIBBLE').length}</span>
+                  </div>
+                )}
+                {team2Events.some(e => ['SHOT_ON', 'SHOT_OFF'].includes(e.event_type)) && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      🎯 슈팅: {team2Events.filter(e => e.event_type === 'SHOT_ON').length}유효 / {team2Events.filter(e => e.event_type === 'SHOT_OFF').length}무효
+                    </span>
                   </div>
                 )}
               </div>

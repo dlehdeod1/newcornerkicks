@@ -15,15 +15,25 @@ interface Props {
   onRefetch: () => void
 }
 
+// 골 제외 모든 이벤트 타입 정의
+const EXTRA_EVENTS = ['DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE', 'SAVE', 'KEY_PASS', 'DRIBBLE', 'SHOT_ON', 'SHOT_OFF'] as const
+type ExtraEventType = typeof EXTRA_EVENTS[number]
+
+const extraEventMeta: Record<ExtraEventType, { label: string; icon: string; category: 'defense' | 'attack' | 'gk'; color: string; badgeColor: string; bgColor: string; borderColor: string; btnColor: string }> = {
+  DEFENSE:      { label: '수비',       icon: '🛡️', category: 'defense', color: 'text-indigo-700 dark:text-indigo-400', badgeColor: 'bg-indigo-500', bgColor: 'bg-indigo-50 dark:bg-indigo-900/20', borderColor: 'border-indigo-200 dark:border-indigo-800', btnColor: 'blue' },
+  TACKLE:       { label: '태클',       icon: '🦶', category: 'defense', color: 'text-violet-700 dark:text-violet-400', badgeColor: 'bg-violet-500', bgColor: 'bg-violet-50 dark:bg-violet-900/20', borderColor: 'border-violet-200 dark:border-violet-800', btnColor: 'violet' },
+  INTERCEPTION: { label: '인터셉트',   icon: '✋', category: 'defense', color: 'text-cyan-700 dark:text-cyan-400', badgeColor: 'bg-cyan-500', bgColor: 'bg-cyan-50 dark:bg-cyan-900/20', borderColor: 'border-cyan-200 dark:border-cyan-800', btnColor: 'cyan' },
+  CLEARANCE:    { label: '클리어런스', icon: '🧹', category: 'defense', color: 'text-amber-700 dark:text-amber-400', badgeColor: 'bg-amber-500', bgColor: 'bg-amber-50 dark:bg-amber-900/20', borderColor: 'border-amber-200 dark:border-amber-800', btnColor: 'amber' },
+  SAVE:         { label: '선방',       icon: '🧤', category: 'gk', color: 'text-yellow-700 dark:text-yellow-400', badgeColor: 'bg-yellow-500', bgColor: 'bg-yellow-50 dark:bg-yellow-900/20', borderColor: 'border-yellow-200 dark:border-yellow-800', btnColor: 'yellow' },
+  KEY_PASS:     { label: '키패스',     icon: '⚡', category: 'attack', color: 'text-pink-700 dark:text-pink-400', badgeColor: 'bg-pink-500', bgColor: 'bg-pink-50 dark:bg-pink-900/20', borderColor: 'border-pink-200 dark:border-pink-800', btnColor: 'pink' },
+  DRIBBLE:      { label: '돌파',       icon: '💨', category: 'attack', color: 'text-teal-700 dark:text-teal-400', badgeColor: 'bg-teal-500', bgColor: 'bg-teal-50 dark:bg-teal-900/20', borderColor: 'border-teal-200 dark:border-teal-800', btnColor: 'teal' },
+  SHOT_ON:      { label: '유효슈팅',   icon: '🎯', category: 'attack', color: 'text-rose-700 dark:text-rose-400', badgeColor: 'bg-rose-500', bgColor: 'bg-rose-50 dark:bg-rose-900/20', borderColor: 'border-rose-200 dark:border-rose-800', btnColor: 'rose' },
+  SHOT_OFF:     { label: '무효슈팅',   icon: '💫', category: 'attack', color: 'text-slate-600 dark:text-slate-400', badgeColor: 'bg-slate-500', bgColor: 'bg-slate-100 dark:bg-slate-800/50', borderColor: 'border-slate-300 dark:border-slate-700', btnColor: 'slate' },
+}
+
+// 하위호환
 const DEFENSE_EVENTS = ['DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE'] as const
 type DefenseEventType = typeof DEFENSE_EVENTS[number]
-
-const defenseEventLabels: Record<DefenseEventType, { label: string; icon: string; color: string; badgeColor: string; bgColor: string; borderColor: string }> = {
-  DEFENSE: { label: '수비', icon: '🛡️', color: 'text-indigo-700 dark:text-indigo-400', badgeColor: 'bg-indigo-500', bgColor: 'bg-indigo-50 dark:bg-indigo-900/20', borderColor: 'border-indigo-200 dark:border-indigo-800' },
-  TACKLE: { label: '태클', icon: '🦶', color: 'text-violet-700 dark:text-violet-400', badgeColor: 'bg-violet-500', bgColor: 'bg-violet-50 dark:bg-violet-900/20', borderColor: 'border-violet-200 dark:border-violet-800' },
-  INTERCEPTION: { label: '인터셉트', icon: '✋', color: 'text-cyan-700 dark:text-cyan-400', badgeColor: 'bg-cyan-500', bgColor: 'bg-cyan-50 dark:bg-cyan-900/20', borderColor: 'border-cyan-200 dark:border-cyan-800' },
-  CLEARANCE: { label: '클리어런스', icon: '🧹', color: 'text-amber-700 dark:text-amber-400', badgeColor: 'bg-amber-500', bgColor: 'bg-amber-50 dark:bg-amber-900/20', borderColor: 'border-amber-200 dark:border-amber-800' },
-}
 
 export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
   const { token, club } = useAuthStore()
@@ -123,7 +133,7 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
     setAssistMode(null)
   }
 
-  const handleDefenseClick = (member: any, teamId: number, eventType: DefenseEventType = 'DEFENSE') => {
+  const handleExtraClick = (member: any, teamId: number, eventType: ExtraEventType = 'DEFENSE') => {
     addEventMutation.mutate({
       eventType,
       playerId: member.player_id,
@@ -154,8 +164,8 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
     ).length
   }
 
-  const getPlayerDefenseCount = (playerId: number | null, guestName?: string, eventType?: string) => {
-    const types = eventType ? [eventType] : DEFENSE_EVENTS as readonly string[]
+  const getPlayerExtraCount = (playerId: number | null, guestName?: string, eventType?: string) => {
+    const types = eventType ? [eventType] : EXTRA_EVENTS as readonly string[]
     return events.filter((e: any) =>
       types.includes(e.event_type) &&
       (playerId ? e.player_id === playerId : e.guest_name === guestName)
@@ -181,10 +191,10 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
     )
   }
 
-  // 활성화된 수비 이벤트 목록
-  const enabledDefenseEvents = (club?.enabledEvents || ['GOAL', 'DEFENSE']).filter(
-    (e) => (DEFENSE_EVENTS as readonly string[]).includes(e)
-  ) as DefenseEventType[]
+  // 활성화된 추가 이벤트 목록 (골 제외)
+  const enabledExtraEvents = (club?.enabledEvents || ['GOAL', 'DEFENSE']).filter(
+    (e) => (EXTRA_EVENTS as readonly string[]).includes(e)
+  ) as ExtraEventType[]
 
   // 선수 버튼 렌더링
   const PlayerButton = ({
@@ -192,17 +202,17 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
     type,
     teamId,
     color,
-    defenseType,
+    extraType,
   }: {
     member: any
-    type: 'goal' | 'defense'
+    type: 'goal' | 'extra'
     teamId: number
-    color: 'green' | 'blue' | 'orange' | 'sky' | 'violet' | 'cyan' | 'amber'
-    defenseType?: DefenseEventType
+    color: 'green' | 'blue' | 'orange' | 'sky' | 'violet' | 'cyan' | 'amber' | 'yellow' | 'pink' | 'teal' | 'rose' | 'slate'
+    extraType?: ExtraEventType
   }) => {
     const count = type === 'goal'
       ? getPlayerGoals(member.player_id, member.guest_name)
-      : getPlayerDefenseCount(member.player_id, member.guest_name, defenseType)
+      : getPlayerExtraCount(member.player_id, member.guest_name, extraType)
 
     const colorClasses: Record<string, string> = {
       green: 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-100 hover:bg-emerald-100 dark:hover:bg-emerald-800',
@@ -212,6 +222,11 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
       violet: 'bg-violet-50 dark:bg-violet-900/30 border-violet-300 dark:border-violet-700 text-violet-900 dark:text-violet-100 hover:bg-violet-100 dark:hover:bg-violet-800',
       cyan: 'bg-cyan-50 dark:bg-cyan-900/30 border-cyan-300 dark:border-cyan-700 text-cyan-900 dark:text-cyan-100 hover:bg-cyan-100 dark:hover:bg-cyan-800',
       amber: 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-100 hover:bg-amber-100 dark:hover:bg-amber-800',
+      yellow: 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700 text-yellow-900 dark:text-yellow-100 hover:bg-yellow-100 dark:hover:bg-yellow-800',
+      pink: 'bg-pink-50 dark:bg-pink-900/30 border-pink-300 dark:border-pink-700 text-pink-900 dark:text-pink-100 hover:bg-pink-100 dark:hover:bg-pink-800',
+      teal: 'bg-teal-50 dark:bg-teal-900/30 border-teal-300 dark:border-teal-700 text-teal-900 dark:text-teal-100 hover:bg-teal-100 dark:hover:bg-teal-800',
+      rose: 'bg-rose-50 dark:bg-rose-900/30 border-rose-300 dark:border-rose-700 text-rose-900 dark:text-rose-100 hover:bg-rose-100 dark:hover:bg-rose-800',
+      slate: 'bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700',
     }
 
     const badgeColors: Record<string, string> = {
@@ -222,13 +237,18 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
       violet: 'bg-violet-500',
       cyan: 'bg-cyan-500',
       amber: 'bg-amber-500',
+      yellow: 'bg-yellow-500',
+      pink: 'bg-pink-500',
+      teal: 'bg-teal-500',
+      rose: 'bg-rose-500',
+      slate: 'bg-slate-500',
     }
 
     return (
       <button
         onClick={() => type === 'goal'
           ? handleGoalClick(member, teamId)
-          : handleDefenseClick(member, teamId, defenseType || 'DEFENSE')
+          : handleExtraClick(member, teamId, extraType || 'DEFENSE')
         }
         disabled={addEventMutation.isPending}
         className={cn(
@@ -381,26 +401,19 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
             )}
           </div>
 
-          {/* 수비 기록 섹션 */}
-          {enabledDefenseEvents.map((defType) => {
-            const meta = defenseEventLabels[defType]
-            const team1Color = defType === 'DEFENSE' ? 'blue' as const
-              : defType === 'TACKLE' ? 'violet' as const
-              : defType === 'INTERCEPTION' ? 'cyan' as const
-              : 'amber' as const
-            const team2Color = defType === 'DEFENSE' ? 'sky' as const
-              : defType === 'TACKLE' ? 'violet' as const
-              : defType === 'INTERCEPTION' ? 'cyan' as const
-              : 'amber' as const
+          {/* 추가 이벤트 기록 섹션 (수비/공격/골키퍼) */}
+          {enabledExtraEvents.map((evType) => {
+            const meta = extraEventMeta[evType]
+            const btnColor = meta.btnColor as any
             return (
-              <div key={defType} className="rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+              <div key={evType} className="rounded-xl border border-slate-200 dark:border-slate-700 p-3">
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 block">{meta.icon} {meta.label} 기록</span>
                 <div className="flex gap-2">
                   <div className={cn('flex-1 rounded-lg p-2 border', meta.bgColor, meta.borderColor)}>
                     <p className={cn('text-[10px] font-bold mb-2 truncate text-center', meta.color)}>{team1?.name}</p>
                     <div className="grid grid-cols-2 gap-1.5">
                       {team1Members.map((member: any) => (
-                        <PlayerButton key={member.id} member={member} type="defense" teamId={match.team1_id} color={team1Color} defenseType={defType} />
+                        <PlayerButton key={member.id} member={member} type="extra" teamId={match.team1_id} color={btnColor} extraType={evType} />
                       ))}
                     </div>
                   </div>
@@ -408,7 +421,7 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
                     <p className={cn('text-[10px] font-bold mb-2 truncate text-center', meta.color)}>{team2?.name}</p>
                     <div className="grid grid-cols-2 gap-1.5">
                       {team2Members.map((member: any) => (
-                        <PlayerButton key={member.id} member={member} type="defense" teamId={match.team2_id} color={team2Color} defenseType={defType} />
+                        <PlayerButton key={member.id} member={member} type="extra" teamId={match.team2_id} color={btnColor} extraType={evType} />
                       ))}
                     </div>
                   </div>
@@ -466,16 +479,12 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
                       <div className={cn(
                         'w-5 h-5 rounded-full flex items-center justify-center text-[10px]',
                         event.event_type === 'GOAL' ? 'bg-green-100 dark:bg-green-900/50'
-                          : event.event_type === 'TACKLE' ? 'bg-violet-100 dark:bg-violet-900/50'
-                          : event.event_type === 'INTERCEPTION' ? 'bg-cyan-100 dark:bg-cyan-900/50'
-                          : event.event_type === 'CLEARANCE' ? 'bg-amber-100 dark:bg-amber-900/50'
-                          : 'bg-blue-100 dark:bg-blue-900/50'
+                          : extraEventMeta[event.event_type as ExtraEventType]
+                            ? extraEventMeta[event.event_type as ExtraEventType].bgColor
+                            : 'bg-blue-100 dark:bg-blue-900/50'
                       )}>
                         {event.event_type === 'GOAL' ? '⚽'
-                          : event.event_type === 'TACKLE' ? '🦶'
-                          : event.event_type === 'INTERCEPTION' ? '✋'
-                          : event.event_type === 'CLEARANCE' ? '🧹'
-                          : '🛡️'}
+                          : extraEventMeta[event.event_type as ExtraEventType]?.icon || '🛡️'}
                       </div>
                       <span className="text-[9px] text-slate-400 font-mono mt-0.5">
                         {formatTime(event.event_time || 0)}
