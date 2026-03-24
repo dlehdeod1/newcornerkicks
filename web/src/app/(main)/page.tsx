@@ -312,7 +312,7 @@ export default function HomePage() {
                       <span className="font-medium text-sm text-slate-900 dark:text-white truncate block">{r.name}</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-sm font-bold text-slate-900 dark:text-white">{Number(r.mvp_score).toFixed(1)}</span>
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">{Number(r.mvpScore || 0).toFixed(1)}</span>
                       <span className="text-xs text-slate-400 ml-1">점</span>
                     </div>
                   </div>
