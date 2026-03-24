@@ -452,7 +452,7 @@ export const postsApi = {
   get: (id: number, token: string) =>
     api(`/posts/${id}`, { token }),
 
-  create: (data: { title: string; content: string; category?: string; imageUrl?: string; isPinned?: boolean }, token: string) =>
+  create: (data: { title: string; content: string; category?: string; imageUrl?: string; isPinned?: boolean; poll?: { title: string; options: string[]; allowMultiple?: boolean } }, token: string) =>
     api('/posts', { method: 'POST', body: data, token }),
 
   update: (id: number, data: { title?: string; content?: string; imageUrl?: string | null; isPinned?: boolean; category?: string }, token: string) =>
@@ -466,6 +466,12 @@ export const postsApi = {
 
   deleteComment: (postId: number, commentId: number, token: string) =>
     api(`/posts/${postId}/comments/${commentId}`, { method: 'DELETE', token }),
+
+  vote: (postId: number, optionId: number, token: string) =>
+    api(`/posts/${postId}/poll/vote`, { method: 'POST', body: { optionId }, token }),
+
+  unvote: (postId: number, optionId: number | null, token: string) =>
+    api(`/posts/${postId}/poll/vote`, { method: 'DELETE', body: { optionId }, token }),
 }
 
 // Community API (전체 커뮤니티)
@@ -500,6 +506,18 @@ export const communityApi = {
 
   deleteComment: (postId: number, commentId: number, token: string) =>
     api(`/community/${postId}/comments/${commentId}`, { method: 'DELETE', token }),
+}
+
+// Club Profile API (공개 클럽 프로필)
+export const clubProfileApi = {
+  get: (slug: string, token: string) =>
+    api(`/clubs/${slug}/profile`, { token }),
+
+  createReview: (slug: string, data: { rating: number; content?: string }, token: string) =>
+    api(`/clubs/${slug}/reviews`, { method: 'POST', body: data, token }),
+
+  deleteReview: (slug: string, token: string) =>
+    api(`/clubs/${slug}/reviews`, { method: 'DELETE', token }),
 }
 
 // Uploads API (이미지 업로드)

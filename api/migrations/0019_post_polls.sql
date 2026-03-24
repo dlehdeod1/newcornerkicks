@@ -1,0 +1,26 @@
+-- 게시글 투표 기능
+CREATE TABLE IF NOT EXISTS post_polls (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  allow_multiple INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  UNIQUE(post_id)
+);
+
+CREATE TABLE IF NOT EXISTS post_poll_options (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  poll_id INTEGER NOT NULL REFERENCES post_polls(id) ON DELETE CASCADE,
+  label TEXT NOT NULL,
+  vote_count INTEGER NOT NULL DEFAULT 0,
+  sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS post_poll_votes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  poll_id INTEGER NOT NULL REFERENCES post_polls(id) ON DELETE CASCADE,
+  option_id INTEGER NOT NULL REFERENCES post_poll_options(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  created_at INTEGER NOT NULL,
+  UNIQUE(poll_id, option_id, user_id)
+);

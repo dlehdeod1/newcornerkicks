@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import { MessageSquare, Pin, ArrowLeft, Pencil, Trash2, X, Send } from 'lucide-react'
+import { MessageSquare, Pin, ArrowLeft, Pencil, Trash2, X, Send, BarChart3, Check } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { postsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
@@ -76,6 +76,16 @@ export default function PostDetailPage() {
     },
   })
 
+  const voteMutation = useMutation({
+    mutationFn: (optionId: number) => postsApi.vote(id, optionId, token!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['posts', id] }),
+  })
+
+  const unvoteMutation = useMutation({
+    mutationFn: (optionId: number) => postsApi.unvote(id, optionId, token!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['posts', id] }),
+  })
+
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault()
     const trimmed = commentText.trim()
@@ -105,6 +115,7 @@ export default function PostDetailPage() {
 
   const isAuthor = user?.id === post.author_id
   const canEdit = isAuthor || isAdmin
+  const poll = post.poll
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -150,11 +161,7 @@ export default function PostDetailPage() {
         {/* Image */}
         {post.image_url && (
           <div className="mb-6 rounded-xl overflow-hidden">
-            <img
-              src={`${API_BASE}${post.image_url}`}
-              alt=""
-              className="w-full rounded-xl"
-            />
+            <img src={`${API_BASE}${post.image_url}`} alt="" className="w-full rounded-xl" />
           </div>
         )}
 
@@ -162,6 +169,16 @@ export default function PostDetailPage() {
         <div className="prose prose-slate dark:prose-invert max-w-none whitespace-pre-wrap text-slate-700 dark:text-slate-300 leading-relaxed">
           {post.content}
         </div>
+
+        {/* Poll */}
+        {poll && (
+          <PollSection
+            poll={poll}
+            onVote={(optionId) => voteMutation.mutate(optionId)}
+            onUnvote={(optionId) => unvoteMutation.mutate(optionId)}
+            isVoting={voteMutation.isPending || unvoteMutation.isPending}
+          />
+        )}
 
         {/* Author/admin actions */}
         {canEdit && (
@@ -191,7 +208,6 @@ export default function PostDetailPage() {
           댓글 {post.comments?.length > 0 && `(${post.comments.length})`}
         </h2>
 
-        {/* Comment list */}
         {post.comments?.length > 0 ? (
           <div className="space-y-4 mb-6">
             {post.comments.map((comment: any) => (
@@ -228,7 +244,6 @@ export default function PostDetailPage() {
           <p className="text-sm text-slate-400 dark:text-slate-500 mb-6">아직 댓글이 없습니다.</p>
         )}
 
-        {/* Comment input */}
         <form onSubmit={handleSubmitComment} className="flex gap-3">
           <textarea
             value={commentText}
@@ -251,24 +266,13 @@ export default function PostDetailPage() {
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full border border-slate-200 dark:border-slate-700 shadow-xl">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-              게시글 삭제
-            </h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-6">
-              이 게시글을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
-            </p>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">게시글 삭제</h3>
+            <p className="text-slate-500 dark:text-slate-400 mb-6">이 게시글을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
             <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-medium transition-colors"
-              >
+              <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-medium transition-colors">
                 취소
               </button>
-              <button
-                onClick={() => deleteMutation.mutate()}
-                disabled={deleteMutation.isPending}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
-              >
+              <button onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50">
                 {deleteMutation.isPending ? '삭제 중...' : '삭제'}
               </button>
             </div>
@@ -280,30 +284,105 @@ export default function PostDetailPage() {
       {deleteCommentId !== null && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full border border-slate-200 dark:border-slate-700 shadow-xl">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-              댓글 삭제
-            </h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-6">
-              이 댓글을 삭제하시겠습니까?
-            </p>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">댓글 삭제</h3>
+            <p className="text-slate-500 dark:text-slate-400 mb-6">이 댓글을 삭제하시겠습니까?</p>
             <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteCommentId(null)}
-                className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-medium transition-colors"
-              >
+              <button onClick={() => setDeleteCommentId(null)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-medium transition-colors">
                 취소
               </button>
-              <button
-                onClick={() => deleteCommentMutation.mutate(deleteCommentId)}
-                disabled={deleteCommentMutation.isPending}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
-              >
+              <button onClick={() => deleteCommentMutation.mutate(deleteCommentId)} disabled={deleteCommentMutation.isPending} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50">
                 {deleteCommentMutation.isPending ? '삭제 중...' : '삭제'}
               </button>
             </div>
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ===================== Poll Component =====================
+
+function PollSection({ poll, onVote, onUnvote, isVoting }: {
+  poll: { id: number; title: string; allowMultiple: boolean; totalVotes: number; options: { id: number; label: string; voteCount: number }[]; myVotes: number[] }
+  onVote: (optionId: number) => void
+  onUnvote: (optionId: number) => void
+  isVoting: boolean
+}) {
+  const hasVoted = poll.myVotes.length > 0
+
+  return (
+    <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+      <div className="flex items-center gap-2 mb-4">
+        <BarChart3 className="w-5 h-5 text-emerald-500" />
+        <h3 className="font-semibold text-slate-900 dark:text-white">{poll.title}</h3>
+        {poll.allowMultiple && (
+          <span className="text-xs text-slate-400">(복수 선택 가능)</span>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        {poll.options.map((option) => {
+          const isSelected = poll.myVotes.includes(option.id)
+          const percentage = poll.totalVotes > 0 ? Math.round((option.voteCount / poll.totalVotes) * 100) : 0
+
+          return (
+            <button
+              key={option.id}
+              onClick={() => {
+                if (isVoting) return
+                if (isSelected) {
+                  onUnvote(option.id)
+                } else {
+                  onVote(option.id)
+                }
+              }}
+              disabled={isVoting}
+              className={cn(
+                'relative w-full text-left px-4 py-3 rounded-xl border transition-all overflow-hidden',
+                isSelected
+                  ? 'border-emerald-400 dark:border-emerald-500/50 bg-emerald-50 dark:bg-emerald-500/10'
+                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800/50'
+              )}
+            >
+              {/* Progress bar background */}
+              {hasVoted && (
+                <div
+                  className={cn(
+                    'absolute inset-y-0 left-0 transition-all duration-500',
+                    isSelected
+                      ? 'bg-emerald-100 dark:bg-emerald-500/15'
+                      : 'bg-slate-100 dark:bg-slate-700/30'
+                  )}
+                  style={{ width: `${percentage}%` }}
+                />
+              )}
+
+              <div className="relative flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {isSelected && <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />}
+                  <span className={cn(
+                    'text-sm font-medium',
+                    isSelected ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-700 dark:text-slate-300'
+                  )}>
+                    {option.label}
+                  </span>
+                </div>
+                {hasVoted && (
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400 ml-2 flex-shrink-0">
+                    {option.voteCount}표 ({percentage}%)
+                  </span>
+                )}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      <p className="text-xs text-slate-400 mt-3">
+        총 {poll.totalVotes}명 투표
+        {hasVoted && ' · 다시 클릭하면 투표 취소'}
+      </p>
     </div>
   )
 }

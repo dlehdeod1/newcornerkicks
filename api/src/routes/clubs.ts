@@ -530,6 +530,134 @@ clubsRoutes.delete('/me', authMiddleware(), async (c) => {
   }
 })
 
+// ─── 클럽 공개 프로필 ────────────────────────────────
+
+// GET /clubs/:slug/profile — 공개 클럽 정보
+clubsRoutes.get('/:slug/profile', authMiddleware(), async (c) => {
+  const slug = c.req.param('slug')
+
+  const club = await c.env.DB.prepare(`
+    SELECT id, slug, name, description, logo_url, plan_type, created_at
+    FROM clubs WHERE slug = ?
+  `).bind(slug).first()
+
+  if (!club) return c.json({ error: '클럽을 찾을 수 없습니다.' }, 404)
+
+  const clubId = club.id as number
+
+  // 멤버 수
+  const memberCount = await c.env.DB.prepare(
+    'SELECT COUNT(*) as cnt FROM club_members WHERE club_id = ?'
+  ).bind(clubId).first()
+
+  // 총 세션 수 + 최근 세션
+  const sessionStats = await c.env.DB.prepare(`
+    SELECT COUNT(*) as total,
+           MAX(session_date) as last_session_date
+    FROM sessions WHERE club_id = ? AND status IN ('completed', 'closed')
+  `).bind(clubId).first()
+
+  // 리뷰 평균 + 개수
+  const reviewStats = await c.env.DB.prepare(`
+    SELECT AVG(rating) as avg_rating, COUNT(*) as review_count
+    FROM club_reviews WHERE club_id = ?
+  `).bind(clubId).first()
+
+  // 최근 리뷰 5개
+  const { results: reviews } = await c.env.DB.prepare(`
+    SELECT cr.*, u.username as author_name
+    FROM club_reviews cr
+    LEFT JOIN users u ON u.id = cr.author_id
+    WHERE cr.club_id = ?
+    ORDER BY cr.created_at DESC LIMIT 5
+  `).bind(clubId).all()
+
+  // 현재 사용자의 리뷰
+  const userId = (c as any).userId
+  const myReview = userId ? await c.env.DB.prepare(
+    'SELECT * FROM club_reviews WHERE club_id = ? AND author_id = ?'
+  ).bind(clubId, userId).first() : null
+
+  // 현재 사용자가 이 클럽 멤버인지
+  const isMember = userId ? await c.env.DB.prepare(
+    'SELECT role FROM club_members WHERE club_id = ? AND user_id = ?'
+  ).bind(clubId, userId).first() : null
+
+  return c.json({
+    club: {
+      id: clubId,
+      slug: club.slug,
+      name: club.name,
+      description: club.description,
+      logoUrl: club.logo_url,
+      isPro: isClubPro(club.plan_type as string),
+      createdAt: club.created_at,
+      memberCount: memberCount?.cnt || 0,
+      totalSessions: sessionStats?.total || 0,
+      lastSessionDate: sessionStats?.last_session_date || null,
+      avgRating: reviewStats?.avg_rating ? Math.round((reviewStats.avg_rating as number) * 10) / 10 : null,
+      reviewCount: reviewStats?.review_count || 0,
+    },
+    reviews,
+    myReview,
+    isMember: !!isMember,
+    myRole: isMember?.role || null,
+  })
+})
+
+// POST /clubs/:slug/reviews — 리뷰 작성
+clubsRoutes.post('/:slug/reviews', authMiddleware(), async (c) => {
+  const slug = c.req.param('slug')
+  const userId = (c as any).userId
+
+  const club = await c.env.DB.prepare(
+    'SELECT id FROM clubs WHERE slug = ?'
+  ).bind(slug).first()
+  if (!club) return c.json({ error: '클럽을 찾을 수 없습니다.' }, 404)
+
+  const { rating, content } = await c.req.json()
+  if (!rating || rating < 1 || rating > 5) {
+    return c.json({ error: '평점은 1~5 사이여야 합니다.' }, 400)
+  }
+
+  const now = Math.floor(Date.now() / 1000)
+
+  // UPSERT: 이미 리뷰가 있으면 업데이트
+  const existing = await c.env.DB.prepare(
+    'SELECT id FROM club_reviews WHERE club_id = ? AND author_id = ?'
+  ).bind(club.id, userId).first()
+
+  if (existing) {
+    await c.env.DB.prepare(
+      'UPDATE club_reviews SET rating = ?, content = ?, updated_at = ? WHERE id = ?'
+    ).bind(rating, content || null, now, existing.id).run()
+    return c.json({ data: { id: existing.id, updated: true } })
+  }
+
+  const result = await c.env.DB.prepare(
+    'INSERT INTO club_reviews (club_id, author_id, rating, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)'
+  ).bind(club.id, userId, rating, content || null, now, now).run()
+
+  return c.json({ data: { id: result.meta.last_row_id } }, 201)
+})
+
+// DELETE /clubs/:slug/reviews — 내 리뷰 삭제
+clubsRoutes.delete('/:slug/reviews', authMiddleware(), async (c) => {
+  const slug = c.req.param('slug')
+  const userId = (c as any).userId
+
+  const club = await c.env.DB.prepare(
+    'SELECT id FROM clubs WHERE slug = ?'
+  ).bind(slug).first()
+  if (!club) return c.json({ error: '클럽을 찾을 수 없습니다.' }, 404)
+
+  await c.env.DB.prepare(
+    'DELETE FROM club_reviews WHERE club_id = ? AND author_id = ?'
+  ).bind(club.id, userId).run()
+
+  return c.json({ data: { success: true } })
+})
+
 function generateInviteCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   let code = ''

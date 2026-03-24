@@ -31,10 +31,11 @@ postsRoutes.get('/', authMiddleware(), async (c) => {
   return c.json({ data: results })
 })
 
-// GET /posts/:id — 상세 + 댓글
+// GET /posts/:id — 상세 + 댓글 + 투표
 postsRoutes.get('/:id', authMiddleware(), async (c) => {
   const id = Number(c.req.param('id'))
   const clubId = (c as any).clubId
+  const userId = (c as any).userId
 
   const post = await c.env.DB.prepare(`
     SELECT p.*, u.username as author_name
@@ -53,7 +54,38 @@ postsRoutes.get('/:id', authMiddleware(), async (c) => {
     ORDER BY c.created_at ASC
   `).bind(id).all()
 
-  return c.json({ data: { ...post, comments } })
+  // 투표 정보
+  let poll = null
+  const pollRow = await c.env.DB.prepare(
+    'SELECT * FROM post_polls WHERE post_id = ?'
+  ).bind(id).first()
+
+  if (pollRow) {
+    const { results: options } = await c.env.DB.prepare(
+      'SELECT * FROM post_poll_options WHERE poll_id = ? ORDER BY sort_order ASC'
+    ).bind(pollRow.id).all()
+
+    const { results: myVotes } = await c.env.DB.prepare(
+      'SELECT option_id FROM post_poll_votes WHERE poll_id = ? AND user_id = ?'
+    ).bind(pollRow.id, userId).all()
+
+    const totalVotes = options.reduce((sum: number, o: any) => sum + (o.vote_count as number), 0)
+
+    poll = {
+      id: pollRow.id,
+      title: pollRow.title,
+      allowMultiple: pollRow.allow_multiple === 1,
+      totalVotes,
+      options: options.map((o: any) => ({
+        id: o.id,
+        label: o.label,
+        voteCount: o.vote_count,
+      })),
+      myVotes: myVotes.map((v: any) => v.option_id),
+    }
+  }
+
+  return c.json({ data: { ...post, comments, poll } })
 })
 
 // POST /posts — 작성
@@ -62,7 +94,7 @@ postsRoutes.post('/', authMiddleware(), async (c) => {
   const clubId = (c as any).clubId
   const clubRole = (c as any).clubRole
 
-  const { title, content, category, imageUrl, isPinned } = await c.req.json()
+  const { title, content, category, imageUrl, isPinned, poll } = await c.req.json()
 
   if (!title || !content) {
     return c.json({ error: '제목과 내용은 필수입니다.' }, 400)
@@ -82,7 +114,23 @@ postsRoutes.post('/', authMiddleware(), async (c) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
   `).bind(clubId, userId, category || 'free', title, content, imageUrl || null, pinValue, now, now).run()
 
-  return c.json({ data: { id: result.meta.last_row_id } }, 201)
+  const postId = result.meta.last_row_id
+
+  // 투표 생성
+  if (poll && poll.title && Array.isArray(poll.options) && poll.options.length >= 2) {
+    const pollResult = await c.env.DB.prepare(
+      'INSERT INTO post_polls (post_id, title, allow_multiple, created_at) VALUES (?, ?, ?, ?)'
+    ).bind(postId, poll.title, poll.allowMultiple ? 1 : 0, now).run()
+
+    const pollId = pollResult.meta.last_row_id
+    for (let i = 0; i < poll.options.length; i++) {
+      await c.env.DB.prepare(
+        'INSERT INTO post_poll_options (poll_id, label, vote_count, sort_order) VALUES (?, ?, 0, ?)'
+      ).bind(pollId, poll.options[i], i).run()
+    }
+  }
+
+  return c.json({ data: { id: postId } }, 201)
 })
 
 // PUT /posts/:id — 수정
@@ -208,6 +256,115 @@ postsRoutes.delete('/:id/comments/:commentId', authMiddleware(), async (c) => {
       'UPDATE posts SET comment_count = CASE WHEN comment_count > 0 THEN comment_count - 1 ELSE 0 END WHERE id = ?'
     ).bind(postId),
   ])
+
+  return c.json({ data: { success: true } })
+})
+
+// POST /posts/:id/poll/vote — 투표
+postsRoutes.post('/:id/poll/vote', authMiddleware(), async (c) => {
+  const postId = Number(c.req.param('id'))
+  const userId = (c as any).userId
+  const clubId = (c as any).clubId
+
+  const post = await c.env.DB.prepare(
+    'SELECT id FROM posts WHERE id = ? AND club_id = ?'
+  ).bind(postId, clubId).first()
+  if (!post) return c.json({ error: '게시글을 찾을 수 없습니다.' }, 404)
+
+  const poll = await c.env.DB.prepare(
+    'SELECT * FROM post_polls WHERE post_id = ?'
+  ).bind(postId).first()
+  if (!poll) return c.json({ error: '투표가 없습니다.' }, 404)
+
+  const { optionId } = await c.req.json()
+  if (!optionId) return c.json({ error: 'optionId가 필요합니다.' }, 400)
+
+  // 옵션이 이 poll에 속하는지 확인
+  const option = await c.env.DB.prepare(
+    'SELECT id FROM post_poll_options WHERE id = ? AND poll_id = ?'
+  ).bind(optionId, poll.id).first()
+  if (!option) return c.json({ error: '유효하지 않은 선택지입니다.' }, 400)
+
+  // 복수 선택 불가일 때 기존 투표 제거
+  if (!poll.allow_multiple) {
+    const existing = await c.env.DB.prepare(
+      'SELECT option_id FROM post_poll_votes WHERE poll_id = ? AND user_id = ?'
+    ).bind(poll.id, userId).all()
+
+    for (const v of existing.results) {
+      await c.env.DB.prepare(
+        'DELETE FROM post_poll_votes WHERE poll_id = ? AND option_id = ? AND user_id = ?'
+      ).bind(poll.id, v.option_id, userId).run()
+      await c.env.DB.prepare(
+        'UPDATE post_poll_options SET vote_count = MAX(vote_count - 1, 0) WHERE id = ?'
+      ).bind(v.option_id).run()
+    }
+  }
+
+  // 이미 같은 옵션에 투표했는지 확인
+  const alreadyVoted = await c.env.DB.prepare(
+    'SELECT id FROM post_poll_votes WHERE poll_id = ? AND option_id = ? AND user_id = ?'
+  ).bind(poll.id, optionId, userId).first()
+
+  if (alreadyVoted) {
+    return c.json({ message: '이미 투표했습니다.' })
+  }
+
+  const now = Math.floor(Date.now() / 1000)
+  await c.env.DB.batch([
+    c.env.DB.prepare(
+      'INSERT INTO post_poll_votes (poll_id, option_id, user_id, created_at) VALUES (?, ?, ?, ?)'
+    ).bind(poll.id, optionId, userId, now),
+    c.env.DB.prepare(
+      'UPDATE post_poll_options SET vote_count = vote_count + 1 WHERE id = ?'
+    ).bind(optionId),
+  ])
+
+  return c.json({ data: { success: true } })
+})
+
+// DELETE /posts/:id/poll/vote — 투표 취소
+postsRoutes.delete('/:id/poll/vote', authMiddleware(), async (c) => {
+  const postId = Number(c.req.param('id'))
+  const userId = (c as any).userId
+
+  const poll = await c.env.DB.prepare(
+    'SELECT id FROM post_polls WHERE post_id = ?'
+  ).bind(postId).first()
+  if (!poll) return c.json({ error: '투표가 없습니다.' }, 404)
+
+  const { optionId } = await c.req.json()
+
+  if (optionId) {
+    // 특정 옵션만 취소
+    const vote = await c.env.DB.prepare(
+      'SELECT id FROM post_poll_votes WHERE poll_id = ? AND option_id = ? AND user_id = ?'
+    ).bind(poll.id, optionId, userId).first()
+    if (!vote) return c.json({ error: '투표 기록이 없습니다.' }, 404)
+
+    await c.env.DB.batch([
+      c.env.DB.prepare(
+        'DELETE FROM post_poll_votes WHERE poll_id = ? AND option_id = ? AND user_id = ?'
+      ).bind(poll.id, optionId, userId),
+      c.env.DB.prepare(
+        'UPDATE post_poll_options SET vote_count = MAX(vote_count - 1, 0) WHERE id = ?'
+      ).bind(optionId),
+    ])
+  } else {
+    // 전체 취소
+    const { results: votes } = await c.env.DB.prepare(
+      'SELECT option_id FROM post_poll_votes WHERE poll_id = ? AND user_id = ?'
+    ).bind(poll.id, userId).all()
+
+    for (const v of votes) {
+      await c.env.DB.prepare(
+        'UPDATE post_poll_options SET vote_count = MAX(vote_count - 1, 0) WHERE id = ?'
+      ).bind(v.option_id).run()
+    }
+    await c.env.DB.prepare(
+      'DELETE FROM post_poll_votes WHERE poll_id = ? AND user_id = ?'
+    ).bind(poll.id, userId).run()
+  }
 
   return c.json({ data: { success: true } })
 })

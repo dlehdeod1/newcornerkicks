@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, ImageIcon, X, Pin } from 'lucide-react'
+import { ArrowLeft, ImageIcon, X, Pin, BarChart3, Plus, Trash2 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { postsApi, uploadsApi } from '@/lib/api'
 
@@ -45,6 +45,10 @@ function BoardWriteContent() {
   const [isPinned, setIsPinned] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const [showPoll, setShowPoll] = useState(false)
+  const [pollTitle, setPollTitle] = useState('')
+  const [pollOptions, setPollOptions] = useState(['', ''])
+  const [pollAllowMultiple, setPollAllowMultiple] = useState(false)
 
   // Load post for editing
   const { data: editData } = useQuery({
@@ -118,6 +122,18 @@ function BoardWriteContent() {
     }
     if (imageUrl) payload.imageUrl = imageUrl
     if (isAdmin) payload.isPinned = isPinned
+
+    // 투표 첨부
+    if (showPoll && pollTitle.trim() && !editId) {
+      const validOptions = pollOptions.map(o => o.trim()).filter(Boolean)
+      if (validOptions.length >= 2) {
+        payload.poll = {
+          title: pollTitle.trim(),
+          options: validOptions,
+          allowMultiple: pollAllowMultiple,
+        }
+      }
+    }
 
     if (editId) {
       if (!imageUrl && editData?.data?.image_url) {
@@ -232,6 +248,92 @@ function BoardWriteContent() {
             className="hidden"
           />
         </div>
+
+        {/* Poll section (new post only) */}
+        {!editId && (
+          <div>
+            {!showPoll ? (
+              <button
+                type="button"
+                onClick={() => setShowPoll(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-xl text-sm font-medium transition-colors"
+              >
+                <BarChart3 className="w-4 h-4" />
+                투표 추가
+              </button>
+            ) : (
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-emerald-500" />
+                    투표
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => { setShowPoll(false); setPollTitle(''); setPollOptions(['', '']); setPollAllowMultiple(false) }}
+                    className="text-xs text-slate-400 hover:text-red-500 transition-colors"
+                  >
+                    투표 제거
+                  </button>
+                </div>
+
+                <input
+                  type="text"
+                  value={pollTitle}
+                  onChange={(e) => setPollTitle(e.target.value)}
+                  placeholder="투표 제목 (예: 다음 주 시간 투표)"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                />
+
+                {pollOptions.map((opt, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={opt}
+                      onChange={(e) => {
+                        const next = [...pollOptions]
+                        next[i] = e.target.value
+                        setPollOptions(next)
+                      }}
+                      placeholder={`선택지 ${i + 1}`}
+                      className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                    />
+                    {pollOptions.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}
+                        className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                {pollOptions.length < 10 && (
+                  <button
+                    type="button"
+                    onClick={() => setPollOptions([...pollOptions, ''])}
+                    className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    선택지 추가
+                  </button>
+                )}
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={pollAllowMultiple}
+                    onChange={(e) => setPollAllowMultiple(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-emerald-500 focus:ring-emerald-500"
+                  />
+                  <span className="text-xs text-slate-500 dark:text-slate-400">복수 선택 허용</span>
+                </label>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Pin toggle (admin only) */}
         {isAdmin && (
