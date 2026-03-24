@@ -13,6 +13,7 @@ import {
   Banknote,
   HelpCircle,
   Check,
+  BarChart3,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { clubsApi } from '@/lib/api'
@@ -57,6 +58,11 @@ export default function AdminSettingsPage() {
   const [feeSaving, setFeeSaving] = useState(false)
   const [feeSaved, setFeeSaved] = useState(false)
 
+  // 기록 이벤트 설정
+  const [enabledEvents, setEnabledEvents] = useState<string[]>(['GOAL', 'SAVE'])
+  const [eventsSaving, setEventsSaving] = useState(false)
+  const [eventsSaved, setEventsSaved] = useState(false)
+
   const { data, isLoading } = useQuery({
     queryKey: ['club-me'],
     queryFn: () => clubsApi.me(token!),
@@ -77,6 +83,7 @@ export default function AdminSettingsPage() {
     setClubName(club.name || '')
     setClubDesc(club.description || '')
     setSeasonMonth(club.seasonStartMonth ?? 1)
+    setEnabledEvents(club.enabledEvents ?? ['GOAL', 'SAVE'])
     const fc = club.feeConfig || {}
     setBaseAmount(fc.baseAmount ?? 0)
     setSplitEnabled(fc.splitEnabled ?? false)
@@ -118,6 +125,27 @@ export default function AdminSettingsPage() {
     } finally {
       setFeeSaving(false)
     }
+  }
+
+  const handleSaveEvents = async () => {
+    if (!token) return
+    setEventsSaving(true)
+    try {
+      await clubsApi.updateSettings({ enabledEvents }, token)
+      queryClient.invalidateQueries({ queryKey: ['club-me'] })
+      setEventsSaved(true)
+      setTimeout(() => setEventsSaved(false), 2000)
+    } catch (err: any) {
+      alert(err.message || '저장에 실패했습니다.')
+    } finally {
+      setEventsSaving(false)
+    }
+  }
+
+  const toggleEvent = (event: string) => {
+    setEnabledEvents(prev =>
+      prev.includes(event) ? prev.filter(e => e !== event) : [...prev, event]
+    )
   }
 
   if (!isLoggedIn || !isAdmin) {
@@ -529,6 +557,54 @@ export default function AdminSettingsPage() {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* 기록 이벤트 설정 */}
+        <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" />
+            기록 이벤트
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">현황판에서 기록할 이벤트 종류를 선택하세요</p>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { key: 'GOAL', label: '득점', icon: '⚽', desc: '골 기록' },
+              { key: 'SAVE', label: '선방', icon: '🧤', desc: '골키퍼 세이브' },
+              { key: 'SHOT', label: '슈팅', icon: '🎯', desc: '유효 슈팅 기록' },
+              { key: 'KEY_PASS', label: '키패스', icon: '⚡', desc: '결정적 패스' },
+            ].map(({ key, label, icon, desc }) => {
+              const active = enabledEvents.includes(key)
+              return (
+                <button
+                  key={key}
+                  onClick={() => toggleEvent(key)}
+                  className={cn(
+                    'flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left',
+                    active
+                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+                      : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                  )}
+                >
+                  <span className="text-xl">{icon}</span>
+                  <div>
+                    <p className={cn(
+                      'text-sm font-medium',
+                      active ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'
+                    )}>{label}</p>
+                    <p className="text-xs text-slate-400">{desc}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+          {enabledEvents.length === 0 && (
+            <p className="text-xs text-red-500 mt-2">최소 1개 이상의 이벤트를 선택해야 합니다</p>
+          )}
+          <div className="mt-4 flex justify-end">
+            <Button size="sm" onClick={handleSaveEvents} disabled={eventsSaving || enabledEvents.length === 0}>
+              {eventsSaved ? <><Check className="w-4 h-4" /> 저장됨</> : eventsSaving ? '저장 중...' : '저장'}
+            </Button>
           </div>
         </div>
 
