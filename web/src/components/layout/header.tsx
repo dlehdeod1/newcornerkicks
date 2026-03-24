@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, X, User, LogOut, Crown, Sun, Moon, LayoutDashboard, ChevronDown, Check, Plus, Users, MessageCircle, MoreHorizontal, BarChart3, Award, Target } from 'lucide-react'
+import { Menu, X, User, LogOut, Crown, Sun, Moon, LayoutDashboard, ChevronDown, Check, Plus, Users } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useTheme } from 'next-themes'
 import { useAuthStore } from '@/stores/auth'
@@ -22,14 +22,10 @@ const navItems = [
   { href: '/', label: '홈' },
   { href: '/sessions', label: '일정' },
   { href: '/ranking', label: '선수/랭킹' },
+  { href: '/abilities', label: '능력치' },
+  { href: '/stats', label: '통계' },
+  { href: '/hall-of-fame', label: '명예의 전당' },
   { href: '/board', label: '게시판' },
-  { href: '/community', label: '커뮤니티' },
-]
-
-const moreItems = [
-  { href: '/abilities', label: '능력치', icon: Target },
-  { href: '/stats', label: '통계', icon: BarChart3 },
-  { href: '/hall-of-fame', label: '명예의 전당', icon: Award },
 ]
 
 export function Header() {
@@ -37,13 +33,11 @@ export function Header() {
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [clubDropdownOpen, setClubDropdownOpen] = useState(false)
-  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { theme, setTheme } = useTheme()
   const { isLoggedIn, user, club, clubs, isAdmin, logout, setActiveClub } = useAuthStore()
   const isPro = club?.isPro
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const moreRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -55,13 +49,10 @@ export function Header() {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setClubDropdownOpen(false)
       }
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
-        setMoreDropdownOpen(false)
-      }
     }
-    if (clubDropdownOpen || moreDropdownOpen) document.addEventListener('mousedown', handleClickOutside)
+    if (clubDropdownOpen) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [clubDropdownOpen, moreDropdownOpen])
+  }, [clubDropdownOpen])
 
   const handleSwitchClub = (c: any) => {
     setActiveClub(c)
@@ -193,40 +184,6 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-            {/* 더보기 */}
-            <div className="relative" ref={moreRef}>
-              <button
-                onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
-                className={cn(
-                  'px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                  moreItems.some(i => pathname.startsWith(i.href))
-                    ? 'bg-brand-green/20 text-brand-green'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800/50'
-                )}
-              >
-                <MoreHorizontal className="w-4 h-4" />
-              </button>
-              {moreDropdownOpen && (
-                <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl shadow-black/10 dark:shadow-black/30 overflow-hidden z-50 p-1">
-                  {moreItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMoreDropdownOpen(false)}
-                      className={cn(
-                        'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                        pathname.startsWith(item.href)
-                          ? 'bg-brand-green/10 text-brand-green'
-                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                      )}
-                    >
-                      <item.icon className="w-4 h-4" />
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
           </nav>
 
           {/* 유저 메뉴 */}
@@ -370,27 +327,6 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-
-            {/* 더보기 항목 */}
-            <div className="pt-3 mt-3 border-t border-slate-200 dark:border-slate-800/50">
-              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider px-4 mb-2">더보기</p>
-              {moreItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors',
-                    pathname.startsWith(item.href)
-                      ? 'bg-brand-green/20 text-brand-green'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50'
-                  )}
-                >
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
-                </Link>
-              ))}
-            </div>
 
             <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800/50">
               {mounted && isLoggedIn ? (
