@@ -73,11 +73,12 @@ export default function ProfilePage() {
   })
 
   // 선수 목록 (선호 선수 추가용)
-  const { data: allPlayers } = useQuery({
+  const { data: allPlayersData } = useQuery({
     queryKey: ['players-list', token],
     queryFn: () => playersApi.list(token),
     enabled: !!token && showPrefModal,
   })
+  const allPlayers = allPlayersData?.players || []
 
   useEffect(() => {
     if (token) {
