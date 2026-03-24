@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, X, User, LogOut, Crown, Sun, Moon, LayoutDashboard, ChevronDown, Check, Plus, Users } from 'lucide-react'
+import { Menu, X, User, LogOut, Crown, Sun, Moon, LayoutDashboard, ChevronDown, Check, Plus, Users, Globe } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useTheme } from 'next-themes'
 import { useAuthStore } from '@/stores/auth'
@@ -25,7 +25,6 @@ const navItems = [
   { href: '/abilities', label: '능력치' },
   { href: '/stats', label: '통계' },
   { href: '/hall-of-fame', label: '명예의 전당' },
-  { href: '/community', label: '커뮤니티' },
 ]
 
 export function Header() {
@@ -68,9 +67,9 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           {/* 좌상단: 클럽 전환 or 앱 로고 */}
           {mounted && isLoggedIn && club ? (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setClubDropdownOpen(!clubDropdownOpen)}
+            <div className="relative flex items-center" ref={dropdownRef}>
+              <Link
+                href="/"
                 className="flex items-center gap-2.5 px-2 py-1.5 -ml-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
               >
                 {/* 클럽 아바타 */}
@@ -91,11 +90,18 @@ export function Header() {
                   </span>
                   <span className="text-[10px] text-slate-400 leading-none mt-0.5">코너킥스</span>
                 </div>
-                <ChevronDown className={cn(
-                  'w-4 h-4 text-slate-400 transition-transform',
-                  clubDropdownOpen && 'rotate-180'
-                )} />
-              </button>
+              </Link>
+              {clubs.length > 1 && (
+                <button
+                  onClick={() => setClubDropdownOpen(!clubDropdownOpen)}
+                  className="p-1.5 -ml-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+                >
+                  <ChevronDown className={cn(
+                    'w-4 h-4 text-slate-400 transition-transform',
+                    clubDropdownOpen && 'rotate-180'
+                  )} />
+                </button>
+              )}
 
               {/* 클럽 전환 드롭다운 */}
               {clubDropdownOpen && (
@@ -183,6 +189,20 @@ export function Header() {
 
           {/* 유저 메뉴 */}
           <div className="hidden md:flex items-center gap-3 min-w-[120px] justify-end">
+            {/* 커뮤니티 */}
+            <Link
+              href="/community"
+              className={cn(
+                'p-2.5 rounded-xl transition-colors',
+                pathname.startsWith('/community')
+                  ? 'text-teal-500 bg-teal-500/10'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50'
+              )}
+              title="커뮤니티"
+            >
+              <Globe className="w-5 h-5" />
+            </Link>
+
             {/* 테마 토글 */}
             {mounted && (
               <button
@@ -322,6 +342,24 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
+
+            {/* 커뮤니티 (앱 전체) */}
+            <div className="pt-3 mt-3 border-t border-slate-200 dark:border-slate-800/50">
+              <Link
+                href="/community"
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors',
+                  pathname.startsWith('/community')
+                    ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50'
+                )}
+              >
+                <Globe className="w-4 h-4" />
+                커뮤니티
+              </Link>
+            </div>
+
             <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800/50">
               {mounted && isLoggedIn ? (
                 <div className="space-y-1">
