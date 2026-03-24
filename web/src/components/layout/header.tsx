@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, X, User, LogOut, Crown, Sun, Moon, LayoutDashboard, ChevronDown, Check, Plus, Users, Globe } from 'lucide-react'
+import { Menu, X, User, LogOut, Crown, Sun, Moon, LayoutDashboard, ChevronDown, Check, Plus, Users, MessageCircle } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useTheme } from 'next-themes'
 import { useAuthStore } from '@/stores/auth'
@@ -198,7 +198,7 @@ export function Header() {
               )}
               title="커뮤니티"
             >
-              <Globe className="w-5 h-5" />
+              <MessageCircle className="w-5 h-5" />
             </Link>
 
             {/* 테마 토글 */}
@@ -353,7 +353,7 @@ export function Header() {
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50'
                 )}
               >
-                <Globe className="w-4 h-4" />
+                <MessageCircle className="w-4 h-4" />
                 커뮤니티
               </Link>
             </div>
