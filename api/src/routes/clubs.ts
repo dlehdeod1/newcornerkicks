@@ -177,6 +177,7 @@ clubsRoutes.get('/me', authMiddleware(), async (c) => {
       bankAccount: JSON.parse(membership.bank_account ?? 'null'),
       notificationConfig: JSON.parse(membership.notification_config ?? '{"sessionCreated":true,"sessionDayRemind":true,"settlementRemind":true}'),
       feeConfig: JSON.parse(membership.fee_config ?? '{}'),
+      mvpWeights: JSON.parse(membership.mvp_weights ?? 'null'),
     },
   })
 })
@@ -222,6 +223,7 @@ clubsRoutes.put('/me', authMiddleware(), async (c) => {
   if (body.bankAccount !== undefined) { updates.push('bank_account = ?'); vals.push(JSON.stringify(body.bankAccount)) }
   if (body.notificationConfig !== undefined) { updates.push('notification_config = ?'); vals.push(JSON.stringify(body.notificationConfig)) }
   if (body.feeConfig !== undefined) { updates.push('fee_config = ?'); vals.push(JSON.stringify(body.feeConfig)) }
+  if (body.mvpWeights !== undefined) { updates.push('mvp_weights = ?'); vals.push(body.mvpWeights ? JSON.stringify(body.mvpWeights) : null) }
 
   if (updates.length === 0) return c.json({ error: '변경할 내용이 없습니다.' }, 400)
 

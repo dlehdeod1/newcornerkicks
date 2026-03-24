@@ -506,6 +506,15 @@ async function autoBackfillMvp(db: D1Database, sessionId: number, yearStart: str
   const matches = await db.prepare(`SELECT * FROM matches WHERE session_id = ? AND status = 'completed'`).bind(sessionId).all()
   if (matches.results.length === 0) return
 
+  // 클럽 MVP 가중치 로드
+  const session = await db.prepare(`SELECT club_id FROM sessions WHERE id = ?`).bind(sessionId).first()
+  const defaultWeights = { GOAL: 2, ASSIST: 1.5, DEFENSE: 0.5, TACKLE: 0.3, INTERCEPTION: 0.3, CLEARANCE: 0.3, SAVE: 0.5, KEY_PASS: 0.5, DRIBBLE: 0.3, SHOT_ON: 0.2, SHOT_OFF: 0.1, SESSION_WIN: 1.5 }
+  let weights = defaultWeights
+  if (session?.club_id) {
+    const clubData = await db.prepare(`SELECT mvp_weights FROM clubs WHERE id = ?`).bind(session.club_id).first()
+    if (clubData?.mvp_weights) weights = { ...defaultWeights, ...JSON.parse(clubData.mvp_weights as string) }
+  }
+
   // 팀별 승점 계산
   const teamStandings = new Map<number, { points: number; goalsFor: number; members: number[] }>()
   for (const teamId of teamIds) {
@@ -540,22 +549,30 @@ async function autoBackfillMvp(db: D1Database, sessionId: number, yearStart: str
         playerStats.set(event.player_id, { id: event.player_id, name: (player as any)?.name || 'Unknown', mvpScore: 0 })
       }
       const stats = playerStats.get(event.player_id)!
-      if (event.event_type === 'GOAL') stats.mvpScore += 2
-      else if (event.event_type === 'DEFENSE') stats.mvpScore += 0.5
+      if (event.event_type === 'GOAL') stats.mvpScore += weights.GOAL
+      else if (event.event_type === 'DEFENSE') stats.mvpScore += weights.DEFENSE
+      else if (event.event_type === 'TACKLE') stats.mvpScore += weights.TACKLE
+      else if (event.event_type === 'INTERCEPTION') stats.mvpScore += weights.INTERCEPTION
+      else if (event.event_type === 'CLEARANCE') stats.mvpScore += weights.CLEARANCE
+      else if (event.event_type === 'SAVE') stats.mvpScore += weights.SAVE
+      else if (event.event_type === 'KEY_PASS') stats.mvpScore += weights.KEY_PASS
+      else if (event.event_type === 'DRIBBLE') stats.mvpScore += weights.DRIBBLE
+      else if (event.event_type === 'SHOT_ON') stats.mvpScore += weights.SHOT_ON
+      else if (event.event_type === 'SHOT_OFF') stats.mvpScore += weights.SHOT_OFF
 
       if (event.assister_id && event.event_type === 'GOAL' && !event.assister_guest_name) {
         if (!playerStats.has(event.assister_id)) {
           const assister = await db.prepare(`SELECT name FROM players WHERE id = ?`).bind(event.assister_id).first()
           playerStats.set(event.assister_id, { id: event.assister_id, name: (assister as any)?.name || 'Unknown', mvpScore: 0 })
         }
-        playerStats.get(event.assister_id)!.mvpScore += 1.5
+        playerStats.get(event.assister_id)!.mvpScore += weights.ASSIST
       }
     }
   }
 
   // 우승팀 보너스
   playerStats.forEach((stats, playerId) => {
-    if (winningTeamMembers.has(playerId)) stats.mvpScore += 1.5
+    if (winningTeamMembers.has(playerId)) stats.mvpScore += weights.SESSION_WIN
   })
 
   const mvp = Array.from(playerStats.values()).sort((a, b) => b.mvpScore - a.mvpScore)[0]
@@ -575,6 +592,14 @@ async function buildAndCacheRankings(db: D1Database, clubId: number, year: numbe
       COALESCE(SUM(pms.goals), 0) as goals,
       COALESCE(SUM(pms.assists), 0) as assists,
       COALESCE(SUM(pms.blocks), 0) as defenses,
+      COALESCE(SUM(pms.tackles), 0) as tackles,
+      COALESCE(SUM(pms.interceptions), 0) as interceptions,
+      COALESCE(SUM(pms.clearances), 0) as clearances,
+      COALESCE(SUM(pms.saves), 0) as saves,
+      COALESCE(SUM(pms.key_passes), 0) as keyPasses,
+      COALESCE(SUM(pms.dribbles), 0) as dribbles,
+      COALESCE(SUM(pms.shots_on), 0) as shotsOn,
+      COALESCE(SUM(pms.shots_off), 0) as shotsOff,
       (SELECT COUNT(*) FROM attendance a
        JOIN sessions s ON a.session_id = s.id
        WHERE a.player_id = p.id AND s.session_date BETWEEN ? AND ? AND s.club_id = ?) as attendance
@@ -588,6 +613,10 @@ async function buildAndCacheRankings(db: D1Database, clubId: number, year: numbe
     GROUP BY p.id
     ORDER BY goals DESC, assists DESC, defenses DESC
   `).bind(yearStart, yearEnd, clubId, clubId, yearStart, yearEnd).all()
+
+  const clubData = await db.prepare(`SELECT mvp_weights FROM clubs WHERE id = ?`).bind(clubId).first()
+  const defaultWeights = { GOAL: 2, ASSIST: 1.5, DEFENSE: 0.5, TACKLE: 0.3, INTERCEPTION: 0.3, CLEARANCE: 0.3, SAVE: 0.5, KEY_PASS: 0.5, DRIBBLE: 0.3, SHOT_ON: 0.2, SHOT_OFF: 0.1, SESSION_WIN: 1.5 }
+  const weights = clubData?.mvp_weights ? { ...defaultWeights, ...JSON.parse(clubData.mvp_weights as string) } : defaultWeights
 
   const enrichedRankings = await Promise.all(
     rankings.results.map(async (player: any) => {
@@ -622,11 +651,7 @@ async function buildAndCacheRankings(db: D1Database, clubId: number, year: numbe
       `).bind(yearStart, yearEnd, clubId, player.id).first()
       const sessionWins = (sessionWinsResult?.session_wins as number) || 0
 
-      const mvpScore = player.goals * 2 + player.assists * 1.5 + player.defenses * 0.5 + sessionWins * 1.5
-      const ppm = totalGames > 0 ? (points / totalGames).toFixed(2) : '0.00'
-      const winRate = player.attendance > 0 ? ((sessionWins / player.attendance) * 100).toFixed(1) : '0.0'
-
-      const placementResults = await db.prepare(`
+      const sessionLossesResult = await db.prepare(`
         WITH team_standings AS (
           SELECT t.session_id, t.id as team_id,
             SUM(CASE WHEN (t.id = m.team1_id AND m.team1_score > m.team2_score) OR (t.id = m.team2_id AND m.team2_score > m.team1_score) THEN 3 WHEN m.team1_score = m.team2_score THEN 1 ELSE 0 END) as points,
@@ -634,10 +659,26 @@ async function buildAndCacheRankings(db: D1Database, clubId: number, year: numbe
           FROM teams t JOIN matches m ON t.id = m.team1_id OR t.id = m.team2_id JOIN sessions s ON t.session_id = s.id
           WHERE s.session_date BETWEEN ? AND ? AND s.club_id = ? AND m.status = 'completed' GROUP BY t.session_id, t.id
         ),
-        ranked_teams AS (SELECT session_id, team_id, RANK() OVER (PARTITION BY session_id ORDER BY points DESC, goals_for DESC) as team_rank FROM team_standings)
-        SELECT SUM(CASE WHEN rt.team_rank = 1 THEN 1 ELSE 0 END) as rank1, SUM(CASE WHEN rt.team_rank = 2 THEN 1 ELSE 0 END) as rank2, SUM(CASE WHEN rt.team_rank = 3 THEN 1 ELSE 0 END) as rank3
-        FROM ranked_teams rt JOIN team_members tm ON rt.team_id = tm.team_id WHERE tm.player_id = ?
+        losing_teams AS (SELECT ts.session_id, ts.team_id FROM team_standings ts WHERE (ts.session_id, ts.points, ts.goals_for) IN (SELECT session_id, MIN(points), MIN(goals_for) FROM team_standings GROUP BY session_id))
+        SELECT COUNT(*) as session_losses FROM losing_teams lt JOIN team_members tm ON lt.team_id = tm.team_id WHERE tm.player_id = ?
       `).bind(yearStart, yearEnd, clubId, player.id).first()
+      const sessionLosses = (sessionLossesResult?.session_losses as number) || 0
+
+      const mvpScore =
+        player.goals * weights.GOAL +
+        player.assists * weights.ASSIST +
+        player.defenses * weights.DEFENSE +
+        (player.tackles || 0) * weights.TACKLE +
+        (player.interceptions || 0) * weights.INTERCEPTION +
+        (player.clearances || 0) * weights.CLEARANCE +
+        (player.saves || 0) * weights.SAVE +
+        (player.keyPasses || 0) * weights.KEY_PASS +
+        (player.dribbles || 0) * weights.DRIBBLE +
+        (player.shotsOn || 0) * weights.SHOT_ON +
+        (player.shotsOff || 0) * weights.SHOT_OFF +
+        sessionWins * weights.SESSION_WIN
+      const ppm = totalGames > 0 ? (points / totalGames).toFixed(2) : '0.00'
+      const winRate = player.attendance > 0 ? ((sessionWins / player.attendance) * 100).toFixed(1) : '0.0'
 
       const mvpCountResult = await db.prepare(`
         SELECT COUNT(*) as mvp_count FROM session_mvp_results smr JOIN sessions s ON smr.session_id = s.id
@@ -648,10 +689,12 @@ async function buildAndCacheRankings(db: D1Database, clubId: number, year: numbe
       return {
         id: player.id, name: player.name,
         games: totalGames, goals: player.goals, assists: player.assists, defenses: player.defenses,
+        tackles: player.tackles || 0, interceptions: player.interceptions || 0, clearances: player.clearances || 0,
+        saves: player.saves || 0, keyPasses: player.keyPasses || 0, dribbles: player.dribbles || 0,
+        shotsOn: player.shotsOn || 0, shotsOff: player.shotsOff || 0,
         wins, draws, losses, points,
         ppm: parseFloat(ppm), winRate: parseFloat(winRate),
-        attendance: player.attendance, sessionWins,
-        rank1: placementResults?.rank1 || 0, rank2: placementResults?.rank2 || 0, rank3: placementResults?.rank3 || 0,
+        attendance: player.attendance, sessionWins, sessionLosses,
         mvpScore, mvpCount,
       }
     })

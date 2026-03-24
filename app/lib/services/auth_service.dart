@@ -33,6 +33,21 @@ class AuthService extends ChangeNotifier {
     return ['GOAL', 'DEFENSE'];
   }
 
+  Map<String, double> get mvpWeights {
+    final weights = _club?['mvpWeights'];
+    if (weights is Map) {
+      return Map<String, double>.from(
+        weights.map((k, v) => MapEntry(k.toString(), (v as num).toDouble())),
+      );
+    }
+    return {
+      'GOAL': 2.0, 'ASSIST': 1.5, 'DEFENSE': 0.5,
+      'TACKLE': 0.3, 'INTERCEPTION': 0.3, 'CLEARANCE': 0.3,
+      'SAVE': 0.5, 'KEY_PASS': 0.5, 'DRIBBLE': 0.3,
+      'SHOT_ON': 0.2, 'SHOT_OFF': 0.1, 'SESSION_WIN': 1.5,
+    };
+  }
+
   /// clubs 응답에서 첫 번째 클럽(또는 저장된 activeClubId에 해당하는 클럽)을 활성 클럽으로 설정
   void _initClubsFromData(List<dynamic> rawClubs, {int? preferredClubId}) {
     _clubs = rawClubs.map((c) => Map<String, dynamic>.from(c as Map)).toList();

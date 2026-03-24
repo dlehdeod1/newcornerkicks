@@ -49,6 +49,14 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
   bool _loading = true;
   bool _saving = false;
 
+  // MVP 가중치 설정
+  Map<String, double> _mvpWeights = {
+    'GOAL': 2.0, 'ASSIST': 1.5, 'DEFENSE': 0.5,
+    'TACKLE': 0.3, 'INTERCEPTION': 0.3, 'CLEARANCE': 0.3,
+    'SAVE': 0.5, 'KEY_PASS': 0.5, 'DRIBBLE': 0.3,
+    'SHOT_ON': 0.2, 'SHOT_OFF': 0.1, 'SESSION_WIN': 1.5,
+  };
+
   @override
   void initState() {
     super.initState();
@@ -95,6 +103,12 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
             _enabledEvents = Set<String>.from(events.map((e) => e.toString()));
           }
           _seasonStartMonth = (club['seasonStartMonth'] as int?) ?? 1;
+          final weights = club['mvpWeights'];
+          if (weights is Map) {
+            _mvpWeights = Map<String, double>.from(
+              weights.map((k, v) => MapEntry(k.toString(), (v as num).toDouble())),
+            );
+          }
           _loading = false;
         });
       }
@@ -128,11 +142,12 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
         'feeNotes': _feeNotesCtrl.text.trim(),
         'feeTiers': _feeTiers,
         'seasonStartMonth': _seasonStartMonth,
+        'mvpWeights': _mvpWeights,
       }, token);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('설정이 저장되었습니다 ✅'), backgroundColor: AppColors.primary, duration: Duration(seconds: 2)),
+          const SnackBar(content: Text('설정이 저장되었습니다'), backgroundColor: AppColors.primary, duration: Duration(seconds: 2)),
         );
         // Refresh auth service club info
         await context.read<AuthService>().refreshClub();
@@ -216,6 +231,15 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
                   ),
                   const SizedBox(height: 12),
                   _buildEventTypeSection(),
+                  const SizedBox(height: 28),
+                  _buildSectionTitle(Icons.tune_rounded, 'MVP 가중치 설정'),
+                  const SizedBox(height: 6),
+                  Text(
+                    'MVP 점수 계산 시 각 기록 항목별 가중치를 설정합니다. 값이 클수록 해당 기록의 비중이 높아집니다.',
+                    style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102)),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildMvpWeightsSection(),
                   const SizedBox(height: 28),
                   _buildSectionTitle(Icons.calendar_month_rounded, '시즌 설정'),
                   const SizedBox(height: 6),
@@ -569,7 +593,7 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      '경기 종료 → 순위 자동 계산 → 각 선수 참가비 자동 생성',
+                      '경기 종료 -> 순위 자동 계산 -> 각 선수 참가비 자동 생성',
                       style: TextStyle(fontSize: 11, color: AppColors.primary.withAlpha(179)),
                     ),
                   ),
@@ -657,7 +681,7 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
                 setState(() {
                   if (val) {
                     _enabledEvents.add(key);
-                    // 간편 수비 ↔ 상세 수비 상호 배타
+                    // 간편 수비 <-> 상세 수비 상호 배타
                     if (key == 'DEFENSE') {
                       _enabledEvents.removeAll(_defenseDetailKeys);
                     } else if (_defenseDetailKeys.contains(key)) {
@@ -677,6 +701,120 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
         ));
         return widgets;
       }).toList(),
+    );
+  }
+
+  // MVP 가중치에 표시할 항목 목록
+  static const _allWeightItems = [
+    {'key': 'GOAL', 'label': '득점', 'icon': '⚽', 'alwaysShow': true},
+    {'key': 'ASSIST', 'label': '도움', 'icon': '⚡', 'alwaysShow': true},
+    {'key': 'SESSION_WIN', 'label': '세션 승리', 'icon': '🏆', 'alwaysShow': true},
+    {'key': 'DEFENSE', 'label': '수비', 'icon': '🛡️', 'alwaysShow': false},
+    {'key': 'TACKLE', 'label': '태클', 'icon': '🦶', 'alwaysShow': false},
+    {'key': 'INTERCEPTION', 'label': '인터셉트', 'icon': '✋', 'alwaysShow': false},
+    {'key': 'CLEARANCE', 'label': '클리어런스', 'icon': '🧹', 'alwaysShow': false},
+    {'key': 'SAVE', 'label': '선방', 'icon': '🧤', 'alwaysShow': false},
+    {'key': 'KEY_PASS', 'label': '키패스', 'icon': '⚡', 'alwaysShow': false},
+    {'key': 'DRIBBLE', 'label': '돌파', 'icon': '💨', 'alwaysShow': false},
+    {'key': 'SHOT_ON', 'label': '유효슈팅', 'icon': '🎯', 'alwaysShow': false},
+    {'key': 'SHOT_OFF', 'label': '무효슈팅', 'icon': '💫', 'alwaysShow': false},
+  ];
+
+  Widget _buildMvpWeightsSection() {
+    final visible = _allWeightItems.where((item) {
+      if (item['alwaysShow'] == true) return true;
+      return _enabledEvents.contains(item['key']);
+    }).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(8),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withAlpha(15)),
+      ),
+      child: Column(
+        children: [
+          ...visible.map((item) {
+            final key = item['key'] as String;
+            final label = item['label'] as String;
+            final icon = item['icon'] as String;
+            final weight = _mvpWeights[key] ?? 0.0;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(6),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withAlpha(13)),
+              ),
+              child: Row(
+                children: [
+                  Text(icon, style: const TextStyle(fontSize: 18)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white)),
+                  ),
+                  SizedBox(
+                    width: 70,
+                    height: 36,
+                    child: TextFormField(
+                      initialValue: weight.toString(),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppColors.primary, fontSize: 14, fontWeight: FontWeight.w600),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white.withAlpha(10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.white.withAlpha(20)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.white.withAlpha(20)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      ),
+                      onChanged: (v) {
+                        final parsed = double.tryParse(v);
+                        if (parsed != null) {
+                          setState(() => _mvpWeights[key] = parsed);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withAlpha(13),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, size: 13, color: AppColors.primary.withAlpha(179)),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'MVP 점수 = 각 기록 x 가중치의 합. 기록 항목이 비활성이면 가중치도 숨겨집니다.',
+                    style: TextStyle(fontSize: 11, color: AppColors.primary.withAlpha(179)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

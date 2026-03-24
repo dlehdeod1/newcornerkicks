@@ -23,7 +23,7 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
   Map<String, dynamic>? _stats;
   bool _loading = true;
   bool _refreshing = false;
-  String _sortBy = 'mvpCount';
+  String _sortBy = 'mvpScore';
   int _selectedYear = DateTime.now().year;
   String? _lastLoadedToken;
 
@@ -37,13 +37,46 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
     return now.month >= startMonth ? now.year : now.year - 1;
   }
 
-  final List<Map<String, dynamic>> _categories = [
-    {'key': 'mvpCount', 'label': 'MVP', 'icon': '⭐', 'color': AppColors.primary},
-    {'key': 'goals', 'label': '득점', 'icon': '⚽', 'color': AppColors.amber},
-    {'key': 'assists', 'label': '도움', 'icon': '⚡', 'color': AppColors.blue},
-    {'key': 'defenses', 'label': '수비', 'icon': '🛡️', 'color': AppColors.purple},
-    {'key': 'games', 'label': '경기', 'icon': '🎮', 'color': AppColors.slate},
-  ];
+  List<Map<String, dynamic>> get _categories {
+    final events = context.read<AuthService>().enabledEvents;
+    final cats = <Map<String, dynamic>>[
+      {'key': 'mvpScore', 'label': 'MVP점수', 'icon': '⭐', 'color': AppColors.primary},
+      {'key': 'mvpCount', 'label': 'MVP', 'icon': '🏅', 'color': AppColors.amber},
+      {'key': 'goals', 'label': '득점', 'icon': '⚽', 'color': AppColors.amber},
+      {'key': 'assists', 'label': '도움', 'icon': '⚡', 'color': AppColors.blue},
+      {'key': 'sessionWins', 'label': '승리', 'icon': '🏆', 'color': AppColors.primary},
+      {'key': 'sessionLosses', 'label': '패배', 'icon': '💀', 'color': AppColors.red},
+    ];
+    if (events.contains('DEFENSE')) {
+      cats.add({'key': 'defenses', 'label': '수비', 'icon': '🛡️', 'color': AppColors.purple});
+    }
+    if (events.contains('TACKLE')) {
+      cats.add({'key': 'tackles', 'label': '태클', 'icon': '🦶', 'color': AppColors.purple});
+    }
+    if (events.contains('INTERCEPTION')) {
+      cats.add({'key': 'interceptions', 'label': '인터셉트', 'icon': '✋', 'color': AppColors.indigo});
+    }
+    if (events.contains('CLEARANCE')) {
+      cats.add({'key': 'clearances', 'label': '클리어런스', 'icon': '🧹', 'color': AppColors.teal});
+    }
+    if (events.contains('SAVE')) {
+      cats.add({'key': 'saves', 'label': '선방', 'icon': '🧤', 'color': AppColors.blueSky});
+    }
+    if (events.contains('KEY_PASS')) {
+      cats.add({'key': 'keyPasses', 'label': '키패스', 'icon': '🎯', 'color': AppColors.cyan});
+    }
+    if (events.contains('DRIBBLE')) {
+      cats.add({'key': 'dribbles', 'label': '돌파', 'icon': '💨', 'color': AppColors.orange});
+    }
+    if (events.contains('SHOT_ON')) {
+      cats.add({'key': 'shotsOn', 'label': '유효슈팅', 'icon': '🎯', 'color': AppColors.rose});
+    }
+    if (events.contains('SHOT_OFF')) {
+      cats.add({'key': 'shotsOff', 'label': '무효슈팅', 'icon': '💫', 'color': AppColors.slate});
+    }
+    cats.add({'key': 'games', 'label': '경기', 'icon': '🎮', 'color': AppColors.slate});
+    return cats;
+  }
 
   @override
   void initState() {
@@ -490,8 +523,14 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
-                  if (player['attendance'] != null)
-                    Text('${player['attendance']}경기 참여', style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(77))),
+                  if (player['attendance'] != null || player['winRate'] != null)
+                    Text(
+                      [
+                        if (player['attendance'] != null) '${player['attendance']}경기',
+                        if (player['winRate'] != null) '승률 ${((player['winRate'] as num).toDouble() * 100).toInt()}%',
+                      ].join(' / '),
+                      style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(77)),
+                    ),
                 ],
               ),
             ),

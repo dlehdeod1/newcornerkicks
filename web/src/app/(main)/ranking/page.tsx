@@ -9,7 +9,7 @@ import { Trophy, Target, Handshake, Shield, ChevronDown, Search, ChevronRight, C
 import { rankingsApi, exportApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
-type SortKey = 'mvpCount' | 'goals' | 'assists' | 'attackPoints' | 'defenses' | 'games' | 'rank1' | 'rank2' | 'rank3' | 'ppm' | 'winRate'
+type SortKey = 'mvpCount' | 'goals' | 'assists' | 'attackPoints' | 'defenses' | 'games' | 'sessionWins' | 'sessionLosses' | 'ppm' | 'winRate' | 'tackles' | 'interceptions' | 'clearances' | 'saves' | 'keyPasses' | 'dribbles' | 'shotsOn' | 'shotsOff' | 'mvpScore'
 type SortOrder = 'asc' | 'desc'
 
 function getCurrentSeasonYear(startMonth: number): number {
@@ -27,6 +27,8 @@ export default function RankingPage() {
   const [sortBy, setSortBy] = useState<SortKey>('mvpCount')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [search, setSearch] = useState('')
+
+  const enabledEvents: string[] = club?.enabledEvents ?? ['GOAL', 'DEFENSE']
 
   const { data, isLoading } = useQuery({
     queryKey: ['rankings', selectedYear, token],
@@ -74,11 +76,19 @@ export default function RankingPage() {
       attackPoints: '공격포인트',
       defenses: '수비',
       games: '경기수',
-      rank1: '1등',
-      rank2: '2등',
-      rank3: '3등',
+      sessionWins: '승',
+      sessionLosses: '패',
       ppm: 'PPM',
-      winRate: '우승률',
+      winRate: '승률',
+      tackles: '태클',
+      interceptions: '인터셉트',
+      clearances: '클리어런스',
+      saves: '선방',
+      keyPasses: '키패스',
+      dribbles: '돌파',
+      shotsOn: '유효슈팅',
+      shotsOff: '무효슈팅',
+      mvpScore: 'MVP점수',
     }
     return labels[sortBy]
   }
@@ -164,13 +174,38 @@ export default function RankingPage() {
                     <SortableHeader label="득점" sortKey="goals" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Target className="w-3.5 h-3.5" />} color="amber" />
                     <SortableHeader label="도움" sortKey="assists" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Handshake className="w-3.5 h-3.5" />} color="blue" />
                     <SortableHeader label="공격P" sortKey="attackPoints" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="rose" />
-                    <SortableHeader label="수비" sortKey="defenses" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Shield className="w-3.5 h-3.5" />} color="purple" />
+                    {enabledEvents.includes('DEFENSE') && (
+                      <SortableHeader label="수비" sortKey="defenses" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Shield className="w-3.5 h-3.5" />} color="purple" />
+                    )}
+                    {enabledEvents.includes('TACKLE') && (
+                      <SortableHeader label="태클" sortKey="tackles" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="purple" />
+                    )}
+                    {enabledEvents.includes('INTERCEPTION') && (
+                      <SortableHeader label="인터셉트" sortKey="interceptions" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="purple" />
+                    )}
+                    {enabledEvents.includes('CLEARANCE') && (
+                      <SortableHeader label="클리어런스" sortKey="clearances" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="purple" />
+                    )}
+                    {enabledEvents.includes('SAVE') && (
+                      <SortableHeader label="선방" sortKey="saves" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="teal" />
+                    )}
+                    {enabledEvents.includes('KEY_PASS') && (
+                      <SortableHeader label="키패스" sortKey="keyPasses" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="blue" />
+                    )}
+                    {enabledEvents.includes('DRIBBLE') && (
+                      <SortableHeader label="돌파" sortKey="dribbles" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="orange" />
+                    )}
+                    {enabledEvents.includes('SHOT_ON') && (
+                      <SortableHeader label="유효슈팅" sortKey="shotsOn" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="amber" />
+                    )}
+                    {enabledEvents.includes('SHOT_OFF') && (
+                      <SortableHeader label="무효슈팅" sortKey="shotsOff" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="slate" />
+                    )}
                     <SortableHeader label="경기" sortKey="games" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="slate" />
-                    <SortableHeader label="PPM" sortKey="ppm" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="orange" />
-                    <SortableHeader label="🥇" sortKey="rank1" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="yellow" />
-                    <SortableHeader label="🥈" sortKey="rank2" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="slate" />
-                    <SortableHeader label="🥉" sortKey="rank3" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="orange" />
+                    <SortableHeader label="승" sortKey="sessionWins" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="emerald" />
+                    <SortableHeader label="패" sortKey="sessionLosses" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="red" />
                     <SortableHeader label="승률" sortKey="winRate" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="emerald" />
+                    <SortableHeader label="MVP점수" sortKey="mvpScore" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="amber" />
                     <th className="px-2 py-2.5 w-8"></th>
                   </tr>
                 </thead>
@@ -181,6 +216,7 @@ export default function RankingPage() {
                       player={player}
                       rank={index + 1}
                       sortBy={sortBy}
+                      enabledEvents={enabledEvents}
                     />
                   ))}
                 </tbody>
@@ -221,6 +257,8 @@ function SortableHeader({
     yellow: 'text-yellow-600 dark:text-yellow-400',
     orange: 'text-orange-600 dark:text-orange-400',
     rose: 'text-rose-600 dark:text-rose-400',
+    red: 'text-red-600 dark:text-red-400',
+    teal: 'text-teal-600 dark:text-teal-400',
   }
 
   return (
@@ -253,15 +291,18 @@ function Podium({ topThree, sortBy }: { topThree: any[]; sortBy: SortKey }) {
       return (player.goals || 0) + (player.assists || 0)
     }
     if (sortBy === 'winRate') {
-      return player.attendance > 0 ? `${((player.rank1 || 0) / player.attendance * 100).toFixed(0)}%` : '-'
+      return player.winRate ? player.winRate + '%' : '-'
+    }
+    if (sortBy === 'mvpScore') {
+      return player.mvpScore != null ? Number(player.mvpScore).toFixed(1) : '0.0'
     }
     return player[sortBy] || 0
   }
 
   const positions = [
-    { player: topThree[1], rank: 2, medal: '🥈', size: 'w-14 h-14 sm:w-16 sm:h-16' },
-    { player: topThree[0], rank: 1, medal: '🥇', size: 'w-16 h-16 sm:w-20 sm:h-20' },
-    { player: topThree[2], rank: 3, medal: '🥉', size: 'w-14 h-14 sm:w-16 sm:h-16' },
+    { player: topThree[1], rank: 2, medal: '\u{1F948}', size: 'w-14 h-14 sm:w-16 sm:h-16' },
+    { player: topThree[0], rank: 1, medal: '\u{1F947}', size: 'w-16 h-16 sm:w-20 sm:h-20' },
+    { player: topThree[2], rank: 3, medal: '\u{1F949}', size: 'w-14 h-14 sm:w-16 sm:h-16' },
   ]
 
   return (
@@ -270,7 +311,7 @@ function Podium({ topThree, sortBy }: { topThree: any[]; sortBy: SortKey }) {
         {positions.map(({ player, rank, medal, size }) => (
           <Link
             key={rank}
-            href={`/ranking/${player.id}`}
+            href={'/ranking/' + player.id}
             className={cn(
               'flex flex-col items-center group transition-transform hover:scale-105',
               rank === 1 ? 'mb-4' : 'mb-0'
@@ -314,11 +355,11 @@ function Podium({ topThree, sortBy }: { topThree: any[]; sortBy: SortKey }) {
   )
 }
 
-function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy: SortKey }) {
+function PlayerRow({ player, rank, sortBy, enabledEvents }: { player: any; rank: number; sortBy: SortKey; enabledEvents: string[] }) {
   const getRankBadge = () => {
-    if (rank === 1) return <span className="text-sm">🥇</span>
-    if (rank === 2) return <span className="text-sm">🥈</span>
-    if (rank === 3) return <span className="text-sm">🥉</span>
+    if (rank === 1) return <span className="text-sm">{'\u{1F947}'}</span>
+    if (rank === 2) return <span className="text-sm">{'\u{1F948}'}</span>
+    if (rank === 3) return <span className="text-sm">{'\u{1F949}'}</span>
     return <span className="text-xs font-bold text-slate-400 dark:text-slate-500">{rank}</span>
   }
 
@@ -331,16 +372,23 @@ function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy
       attackPoints: 'text-rose-600 dark:text-rose-400 font-bold',
       defenses: 'text-purple-600 dark:text-purple-400 font-bold',
       games: 'text-slate-700 dark:text-slate-300 font-bold',
-      rank1: 'text-yellow-600 dark:text-yellow-400 font-bold',
-      rank2: 'text-slate-600 dark:text-slate-400 font-bold',
-      rank3: 'text-orange-600 dark:text-orange-400 font-bold',
+      sessionWins: 'text-emerald-600 dark:text-emerald-400 font-bold',
+      sessionLosses: 'text-red-600 dark:text-red-400 font-bold',
       ppm: 'text-orange-600 dark:text-orange-400 font-bold',
       winRate: 'text-emerald-600 dark:text-emerald-400 font-bold',
+      tackles: 'text-purple-600 dark:text-purple-400 font-bold',
+      interceptions: 'text-purple-600 dark:text-purple-400 font-bold',
+      clearances: 'text-purple-600 dark:text-purple-400 font-bold',
+      saves: 'text-teal-600 dark:text-teal-400 font-bold',
+      keyPasses: 'text-blue-600 dark:text-blue-400 font-bold',
+      dribbles: 'text-orange-600 dark:text-orange-400 font-bold',
+      shotsOn: 'text-amber-600 dark:text-amber-400 font-bold',
+      shotsOff: 'text-slate-600 dark:text-slate-400 font-bold',
+      mvpScore: 'text-amber-600 dark:text-amber-400 font-bold',
     }
     return colors[key]
   }
 
-  const ppm = player.games > 0 ? (player.goals / player.games).toFixed(2) : '0.00'
   const attackPoints = (player.goals || 0) + (player.assists || 0)
 
   return (
@@ -356,7 +404,7 @@ function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy
         'px-2 py-2.5 sticky left-10 z-10 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]',
         rank <= 3 ? 'bg-amber-50 dark:bg-slate-900' : 'bg-white dark:bg-slate-900'
       )}>
-        <Link href={`/ranking/${player.id}`} className="flex items-center gap-1.5 group">
+        <Link href={'/ranking/' + player.id} className="flex items-center gap-1.5 group">
           <div className="w-7 h-7 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700 shrink-0">
             {player.photo_url ? (
               <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover rounded-lg" />
@@ -381,29 +429,68 @@ function PlayerRow({ player, rank, sortBy }: { player: any; rank: number; sortBy
       <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('attackPoints'))}>
         {attackPoints}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('defenses'))}>
-        {player.defenses || 0}
-      </td>
+      {enabledEvents.includes('DEFENSE') && (
+        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('defenses'))}>
+          {player.defenses || 0}
+        </td>
+      )}
+      {enabledEvents.includes('TACKLE') && (
+        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('tackles'))}>
+          {player.tackles || 0}
+        </td>
+      )}
+      {enabledEvents.includes('INTERCEPTION') && (
+        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('interceptions'))}>
+          {player.interceptions || 0}
+        </td>
+      )}
+      {enabledEvents.includes('CLEARANCE') && (
+        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('clearances'))}>
+          {player.clearances || 0}
+        </td>
+      )}
+      {enabledEvents.includes('SAVE') && (
+        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('saves'))}>
+          {player.saves || 0}
+        </td>
+      )}
+      {enabledEvents.includes('KEY_PASS') && (
+        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('keyPasses'))}>
+          {player.keyPasses || 0}
+        </td>
+      )}
+      {enabledEvents.includes('DRIBBLE') && (
+        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('dribbles'))}>
+          {player.dribbles || 0}
+        </td>
+      )}
+      {enabledEvents.includes('SHOT_ON') && (
+        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('shotsOn'))}>
+          {player.shotsOn || 0}
+        </td>
+      )}
+      {enabledEvents.includes('SHOT_OFF') && (
+        <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('shotsOff'))}>
+          {player.shotsOff || 0}
+        </td>
+      )}
       <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('games'))}>
         {player.games || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('ppm'))}>
-        {ppm}
+      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('sessionWins'))}>
+        {player.sessionWins || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs ', getCellClass('rank1'))}>
-        {player.rank1 || 0}
+      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('sessionLosses'))}>
+        {player.sessionLosses || 0}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs ', getCellClass('rank2'))}>
-        {player.rank2 || 0}
+      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('winRate'))}>
+        {player.winRate ? player.winRate + '%' : '-'}
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs ', getCellClass('rank3'))}>
-        {player.rank3 || 0}
-      </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs ', getCellClass('winRate'))}>
-        {player.attendance > 0 ? `${((player.rank1 || 0) / player.attendance * 100).toFixed(0)}%` : '-'}
+      <td className={cn('px-2 py-2.5 text-center text-xs', getCellClass('mvpScore'))}>
+        {player.mvpScore != null ? Number(player.mvpScore).toFixed(1) : '0.0'}
       </td>
       <td className="px-2 py-2.5">
-        <Link href={`/ranking/${player.id}`}>
+        <Link href={'/ranking/' + player.id}>
           <ChevronRight className="w-4 h-4 text-slate-400 hover:text-emerald-500 transition-colors" />
         </Link>
       </td>
@@ -418,7 +505,7 @@ function LoadingSkeleton() {
         <div className="flex items-end justify-center gap-6">
           {[16, 20, 16].map((s, i) => (
             <div key={i} className="flex flex-col items-center">
-              <div className={`w-${s} h-${s} bg-slate-200 dark:bg-slate-700 rounded-xl mb-2 animate-pulse`} style={{ width: s * 4, height: s * 4 }} />
+              <div className="bg-slate-200 dark:bg-slate-700 rounded-xl mb-2 animate-pulse" style={{ width: s * 4, height: s * 4 }} />
               <div className="w-12 h-4 bg-slate-200 dark:bg-slate-700 rounded mb-1 animate-pulse" />
               <div className="w-8 h-5 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
             </div>
