@@ -134,9 +134,9 @@ meRoutes.get('/profile-summary', authMiddleware(), async (c) => {
     // 능력치 평균
     const ratings = await c.env.DB.prepare(`
       SELECT
-        AVG(shooting) as shooting, AVG(off_the_ball) as off_the_ball,
+        AVG(shooting) as shooting, AVG(offball_run) as offball_run,
         AVG(ball_keeping) as ball_keeping, AVG(passing) as passing,
-        AVG(linking_play) as linking_play, AVG(intercept) as intercept,
+        AVG(linkup) as linkup, AVG(intercept) as intercept,
         AVG(marking) as marking, AVG(stamina) as stamina,
         AVG(speed) as speed, AVG(physical) as physical,
         COUNT(*) as rater_count
@@ -146,8 +146,8 @@ meRoutes.get('/profile-summary', authMiddleware(), async (c) => {
     let abilities = null
     if (ratings && (ratings.rater_count as number) > 0) {
       const vals = [
-        ratings.shooting, ratings.off_the_ball, ratings.ball_keeping,
-        ratings.passing, ratings.linking_play, ratings.intercept,
+        ratings.shooting, ratings.offball_run, ratings.ball_keeping,
+        ratings.passing, ratings.linkup, ratings.intercept,
         ratings.marking, ratings.stamina, ratings.speed, ratings.physical,
       ].map(v => Math.round(v as number))
       abilities = {
