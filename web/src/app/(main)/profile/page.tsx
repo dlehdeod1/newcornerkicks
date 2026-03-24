@@ -400,38 +400,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* 시즌 스탯 */}
-      {summaryPlayer && seasonStats && (
-        <Link
-          href={`/players/${summaryPlayer.id}`}
-          className="block bg-white dark:bg-white/[0.03] rounded-2xl p-5 border border-slate-200 dark:border-white/[0.08] hover:border-emerald-300 dark:hover:border-emerald-500/30 transition-colors group"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-xs font-semibold text-slate-400 dark:text-white/40 uppercase tracking-wider">
-              {seasonStats.year} 시즌 기록
-            </p>
-            <span className="text-xs text-emerald-500 group-hover:text-emerald-600 flex items-center gap-0.5">
-              자세히 보기 <ChevronRight className="w-3 h-3" />
-            </span>
-          </div>
-          <div className="flex">
-            {[
-              { label: '출석', value: seasonStats.attendance, icon: Target, color: 'text-blue-500' },
-              { label: '경기', value: seasonStats.games, icon: Swords, color: 'text-slate-500 dark:text-white/50' },
-              { label: '득점', value: seasonStats.goals, icon: Zap, color: 'text-emerald-500' },
-              { label: '도움', value: seasonStats.assists, icon: Trophy, color: 'text-amber-500' },
-              { label: '수비', value: seasonStats.defenses, icon: Shield, color: 'text-purple-500' },
-            ].map(({ label, value, icon: Icon, color }) => (
-              <div key={label} className="flex-1 text-center">
-                <Icon className={cn('w-4 h-4 mx-auto mb-1.5', color)} />
-                <div className="text-xl font-bold text-slate-900 dark:text-white">{value ?? 0}</div>
-                <div className="text-xs text-slate-500 dark:text-white/50">{label}</div>
-              </div>
-            ))}
-          </div>
-        </Link>
-      )}
-
       {/* 능력치 + 선호 선수 (2열) */}
       {summaryPlayer && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
