@@ -1,15 +1,16 @@
 'use client'
 
 import { useAuthStore } from '@/stores/auth'
-
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
-import { Trophy, Target, Handshake, Shield, ChevronDown, Search, ChevronRight, ChevronUp, Crown, Award } from 'lucide-react'
+import { Trophy, Target, Handshake, Shield, ChevronDown, Search, ChevronRight, ChevronUp, Crown, Award, List, TableProperties } from 'lucide-react'
 import { rankingsApi, exportApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import { SortChips, type SortChip } from '@/components/ui/sort-chips'
+import { CompactPlayerList } from '@/components/ranking/compact-player-list'
 
-type SortKey = 'mvpCount' | 'goals' | 'assists' | 'attackPoints' | 'defenses' | 'games' | 'sessionWins' | 'sessionLosses' | 'ppm' | 'winRate' | 'tackles' | 'interceptions' | 'clearances' | 'saves' | 'keyPasses' | 'dribbles' | 'shotsOn' | 'shotsOff' | 'mvpScore'
+type SortKey = 'mvpCount' | 'goals' | 'assists' | 'attackPoints' | 'defenses' | 'games' | 'sessionWins' | 'sessionLosses' | 'contribution' | 'winRate' | 'tackles' | 'interceptions' | 'clearances' | 'saves' | 'keyPasses' | 'dribbles' | 'shotsOn' | 'shotsOff' | 'mvpScore'
 type SortOrder = 'asc' | 'desc'
 
 function getCurrentSeasonYear(startMonth: number): number {
@@ -27,8 +28,16 @@ export default function RankingPage() {
   const [sortBy, setSortBy] = useState<SortKey>('mvpCount')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [search, setSearch] = useState('')
+  const [viewMode, setViewMode] = useState<'compact' | 'table'>(() => {
+    if (typeof window !== 'undefined') return (localStorage.getItem('ranking-view-mode') as 'compact' | 'table') || 'compact'
+    return 'compact'
+  })
 
   const enabledEvents: string[] = club?.enabledEvents ?? ['GOAL', 'DEFENSE']
+
+  useEffect(() => {
+    localStorage.setItem('ranking-view-mode', viewMode)
+  }, [viewMode])
 
   const { data, isLoading } = useQuery({
     queryKey: ['rankings', selectedYear, token],
@@ -44,9 +53,9 @@ export default function RankingPage() {
 
   const sortedRankings = [...filteredRankings].sort((a: any, b: any) => {
     let aVal, bVal
-    if (sortBy === 'ppm') {
-      aVal = a.games > 0 ? a.goals / a.games : 0
-      bVal = b.games > 0 ? b.goals / b.games : 0
+    if (sortBy === 'contribution') {
+      aVal = a.games > 0 ? (a.goals + a.assists) / a.games : 0
+      bVal = b.games > 0 ? (b.goals + b.assists) / b.games : 0
     } else if (sortBy === 'attackPoints') {
       aVal = (a.goals || 0) + (a.assists || 0)
       bVal = (b.goals || 0) + (b.assists || 0)
@@ -59,39 +68,51 @@ export default function RankingPage() {
 
   const topThree = sortedRankings.slice(0, 3)
 
-  const handleSort = (key: SortKey) => {
-    if (sortBy === key) {
+  const handleSort = (key: string) => {
+    const k = key as SortKey
+    if (sortBy === k) {
       setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')
     } else {
-      setSortBy(key)
+      setSortBy(k)
       setSortOrder('desc')
     }
   }
 
+  const chipList: SortChip[] = [
+    { key: 'mvpCount', label: 'MVP' },
+    { key: 'goals', label: '득점' },
+    { key: 'assists', label: '도움' },
+    { key: 'attackPoints', label: '공격P' },
+    ...enabledEvents.filter(e => e !== 'GOAL').map(e => {
+      const map: Record<string, SortChip> = {
+        DEFENSE: { key: 'defenses', label: '수비' },
+        TACKLE: { key: 'tackles', label: '태클' },
+        INTERCEPTION: { key: 'interceptions', label: '인터셉트' },
+        CLEARANCE: { key: 'clearances', label: '클리어런스' },
+        SAVE: { key: 'saves', label: '선방' },
+        KEY_PASS: { key: 'keyPasses', label: '키패스' },
+        DRIBBLE: { key: 'dribbles', label: '돌파' },
+        SHOT_ON: { key: 'shotsOn', label: '유효슈팅' },
+        SHOT_OFF: { key: 'shotsOff', label: '무효슈팅' },
+      }
+      return map[e]
+    }).filter(Boolean) as SortChip[],
+    { key: 'games', label: '경기' },
+    { key: 'winRate', label: '승률' },
+    { key: 'contribution', label: '공헌도' },
+    { key: 'mvpScore', label: '평점' },
+  ]
+
   const getSortLabel = () => {
-    const labels: Record<SortKey, string> = {
-      mvpCount: 'MVP',
-      goals: '득점',
-      assists: '도움',
-      attackPoints: '공격포인트',
-      defenses: '수비',
-      games: '경기수',
-      sessionWins: '승',
-      sessionLosses: '패',
-      ppm: 'PPM',
-      winRate: '승률',
-      tackles: '태클',
-      interceptions: '인터셉트',
-      clearances: '클리어런스',
-      saves: '선방',
-      keyPasses: '키패스',
-      dribbles: '돌파',
-      shotsOn: '유효슈팅',
-      shotsOff: '무효슈팅',
-      mvpScore: '평점합계',
-    }
-    return labels[sortBy]
+    const chip = chipList.find(c => c.key === sortBy)
+    return chip?.label ?? sortBy
   }
+
+  // Table column grouping: determine if we need column toggle
+  const eventColumns = enabledEvents.filter(e => e !== 'GOAL')
+  const totalColumns = 11 + eventColumns.length
+  const showColumnToggle = totalColumns >= 12
+  const [showAllColumns, setShowAllColumns] = useState(false)
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -132,8 +153,8 @@ export default function RankingPage() {
           </div>
         </div>
 
-        {/* 검색 - 별도 줄 */}
-        <div className="relative">
+        {/* 검색 */}
+        <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
@@ -143,6 +164,9 @@ export default function RankingPage() {
             className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
+
+        {/* Sort Chips */}
+        <SortChips chips={chipList} activeKey={sortBy} onSelect={handleSort} />
       </div>
 
       {isLoading ? (
@@ -158,73 +182,172 @@ export default function RankingPage() {
             </div>
           )}
 
-          {/* 테이블 */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-            <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
-              <table className="w-max min-w-full">
-                <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20">
-                    <th className="px-2 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 w-10 sticky left-0 z-30 bg-slate-50 dark:bg-slate-800">
-                      #
-                    </th>
-                    <th className="px-2 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 min-w-[100px] sticky left-10 z-30 bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
-                      선수
-                    </th>
-                    <SortableHeader label="MVP" sortKey="mvpCount" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Award className="w-3.5 h-3.5" />} color="emerald" />
-                    <SortableHeader label="득점" sortKey="goals" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Target className="w-3.5 h-3.5" />} color="amber" />
-                    <SortableHeader label="도움" sortKey="assists" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Handshake className="w-3.5 h-3.5" />} color="blue" />
-                    <SortableHeader label="공격P" sortKey="attackPoints" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="rose" />
-                    {enabledEvents.includes('DEFENSE') && (
-                      <SortableHeader label="수비" sortKey="defenses" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Shield className="w-3.5 h-3.5" />} color="purple" />
+          {/* 뷰 모드에 따른 렌더링 */}
+          {viewMode === 'compact' ? (
+            <CompactPlayerList
+              rankings={sortedRankings}
+              sortBy={sortBy}
+              enabledEvents={enabledEvents}
+            />
+          ) : (
+            /* 테이블 뷰 */
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+              {showColumnToggle && (
+                <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    {showAllColumns ? '전체 컬럼 표시 중' : '주요 컬럼만 표시 중'}
+                  </span>
+                  <button
+                    onClick={() => setShowAllColumns(!showAllColumns)}
+                    className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-semibold"
+                  >
+                    {showAllColumns ? '주요 컬럼만' : '전체 컬럼 보기'}
+                  </button>
+                </div>
+              )}
+              <div className="overflow-x-auto overflow-y-auto max-h-[70vh]">
+                <table className="w-max min-w-full">
+                  <thead>
+                    {/* Group headers when showing all columns */}
+                    {showAllColumns && showColumnToggle && (
+                      <tr className="bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
+                        <th className="sticky left-0 z-30 bg-slate-100 dark:bg-slate-800" colSpan={2}></th>
+                        <th className="text-[10px] font-bold text-amber-600 dark:text-amber-400 text-center border-b-2 border-amber-400/30" colSpan={getAttackColspan(enabledEvents)}>공격</th>
+                        <th className="text-[10px] font-bold text-purple-600 dark:text-purple-400 text-center border-b-2 border-purple-400/30" colSpan={getDefenseColspan(enabledEvents)}>수비</th>
+                        <th className="text-[10px] font-bold text-slate-600 dark:text-slate-400 text-center border-b-2 border-slate-400/30" colSpan={6}>기록</th>
+                        <th className="w-8"></th>
+                      </tr>
                     )}
-                    {enabledEvents.includes('TACKLE') && (
-                      <SortableHeader label="태클" sortKey="tackles" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="purple" />
-                    )}
-                    {enabledEvents.includes('INTERCEPTION') && (
-                      <SortableHeader label="인터셉트" sortKey="interceptions" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="purple" />
-                    )}
-                    {enabledEvents.includes('CLEARANCE') && (
-                      <SortableHeader label="클리어런스" sortKey="clearances" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="purple" />
-                    )}
-                    {enabledEvents.includes('SAVE') && (
-                      <SortableHeader label="선방" sortKey="saves" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="teal" />
-                    )}
-                    {enabledEvents.includes('KEY_PASS') && (
-                      <SortableHeader label="키패스" sortKey="keyPasses" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="blue" />
-                    )}
-                    {enabledEvents.includes('DRIBBLE') && (
-                      <SortableHeader label="돌파" sortKey="dribbles" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="orange" />
-                    )}
-                    {enabledEvents.includes('SHOT_ON') && (
-                      <SortableHeader label="유효슈팅" sortKey="shotsOn" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="amber" />
-                    )}
-                    {enabledEvents.includes('SHOT_OFF') && (
-                      <SortableHeader label="무효슈팅" sortKey="shotsOff" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="slate" />
-                    )}
-                    <SortableHeader label="경기" sortKey="games" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="slate" />
-                    <SortableHeader label="승" sortKey="sessionWins" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="emerald" />
-                    <SortableHeader label="패" sortKey="sessionLosses" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="red" />
-                    <SortableHeader label="승률" sortKey="winRate" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="emerald" />
-                    <SortableHeader label="평점합계" sortKey="mvpScore" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="amber" />
-                    <th className="px-2 py-2.5 w-8"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {sortedRankings.map((player: any, index: number) => (
-                    <PlayerRow
-                      key={player.id}
-                      player={player}
-                      rank={index + 1}
-                      sortBy={sortBy}
-                      enabledEvents={enabledEvents}
-                    />
-                  ))}
-                </tbody>
-              </table>
+                    <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20">
+                      <th className="px-2 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 w-10 sticky left-0 z-30 bg-slate-50 dark:bg-slate-800">
+                        #
+                      </th>
+                      <th className="px-2 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 min-w-[100px] sticky left-10 z-30 bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                        선수
+                      </th>
+                      {/* 공격 그룹 */}
+                      <SortableHeader label="득점" sortKey="goals" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Target className="w-3.5 h-3.5" />} color="amber" />
+                      <SortableHeader label="도움" sortKey="assists" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Handshake className="w-3.5 h-3.5" />} color="blue" />
+                      <SortableHeader label="공격P" sortKey="attackPoints" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="rose" />
+                      {(!showColumnToggle || showAllColumns) && (
+                        <>
+                          {enabledEvents.includes('KEY_PASS') && (
+                            <SortableHeader label="키패스" sortKey="keyPasses" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="blue" />
+                          )}
+                          {enabledEvents.includes('DRIBBLE') && (
+                            <SortableHeader label="돌파" sortKey="dribbles" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="orange" />
+                          )}
+                          {enabledEvents.includes('SHOT_ON') && (
+                            <SortableHeader label="유효슈팅" sortKey="shotsOn" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="amber" />
+                          )}
+                          {enabledEvents.includes('SHOT_OFF') && (
+                            <SortableHeader label="무효슈팅" sortKey="shotsOff" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="slate" />
+                          )}
+                        </>
+                      )}
+                      {/* 수비 그룹 */}
+                      {(!showColumnToggle || showAllColumns) && (
+                        <>
+                          {enabledEvents.includes('DEFENSE') && (
+                            <SortableHeader label="수비" sortKey="defenses" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Shield className="w-3.5 h-3.5" />} color="purple" />
+                          )}
+                          {enabledEvents.includes('TACKLE') && (
+                            <SortableHeader label="태클" sortKey="tackles" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="purple" />
+                          )}
+                          {enabledEvents.includes('INTERCEPTION') && (
+                            <SortableHeader label="인터셉트" sortKey="interceptions" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="purple" />
+                          )}
+                          {enabledEvents.includes('CLEARANCE') && (
+                            <SortableHeader label="클리어런스" sortKey="clearances" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="purple" />
+                          )}
+                          {enabledEvents.includes('SAVE') && (
+                            <SortableHeader label="선방" sortKey="saves" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="teal" />
+                          )}
+                        </>
+                      )}
+                      {/* 기록 그룹 */}
+                      <SortableHeader label="경기" sortKey="games" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="slate" />
+                      <SortableHeader label="승" sortKey="sessionWins" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="emerald" />
+                      <SortableHeader label="패" sortKey="sessionLosses" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="red" />
+                      <SortableHeader label="승률" sortKey="winRate" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="emerald" />
+                      <SortableHeader label="MVP" sortKey="mvpCount" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} icon={<Award className="w-3.5 h-3.5" />} color="emerald" />
+                      <SortableHeader label="평점" sortKey="mvpScore" currentSort={sortBy} sortOrder={sortOrder} onSort={handleSort} color="amber" />
+                      <th className="px-2 py-2.5 w-8"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {sortedRankings.map((player: any, index: number) => (
+                      <PlayerRow
+                        key={player.id}
+                        player={player}
+                        rank={index + 1}
+                        sortBy={sortBy}
+                        enabledEvents={enabledEvents}
+                        showAllColumns={!showColumnToggle || showAllColumns}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* View Toggle */}
+          <ViewToggle viewMode={viewMode} onToggle={() => setViewMode(viewMode === 'compact' ? 'table' : 'compact')} />
         </>
       )}
+    </div>
+  )
+}
+
+function getAttackColspan(enabledEvents: string[]): number {
+  let count = 3 // 득점, 도움, 공격P
+  if (enabledEvents.includes('KEY_PASS')) count++
+  if (enabledEvents.includes('DRIBBLE')) count++
+  if (enabledEvents.includes('SHOT_ON')) count++
+  if (enabledEvents.includes('SHOT_OFF')) count++
+  return count
+}
+
+function getDefenseColspan(enabledEvents: string[]): number {
+  let count = 0
+  if (enabledEvents.includes('DEFENSE')) count++
+  if (enabledEvents.includes('TACKLE')) count++
+  if (enabledEvents.includes('INTERCEPTION')) count++
+  if (enabledEvents.includes('CLEARANCE')) count++
+  if (enabledEvents.includes('SAVE')) count++
+  return count
+}
+
+function ViewToggle({ viewMode, onToggle }: { viewMode: 'compact' | 'table'; onToggle: () => void }) {
+  return (
+    <div className="flex justify-center mt-6">
+      <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-0.5">
+        <button
+          onClick={viewMode !== 'compact' ? onToggle : undefined}
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors',
+            viewMode === 'compact'
+              ? 'bg-emerald-500 text-white shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+          )}
+        >
+          <List className="w-3.5 h-3.5" />
+          리스트
+        </button>
+        <button
+          onClick={viewMode !== 'table' ? onToggle : undefined}
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors',
+            viewMode === 'table'
+              ? 'bg-emerald-500 text-white shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+          )}
+        >
+          <TableProperties className="w-3.5 h-3.5" />
+          테이블
+        </button>
+      </div>
     </div>
   )
 }
@@ -239,10 +362,10 @@ function SortableHeader({
   color,
 }: {
   label: string
-  sortKey: SortKey
-  currentSort: SortKey
+  sortKey: string
+  currentSort: string
   sortOrder: SortOrder
-  onSort: (key: SortKey) => void
+  onSort: (key: string) => void
   icon?: React.ReactNode
   color: string
 }) {
@@ -284,8 +407,8 @@ function SortableHeader({
 
 function Podium({ topThree, sortBy }: { topThree: any[]; sortBy: SortKey }) {
   const getValue = (player: any) => {
-    if (sortBy === 'ppm') {
-      return player.games > 0 ? (player.goals / player.games).toFixed(2) : '0.00'
+    if (sortBy === 'contribution') {
+      return player.games > 0 ? ((player.goals + player.assists) / player.games).toFixed(2) : '0.00'
     }
     if (sortBy === 'attackPoints') {
       return (player.goals || 0) + (player.assists || 0)
@@ -355,7 +478,7 @@ function Podium({ topThree, sortBy }: { topThree: any[]; sortBy: SortKey }) {
   )
 }
 
-function PlayerRow({ player, rank, sortBy, enabledEvents }: { player: any; rank: number; sortBy: SortKey; enabledEvents: string[] }) {
+function PlayerRow({ player, rank, sortBy, enabledEvents, showAllColumns }: { player: any; rank: number; sortBy: SortKey; enabledEvents: string[]; showAllColumns: boolean }) {
   const getRankBadge = () => {
     if (rank === 1) return <span className="text-sm">{'\u{1F947}'}</span>
     if (rank === 2) return <span className="text-sm">{'\u{1F948}'}</span>
@@ -374,7 +497,7 @@ function PlayerRow({ player, rank, sortBy, enabledEvents }: { player: any; rank:
       games: 'text-slate-700 dark:text-slate-300 font-bold',
       sessionWins: 'text-emerald-600 dark:text-emerald-400 font-bold',
       sessionLosses: 'text-red-600 dark:text-red-400 font-bold',
-      ppm: 'text-orange-600 dark:text-orange-400 font-bold',
+      contribution: 'text-orange-600 dark:text-orange-400 font-bold',
       winRate: 'text-emerald-600 dark:text-emerald-400 font-bold',
       tackles: 'text-purple-600 dark:text-purple-400 font-bold',
       interceptions: 'text-purple-600 dark:text-purple-400 font-bold',
@@ -417,9 +540,7 @@ function PlayerRow({ player, rank, sortBy, enabledEvents }: { player: any; rank:
           </span>
         </Link>
       </td>
-      <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('mvpCount'))}>
-        {player.mvpCount || 0}
-      </td>
+      {/* 공격 */}
       <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('goals'))}>
         {player.goals || 0}
       </td>
@@ -429,51 +550,61 @@ function PlayerRow({ player, rank, sortBy, enabledEvents }: { player: any; rank:
       <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('attackPoints'))}>
         {attackPoints}
       </td>
-      {enabledEvents.includes('DEFENSE') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('defenses'))}>
-          {player.defenses || 0}
-        </td>
+      {showAllColumns && (
+        <>
+          {enabledEvents.includes('KEY_PASS') && (
+            <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('keyPasses'))}>
+              {player.keyPasses || 0}
+            </td>
+          )}
+          {enabledEvents.includes('DRIBBLE') && (
+            <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('dribbles'))}>
+              {player.dribbles || 0}
+            </td>
+          )}
+          {enabledEvents.includes('SHOT_ON') && (
+            <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('shotsOn'))}>
+              {player.shotsOn || 0}
+            </td>
+          )}
+          {enabledEvents.includes('SHOT_OFF') && (
+            <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('shotsOff'))}>
+              {player.shotsOff || 0}
+            </td>
+          )}
+        </>
       )}
-      {enabledEvents.includes('TACKLE') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('tackles'))}>
-          {player.tackles || 0}
-        </td>
+      {/* 수비 */}
+      {showAllColumns && (
+        <>
+          {enabledEvents.includes('DEFENSE') && (
+            <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('defenses'))}>
+              {player.defenses || 0}
+            </td>
+          )}
+          {enabledEvents.includes('TACKLE') && (
+            <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('tackles'))}>
+              {player.tackles || 0}
+            </td>
+          )}
+          {enabledEvents.includes('INTERCEPTION') && (
+            <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('interceptions'))}>
+              {player.interceptions || 0}
+            </td>
+          )}
+          {enabledEvents.includes('CLEARANCE') && (
+            <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('clearances'))}>
+              {player.clearances || 0}
+            </td>
+          )}
+          {enabledEvents.includes('SAVE') && (
+            <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('saves'))}>
+              {player.saves || 0}
+            </td>
+          )}
+        </>
       )}
-      {enabledEvents.includes('INTERCEPTION') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('interceptions'))}>
-          {player.interceptions || 0}
-        </td>
-      )}
-      {enabledEvents.includes('CLEARANCE') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('clearances'))}>
-          {player.clearances || 0}
-        </td>
-      )}
-      {enabledEvents.includes('SAVE') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('saves'))}>
-          {player.saves || 0}
-        </td>
-      )}
-      {enabledEvents.includes('KEY_PASS') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('keyPasses'))}>
-          {player.keyPasses || 0}
-        </td>
-      )}
-      {enabledEvents.includes('DRIBBLE') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('dribbles'))}>
-          {player.dribbles || 0}
-        </td>
-      )}
-      {enabledEvents.includes('SHOT_ON') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('shotsOn'))}>
-          {player.shotsOn || 0}
-        </td>
-      )}
-      {enabledEvents.includes('SHOT_OFF') && (
-        <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('shotsOff'))}>
-          {player.shotsOff || 0}
-        </td>
-      )}
+      {/* 기록 */}
       <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('games'))}>
         {player.games || 0}
       </td>
@@ -485,6 +616,9 @@ function PlayerRow({ player, rank, sortBy, enabledEvents }: { player: any; rank:
       </td>
       <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('winRate'))}>
         {player.winRate ? player.winRate + '%' : '-'}
+      </td>
+      <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('mvpCount'))}>
+        {player.mvpCount || 0}
       </td>
       <td className={cn('px-2 py-2.5 text-center text-xs min-w-[52px]', getCellClass('mvpScore'))}>
         {player.mvpScore != null ? Number(player.mvpScore).toFixed(1) : '0.0'}
