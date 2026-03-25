@@ -218,54 +218,67 @@ export function AttendanceEditorModal({
         {/* ── 직접 선택 모드 ── */}
         {mode === 'manual' && (
           <>
-            {/* 현재 선택된 참석자 */}
+            {/* 현재 선택된 참석자 + 용병 추가 인라인 */}
             <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  선택된 참석자
+                  참석자
                 </span>
                 <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
                   {selectedPlayerIds.length + guestNames.length}명
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {selectedPlayerIds.length === 0 && guestNames.length === 0 ? (
-                  <p className="text-sm text-slate-400">아직 선택된 참석자가 없습니다.</p>
-                ) : (
-                  <>
-                    {selectedPlayerIds.map(playerId => {
-                      const player = players.find((p: any) => p.id === playerId)
-                      return (
-                        <div
-                          key={playerId}
-                          className="flex items-center gap-1 px-2.5 py-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-lg text-sm"
-                        >
-                          <span>{player?.name || player?.nickname}</span>
-                          <button
-                            onClick={() => togglePlayer(playerId)}
-                            className="hover:text-red-500 transition-colors"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      )
-                    })}
-                    {guestNames.map((name, index) => (
-                      <div
-                        key={`guest-${index}`}
-                        className="flex items-center gap-1 px-2.5 py-1 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded-lg text-sm"
+                {selectedPlayerIds.map(playerId => {
+                  const player = players.find((p: any) => p.id === playerId)
+                  return (
+                    <div
+                      key={playerId}
+                      className="flex items-center gap-1 px-2.5 py-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-lg text-sm"
+                    >
+                      <span>{player?.name || player?.nickname}</span>
+                      <button
+                        onClick={() => togglePlayer(playerId)}
+                        className="hover:text-red-500 transition-colors"
                       >
-                        <span>{name} (용병)</span>
-                        <button
-                          onClick={() => removeGuest(index)}
-                          className="hover:text-red-500 transition-colors"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </>
-                )}
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )
+                })}
+                {guestNames.map((name, index) => (
+                  <div
+                    key={`guest-${index}`}
+                    className="flex items-center gap-1 px-2.5 py-1 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded-lg text-sm"
+                  >
+                    <span>{name}</span>
+                    <button
+                      onClick={() => removeGuest(index)}
+                      className="hover:text-red-500 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+                {/* 용병 추가 인라인 입력 */}
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    value={newGuestName}
+                    onChange={(e) => setNewGuestName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addGuest()}
+                    placeholder="+ 용병"
+                    className="w-20 px-2 py-1 bg-white dark:bg-slate-800 border border-dashed border-amber-300 dark:border-amber-500/40 rounded-lg text-sm text-slate-900 dark:text-white placeholder-amber-400 dark:placeholder-amber-500/60 focus:outline-none focus:ring-1 focus:ring-amber-400 focus:w-28 transition-all"
+                  />
+                  {newGuestName.trim() && (
+                    <button
+                      onClick={addGuest}
+                      className="p-1 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-md hover:bg-amber-200 dark:hover:bg-amber-500/30 transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -327,27 +340,6 @@ export function AttendanceEditorModal({
               </div>
             </div>
 
-            {/* 용병 추가 */}
-            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-              <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
-                <UserPlus className="w-4 h-4" />
-                용병 추가
-              </h3>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newGuestName}
-                  onChange={(e) => setNewGuestName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addGuest()}
-                  placeholder="용병 이름"
-                  className="flex-1 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                />
-                <Button onClick={addGuest} disabled={!newGuestName.trim()}>
-                  <Plus className="w-4 h-4" />
-                  추가
-                </Button>
-              </div>
-            </div>
           </>
         )}
 

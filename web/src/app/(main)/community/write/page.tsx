@@ -17,6 +17,7 @@ const categories = [
   { key: 'mercenary', label: '용병 모집' },
   { key: 'match', label: '매칭' },
   { key: 'review', label: '경기 후기' },
+  { key: 'patchnote', label: '패치노트' },
 ]
 
 const regions = ['서울', '경기', '인천', '부산', '대구', '대전', '광주', '울산', '세종', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주']

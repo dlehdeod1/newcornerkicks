@@ -27,6 +27,7 @@ const communityCategories = [
   { key: 'mercenary', label: '용병 모집', color: 'rose' },
   { key: 'match', label: '매칭', color: 'blue' },
   { key: 'review', label: '경기 후기', color: 'purple' },
+  { key: 'patchnote', label: '패치노트', color: 'slate' },
 ] as const
 
 type CommunityCategoryKey = typeof communityCategories[number]['key']
@@ -42,6 +43,7 @@ const badgeColors: Record<string, string> = {
   blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
   purple: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400',
   rose: 'bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400',
+  slate: 'bg-slate-100 dark:bg-slate-500/20 text-slate-600 dark:text-slate-400',
 }
 
 function formatDate(ts: number) {
