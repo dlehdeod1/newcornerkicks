@@ -29,8 +29,13 @@ export default function RankingPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [search, setSearch] = useState('')
   const [viewMode, setViewMode] = useState<'compact' | 'table'>(() => {
-    if (typeof window !== 'undefined') return (localStorage.getItem('ranking-view-mode') as 'compact' | 'table') || 'compact'
-    return 'compact'
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ranking-view-mode') as 'compact' | 'table' | null
+      if (saved) return saved
+      // 기본값: 데스크톱은 테이블, 모바일은 컴팩트
+      return window.innerWidth >= 768 ? 'table' : 'compact'
+    }
+    return 'table'
   })
 
   const enabledEvents: string[] = club?.enabledEvents ?? ['GOAL', 'DEFENSE']
@@ -165,8 +170,13 @@ export default function RankingPage() {
           />
         </div>
 
-        {/* Sort Chips */}
-        <SortChips chips={chipList} activeKey={sortBy} onSelect={handleSort} />
+        {/* Sort Chips + View Toggle */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <SortChips chips={chipList} activeKey={sortBy} onSelect={handleSort} />
+          </div>
+          <ViewToggle viewMode={viewMode} onToggle={() => setViewMode(viewMode === 'compact' ? 'table' : 'compact')} />
+        </div>
       </div>
 
       {isLoading ? (
@@ -213,7 +223,9 @@ export default function RankingPage() {
                       <tr className="bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
                         <th className="sticky left-0 z-30 bg-slate-100 dark:bg-slate-800" colSpan={2}></th>
                         <th className="text-[10px] font-bold text-amber-600 dark:text-amber-400 text-center border-b-2 border-amber-400/30" colSpan={getAttackColspan(enabledEvents)}>공격</th>
-                        <th className="text-[10px] font-bold text-purple-600 dark:text-purple-400 text-center border-b-2 border-purple-400/30" colSpan={getDefenseColspan(enabledEvents)}>수비</th>
+                        {getDefenseColspan(enabledEvents) > 0 && (
+                          <th className="text-[10px] font-bold text-purple-600 dark:text-purple-400 text-center border-b-2 border-purple-400/30" colSpan={getDefenseColspan(enabledEvents)}>수비</th>
+                        )}
                         <th className="text-[10px] font-bold text-slate-600 dark:text-slate-400 text-center border-b-2 border-slate-400/30" colSpan={6}>기록</th>
                         <th className="w-8"></th>
                       </tr>
@@ -292,8 +304,6 @@ export default function RankingPage() {
             </div>
           )}
 
-          {/* View Toggle */}
-          <ViewToggle viewMode={viewMode} onToggle={() => setViewMode(viewMode === 'compact' ? 'table' : 'compact')} />
         </>
       )}
     </div>
@@ -321,34 +331,13 @@ function getDefenseColspan(enabledEvents: string[]): number {
 
 function ViewToggle({ viewMode, onToggle }: { viewMode: 'compact' | 'table'; onToggle: () => void }) {
   return (
-    <div className="flex justify-center mt-6">
-      <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-0.5">
-        <button
-          onClick={viewMode !== 'compact' ? onToggle : undefined}
-          className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors',
-            viewMode === 'compact'
-              ? 'bg-emerald-500 text-white shadow-sm'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-          )}
-        >
-          <List className="w-3.5 h-3.5" />
-          리스트
-        </button>
-        <button
-          onClick={viewMode !== 'table' ? onToggle : undefined}
-          className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors',
-            viewMode === 'table'
-              ? 'bg-emerald-500 text-white shadow-sm'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-          )}
-        >
-          <TableProperties className="w-3.5 h-3.5" />
-          테이블
-        </button>
-      </div>
-    </div>
+    <button
+      onClick={onToggle}
+      className="shrink-0 p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+      title={viewMode === 'compact' ? '테이블 뷰' : '리스트 뷰'}
+    >
+      {viewMode === 'compact' ? <TableProperties className="w-4 h-4" /> : <List className="w-4 h-4" />}
+    </button>
   )
 }
 
