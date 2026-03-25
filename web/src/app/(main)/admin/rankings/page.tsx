@@ -17,6 +17,7 @@ import {
 import { useAuthStore, useAuthHydrated } from '@/stores/auth'
 import { rankingsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import { StatCard } from '@/components/ui/stat-card'
 
 export default function AdminRankingsPage() {
   const currentYear = new Date().getFullYear()
@@ -116,24 +117,28 @@ export default function AdminRankingsPage() {
           label="총 선수"
           value={rankingsData.totalPlayers || 0}
           color="blue"
+          variant="flat"
         />
         <StatCard
           icon={<Target className="w-5 h-5" />}
           label="총 골"
           value={rankingsData.totalGoals || 0}
           color="red"
+          variant="flat"
         />
         <StatCard
           icon={<Shield className="w-5 h-5" />}
           label="총 어시스트"
           value={rankingsData.totalAssists || 0}
           color="emerald"
+          variant="flat"
         />
         <StatCard
           icon={<Flame className="w-5 h-5" />}
           label="총 세션"
           value={rankingsData.totalSessions || 0}
           color="amber"
+          variant="flat"
         />
       </div>
 
@@ -217,31 +222,3 @@ export default function AdminRankingsPage() {
   )
 }
 
-function StatCard({
-  icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: number
-  color: 'blue' | 'red' | 'emerald' | 'amber'
-}) {
-  const colorClasses = {
-    blue: 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400',
-    red: 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400',
-    emerald: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-    amber: 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  }
-
-  return (
-    <div className={cn('rounded-xl p-4', colorClasses[color])}>
-      <div className="flex items-center gap-2 mb-2 opacity-80">
-        {icon}
-        <span className="text-sm">{label}</span>
-      </div>
-      <p className="text-2xl font-bold">{value}</p>
-    </div>
-  )
-}

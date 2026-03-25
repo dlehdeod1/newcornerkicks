@@ -17,6 +17,8 @@ import Link from 'next/link'
 import { useAuthStore, useAuthHydrated } from '@/stores/auth'
 import { sessionsApi, playersApi, rankingsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import { StatCard } from '@/components/ui/stat-card'
+import { StatusBadge } from '@/components/ui/status-badge'
 
 export default function AdminDashboardPage() {
   const hydrated = useAuthHydrated()
@@ -279,57 +281,4 @@ function QuickActionCard({
   )
 }
 
-function StatCard({
-  label,
-  value,
-  icon,
-  color,
-}: {
-  label: string
-  value: number
-  icon: React.ReactNode
-  color: 'blue' | 'emerald' | 'amber' | 'red'
-}) {
-  const colorClasses = {
-    blue: 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400',
-    emerald: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-    amber: 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400',
-    red: 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400',
-  }
-
-  return (
-    <div className="bg-white dark:bg-slate-900/50 rounded-xl p-4 border border-slate-200 dark:border-slate-800/50">
-      <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center mb-3', colorClasses[color])}>
-        {icon}
-      </div>
-      <p className="text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
-      <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
-    </div>
-  )
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; className: string }> = {
-    recruiting: {
-      label: '모집중',
-      className: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
-    },
-    closed: {
-      label: '마감',
-      className: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400',
-    },
-    completed: {
-      label: '완료',
-      className: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
-    },
-  }
-
-  const { label, className } = config[status] || config.closed
-
-  return (
-    <span className={cn('px-2 py-1 rounded-lg text-xs font-medium', className)}>
-      {label}
-    </span>
-  )
-}
 
