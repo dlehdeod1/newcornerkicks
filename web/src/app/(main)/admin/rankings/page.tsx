@@ -18,13 +18,31 @@ import { useAuthStore, useAuthHydrated } from '@/stores/auth'
 import { rankingsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import { StatCard } from '@/components/ui/stat-card'
+import { CompactPlayerList } from '@/components/ranking/compact-player-list'
+import { SortChips, type SortChip } from '@/components/ui/sort-chips'
+
+const EVENT_CHIP_MAP: { event: string; chip: SortChip }[] = [
+  { event: 'DEFENSE', chip: { key: 'defenses', label: '수비' } },
+  { event: 'TACKLE', chip: { key: 'tackles', label: '태클' } },
+  { event: 'INTERCEPTION', chip: { key: 'interceptions', label: '인터셉트' } },
+  { event: 'CLEARANCE', chip: { key: 'clearances', label: '클리어런스' } },
+  { event: 'SAVE', chip: { key: 'saves', label: '선방' } },
+  { event: 'KEY_PASS', chip: { key: 'keyPasses', label: '키패스' } },
+  { event: 'DRIBBLE', chip: { key: 'dribbles', label: '돌파' } },
+  { event: 'SHOT_ON', chip: { key: 'shotsOn', label: '유효슈팅' } },
+  { event: 'SHOT_OFF', chip: { key: 'shotsOff', label: '무효슈팅' } },
+]
 
 export default function AdminRankingsPage() {
   const currentYear = new Date().getFullYear()
   const [selectedYear, setSelectedYear] = useState(currentYear)
+  const [sortBy, setSortBy] = useState('mvpCount')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const hydrated = useAuthHydrated()
-  const { isAdmin, isLoggedIn, token } = useAuthStore()
+  const { isAdmin, isLoggedIn, token, club } = useAuthStore()
   const queryClient = useQueryClient()
+
+  const enabledEvents: string[] = club?.enabledEvents ?? ['GOAL', 'DEFENSE']
 
   // hooks는 조건부 return 전에 모두 선언 (React hooks 규칙)
   const { data, isLoading } = useQuery({
@@ -39,6 +57,11 @@ export default function AdminRankingsPage() {
       queryClient.invalidateQueries({ queryKey: ['rankings', selectedYear] })
     },
   })
+
+  const handleSort = (key: string) => {
+    if (sortBy === key) setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')
+    else { setSortBy(key); setSortOrder('desc') }
+  }
 
   if (!hydrated) {
     return (
@@ -61,6 +84,38 @@ export default function AdminRankingsPage() {
   const rankingsData = data?.data || {}
   const rankings = rankingsData.rankings || []
   const updatedAt = data?.updatedAt
+
+  // Build chip list dynamically based on enabledEvents
+  const chips: SortChip[] = [
+    { key: 'mvpCount', label: 'MVP' },
+    { key: 'goals', label: '득점' },
+    { key: 'assists', label: '도움' },
+    { key: 'attackPoints', label: '공격P' },
+    ...EVENT_CHIP_MAP.filter(e => enabledEvents.includes(e.event)).map(e => e.chip),
+    { key: 'games', label: '경기' },
+    { key: 'winRate', label: '승률' },
+    { key: 'mvpScore', label: '평점합계' },
+    { key: 'contribution', label: '공헌도' },
+  ]
+
+  // Sort rankings
+  const sorted = [...rankings].sort((a: any, b: any) => {
+    let av: number, bv: number
+    if (sortBy === 'attackPoints') {
+      av = (a.goals || 0) + (a.assists || 0)
+      bv = (b.goals || 0) + (b.assists || 0)
+    } else if (sortBy === 'winRate') {
+      av = parseFloat(a.winRate || '0')
+      bv = parseFloat(b.winRate || '0')
+    } else if (sortBy === 'contribution') {
+      av = a.games > 0 ? (a.goals + a.assists) / a.games : 0
+      bv = b.games > 0 ? (b.goals + b.assists) / b.games : 0
+    } else {
+      av = a[sortBy] || 0
+      bv = b[sortBy] || 0
+    }
+    return sortOrder === 'desc' ? bv - av : av - bv
+  })
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -142,7 +197,12 @@ export default function AdminRankingsPage() {
         />
       </div>
 
-      {/* 랭킹 테이블 */}
+      {/* 정렬 칩 */}
+      <div className="mb-4">
+        <SortChips chips={chips} activeKey={sortBy} onSelect={handleSort} />
+      </div>
+
+      {/* 랭킹 리스트 */}
       {isLoading ? (
         <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse" />
       ) : rankings.length === 0 ? (
@@ -157,68 +217,12 @@ export default function AdminRankingsPage() {
           </button>
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-                  <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">#</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">선수</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-slate-500">경기</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-slate-500">골</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-slate-500">도움</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-slate-500">수비</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-slate-500">승/무/패</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-slate-500">승률</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-amber-500">MVP점수</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {rankings.slice(0, 20).map((player: any, idx: number) => (
-                  <tr key={player.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td className="px-4 py-3">
-                      <span className={cn(
-                        'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold',
-                        idx === 0 && 'bg-amber-100 text-amber-600',
-                        idx === 1 && 'bg-slate-200 text-slate-600',
-                        idx === 2 && 'bg-orange-100 text-orange-600',
-                        idx > 2 && 'bg-slate-100 text-slate-500'
-                      )}>
-                        {idx + 1}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
-                      {player.name}
-                    </td>
-                    <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-400">
-                      {player.games}
-                    </td>
-                    <td className="px-4 py-3 text-center text-red-600 dark:text-red-400 font-medium">
-                      {player.goals}
-                    </td>
-                    <td className="px-4 py-3 text-center text-blue-600 dark:text-blue-400">
-                      {player.assists}
-                    </td>
-                    <td className="px-4 py-3 text-center text-emerald-600 dark:text-emerald-400">
-                      {player.defenses}
-                    </td>
-                    <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-400 text-sm">
-                      {player.wins}/{player.draws}/{player.losses}
-                    </td>
-                    <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-400">
-                      {player.winRate}%
-                    </td>
-                    <td className="px-4 py-3 text-center font-bold text-amber-600 dark:text-amber-400">
-                      {player.mvpScore?.toFixed(1)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <CompactPlayerList
+          rankings={sorted}
+          sortBy={sortBy}
+          enabledEvents={enabledEvents}
+        />
       )}
     </div>
   )
 }
-
