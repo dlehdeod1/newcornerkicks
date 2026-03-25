@@ -10,6 +10,13 @@ import { MatchRecorder } from './match-recorder'
 import { MatchTimeline } from '@/components/match/match-timeline'
 import { useAuthStore } from '@/stores/auth'
 
+// vest_color → hex 매핑
+const vestColorHex: Record<string, string> = {
+  yellow: '#EAB308', orange: '#F97316', white: '#94A3B8',
+  red: '#EF4444', blue: '#3B82F6', green: '#10B981',
+  purple: '#A855F7', pink: '#EC4899',
+}
+
 type ViewMode = 'table' | 'timeline'
 
 interface Props {
@@ -202,7 +209,7 @@ export function ScoreboardTab({ sessionId, teams, matches, onRefetch }: Props) {
               teams={teams.map((t: any) => ({
                 id: t.id,
                 team_name: t.name,
-                color_primary: t.vest_color || '#3B82F6',
+                color_primary: vestColorHex[t.vest_color] || t.vest_color || '#3B82F6',
               }))}
               events={(matchEventsData?.[match.id] || []).map((e: any) => ({
                 id: e.id,

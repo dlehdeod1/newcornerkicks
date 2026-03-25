@@ -31,7 +31,7 @@ interface TeamAnalysis {
   watchOut?: string
 }
 
-// 조끼색: 노랑, 주황, 하양
+// 조끼색 팔레트
 const teamColors: Record<string, {
   light: string
   dark: string
@@ -40,36 +40,73 @@ const teamColors: Record<string, {
   emoji: string
 }> = {
   yellow: {
-    light: 'bg-yellow-100 border-yellow-300 text-yellow-800',
-    dark: 'dark:bg-yellow-500/20 dark:border-yellow-500/40 dark:text-yellow-300',
-    badge: 'bg-yellow-400 text-yellow-900',
+    light: 'bg-yellow-50 border-yellow-400 text-slate-900',
+    dark: 'dark:bg-yellow-500/15 dark:border-yellow-500/50 dark:text-white',
+    badge: 'bg-yellow-400 text-yellow-950',
     name: '노랑',
     emoji: '🟡',
   },
   orange: {
-    light: 'bg-orange-100 border-orange-300 text-orange-800',
-    dark: 'dark:bg-orange-500/20 dark:border-orange-500/40 dark:text-orange-300',
-    badge: 'bg-orange-400 text-orange-900',
+    light: 'bg-orange-50 border-orange-400 text-slate-900',
+    dark: 'dark:bg-orange-500/15 dark:border-orange-500/50 dark:text-white',
+    badge: 'bg-orange-400 text-orange-950',
     name: '주황',
     emoji: '🟠',
   },
   white: {
-    light: 'bg-slate-50 border-slate-300 text-slate-800',
-    dark: 'dark:bg-slate-700/50 dark:border-slate-500/40 dark:text-slate-200',
+    light: 'bg-slate-50 border-slate-300 text-slate-900',
+    dark: 'dark:bg-slate-700/50 dark:border-slate-500/50 dark:text-white',
     badge: 'bg-white text-slate-800 border border-slate-300',
     name: '하양',
     emoji: '⚪',
   },
+  red: {
+    light: 'bg-red-50 border-red-400 text-slate-900',
+    dark: 'dark:bg-red-500/15 dark:border-red-500/50 dark:text-white',
+    badge: 'bg-red-500 text-white',
+    name: '빨강',
+    emoji: '🔴',
+  },
+  blue: {
+    light: 'bg-blue-50 border-blue-400 text-slate-900',
+    dark: 'dark:bg-blue-500/15 dark:border-blue-500/50 dark:text-white',
+    badge: 'bg-blue-500 text-white',
+    name: '파랑',
+    emoji: '🔵',
+  },
+  green: {
+    light: 'bg-emerald-50 border-emerald-400 text-slate-900',
+    dark: 'dark:bg-emerald-500/15 dark:border-emerald-500/50 dark:text-white',
+    badge: 'bg-emerald-500 text-white',
+    name: '초록',
+    emoji: '🟢',
+  },
+  purple: {
+    light: 'bg-purple-50 border-purple-400 text-slate-900',
+    dark: 'dark:bg-purple-500/15 dark:border-purple-500/50 dark:text-white',
+    badge: 'bg-purple-500 text-white',
+    name: '보라',
+    emoji: '🟣',
+  },
+  pink: {
+    light: 'bg-pink-50 border-pink-400 text-slate-900',
+    dark: 'dark:bg-pink-500/15 dark:border-pink-500/50 dark:text-white',
+    badge: 'bg-pink-400 text-pink-950',
+    name: '핑크',
+    emoji: '🩷',
+  },
 }
 
-// 기존 색상 매핑 (red, blue, green -> 새 색상)
+// 기존 색상 매핑 (이전 데이터 호환)
 const colorMapping: Record<string, string> = {
-  red: 'yellow',
-  blue: 'orange',
-  green: 'white',
+  red: 'red',
+  blue: 'blue',
+  green: 'green',
   yellow: 'yellow',
   orange: 'orange',
   white: 'white',
+  purple: 'purple',
+  pink: 'pink',
 }
 
 export function TeamsTab({ teams, sessionId, session, attendance, onRefetch }: Props) {
@@ -574,7 +611,7 @@ function TeamCard({
 
               {/* 색상 선택 팝업 */}
               {showColorPicker && (
-                <div className="absolute top-full right-0 mt-1 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-2 flex gap-1 z-20">
+                <div className="absolute top-full right-0 mt-1 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 p-2 grid grid-cols-4 gap-1 z-20">
                   {(Object.keys(teamColors) as Array<keyof typeof teamColors>).map(colorKey => (
                     <button
                       key={colorKey}

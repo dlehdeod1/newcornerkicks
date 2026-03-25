@@ -204,11 +204,26 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
     }
   }
 
-  // 팀 카드 색상
-  const teamColors = [
+  // 팀 카드 색상 (vest_color 기반)
+  const vestColorStyles: Record<string, { border: string; bg: string; accent: string }> = {
+    yellow: { border: 'border-yellow-400/60', bg: 'bg-yellow-500/10', accent: '#eab308' },
+    orange: { border: 'border-orange-400/60', bg: 'bg-orange-500/10', accent: '#f97316' },
+    white: { border: 'border-slate-400/40', bg: 'bg-slate-500/10', accent: '#94a3b8' },
+    red: { border: 'border-red-400/60', bg: 'bg-red-500/10', accent: '#ef4444' },
+    blue: { border: 'border-blue-400/60', bg: 'bg-blue-500/10', accent: '#3b82f6' },
+    green: { border: 'border-emerald-400/60', bg: 'bg-emerald-500/10', accent: '#10b981' },
+    purple: { border: 'border-purple-400/60', bg: 'bg-purple-500/10', accent: '#a855f7' },
+    pink: { border: 'border-pink-400/60', bg: 'bg-pink-500/10', accent: '#ec4899' },
+  }
+  const defaultStyles = [
     { border: 'border-amber-400/60', bg: 'bg-amber-500/10', accent: '#fbbf24' },
     { border: 'border-slate-400/40', bg: 'bg-slate-500/10', accent: '#94a3b8' },
     { border: 'border-purple-400/40', bg: 'bg-purple-500/10', accent: '#c084fc' },
+    { border: 'border-blue-400/60', bg: 'bg-blue-500/10', accent: '#3b82f6' },
+    { border: 'border-emerald-400/60', bg: 'bg-emerald-500/10', accent: '#10b981' },
+    { border: 'border-red-400/60', bg: 'bg-red-500/10', accent: '#ef4444' },
+    { border: 'border-pink-400/60', bg: 'bg-pink-500/10', accent: '#ec4899' },
+    { border: 'border-orange-400/60', bg: 'bg-orange-500/10', accent: '#f97316' },
   ]
 
   const formatDate = () => {
@@ -265,7 +280,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
           {/* 팀 카드 */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {rankedTeams.map((team: any, idx: number) => {
-              const colors = teamColors[idx] || teamColors[2]
+              const colors = vestColorStyles[team.vest_color] || defaultStyles[idx] || defaultStyles[0]
               const s = team.standing
               const memberNames = (team.members || []).map((m: any) => m.name || m.player_name || m.guest_name || '').filter(Boolean)
               const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'

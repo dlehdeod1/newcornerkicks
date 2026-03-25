@@ -77,7 +77,7 @@ teamsRoutes.put('/:teamId/color', authMiddleware(), async (c) => {
     }
 
     const schema = z.object({
-      vestColor: z.enum(['yellow', 'orange', 'white']),
+      vestColor: z.enum(['yellow', 'orange', 'white', 'red', 'blue', 'green', 'purple', 'pink']),
     })
 
     const { vestColor } = schema.parse(body)

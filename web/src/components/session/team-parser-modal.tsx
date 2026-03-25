@@ -17,30 +17,43 @@ interface Props {
 
 interface ParsedTeam {
   name: string
-  color: 'yellow' | 'orange' | 'white'
+  color: string
   members: { name: string; playerId: number | null; isGuest: boolean }[]
 }
 
 // 조끼색 매핑
-const colorKeywords: Record<string, 'yellow' | 'orange' | 'white'> = {
+const colorKeywords: Record<string, string> = {
   '노란': 'yellow',
   '노랑': 'yellow',
   '황색': 'yellow',
   '주황': 'orange',
   '오렌지': 'orange',
-  '빨간': 'orange', // 빨간조끼 -> 주황으로 매핑 (실제 조끼가 주황일 수 있음)
-  '빨강': 'orange',
+  '빨간': 'red',
+  '빨강': 'red',
   '흰': 'white',
   '흰색': 'white',
   '하얀': 'white',
   '하양': 'white',
   '백색': 'white',
+  '파란': 'blue',
+  '파랑': 'blue',
+  '청색': 'blue',
+  '초록': 'green',
+  '녹색': 'green',
+  '보라': 'purple',
+  '핑크': 'pink',
+  '분홍': 'pink',
 }
 
-const teamColors = {
-  yellow: { bg: 'bg-yellow-100 dark:bg-yellow-500/20', text: 'text-yellow-700 dark:text-yellow-300', name: '노랑', emoji: '🟡' },
-  orange: { bg: 'bg-orange-100 dark:bg-orange-500/20', text: 'text-orange-700 dark:text-orange-300', name: '주황', emoji: '🟠' },
-  white: { bg: 'bg-slate-100 dark:bg-slate-700/50', text: 'text-slate-700 dark:text-slate-300', name: '하양', emoji: '⚪' },
+const teamColors: Record<string, { bg: string; text: string; name: string; emoji: string }> = {
+  yellow: { bg: 'bg-yellow-50 dark:bg-yellow-500/15', text: 'text-slate-900 dark:text-white', name: '노랑', emoji: '🟡' },
+  orange: { bg: 'bg-orange-50 dark:bg-orange-500/15', text: 'text-slate-900 dark:text-white', name: '주황', emoji: '🟠' },
+  white: { bg: 'bg-slate-50 dark:bg-slate-700/50', text: 'text-slate-900 dark:text-white', name: '하양', emoji: '⚪' },
+  red: { bg: 'bg-red-50 dark:bg-red-500/15', text: 'text-slate-900 dark:text-white', name: '빨강', emoji: '🔴' },
+  blue: { bg: 'bg-blue-50 dark:bg-blue-500/15', text: 'text-slate-900 dark:text-white', name: '파랑', emoji: '🔵' },
+  green: { bg: 'bg-emerald-50 dark:bg-emerald-500/15', text: 'text-slate-900 dark:text-white', name: '초록', emoji: '🟢' },
+  purple: { bg: 'bg-purple-50 dark:bg-purple-500/15', text: 'text-slate-900 dark:text-white', name: '보라', emoji: '🟣' },
+  pink: { bg: 'bg-pink-50 dark:bg-pink-500/15', text: 'text-slate-900 dark:text-white', name: '핑크', emoji: '🩷' },
 }
 
 export function TeamParserModal({ sessionId, isOpen, onClose, onSave }: Props) {
@@ -93,7 +106,7 @@ export function TeamParserModal({ sessionId, isOpen, onClose, onSave }: Props) {
         const teamName = teamMatch[1]
 
         // 조끼색 파싱
-        let color: 'yellow' | 'orange' | 'white' = 'yellow'
+        let color: string = 'yellow'
         const colorPart = teamMatch[2] || ''
 
         for (const [keyword, colorValue] of Object.entries(colorKeywords)) {
