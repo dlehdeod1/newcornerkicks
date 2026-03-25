@@ -77,6 +77,24 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
       if (mounted) {
         setState(() {
           _session = res['session'] as Map<String, dynamic>? ?? res as Map<String, dynamic>?;
+
+          // attendance 또는 RSVP going 기반으로 사전 선택
+          final attendance = (res['attendance'] as List?) ?? [];
+          final rsvp = (res['rsvp'] as List?) ?? [];
+
+          if (attendance.isNotEmpty) {
+            for (final a in attendance) {
+              final pid = a['player_id'];
+              if (pid != null) _selected.add(pid as int);
+            }
+          } else {
+            // attendance 없으면 RSVP going 멤버의 player_id로 선택
+            for (final r in rsvp) {
+              if (r['status'] == 'going' && r['player_id'] != null) {
+                _selected.add(r['player_id'] as int);
+              }
+            }
+          }
         });
       }
     } catch (_) {
@@ -87,12 +105,36 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
   String _buildTemplate() {
     final club = context.read<AuthService>().club;
     final clubName = club?['name'] ?? '우리팀';
-    final now = DateTime.now();
-    final days = ['일', '월', '화', '수', '목', '금', '토'];
-    final dow = days[now.weekday % 7];
-    final dateStr = '${now.month}/${now.day}($dow)';
-    final names = _allPlayers.map((p) => p['name'] as String).join(', ');
-    return '⚽ [$clubName] $dateStr 참석 투표 ⚽\n\n참석하시면 성함 남겨주세요!\n\n등록 선수: $names';
+    final sessionDate = _session?['session_date'] as String?;
+    String dateStr;
+    if (sessionDate != null) {
+      try {
+        final d = DateTime.parse(sessionDate);
+        final days = ['일', '월', '화', '수', '목', '금', '토'];
+        dateStr = '${d.month}/${d.day}(${days[d.weekday % 7]})';
+      } catch (_) {
+        dateStr = sessionDate;
+      }
+    } else {
+      final now = DateTime.now();
+      final days = ['일', '월', '화', '수', '목', '금', '토'];
+      dateStr = '${now.month}/${now.day}(${days[now.weekday % 7]})';
+    }
+    final title = _session?['title'] as String? ?? '정기 풋살';
+    final location = _session?['location'] as String?;
+    final startTime = _session?['start_time'] as String?;
+
+    final buf = StringBuffer();
+    buf.writeln('⚽ [$clubName] $dateStr $title');
+    if (location != null || startTime != null) {
+      buf.writeln('📍 ${[if (startTime != null) startTime, if (location != null) location].join(' / ')}');
+    }
+    buf.writeln();
+    buf.writeln('참석 투표');
+    buf.writeln('1.');
+    buf.writeln('2.');
+    buf.writeln('3.');
+    return buf.toString().trimRight();
   }
 
   Future<void> _parseKakao() async {
@@ -325,7 +367,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (p['nickname'] != null)
+                if (p['nickname'] != null && p['nickname'] != p['name'])
                   Text(
                     p['nickname'] as String,
                     style: TextStyle(color: Colors.white.withAlpha(77), fontSize: 12),
@@ -649,7 +691,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
 
   // ── 결과 단계 ─────────────────────────────────────
   Widget _buildResultStep() {
-    final teamColors = [AppColors.primary, AppColors.amber, AppColors.blueLight, AppColors.fuchsia];
+    final teamColors = _resultTeams.map((t) => AppColors.fromVestColor(t['vest_color'] as String?)).toList();
     final hasTwoTeams = _resultTeams.length == 2;
 
     return Column(

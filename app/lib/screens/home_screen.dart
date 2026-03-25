@@ -278,24 +278,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (_loading)
                     const Center(child: SizedBox(height: 40, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2)))
                   else if (_myStats != null)
-                    Row(
-                      children: [
-                        _StatMini(label: '득점', value: '${_myStats!['goals'] ?? 0}', icon: '⚽', color: AppColors.primary),
-                        _StatMini(label: '도움', value: '${_myStats!['assists'] ?? 0}', icon: '⚡', color: AppColors.blue),
-                        _StatMini(label: '수비', value: '${_myStats!['defenses'] ?? 0}', icon: '🛡️', color: AppColors.purple),
-                        _StatMini(
-                          label: '평점',
-                          value: _myStats!['mvpScore'] != null
-                              ? () {
-                                  final v = (_myStats!['mvpScore'] as num).toDouble();
-                                  return '${v == v.truncate() ? v.toInt() : v.toStringAsFixed(1)}/10';
-                                }()
-                              : '-',
-                          icon: '⭐',
-                          color: AppColors.amber,
-                        ),
-                      ],
-                    )
+                    Builder(builder: (context) {
+                      final events = context.read<AuthService>().enabledEvents;
+                      final hasDefense = events.contains('DEFENSE') || events.contains('TACKLE') || events.contains('INTERCEPTION') || events.contains('CLEARANCE');
+                      return Row(
+                        children: [
+                          _StatMini(label: '득점', value: '${_myStats!['goals'] ?? 0}', icon: '⚽', color: AppColors.primary),
+                          _StatMini(label: '도움', value: '${_myStats!['assists'] ?? 0}', icon: '⚡', color: AppColors.blue),
+                          if (hasDefense)
+                            _StatMini(label: '수비', value: '${_myStats!['defenses'] ?? 0}', icon: '🛡️', color: AppColors.purple),
+                          _StatMini(
+                            label: '평점',
+                            value: _myStats!['mvpScore'] != null
+                                ? () {
+                                    final v = (_myStats!['mvpScore'] as num).toDouble();
+                                    return '${v == v.truncate() ? v.toInt() : v.toStringAsFixed(1)}';
+                                  }()
+                                : '-',
+                            icon: '⭐',
+                            color: AppColors.amber,
+                          ),
+                        ],
+                      );
+                    })
                   else
                     Text(
                       auth.player != null ? '기록이 없습니다' : '선수 연동 후 기록이 표시됩니다',

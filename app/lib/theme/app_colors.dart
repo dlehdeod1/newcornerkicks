@@ -54,4 +54,21 @@ class AppColors {
 
   // ─── 외부 브랜드 ───────────────────────────────────────────────
   static const google = Color(0xFF4285F4); // Google 브랜드 블루
+
+  // ─── 조끼 색상 (vest_color) ──────────────────────────────────
+  static const Map<String, Color> vestColors = {
+    'yellow': Color(0xFFEAB308),
+    'orange': Color(0xFFF97316),
+    'white': Color(0xFF94A3B8),
+    'red': Color(0xFFEF4444),
+    'blue': Color(0xFF3B82F6),
+    'green': Color(0xFF10B981),
+    'purple': Color(0xFFA855F7),
+    'pink': Color(0xFFEC4899),
+  };
+
+  /// vest_color 문자열로 Color 반환 (fallback: primary)
+  static Color fromVestColor(String? vestColor) {
+    return vestColors[vestColor] ?? primary;
+  }
 }

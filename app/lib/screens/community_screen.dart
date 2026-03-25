@@ -6,8 +6,8 @@ import '../services/api_service.dart';
 import 'community_post_detail_screen.dart';
 import 'community_post_form_screen.dart';
 
-const categoryLabels = {'free': '자유', 'recruit': '팀 모집', 'mercenary': '용병 모집', 'match': '매칭', 'review': '경기 후기'};
-const categoryColors = {'free': AppColors.primary, 'recruit': AppColors.amber, 'mercenary': Color(0xFFF43F5E), 'match': AppColors.blue, 'review': AppColors.purple};
+const categoryLabels = {'free': '자유', 'recruit': '팀 모집', 'mercenary': '용병 모집', 'match': '매칭', 'review': '경기 후기', 'patchnote': '패치노트'};
+const categoryColors = {'free': AppColors.primary, 'recruit': AppColors.amber, 'mercenary': Color(0xFFF43F5E), 'match': AppColors.blue, 'review': AppColors.purple, 'patchnote': Color(0xFF64748B)};
 const regionOptions = ['서울', '경기', '인천', '부산', '대구', '대전', '광주', '울산', '세종', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주'];
 const dayLabels = {'mon': '월', 'tue': '화', 'wed': '수', 'thu': '목', 'fri': '금', 'sat': '토', 'sun': '일'};
 const timeSlotLabels = {'morning': '오전', 'afternoon': '오후', 'evening': '저녁', 'night': '심야'};
@@ -22,12 +22,12 @@ class CommunityScreen extends StatefulWidget {
 
 class _CommunityScreenState extends State<CommunityScreen> with TickerProviderStateMixin {
   late TabController _tabController;
-  final _categoryKeys = ['free', 'recruit', 'mercenary', 'match', 'review'];
+  final _categoryKeys = ['free', 'recruit', 'mercenary', 'match', 'review', 'patchnote'];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override

@@ -519,8 +519,8 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // RSVP 섹션 (모집중 세션)
-          if (status == 'recruiting' || status == 'open') ...[
+          // RSVP 섹션 (모집중 세션이고 아직 출석 확정 전)
+          if ((status == 'recruiting' || status == 'open') && _attendance.isEmpty) ...[
             _buildRsvpSection(goingList, isGoing, auth),
             const SizedBox(height: 24),
           ],
@@ -610,14 +610,15 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
         final emoji = team['emoji'] ?? '⚽';
         final members = (team['members'] as List?) ?? [];
         final avgOverall = team['avg_overall'];
+        final teamColor = AppColors.fromVestColor(team['vest_color'] as String?);
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(8),
+            color: teamColor.withAlpha(13),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withAlpha(20)),
+            border: Border.all(color: teamColor.withAlpha(51)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,18 +627,18 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                 children: [
                   Text(emoji, style: const TextStyle(fontSize: 20)),
                   const SizedBox(width: 8),
-                  Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  Text(name, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: teamColor)),
                   const Spacer(),
                   if (avgOverall != null)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withAlpha(26),
+                        color: teamColor.withAlpha(26),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         '평균 ${(avgOverall as num).toStringAsFixed(1)}',
-                        style: const TextStyle(fontSize: 11, color: AppColors.primary),
+                        style: TextStyle(fontSize: 11, color: teamColor),
                       ),
                     ),
                 ],
@@ -1100,10 +1101,13 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
       return Center(child: Text('완료된 경기가 없습니다', style: TextStyle(color: Colors.white.withAlpha(102))));
     }
 
+    final enabledEvents = context.read<AuthService>().enabledEvents;
+    final hasDefense = enabledEvents.contains('DEFENSE') || enabledEvents.contains('TACKLE') || enabledEvents.contains('INTERCEPTION') || enabledEvents.contains('CLEARANCE');
+
     final mvp = sorted.first;
     final topScorer = List.from(sorted)..sort((a, b) => (b['goals'] as int).compareTo(a['goals'] as int));
     final topAssister = List.from(sorted)..sort((a, b) => (b['assists'] as int).compareTo(a['assists'] as int));
-    final topDefender = List.from(sorted)..sort((a, b) => (b['defenses'] as int).compareTo(a['defenses'] as int));
+    final topDefender = hasDefense ? (List.from(sorted)..sort((a, b) => (b['defenses'] as int).compareTo(a['defenses'] as int))) : null;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -1122,7 +1126,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
             children: [
               _highlightCard('⚡', '도움왕', topAssister.first['name'], '${topAssister.first['assists']}도움', AppColors.blue),
               const SizedBox(width: 8),
-              _highlightCard('🛡️', '수비왕', topDefender.first['name'], '${topDefender.first['defenses']}수비', AppColors.purple),
+              if (topDefender != null)
+                _highlightCard('🛡️', '수비왕', topDefender.first['name'], '${topDefender.first['defenses']}수비', AppColors.purple)
+              else
+                const Expanded(child: SizedBox()),
             ],
           ),
           const SizedBox(height: 20),
@@ -1154,7 +1161,8 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                       const Expanded(flex: 3, child: Text('선수', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54))),
                       const Expanded(child: Center(child: Text('골', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54)))),
                       const Expanded(child: Center(child: Text('도움', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54)))),
-                      const Expanded(child: Center(child: Text('수비', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54)))),
+                      if (hasDefense)
+                        const Expanded(child: Center(child: Text('수비', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54)))),
                       const Expanded(child: Center(child: Text('MVP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54)))),
                     ],
                   ),
@@ -1185,7 +1193,8 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                         Expanded(flex: 3, child: Text(p['name'], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white))),
                         Expanded(child: Center(child: Text('${p['goals']}', style: const TextStyle(fontSize: 13, color: AppColors.primary)))),
                         Expanded(child: Center(child: Text('${p['assists']}', style: const TextStyle(fontSize: 13, color: AppColors.blue)))),
-                        Expanded(child: Center(child: Text('${p['defenses']}', style: const TextStyle(fontSize: 13, color: AppColors.purple)))),
+                        if (hasDefense)
+                          Expanded(child: Center(child: Text('${p['defenses']}', style: const TextStyle(fontSize: 13, color: AppColors.purple)))),
                         Expanded(child: Center(child: Text(
                           (p['mvpScore'] as double).toStringAsFixed(1),
                           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.amber),

@@ -6,8 +6,8 @@ import '../services/api_service.dart';
 import '../config/api_config.dart';
 import 'community_post_form_screen.dart';
 
-const _categoryLabels = {'free': '자유', 'recruit': '팀 모집', 'mercenary': '용병 모집', 'match': '매칭', 'review': '경기 후기'};
-const _categoryColors = {'free': AppColors.primary, 'recruit': AppColors.amber, 'mercenary': const Color(0xFFF43F5E), 'match': AppColors.blue, 'review': AppColors.purple};
+const _categoryLabels = {'free': '자유', 'recruit': '팀 모집', 'mercenary': '용병 모집', 'match': '매칭', 'review': '경기 후기', 'patchnote': '패치노트'};
+const _categoryColors = {'free': AppColors.primary, 'recruit': AppColors.amber, 'mercenary': const Color(0xFFF43F5E), 'match': AppColors.blue, 'review': AppColors.purple, 'patchnote': const Color(0xFF64748B)};
 const _dayLabels = {'mon': '월', 'tue': '화', 'wed': '수', 'thu': '목', 'fri': '금', 'sat': '토', 'sun': '일'};
 const _timeSlotLabels = {'morning': '오전', 'afternoon': '오후', 'evening': '저녁', 'night': '심야'};
 const _skillLabels = {'beginner': '입문', 'low': '초급', 'mid': '중급', 'high': '상급'};
