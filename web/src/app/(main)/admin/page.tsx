@@ -2,21 +2,16 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   Calendar,
   Users,
   Trophy,
   Bell,
-  Settings,
-  Plus,
   ChevronRight,
-  TrendingUp,
   Clock,
   CheckCircle,
   AlertCircle,
-  ShieldOff,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useAuthStore, useAuthHydrated } from '@/stores/auth'
@@ -24,7 +19,6 @@ import { sessionsApi, playersApi, rankingsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
 export default function AdminDashboardPage() {
-  const router = useRouter()
   const hydrated = useAuthHydrated()
   const { isAdmin, isLoggedIn, token } = useAuthStore()
 
@@ -121,191 +115,131 @@ export default function AdminDashboardPage() {
         />
       </div>
 
-      {/* 대시보드 그리드 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 왼쪽: 주요 통계 + 최근 세션 */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* 통계 카드 */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard
-              label="총 선수"
-              value={players.length}
-              icon={<Users className="w-5 h-5" />}
-              color="blue"
-            />
-            <StatCard
-              label="총 세션"
-              value={sessions.length}
-              icon={<Calendar className="w-5 h-5" />}
-              color="emerald"
-            />
-            <StatCard
-              label="모집 중"
-              value={recruitingSessions.length}
-              icon={<Clock className="w-5 h-5" />}
-              color="amber"
-            />
-            <StatCard
-              label="연동 대기"
-              value={pendingLinkPlayers.length}
-              icon={<AlertCircle className="w-5 h-5" />}
-              color="red"
-            />
-          </div>
-
-          {/* 최근 세션 */}
-          <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-              <h2 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-emerald-500" />
-                최근 세션
-              </h2>
-              <Link
-                href="/admin/sessions"
-                className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+      {/* 연동 대기 선수 알림 */}
+      {pendingLinkPlayers.length > 0 && (
+        <div className="bg-amber-50 dark:bg-amber-500/10 rounded-2xl border border-amber-200 dark:border-amber-500/30 p-5 mb-6">
+          <h3 className="font-semibold text-amber-700 dark:text-amber-400 mb-3 flex items-center gap-2">
+            <AlertCircle className="w-5 h-5" />
+            연동 승인 대기
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {pendingLinkPlayers.slice(0, 3).map((player: any) => (
+              <div
+                key={player.id}
+                className="flex items-center justify-between bg-white dark:bg-slate-900/50 p-3 rounded-xl flex-1 min-w-[200px]"
               >
-                전체 보기
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              {recentSessions.length === 0 ? (
-                <div className="p-8 text-center text-slate-500">
-                  아직 세션이 없습니다.
-                </div>
-              ) : (
-                recentSessions.map((session: any) => (
-                  <Link
-                    key={session.id}
-                    href={`/sessions/${session.id}`}
-                    className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={cn(
-                        'w-10 h-10 rounded-lg flex items-center justify-center',
-                        session.status === 'recruiting'
-                          ? 'bg-amber-100 dark:bg-amber-500/20'
-                          : session.status === 'completed'
-                          ? 'bg-emerald-100 dark:bg-emerald-500/20'
-                          : 'bg-slate-100 dark:bg-slate-800'
-                      )}>
-                        {session.status === 'recruiting' ? (
-                          <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                        ) : session.status === 'completed' ? (
-                          <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                        ) : (
-                          <Calendar className="w-5 h-5 text-slate-500" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-900 dark:text-white">
-                          {session.title || '코너킥스 정기 풋살'}
-                        </p>
-                        <p className="text-sm text-slate-500">{session.session_date}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <StatusBadge status={session.status} />
-                      <ChevronRight className="w-4 h-4 text-slate-400" />
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
+                <span className="font-medium text-slate-900 dark:text-white">
+                  {player.name}
+                </span>
+                <Link
+                  href={`/admin/players/${player.id}`}
+                  className="text-sm text-amber-600 dark:text-amber-400 hover:underline"
+                >
+                  승인하기
+                </Link>
+              </div>
+            ))}
           </div>
+          {pendingLinkPlayers.length > 3 && (
+            <Link
+              href="/admin/players?filter=pending"
+              className="block text-center text-sm text-amber-600 dark:text-amber-400 hover:underline mt-3"
+            >
+              +{pendingLinkPlayers.length - 3}명 더 보기
+            </Link>
+          )}
+        </div>
+      )}
+
+      {/* 대시보드 콘텐츠 */}
+      <div className="space-y-6">
+        {/* 통계 카드 */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard
+            label="총 선수"
+            value={players.length}
+            icon={<Users className="w-5 h-5" />}
+            color="blue"
+          />
+          <StatCard
+            label="총 세션"
+            value={sessions.length}
+            icon={<Calendar className="w-5 h-5" />}
+            color="emerald"
+          />
+          <StatCard
+            label="모집 중"
+            value={recruitingSessions.length}
+            icon={<Clock className="w-5 h-5" />}
+            color="amber"
+          />
+          <StatCard
+            label="연동 대기"
+            value={pendingLinkPlayers.length}
+            icon={<AlertCircle className="w-5 h-5" />}
+            color="red"
+          />
         </div>
 
-        {/* 오른쪽: 빠른 관리 */}
-        <div className="space-y-6">
-          {/* 연동 대기 선수 */}
-          {pendingLinkPlayers.length > 0 && (
-            <div className="bg-amber-50 dark:bg-amber-500/10 rounded-2xl border border-amber-200 dark:border-amber-500/30 p-5">
-              <h3 className="font-semibold text-amber-700 dark:text-amber-400 mb-3 flex items-center gap-2">
-                <AlertCircle className="w-5 h-5" />
-                연동 승인 대기
-              </h3>
-              <div className="space-y-2">
-                {pendingLinkPlayers.slice(0, 3).map((player: any) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center justify-between bg-white dark:bg-slate-900/50 p-3 rounded-xl"
-                  >
-                    <span className="font-medium text-slate-900 dark:text-white">
-                      {player.name}
-                    </span>
-                    <Link
-                      href={`/admin/players/${player.id}`}
-                      className="text-sm text-amber-600 dark:text-amber-400 hover:underline"
-                    >
-                      승인하기
-                    </Link>
-                  </div>
-                ))}
-              </div>
-              {pendingLinkPlayers.length > 3 && (
-                <Link
-                  href="/admin/players?filter=pending"
-                  className="block text-center text-sm text-amber-600 dark:text-amber-400 hover:underline mt-3"
-                >
-                  +{pendingLinkPlayers.length - 3}명 더 보기
-                </Link>
-              )}
-            </div>
-          )}
+        {/* 최근 세션 */}
+        <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <h2 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-emerald-500" />
+              최근 세션
+            </h2>
+            <Link
+              href="/admin/sessions"
+              className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+            >
+              전체 보기
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
 
-          {/* 관리 메뉴 */}
-          <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
-              <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <Settings className="w-5 h-5 text-slate-500" />
-                관리 메뉴
-              </h3>
-            </div>
-            <div className="p-2">
-              <AdminMenuItem
-                icon={<Calendar className="w-5 h-5" />}
-                label="세션 관리"
-                description="세션 생성, 수정, 팀 편성"
-                href="/admin/sessions"
-              />
-              <AdminMenuItem
-                icon={<Users className="w-5 h-5" />}
-                label="선수 관리"
-                description="선수 등록, 연동 승인"
-                href="/admin/players"
-              />
-              <AdminMenuItem
-                icon={<Trophy className="w-5 h-5" />}
-                label="랭킹 관리"
-                description="랭킹 새로고침, 배지 관리"
-                href="/admin/rankings"
-              />
-              <AdminMenuItem
-                icon={<Bell className="w-5 h-5" />}
-                label="알림 관리"
-                description="공지 발송, 알림 템플릿"
-                href="/admin/notifications"
-              />
-              <AdminMenuItem
-                icon={<Bell className="w-5 h-5" />}
-                label="공지 관리"
-                description="공지사항 작성, 수정, 삭제"
-                href="/admin/announcements"
-              />
-              <AdminMenuItem
-                icon={<ShieldOff className="w-5 h-5" />}
-                label="회비 면제"
-                description="멤버별 참가비/월회비 면제 설정"
-                href="/admin/exemptions"
-              />
-              <AdminMenuItem
-                icon={<Settings className="w-5 h-5" />}
-                label="클럽 설정"
-                description="참가비, 기록 이벤트, 계좌, 알림"
-                href="/admin/settings"
-              />
-            </div>
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {recentSessions.length === 0 ? (
+              <div className="p-8 text-center text-slate-500">
+                아직 세션이 없습니다.
+              </div>
+            ) : (
+              recentSessions.map((session: any) => (
+                <Link
+                  key={session.id}
+                  href={`/sessions/${session.id}`}
+                  className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={cn(
+                      'w-10 h-10 rounded-lg flex items-center justify-center',
+                      session.status === 'recruiting'
+                        ? 'bg-amber-100 dark:bg-amber-500/20'
+                        : session.status === 'completed'
+                        ? 'bg-emerald-100 dark:bg-emerald-500/20'
+                        : 'bg-slate-100 dark:bg-slate-800'
+                    )}>
+                      {session.status === 'recruiting' ? (
+                        <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                      ) : session.status === 'completed' ? (
+                        <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                      ) : (
+                        <Calendar className="w-5 h-5 text-slate-500" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-900 dark:text-white">
+                        {session.title || '코너킥스 정기 풋살'}
+                      </p>
+                      <p className="text-sm text-slate-500">{session.session_date}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={session.status} />
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -399,32 +333,3 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-function AdminMenuItem({
-  icon,
-  label,
-  description,
-  href,
-}: {
-  icon: React.ReactNode
-  label: string
-  description: string
-  href: string
-}) {
-  return (
-    <Link
-      href={href}
-      className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
-    >
-      <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-emerald-500 transition-colors">
-        {icon}
-      </div>
-      <div className="flex-1">
-        <p className="font-medium text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-          {label}
-        </p>
-        <p className="text-xs text-slate-500 dark:text-slate-400">{description}</p>
-      </div>
-      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition-colors" />
-    </Link>
-  )
-}
