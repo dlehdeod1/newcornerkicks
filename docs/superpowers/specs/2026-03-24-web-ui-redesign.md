@@ -35,26 +35,35 @@
 - 고정 스탯 3개: 득점, 도움, 평점 (정렬 기준과 겹치면 다음 스탯으로 대체)
 - ▶ 아이콘 (상세 페이지)
 
+**고정 스탯 대체 우선순위:**
+정렬 기준이 고정 3개(득점/도움/평점) 중 하나와 겹칠 때, 빈 자리를 채우는 순서:
+MVP횟수 → 공격P → 승률 → 경기수
+
 **인라인 확장 (아코디언):**
-- 4열 그리드
+- 4열 그리드 (모바일 md 미만: 2열)
+- 한 번에 하나만 확장 (다른 행 클릭 시 기존 접힘)
+- 정렬 변경 시 확장된 행 자동 접힘
+- 확장/접힘 애니메이션: height transition (150ms ease)
 - 표시 항목: 참석 경기수, 승/패/무(승률), PPM, MVP횟수
 - enabled_events 기반 상세 스탯 (수비류: 태클/인터셉트/클리어런스/선방, 공격류: 키패스/돌파/유효슈팅/무효슈팅)
 
 ### 1.2 테이블 뷰 (토글)
 
-하단 "상세 테이블 보기" 버튼으로 기존 테이블 전환.
+하단 "상세 테이블 보기" 버튼으로 기존 테이블 전환. 뷰 선택은 localStorage에 저장 (재방문 시 유지).
 
 **컬럼 자동 조절:**
 - 실제 표시 컬럼 12개 미만: 전체 컬럼 표시
 - 12개 이상: 핵심 컬럼만 기본 표시 + "전체 컬럼" 토글
 
 **테이블 개선:**
-- 컬럼 그룹 헤더: "공격 | 수비 | 기록"
+- 컬럼 그룹 헤더: "공격(득점/도움/공격P/키패스/돌파/슈팅) | 수비(수비/태클/인터셉트/클리어런스/선방) | 기록(경기/승/패/승률/MVP/평점)"
 
-### 1.3 PPM 공식 변경
+### 1.3 PPM 공식 변경 (프론트엔드 전용)
 
-- 기존: `goals / games`
+프론트엔드 정렬/표시용 PPM만 변경. 백엔드 `ppm` 필드는 기존 유지 (가중치 평점/경기).
+- 기존 프론트 정렬: `goals / games`
 - 변경: `(goals + assists) / games`
+- 표시 라벨: "PPM" → "공헌도" (혼동 방지)
 
 ## 2. Admin 사이드바 레이아웃
 
@@ -68,6 +77,7 @@
 │  ├─ 대시보드              각 admin 페이지
 │  ├─ 세션 관리
 │  ├─ 선수 관리
+│  ├─ 유저 관리
 │  ├─ 랭킹 관리
 │  ├─ 공지 관리
 │  ├─ 알림 관리
@@ -80,11 +90,13 @@
 
 - 데스크톱 (md 이상): 고정 사이드바 + 메인 영역
 - 모바일 (md 미만): 사이드바 숨김 → 햄버거 버튼 → 슬라이드 오버레이
+- 현재 페이지: pathname 기반 active 표시 (brand-green 텍스트 + 좌측 바)
 
 ### 2.3 admin/rankings 개선
 
 - public 랭킹의 컴팩트 리스트 컴포넌트 재사용
-- 상단에 "랭킹 새로고침" 버튼 + 마지막 갱신 시간만 추가
+- 상단에 통계 요약 카드 유지 (총 선수/총 골/총 어시스트/총 세션)
+- "랭킹 새로고침" 버튼 + 마지막 갱신 시간
 - 기존 별도 테이블 삭제
 
 ### 2.4 admin 대시보드 변경
@@ -109,15 +121,15 @@
 ### 3.2 동작
 
 - URL 쿼리에 탭 상태 반영 (`?tab=fees`)
-- 탭 전환 시 미저장 변경 있으면 경고
-- 각 탭이 자체 state만 관리
+- 탭 전환 시 미저장 변경 감지: 각 탭 컴포넌트에서 초기값과 현재값을 비교하는 `isDirty` 로직. 변경 있으면 "저장하지 않은 변경사항이 있습니다" 확인 다이얼로그.
+- 각 탭이 자체 state만 관리. `club` 데이터와 `token`은 props로 전달.
 
 ## 4. 공유 컴포넌트 추출
 
 | 컴포넌트 | 경로 | 용도 |
 |---|---|---|
 | StatCard | components/ui/stat-card.tsx | admin, home, rankings 통합 |
-| StatusBadge | components/ui/status-badge.tsx | 세션 상태 뱃지 |
+| StatusBadge | components/ui/status-badge.tsx | 세션 상태 뱃지 (recruiting/ended/completed/closed 모두 포함) |
 | SortChips | components/ui/sort-chips.tsx | 랭킹 정렬 칩 바 |
 | CompactPlayerList | components/ranking/compact-player-list.tsx | 랭킹 컴팩트 리스트 (admin에서도 재사용) |
 
@@ -134,6 +146,6 @@
 ### 수정
 - `web/src/app/(main)/ranking/page.tsx` — 컴팩트 리스트 + 칩 정렬 + 인라인 확장
 - `web/src/app/(main)/admin/page.tsx` — 관리 메뉴 섹션 제거
-- `web/src/app/(main)/admin/rankings/page.tsx` — 공유 컴포넌트 사용
+- `web/src/app/(main)/admin/rankings/page.tsx` — 공유 컴포넌트 사용 + 통계 카드 유지
 - `web/src/app/(main)/admin/settings/page.tsx` — 탭 분리
 - `web/src/app/(main)/page.tsx` — 공유 StatCard 사용
