@@ -152,6 +152,9 @@ class ApiService {
       request('/rankings/refresh?year=$year', method: 'POST', token: token);
 
   // Players
+  Future<dynamic> createPlayer(String name, {String? nickname, required String token}) =>
+      request('/players', method: 'POST', body: {'name': name, if (nickname != null) 'nickname': nickname}, token: token);
+
   Future<dynamic> getPlayers({String? token}) =>
       request('/players', token: token);
 
@@ -199,9 +202,31 @@ class ApiService {
   Future<dynamic> deletePlayerPhoto(int playerId, String token) =>
       request('/players/$playerId/photo', method: 'DELETE', token: token);
 
+  // 관리자 선수 관리
+  Future<dynamic> approvePlayerLink(int playerId, String token) =>
+      request('/players/$playerId/approve-link', method: 'POST', token: token);
+
+  Future<dynamic> resetPlayerPassword(int playerId, String token) =>
+      request('/players/$playerId/reset-password', method: 'POST', token: token);
+
+  Future<dynamic> deletePlayer(int playerId, String token) =>
+      request('/players/$playerId', method: 'DELETE', token: token);
+
+  Future<dynamic> updatePlayer(int playerId, Map<String, dynamic> data, String token) =>
+      request('/players/$playerId', method: 'PUT', body: data, token: token);
+
+  Future<dynamic> relinkPlayer(int playerId, int? userId, String token) =>
+      request('/players/$playerId/relink', method: 'POST', body: {'userId': userId}, token: token);
+
+  Future<dynamic> searchUsers(String query, String token) =>
+      request('/players/admin/search-users?q=${Uri.encodeQueryComponent(query)}', token: token);
+
   // 팀 편성
   Future<dynamic> createTeams(int sessionId, List<Map<String, dynamic>> attendees, String token, {bool useAI = false}) =>
       request('/sessions/$sessionId/teams', method: 'POST', body: {'attendees': attendees, 'useAI': useAI}, token: token);
+
+  Future<dynamic> createTeamsManual(int sessionId, List<Map<String, dynamic>> teams, String token) =>
+      request('/sessions/$sessionId/teams/manual', method: 'POST', body: {'teams': teams}, token: token);
 
   // AI 분석
   Future<dynamic> getAiAnalysis(int sessionId, String token) =>

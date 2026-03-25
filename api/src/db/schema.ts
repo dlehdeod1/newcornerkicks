@@ -65,17 +65,17 @@ export const players = sqliteTable('players', {
   weightKg: integer('weight_kg'),
   photoUrl: text('photo_url'),
 
-  // 능력치 (1-10)
-  shooting: integer('shooting').default(5),
-  offballRun: integer('offball_run').default(5),
-  ballKeeping: integer('ball_keeping').default(5),
-  passing: integer('passing').default(5),
-  linkup: integer('linkup').default(5),
-  intercept: integer('intercept').default(5),
-  marking: integer('marking').default(5),
-  stamina: integer('stamina').default(5),
-  speed: integer('speed').default(5),
-  physical: integer('physical').default(5),
+  // 능력치 (0-100, 기본 75)
+  shooting: integer('shooting').default(75),
+  offballRun: integer('offball_run').default(75),
+  ballKeeping: integer('ball_keeping').default(75),
+  passing: integer('passing').default(75),
+  linkup: integer('linkup').default(75),
+  intercept: integer('intercept').default(75),
+  marking: integer('marking').default(75),
+  stamina: integer('stamina').default(75),
+  speed: integer('speed').default(75),
+  physical: integer('physical').default(75),
 
   // 연동
   playerCode: text('player_code'),

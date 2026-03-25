@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'admin_team_setup_screen.dart';
 import 'match_result_popup.dart';
+import '../widgets/league_standings_widget.dart';
 
 String _eventIcon(String type) {
   const icons = {
@@ -485,12 +486,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
       decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.white.withAlpha(26)))),
       child: TabBar(
         controller: _tabController,
-        isScrollable: true,
+        isScrollable: false,
         indicatorColor: AppColors.primary,
         labelColor: AppColors.primary,
         unselectedLabelColor: Colors.white38,
         labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-        tabAlignment: TabAlignment.start,
+        labelPadding: EdgeInsets.zero,
         tabs: [
           const Tab(text: '개요/참석'),
           Tab(child: Text('팀 구성', style: TextStyle(color: hasTeams ? null : Colors.white.withAlpha(51)))),
@@ -708,7 +709,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
           ],
           // 리그 현황판 (완료된 경기 있을 때)
           if (completedMatches.isNotEmpty && _teams.length >= 2) ...[
-            _buildLeagueStandings(completedMatches),
+            LeagueStandingsWidget(completedMatches: completedMatches, teams: _teams),
             const SizedBox(height: 16),
             Divider(color: Colors.white.withAlpha(15)),
             const SizedBox(height: 8),
@@ -721,147 +722,6 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
       ),
     );
   }
-
-  Widget _buildLeagueStandings(List<dynamic> completedMatches) {
-    final standings = <int, Map<String, dynamic>>{};
-    for (final team in _teams) {
-      final tid = team['id'] as int;
-      standings[tid] = {
-        'name': team['name'] ?? 'Team',
-        'emoji': team['emoji'] ?? '⚽',
-        'played': 0, 'won': 0, 'drawn': 0, 'lost': 0,
-        'gf': 0, 'ga': 0, 'points': 0,
-      };
-    }
-
-    for (final match in completedMatches) {
-      final t1id = match['team1_id'] as int?;
-      final t2id = match['team2_id'] as int?;
-      if (t1id == null || t2id == null) continue;
-      final events = (match['events'] as List?) ?? [];
-      final s1 = events.where((e) => e['event_type'] == 'GOAL' && e['team_id'] == t1id).length;
-      final s2 = events.where((e) => e['event_type'] == 'GOAL' && e['team_id'] == t2id).length;
-      final t1 = standings[t1id];
-      final t2 = standings[t2id];
-      if (t1 == null || t2 == null) continue;
-
-      t1['played'] = t1['played'] + 1; t2['played'] = t2['played'] + 1;
-      t1['gf'] = t1['gf'] + s1; t1['ga'] = t1['ga'] + s2;
-      t2['gf'] = t2['gf'] + s2; t2['ga'] = t2['ga'] + s1;
-
-      if (s1 > s2) {
-        t1['won'] = t1['won'] + 1; t2['lost'] = t2['lost'] + 1;
-        t1['points'] = t1['points'] + 3;
-      } else if (s2 > s1) {
-        t2['won'] = t2['won'] + 1; t1['lost'] = t1['lost'] + 1;
-        t2['points'] = t2['points'] + 3;
-      } else {
-        t1['drawn'] = t1['drawn'] + 1; t2['drawn'] = t2['drawn'] + 1;
-        t1['points'] = t1['points'] + 1; t2['points'] = t2['points'] + 1;
-      }
-    }
-
-    // 정렬: 승점 → 골득실 → 다득점 → 맞대결 홈팀 우선
-    final sorted = standings.entries.toList()..sort((a, b) {
-      final av = a.value, bv = b.value;
-      final pDiff = (bv['points'] as int) - (av['points'] as int);
-      if (pDiff != 0) return pDiff;
-      final gdA = (av['gf'] as int) - (av['ga'] as int);
-      final gdB = (bv['gf'] as int) - (bv['ga'] as int);
-      if (gdB != gdA) return gdB - gdA;
-      final gfDiff = (bv['gf'] as int) - (av['gf'] as int);
-      if (gfDiff != 0) return gfDiff;
-      // 맞대결 홈팀(team1) 우선
-      for (final m in completedMatches) {
-        final mt1 = m['team1_id']; final mt2 = m['team2_id'];
-        if (mt1 == a.key && mt2 == b.key) return -1;
-        if (mt1 == b.key && mt2 == a.key) return 1;
-      }
-      return 0;
-    });
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withAlpha(20)),
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-            child: Row(
-              children: [
-                const Icon(Icons.emoji_events_rounded, size: 16, color: AppColors.amber),
-                const SizedBox(width: 6),
-                const Text('리그 현황판', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
-                const Spacer(),
-                Text('승3 무1 패0', style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(77))),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: Colors.white.withAlpha(15)),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-            child: Row(
-              children: [
-                const SizedBox(width: 20),
-                const Expanded(flex: 3, child: Text('팀', style: TextStyle(fontSize: 11, color: Colors.white54, fontWeight: FontWeight.w600))),
-                _sCol('경기'), _sCol('승'), _sCol('무'), _sCol('패'), _sCol('득실'), _sCol('승점'),
-              ],
-            ),
-          ),
-          ...sorted.asMap().entries.map((entry) {
-            final rank = entry.key;
-            final t = entry.value.value;
-            final gd = (t['gf'] as int) - (t['ga'] as int);
-            final gdStr = gd > 0 ? '+$gd' : '$gd';
-            final played = t['played'] as int;
-            final isTop = rank == 0 && played > 0;
-            return Container(
-              decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: Colors.white.withAlpha(10))),
-                color: isTop ? AppColors.amber.withAlpha(8) : null,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              child: Row(
-                children: [
-                  SizedBox(width: 20, child: Text(
-                    isTop ? '🥇' : '${rank + 1}',
-                    style: TextStyle(fontSize: isTop ? 14 : 12, color: Colors.white.withAlpha(128)),
-                  )),
-                  Expanded(flex: 3, child: Row(children: [
-                    Text(t['emoji'] as String, style: const TextStyle(fontSize: 13)),
-                    const SizedBox(width: 5),
-                    Expanded(child: Text(
-                      t['name'] as String,
-                      style: TextStyle(fontSize: 13, fontWeight: isTop ? FontWeight.bold : FontWeight.w500, color: isTop ? AppColors.amber : Colors.white),
-                      overflow: TextOverflow.ellipsis,
-                    )),
-                  ])),
-                  _sVal('${t['played']}', Colors.white54),
-                  _sVal('${t['won']}', AppColors.primary),
-                  _sVal('${t['drawn']}', Colors.white54),
-                  _sVal('${t['lost']}', AppColors.red),
-                  _sVal(gdStr, gd > 0 ? AppColors.primary : gd < 0 ? AppColors.red : Colors.white54),
-                  _sVal('${t['points']}', AppColors.amber, bold: true),
-                ],
-              ),
-            );
-          }),
-          const SizedBox(height: 4),
-        ],
-      ),
-    );
-  }
-
-  Widget _sCol(String text) => Expanded(
-    child: Center(child: Text(text, style: const TextStyle(fontSize: 11, color: Colors.white54, fontWeight: FontWeight.w600))),
-  );
-
-  Widget _sVal(String text, Color color, {bool bold = false}) => Expanded(
-    child: Center(child: Text(text, style: TextStyle(fontSize: 13, color: color, fontWeight: bold ? FontWeight.bold : FontWeight.normal))),
-  );
 
   Widget _buildMatchCard(dynamic match, int i, AuthService auth) {
     final matchNo = match['match_no'] ?? (i + 1);
@@ -992,6 +852,13 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
       return Center(child: Text('경기 기록이 없습니다', style: TextStyle(color: Colors.white.withAlpha(102))));
     }
 
+    // 클럽 가중치 설정
+    final weights = context.read<AuthService>().mvpWeights;
+    final wGoal = weights['GOAL'] ?? 2.0;
+    final wAssist = weights['ASSIST'] ?? 1.5;
+    final wDefense = weights['DEFENSE'] ?? 0.5;
+    final wSessionWin = weights['SESSION_WIN'] ?? 1.5;
+
     // String 키: 등록 선수는 'p_$id', 용병은 'g_$name'
     final playerStats = <String, Map<String, dynamic>>{};
     final completedMatches = _matches.where((m) => m['status'] == 'completed').toList();
@@ -1016,10 +883,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
         final stats = playerStats[statsKey]!;
         if (event['event_type'] == 'GOAL') {
           stats['goals'] = (stats['goals'] as int) + 1;
-          stats['mvpScore'] = (stats['mvpScore'] as double) + 2.0;
+          stats['mvpScore'] = (stats['mvpScore'] as double) + wGoal;
         } else if (event['event_type'] == 'DEFENSE') {
           stats['defenses'] = (stats['defenses'] as int) + 1;
-          stats['mvpScore'] = (stats['mvpScore'] as double) + 0.5;
+          stats['mvpScore'] = (stats['mvpScore'] as double) + wDefense;
         }
 
         final assisterId = event['assister_id'];
@@ -1037,7 +904,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
             'mvpScore': 0.0,
           });
           playerStats[aKey]!['assists'] = (playerStats[aKey]!['assists'] as int) + 1;
-          playerStats[aKey]!['mvpScore'] = (playerStats[aKey]!['mvpScore'] as double) + 1.5;
+          playerStats[aKey]!['mvpScore'] = (playerStats[aKey]!['mvpScore'] as double) + wAssist;
         }
       }
     }
@@ -1091,7 +958,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
       final winnerKeys = teamStandings[winningTeamId]!['memberKeys'] as Set;
       for (final entry in playerStats.entries) {
         if (winnerKeys.contains(entry.key)) {
-          entry.value['mvpScore'] = (entry.value['mvpScore'] as double) + 1.5;
+          entry.value['mvpScore'] = (entry.value['mvpScore'] as double) + wSessionWin;
         }
       }
     }

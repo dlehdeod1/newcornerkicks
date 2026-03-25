@@ -119,7 +119,7 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
       if (mounted) {
         setState(() {
           _rankings = (res['data']?['rankings'] as List?) ?? [];
-          _stats = res['data']?['stats'];
+          _stats = res['data'];
           _loading = false;
         });
       }
@@ -146,6 +146,36 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
       return bVal.compareTo(aVal);
     });
     return list;
+  }
+
+  /// 특정 키 기준 Top N 정렬
+  List<dynamic> _topN(String key, int n) {
+    final list = List.from(_rankings.where((p) => (p[key] ?? 0) > 0));
+    list.sort((a, b) => ((b[key] ?? 0) as num).compareTo((a[key] ?? 0) as num));
+    return list.take(n).toList();
+  }
+
+  /// 현재 유저의 랭킹 데이터 찾기
+  Map<String, dynamic>? get _myRanking {
+    final myId = context.read<AuthService>().player?['id'];
+    if (myId == null) return null;
+    try {
+      return _rankings.firstWhere((p) => p['id'] == myId) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 특정 키 기준 내 순위
+  int _myRankFor(String key) {
+    final myId = context.read<AuthService>().player?['id'];
+    if (myId == null) return 0;
+    final sorted = List.from(_rankings.where((p) => (p[key] ?? 0) > 0));
+    sorted.sort((a, b) => ((b[key] ?? 0) as num).compareTo((a[key] ?? 0) as num));
+    for (int i = 0; i < sorted.length; i++) {
+      if (sorted[i]['id'] == myId) return i + 1;
+    }
+    return 0;
   }
 
   @override
@@ -472,6 +502,8 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
     final val = player[_sortBy] ?? 0;
     final currentCat = _categories.firstWhere((c) => c['key'] == _sortBy);
     final color = currentCat['color'] as Color;
+    final myPlayerId = context.read<AuthService>().player?['id'];
+    final isMe = myPlayerId != null && player['id'] == myPlayerId;
 
     String rankDisplay;
     if (rank == 1) { rankDisplay = '🥇'; }
@@ -487,9 +519,9 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: rank <= 3 ? color.withAlpha(8) : Colors.white.withAlpha(5),
+          color: isMe ? AppColors.primary.withAlpha(15) : rank <= 3 ? color.withAlpha(8) : Colors.white.withAlpha(5),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: rank <= 3 ? color.withAlpha(26) : Colors.white.withAlpha(13)),
+          border: Border.all(color: isMe ? AppColors.primary.withAlpha(60) : rank <= 3 ? color.withAlpha(26) : Colors.white.withAlpha(13)),
         ),
         child: Row(
           children: [
@@ -527,7 +559,7 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
                     Text(
                       [
                         if (player['attendance'] != null) '${player['attendance']}경기',
-                        if (player['winRate'] != null) '승률 ${((player['winRate'] as num).toDouble() * 100).toInt()}%',
+                        if (player['winRate'] != null) '승률 ${(player['winRate'] as num).toInt()}%',
                       ].join(' / '),
                       style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(77)),
                     ),
@@ -537,10 +569,10 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: color.withAlpha(20),
+                color: Colors.white.withAlpha(10),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text('$val', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: color)),
+              child: Text('$val', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
             ),
           ],
         ),
@@ -551,61 +583,497 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
   // ─── 통계 탭 ───────────────────────────────────
 
   Widget _buildStatsTab() {
-    if (_funStatsLoading) {
+    if (_loading) {
       return const Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
 
-    if (_funStats == null) {
-      return Center(
+    return RefreshIndicator(
+      onRefresh: () async {
+        setState(() => _loading = true);
+        _funStats = null;
+        await _loadRankings();
+        await _loadFunStats();
+      },
+      color: AppColors.primary,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // 1) Overview 카드
+          _buildStatsOverview(),
+          const SizedBox(height: 16),
+
+          // 2) 내 통계
+          _buildMyStats(),
+
+          // 3) 카테고리별 Top 5 미니 랭킹
+          _buildMiniRankings(),
+
+          // 4) 시즌 요약
+          _buildSeasonSummary(),
+
+          // 5) Fun Stats (듀오/파트너/라이벌)
+          _buildFunStatsSection(),
+
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  /// Overview 카드 4개
+  Widget _buildStatsOverview() {
+    final totalSessions = _stats?['totalSessions'] ?? 0;
+    final totalPlayers = _stats?['totalPlayers'] ?? 0;
+    final totalGoals = _stats?['totalGoals'] ?? 0;
+
+    // 총 승리 합산
+    int totalWins = 0;
+    for (final p in _rankings) {
+      totalWins += ((p['sessionWins'] ?? 0) as num).toInt();
+    }
+
+    final items = [
+      {'icon': Icons.sports_soccer, 'label': '총 세션', 'value': '$totalSessions', 'color': AppColors.primary},
+      {'icon': Icons.people, 'label': '참여 선수', 'value': '$totalPlayers', 'color': AppColors.blue},
+      {'icon': Icons.emoji_events, 'label': '총 득점', 'value': '$totalGoals', 'color': AppColors.amber},
+      {'icon': Icons.military_tech, 'label': '총 승리', 'value': '$totalWins', 'color': AppColors.purple},
+    ];
+
+    return Row(
+      children: items.map((item) {
+        final color = item['color'] as Color;
+        return Expanded(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 3),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              color: color.withAlpha(10),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: color.withAlpha(30)),
+            ),
+            child: Column(
+              children: [
+                Icon(item['icon'] as IconData, size: 20, color: color),
+                const SizedBox(height: 6),
+                Text(
+                  item['value'] as String,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item['label'] as String,
+                  style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(102)),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  /// 내 통계 섹션
+  Widget _buildMyStats() {
+    final my = _myRanking;
+    if (my == null) return const SizedBox.shrink();
+
+    final games = (my['games'] ?? my['attendance'] ?? 0) as num;
+    final goals = (my['goals'] ?? 0) as num;
+    final assists = (my['assists'] ?? 0) as num;
+    final wins = (my['sessionWins'] ?? 0) as num;
+    final losses = (my['sessionLosses'] ?? 0) as num;
+    final winRate = (my['winRate'] as num?)?.toDouble();
+    final mvpScore = (my['mvpScore'] ?? 0) as num;
+    final mvpCount = (my['mvpCount'] ?? 0) as num;
+
+    final goalsPerGame = games > 0 ? (goals / games).toStringAsFixed(1) : '-';
+    final assistsPerGame = games > 0 ? (assists / games).toStringAsFixed(1) : '-';
+    final mvpRank = _myRankFor('mvpScore');
+    final goalRank = _myRankFor('goals');
+
+    final winRateStr = winRate != null ? '${winRate.toInt()}%' : '-';
+    final record = '${wins.toInt()}승 ${losses.toInt()}패';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary.withAlpha(15), AppColors.blue.withAlpha(10)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.primary.withAlpha(40)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.person, size: 16, color: AppColors.primary.withAlpha(180)),
+              const SizedBox(width: 6),
+              const Text('내 시즌 기록', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.primary)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // 상단: 주요 지표 3개
+          Row(
+            children: [
+              _buildMyStatBadge('평점', mvpScore.toStringAsFixed(1), mvpRank > 0 ? '${mvpRank}위' : null, AppColors.primary),
+              const SizedBox(width: 8),
+              _buildMyStatBadge('득점', '${goals.toInt()}', goalRank > 0 ? '${goalRank}위' : null, AppColors.amber),
+              const SizedBox(width: 8),
+              _buildMyStatBadge('승률', winRateStr, null, AppColors.blue),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // 하단: 세부 스탯 그리드
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: [
+              _buildMyStatItem('경기', '${games.toInt()}'),
+              _buildMyStatItem('전적', record),
+              _buildMyStatItem('도움', '${assists.toInt()}'),
+              _buildMyStatItem('경기당 골', goalsPerGame),
+              _buildMyStatItem('경기당 도움', assistsPerGame),
+              _buildMyStatItem('MVP', '${mvpCount.toInt()}회'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMyStatBadge(String label, String value, String? subLabel, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withAlpha(15),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withAlpha(40)),
+        ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.analytics_outlined, size: 48, color: Colors.white.withAlpha(51)),
-            const SizedBox(height: 16),
-            Text('통계를 불러오는 중...', style: TextStyle(color: Colors.white.withAlpha(102))),
+            Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+            const SizedBox(height: 2),
+            Text(label, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(128))),
+            if (subLabel != null) ...[
+              const SizedBox(height: 2),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: color.withAlpha(20),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(subLabel, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMyStatItem(String label, String value) {
+    return SizedBox(
+      width: 100,
+      child: Row(
+        children: [
+          Text(label, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
+          const Spacer(),
+          Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+        ],
+      ),
+    );
+  }
+
+  /// 카테고리별 Top 5 미니 랭킹
+  Widget _buildMiniRankings() {
+    // 표시할 카테고리들
+    final miniCats = <Map<String, dynamic>>[
+      {'key': 'mvpScore', 'label': '평점 TOP 5', 'icon': '⭐', 'color': AppColors.primary},
+      {'key': 'goals', 'label': '득점 TOP 5', 'icon': '⚽', 'color': AppColors.amber},
+      {'key': 'assists', 'label': '도움 TOP 5', 'icon': '⚡', 'color': AppColors.blue},
+      {'key': 'games', 'label': '출석 TOP 5', 'icon': '🎮', 'color': AppColors.slate},
+    ];
+
+    // enabled events에 따라 수비 카테고리 추가
+    final events = context.read<AuthService>().enabledEvents;
+    if (events.contains('DEFENSE')) {
+      miniCats.insert(3, {'key': 'defenses', 'label': '수비 TOP 5', 'icon': '🛡️', 'color': AppColors.purple});
+    } else if (events.contains('TACKLE')) {
+      miniCats.insert(3, {'key': 'tackles', 'label': '태클 TOP 5', 'icon': '🦶', 'color': AppColors.purple});
+    }
+
+    // 승률 TOP 5 (3경기 이상)
+    miniCats.add({'key': 'winRate', 'label': '승률 TOP 5', 'icon': '🏆', 'color': AppColors.primary, 'minGames': 3, 'isRate': true});
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            children: [
+              Icon(Icons.leaderboard, size: 16, color: Colors.white.withAlpha(128)),
+              const SizedBox(width: 6),
+              Text('카테고리별 리더', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(179))),
+            ],
+          ),
+        ),
+        // 2열 그리드
+        ...List.generate((miniCats.length / 2).ceil(), (rowIdx) {
+          final first = miniCats[rowIdx * 2];
+          final second = (rowIdx * 2 + 1 < miniCats.length) ? miniCats[rowIdx * 2 + 1] : null;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _buildMiniRankCard(first)),
+                const SizedBox(width: 10),
+                Expanded(child: second != null ? _buildMiniRankCard(second) : const SizedBox()),
+              ],
+            ),
+          );
+        }),
+        const SizedBox(height: 6),
+      ],
+    );
+  }
+
+  Widget _buildMiniRankCard(Map<String, dynamic> cat) {
+    final key = cat['key'] as String;
+    final label = cat['label'] as String;
+    final icon = cat['icon'] as String;
+    final color = cat['color'] as Color;
+    final minGames = (cat['minGames'] as int?) ?? 0;
+    final isRate = cat['isRate'] == true;
+
+    List<dynamic> top;
+    if (isRate) {
+      // 승률은 최소 경기수 필터 + 별도 정렬
+      final filtered = _rankings.where((p) {
+        final g = ((p['games'] ?? p['attendance'] ?? 0) as num).toInt();
+        return g >= minGames && (p[key] ?? 0) > 0;
+      }).toList();
+      filtered.sort((a, b) => ((b[key] ?? 0) as num).compareTo((a[key] ?? 0) as num));
+      top = filtered.take(5).toList();
+    } else {
+      top = _topN(key, 5);
+    }
+
+    if (top.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white.withAlpha(5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withAlpha(13)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('$icon $label', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+            const SizedBox(height: 12),
+            Text('데이터 없음', style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(51))),
           ],
         ),
       );
     }
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withAlpha(13)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$icon $label', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+          const SizedBox(height: 10),
+          ...top.asMap().entries.map((entry) {
+            final rank = entry.key + 1;
+            final p = entry.value;
+            final name = (p['name'] ?? '?').toString();
+            final displayName = name.length > 5 ? '${name.substring(0, 5)}..' : name;
+            final val = p[key] ?? 0;
+            final valStr = isRate ? '${((val as num).toDouble() * 100).toInt()}%' : '$val';
+
+            final medals = ['🥇', '🥈', '🥉'];
+            final rankStr = rank <= 3 ? medals[rank - 1] : '$rank';
+
+            final myId = context.read<AuthService>().player?['id'];
+            final isMe = p['id'] == myId;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    child: Text(rankStr, style: TextStyle(fontSize: rank <= 3 ? 12 : 11, color: Colors.white.withAlpha(128))),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      displayName,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: isMe ? FontWeight.bold : FontWeight.normal,
+                        color: isMe ? AppColors.primary : Colors.white.withAlpha(179),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(valStr, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  /// 시즌 요약 (평균 통계)
+  Widget _buildSeasonSummary() {
+    if (_rankings.isEmpty) return const SizedBox.shrink();
+
+    final totalPlayers = _rankings.length;
+    final totalSessions = (_stats?['totalSessions'] ?? 0) as num;
+
+    // 평균 계산
+    double avgGoals = 0, avgAssists = 0, avgGames = 0, avgMvp = 0;
+    for (final p in _rankings) {
+      avgGoals += ((p['goals'] ?? 0) as num).toDouble();
+      avgAssists += ((p['assists'] ?? 0) as num).toDouble();
+      avgGames += ((p['games'] ?? p['attendance'] ?? 0) as num).toDouble();
+      avgMvp += ((p['mvpScore'] ?? 0) as num).toDouble();
+    }
+
+    if (totalPlayers > 0) {
+      avgGoals /= totalPlayers;
+      avgAssists /= totalPlayers;
+      avgGames /= totalPlayers;
+      avgMvp /= totalPlayers;
+    }
+
+    // 세션당 평균 골
+    final totalGoals = (_stats?['totalGoals'] ?? 0) as num;
+    final goalsPerSession = totalSessions > 0 ? (totalGoals / totalSessions).toStringAsFixed(1) : '-';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(5),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withAlpha(13)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.bar_chart, size: 16, color: Colors.white.withAlpha(128)),
+              const SizedBox(width: 6),
+              Text('시즌 평균', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(179))),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _buildAvgItem('인당 평점', avgMvp.toStringAsFixed(1), AppColors.primary),
+              _buildAvgItem('인당 득점', avgGoals.toStringAsFixed(1), AppColors.amber),
+              _buildAvgItem('인당 도움', avgAssists.toStringAsFixed(1), AppColors.blue),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _buildAvgItem('인당 출석', avgGames.toStringAsFixed(1), AppColors.slate),
+              _buildAvgItem('세션당 골', goalsPerSession, AppColors.rose),
+              _buildAvgItem('참여 선수', '$totalPlayers', AppColors.purple),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvgItem(String label, String value, Color color) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(102))),
+        ],
+      ),
+    );
+  }
+
+  /// Fun Stats 섹션 (기존 듀오/파트너/라이벌)
+  Widget _buildFunStatsSection() {
+    // 로딩 중
+    if (_funStatsLoading) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: Column(
+            children: [
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
+              ),
+              const SizedBox(height: 8),
+              Text('재미있는 통계 불러오는 중...', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_funStats == null) return const SizedBox.shrink();
 
     final goalDuos = (_funStats!['goalDuos'] as List?) ?? [];
     final bestPartners = (_funStats!['bestPartners'] as List?) ?? [];
     final worstPartners = (_funStats!['worstPartners'] as List?) ?? [];
     final rivals = (_funStats!['rivals'] as List?) ?? [];
 
-    return RefreshIndicator(
-      onRefresh: () async {
-        _funStats = null;
-        await _loadFunStats();
-      },
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (goalDuos.isNotEmpty)
-            _buildDuoSection('⚽ 베스트 득점 듀오', goalDuos, AppColors.amber),
-          if (bestPartners.isNotEmpty)
-            _buildDuoSection('🤝 베스트 파트너', bestPartners, AppColors.primary),
-          if (worstPartners.isNotEmpty)
-            _buildDuoSection('💔 워스트 파트너', worstPartners, AppColors.red),
-          if (rivals.isNotEmpty)
-            _buildDuoSection('⚔️ 라이벌', rivals, AppColors.purple),
-          if (goalDuos.isEmpty && bestPartners.isEmpty && worstPartners.isEmpty && rivals.isEmpty)
-            SizedBox(
-              height: 300,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.analytics_outlined, size: 48, color: Colors.white.withAlpha(51)),
-                    const SizedBox(height: 16),
-                    Text('경기를 더 진행하면 통계가 생성됩니다', style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 14)),
-                  ],
-                ),
-              ),
-            ),
-          const SizedBox(height: 32),
-        ],
-      ),
+    if (goalDuos.isEmpty && bestPartners.isEmpty && worstPartners.isEmpty && rivals.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            children: [
+              Icon(Icons.auto_awesome, size: 16, color: Colors.white.withAlpha(128)),
+              const SizedBox(width: 6),
+              Text('케미 분석', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(179))),
+            ],
+          ),
+        ),
+        if (goalDuos.isNotEmpty)
+          _buildDuoSection('⚽ 베스트 득점 듀오', goalDuos, AppColors.amber),
+        if (bestPartners.isNotEmpty)
+          _buildDuoSection('🤝 베스트 파트너', bestPartners, AppColors.primary),
+        if (worstPartners.isNotEmpty)
+          _buildDuoSection('💔 워스트 파트너', worstPartners, AppColors.red),
+        if (rivals.isNotEmpty)
+          _buildDuoSection('⚔️ 라이벌', rivals, AppColors.purple),
+      ],
     );
   }
 
@@ -624,11 +1092,17 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
           Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: color)),
           const SizedBox(height: 12),
           ...items.take(5).map((item) {
-            final p1 = item['player1Name'] ?? item['playerName'] ?? '?';
-            final p2 = item['player2Name'] ?? item['opponentName'] ?? '';
-            final value = item['goals'] ?? item['wins'] ?? item['totalGoals'] ?? item['count'] ?? 0;
-            final games = item['games'] ?? item['totalGames'] ?? 0;
-            final winRate = item['winRate'];
+            final p1 = item['player1'] ?? item['scorer'] ?? item['player1Name'] ?? '?';
+            final p2 = item['player2'] ?? item['opponent'] ?? item['player2Name'] ?? '';
+            final value = item['combo_count'] ?? item['wins_together'] ?? item['goals_against'] ?? item['goals'] ?? 0;
+            final games = item['games_together'] ?? item['matches_faced'] ?? item['games'] ?? 0;
+            final rawWinRate = item['win_rate'] ?? item['winRate'];
+            // API win_rate는 이미 퍼센트(0~100), 소수점(0~1)이면 변환
+            final winRatePct = rawWinRate != null
+                ? ((rawWinRate as num).toDouble() <= 1.0
+                    ? ((rawWinRate as num).toDouble() * 100).toInt()
+                    : (rawWinRate as num).toInt())
+                : null;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -675,7 +1149,7 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          '${games}경기${winRate != null ? ' / 승률 ${(winRate * 100).toInt()}%' : ''}',
+                          winRatePct != null ? '$games경기 / 승률 $winRatePct%' : '$games경기',
                           style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102)),
                         ),
                       ],

@@ -321,17 +321,8 @@ matchesRoutes.post('/:id/events', authMiddleware(), async (c) => {
       await updateMatchScore(c.env.DB, Number(matchId))
     }
 
-    // player_match_stats 업데이트 (정회원만) - 에러나도 무시
-    try {
-      if (data.playerId) {
-        await updatePlayerMatchStats(c.env.DB, Number(matchId), data.playerId, data.eventType)
-      }
-      if (data.assisterId) {
-        await updatePlayerMatchStats(c.env.DB, Number(matchId), data.assisterId, 'ASSIST')
-      }
-    } catch (statsErr) {
-      console.error('Stats update error (ignored):', statsErr)
-    }
+    // player_match_stats 전체 재계산 (중복 방지)
+    await recalculateMatchStats(c.env.DB, Number(matchId))
 
     // 랭킹 캐시 무효화
     await invalidateRankingsCache(c.env.DB, Number(matchId))
@@ -376,12 +367,8 @@ matchesRoutes.delete('/:id/events/:eventId', authMiddleware(), async (c) => {
     // 스코어 재계산
     await updateMatchScore(c.env.DB, Number(matchId))
 
-    // 스탯 재계산 (에러나도 무시)
-    try {
-      await recalculateMatchStats(c.env.DB, Number(matchId))
-    } catch (statsErr) {
-      console.error('Stats recalculate error (ignored):', statsErr)
-    }
+    // 스탯 재계산
+    await recalculateMatchStats(c.env.DB, Number(matchId))
 
     // 랭킹 캐시 무효화
     await invalidateRankingsCache(c.env.DB, Number(matchId))

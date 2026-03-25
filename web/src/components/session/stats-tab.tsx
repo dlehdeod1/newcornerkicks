@@ -25,6 +25,13 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
 
   const completedMatches = matches.filter((m: any) => m.status === 'completed')
 
+  // 클럽 가중치 설정
+  const cw = club?.mvpWeights || {}
+  const wGoal = cw.GOAL ?? 2
+  const wAssist = cw.ASSIST ?? 1.5
+  const wDefense = cw.DEFENSE ?? 0.5
+  const wSessionWin = cw.SESSION_WIN ?? 1.5
+
   const matchQueries = useQueries({
     queries: completedMatches.map((match: any) => ({
       queryKey: ['match', match.id],
@@ -66,10 +73,10 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
 
       if (event.event_type === 'GOAL') {
         stats.goals++
-        stats.mvpScore += 2
+        stats.mvpScore += wGoal
       } else if (event.event_type === 'DEFENSE') {
         stats.defenses++
-        stats.mvpScore += 0.5
+        stats.mvpScore += wDefense
       }
 
       if (event.assister_id && !event.assister_is_guest && event.event_type === 'GOAL') {
@@ -85,7 +92,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
         }
         const assisterStats = playerStats.get(event.assister_id)!
         assisterStats.assists++
-        assisterStats.mvpScore += 1.5
+        assisterStats.mvpScore += wAssist
       }
     })
   })
@@ -125,10 +132,10 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
   const winningTeamId = rankedTeams[0]?.id
   const winningTeamMembers = new Set(rankedTeams[0]?.standing?.members || [])
 
-  // 우승팀 멤버에게 1.5점 보너스
+  // 우승팀 멤버에게 SESSION_WIN 보너스
   playerStats.forEach((stats, playerId) => {
     if (winningTeamMembers.has(playerId)) {
-      stats.mvpScore += 1.5
+      stats.mvpScore += wSessionWin
     }
   })
 
@@ -450,7 +457,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
                       const parts: string[] = []
                       const order = ['GOAL', 'ASSIST', 'SESSION_WIN', 'DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE', 'SAVE', 'KEY_PASS', 'DRIBBLE', 'SHOT_ON', 'SHOT_OFF']
                       const defaults: Record<string, number> = {
-                        GOAL: 2.0, ASSIST: 1.5, SESSION_WIN: 3.0, DEFENSE: 0.5,
+                        GOAL: 2.0, ASSIST: 1.5, SESSION_WIN: 1.5, DEFENSE: 0.5,
                         TACKLE: 0.6, INTERCEPTION: 0.6, CLEARANCE: 0.6, SAVE: 0.8,
                         KEY_PASS: 0.7, DRIBBLE: 0.5, SHOT_ON: 0.4, SHOT_OFF: 0.1,
                       }

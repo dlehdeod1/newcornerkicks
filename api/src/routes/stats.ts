@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import type { Env } from '../index'
 import { optionalAuthMiddleware } from '../middleware/auth'
 import { getSeasonDateRange, getClubSeasonStartMonth, getCurrentSeasonYear } from '../utils/season'
+import { getSeasonSummaryStats } from '../utils/seasonStats'
 
 const statsRoutes = new Hono<{ Bindings: Env }>()
 
@@ -26,49 +27,8 @@ statsRoutes.get('/season-summary', optionalAuthMiddleware, async (c) => {
   const year = Number(c.req.query('year')) || getCurrentSeasonYear(seasonStartMonth)
   const { yearStart, yearEnd } = getSeasonDateRange(year, seasonStartMonth)
 
-  // 총 세션 수
-  const sessionsResult = await c.env.DB.prepare(`
-    SELECT COUNT(*) as count FROM sessions
-    WHERE session_date BETWEEN ? AND ?
-      AND club_id = ?
-  `).bind(yearStart, yearEnd, clubId).first()
-
-  // 총 경기 수
-  const matchesResult = await c.env.DB.prepare(`
-    SELECT COUNT(*) as count FROM matches m
-    JOIN sessions s ON m.session_id = s.id
-    WHERE s.session_date BETWEEN ? AND ?
-      AND s.club_id = ?
-  `).bind(yearStart, yearEnd, clubId).first()
-
-  // 총 골
-  const goalsResult = await c.env.DB.prepare(`
-    SELECT COALESCE(SUM(pms.goals), 0) as total FROM player_match_stats pms
-    JOIN matches m ON pms.match_id = m.id
-    JOIN sessions s ON m.session_id = s.id
-    WHERE s.session_date BETWEEN ? AND ?
-      AND s.club_id = ?
-  `).bind(yearStart, yearEnd, clubId).first()
-
-  // 총 어시스트
-  const assistsResult = await c.env.DB.prepare(`
-    SELECT COALESCE(SUM(pms.assists), 0) as total FROM player_match_stats pms
-    JOIN matches m ON pms.match_id = m.id
-    JOIN sessions s ON m.session_id = s.id
-    WHERE s.session_date BETWEEN ? AND ?
-      AND s.club_id = ?
-  `).bind(yearStart, yearEnd, clubId).first()
-
-  // 평균 참석자 수
-  const avgAttendanceResult = await c.env.DB.prepare(`
-    SELECT AVG(att_count) as avg FROM (
-      SELECT session_id, COUNT(*) as att_count FROM attendance a
-      JOIN sessions s ON a.session_id = s.id
-      WHERE s.session_date BETWEEN ? AND ?
-        AND s.club_id = ?
-      GROUP BY session_id
-    )
-  `).bind(yearStart, yearEnd, clubId).first()
+  // 공용 유틸로 통계 계산 (rankings.ts와 동일 소스)
+  const summary = await getSeasonSummaryStats(c.env.DB, clubId, yearStart, yearEnd)
 
   // 출석 TOP 5
   const topAttendeesResult = await c.env.DB.prepare(`
@@ -117,11 +77,11 @@ statsRoutes.get('/season-summary', optionalAuthMiddleware, async (c) => {
 
   return c.json({
     year,
-    totalSessions: (sessionsResult as any)?.count || 0,
-    totalMatches: (matchesResult as any)?.count || 0,
-    totalGoals: (goalsResult as any)?.total || 0,
-    totalAssists: (assistsResult as any)?.total || 0,
-    averageAttendance: (avgAttendanceResult as any)?.avg || 0,
+    totalSessions: summary.totalSessions,
+    totalMatches: summary.totalMatches,
+    totalGoals: summary.totalGoals,
+    totalAssists: summary.totalAssists,
+    averageAttendance: summary.avgAttendancePerSession,
     topAttendees: topAttendeesResult.results,
     monthlySessions: monthlySessionsResult.results,
     monthlyAttendance: monthlyAttendanceResult.results,

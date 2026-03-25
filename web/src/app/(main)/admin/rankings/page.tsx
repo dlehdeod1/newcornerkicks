@@ -13,6 +13,8 @@ import {
   Target,
   Shield,
   Flame,
+  LayoutList,
+  Table2,
 } from 'lucide-react'
 import { useAuthStore, useAuthHydrated } from '@/stores/auth'
 import { rankingsApi } from '@/lib/api'
@@ -38,6 +40,7 @@ export default function AdminRankingsPage() {
   const [selectedYear, setSelectedYear] = useState(currentYear)
   const [sortBy, setSortBy] = useState('mvpCount')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card')
   const hydrated = useAuthHydrated()
   const { isAdmin, isLoggedIn, token, club } = useAuthStore()
   const queryClient = useQueryClient()
@@ -197,9 +200,27 @@ export default function AdminRankingsPage() {
         />
       </div>
 
-      {/* 정렬 칩 */}
-      <div className="mb-4">
-        <SortChips chips={chips} activeKey={sortBy} onSelect={handleSort} />
+      {/* 정렬 칩 + 뷰 토글 */}
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex-1">
+          <SortChips chips={chips} activeKey={sortBy} onSelect={handleSort} />
+        </div>
+        <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 shrink-0">
+          <button
+            onClick={() => setViewMode('card')}
+            className={cn('p-1.5 rounded-md transition-colors', viewMode === 'card' ? 'bg-white dark:bg-slate-700 shadow-sm' : 'text-slate-400 hover:text-slate-600')}
+            title="카드 뷰"
+          >
+            <LayoutList className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('table')}
+            className={cn('p-1.5 rounded-md transition-colors', viewMode === 'table' ? 'bg-white dark:bg-slate-700 shadow-sm' : 'text-slate-400 hover:text-slate-600')}
+            title="테이블 뷰"
+          >
+            <Table2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* 랭킹 리스트 */}
@@ -216,6 +237,8 @@ export default function AdminRankingsPage() {
             랭킹 생성하기
           </button>
         </div>
+      ) : viewMode === 'table' ? (
+        <RankingTable rankings={sorted} sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} enabledEvents={enabledEvents} />
       ) : (
         <CompactPlayerList
           rankings={sorted}
@@ -223,6 +246,110 @@ export default function AdminRankingsPage() {
           enabledEvents={enabledEvents}
         />
       )}
+    </div>
+  )
+}
+
+// ── 테이블 뷰 ─────────────────────────────────────
+const TABLE_COLS: { key: string; label: string; event?: string }[] = [
+  { key: 'goals', label: '득점' },
+  { key: 'assists', label: '도움' },
+  { key: 'attackPoints', label: '공격P' },
+  { key: 'games', label: '경기' },
+  { key: 'sessionWins', label: '승' },
+  { key: 'sessionLosses', label: '패' },
+  { key: 'winRate', label: '승률' },
+  { key: 'mvpScore', label: '평점' },
+  { key: 'mvpCount', label: 'MVP' },
+  { key: 'defenses', label: '수비', event: 'DEFENSE' },
+  { key: 'tackles', label: '태클', event: 'TACKLE' },
+  { key: 'interceptions', label: '인터셉트', event: 'INTERCEPTION' },
+  { key: 'clearances', label: '클리어런스', event: 'CLEARANCE' },
+  { key: 'saves', label: '선방', event: 'SAVE' },
+  { key: 'keyPasses', label: '키패스', event: 'KEY_PASS' },
+  { key: 'dribbles', label: '돌파', event: 'DRIBBLE' },
+  { key: 'shotsOn', label: '유효슈팅', event: 'SHOT_ON' },
+  { key: 'shotsOff', label: '무효슈팅', event: 'SHOT_OFF' },
+]
+
+function getCellValue(player: any, key: string): string {
+  if (key === 'attackPoints') return String((player.goals || 0) + (player.assists || 0))
+  if (key === 'winRate') return player.winRate ? player.winRate + '%' : '-'
+  if (key === 'mvpScore') return player.mvpScore != null ? Number(player.mvpScore).toFixed(1) : '0.0'
+  return String(player[key] ?? 0)
+}
+
+function RankingTable({ rankings, sortBy, sortOrder, onSort, enabledEvents }: {
+  rankings: any[]; sortBy: string; sortOrder: 'asc' | 'desc'; onSort: (key: string) => void; enabledEvents: string[]
+}) {
+  const visibleCols = TABLE_COLS.filter(c => !c.event || enabledEvents.includes(c.event))
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
+            <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-500 w-10">#</th>
+            <th className="px-3 py-2.5 text-left text-xs font-semibold text-slate-500 min-w-[100px]">선수</th>
+            {visibleCols.map(col => (
+              <th
+                key={col.key}
+                onClick={() => onSort(col.key)}
+                className={cn(
+                  'px-2 py-2.5 text-center text-xs font-semibold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors whitespace-nowrap',
+                  sortBy === col.key ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10' : 'text-slate-500'
+                )}
+              >
+                {col.label}
+                {sortBy === col.key && (
+                  <span className="ml-0.5">{sortOrder === 'desc' ? '↓' : '↑'}</span>
+                )}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rankings.map((player, i) => {
+            const rank = i + 1
+            return (
+              <tr
+                key={player.id}
+                className={cn(
+                  'border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors',
+                  rank <= 3 && 'bg-amber-50/30 dark:bg-amber-500/5'
+                )}
+              >
+                <td className="px-3 py-2.5 text-center">
+                  <span className={cn(
+                    'inline-flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold',
+                    rank === 1 ? 'bg-amber-500 text-white' : rank === 2 ? 'bg-slate-400 text-white' : rank === 3 ? 'bg-amber-700 text-white' : 'text-slate-400'
+                  )}>
+                    {rank}
+                  </span>
+                </td>
+                <td className="px-3 py-2.5">
+                  <Link href={`/ranking/${player.id}`} className="text-sm font-semibold text-slate-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                    {player.name}
+                  </Link>
+                </td>
+                {visibleCols.map(col => (
+                  <td
+                    key={col.key}
+                    className={cn(
+                      'px-2 py-2.5 text-center text-sm tabular-nums',
+                      sortBy === col.key
+                        ? 'font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-500/5'
+                        : 'text-slate-700 dark:text-slate-300'
+                    )}
+                  >
+                    {getCellValue(player, col.key)}
+                  </td>
+                ))}
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
     </div>
   )
 }

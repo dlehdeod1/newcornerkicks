@@ -175,7 +175,7 @@ Tailwind에서 시맨틱 컬러: `bg-background`, `text-foreground`, `bg-card`, 
 
 - 랭킹 표시 컬럼은 클럽의 `enabled_events`에 따라 동적 표시
 - **평점 가중치**: `clubs.mvp_weights` (JSON) — 관리자가 클럽별 커스텀 가능
-- 기본 가중치: GOAL 2.0, ASSIST 1.5, SESSION_WIN 3.0, DEFENSE 0.5, TACKLE/CLEARANCE 0.6, INTERCEPTION 0.6, SAVE 0.8, KEY_PASS 0.7, DRIBBLE 0.5, SHOT_ON 0.4, SHOT_OFF 0.1
+- 기본 가중치: GOAL 2.0, ASSIST 1.5, SESSION_WIN 1.5, DEFENSE 0.5, TACKLE/CLEARANCE 0.6, INTERCEPTION 0.6, SAVE 0.8, KEY_PASS 0.7, DRIBBLE 0.5, SHOT_ON 0.4, SHOT_OFF 0.1
 - 승/패: 세션 내 1등팀=승, 꼴찌팀=패, 중간=무 (3팀+ 세션)
 
 ## 마이그레이션 파일 순서

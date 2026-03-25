@@ -382,16 +382,16 @@ sessionsRoutes.post('/:id/attendance', authMiddleware('ADMIN'), async (c) => {
 // 선수 종합 능력치 계산
 function calculateOverall(player: any): number {
   const stats = [
-    player.shooting || 5,
-    player.offball_run || 5,
-    player.ball_keeping || 5,
-    player.passing || 5,
-    player.linkup || 5,
-    player.intercept || 5,
-    player.marking || 5,
-    player.stamina || 5,
-    player.speed || 5,
-    player.physical || 5,
+    player.shooting || 75,
+    player.offball_run || 75,
+    player.ball_keeping || 75,
+    player.passing || 75,
+    player.linkup || 75,
+    player.intercept || 75,
+    player.marking || 75,
+    player.stamina || 75,
+    player.speed || 75,
+    player.physical || 75,
   ]
   return stats.reduce((sum, s) => sum + s, 0) / stats.length
 }
@@ -399,17 +399,17 @@ function calculateOverall(player: any): number {
 // 공격/수비 성향 계산
 function calculateRole(player: any): { attack: number; defense: number } {
   const attack = (
-    (player.shooting || 5) * 1.5 +
-    (player.offball_run || 5) +
-    (player.ball_keeping || 5) +
-    (player.linkup || 5)
+    (player.shooting || 75) * 1.5 +
+    (player.offball_run || 75) +
+    (player.ball_keeping || 75) +
+    (player.linkup || 75)
   ) / 4.5
 
   const defense = (
-    (player.intercept || 5) * 1.5 +
-    (player.marking || 5) * 1.5 +
-    (player.physical || 5) +
-    (player.stamina || 5)
+    (player.intercept || 75) * 1.5 +
+    (player.marking || 75) * 1.5 +
+    (player.physical || 75) +
+    (player.stamina || 75)
   ) / 5
 
   return { attack, defense }
@@ -529,13 +529,13 @@ sessionsRoutes.post('/:id/teams', authMiddleware('ADMIN'), async (c) => {
       playersWithStats = playersResult.results as any[]
     }
 
-    // 용병은 기본 능력치(5)로 설정
+    // 용병은 기본 능력치(75)로 설정
     const guestsWithStats = guestAttendees.map((g: any) => ({
       id: null,
       guestName: g.guestName || g.name,
       isGuest: true,
-      shooting: 5, offball_run: 5, ball_keeping: 5, passing: 5, linkup: 5,
-      intercept: 5, marking: 5, stamina: 5, speed: 5, physical: 5,
+      shooting: 75, offball_run: 75, ball_keeping: 75, passing: 75, linkup: 75,
+      intercept: 75, marking: 75, stamina: 75, speed: 75, physical: 75,
     }))
 
     // 모든 참가자 합치기
@@ -599,9 +599,9 @@ sessionsRoutes.post('/:id/teams', authMiddleware('ADMIN'), async (c) => {
 선수 목록:
 ${allPlayers.map((p: any) => {
   const tags = (p.id && tagsByPlayer.get(p.id))?.join(', ') || '없음'
-  const overall = ((p.shooting || 5) + (p.offball_run || 5) + (p.ball_keeping || 5) + (p.passing || 5) + (p.linkup || 5) + (p.intercept || 5) + (p.marking || 5) + (p.stamina || 5) + (p.speed || 5) + (p.physical || 5)) / 10
+  const overall = ((p.shooting || 75) + (p.offball_run || 75) + (p.ball_keeping || 75) + (p.passing || 75) + (p.linkup || 75) + (p.intercept || 75) + (p.marking || 75) + (p.stamina || 75) + (p.speed || 75) + (p.physical || 75)) / 10
   const name = p.name || p.guestName || '용병'
-  return `- ${p.id || 'guest'}. ${name}: 종합 ${overall.toFixed(1)}, 슈팅 ${p.shooting || 5}, 패스 ${p.passing || 5}, 수비 ${p.intercept || 5}, 체력 ${p.stamina || 5}, 태그: ${tags}`
+  return `- ${p.id || 'guest'}. ${name}: 종합 ${overall.toFixed(1)}, 슈팅 ${p.shooting || 75}, 패스 ${p.passing || 75}, 수비 ${p.intercept || 75}, 체력 ${p.stamina || 75}, 태그: ${tags}`
 }).join('\n')}
 
 ${(chemResults.results as any[]).length > 0 ? `케미 정보 (같은 팀 배치 추천):
@@ -739,10 +739,18 @@ ${teamCount}팀으로 밸런스 있게 편성해주세요.
 
       teamSummaries.push({
         name: teamNames[i],
+        vest_color: teamColors[i],
+        emoji: teamEmojis[i],
         type: teamType,
         avgOverall: avgOverall.toFixed(1),
         playerCount: teamPlayers.length,
         keyPlayer: keyPlayer?.name || keyPlayer?.guestName,
+        members: teamPlayers.map((p: any) => ({
+          name: p.name || p.guestName || '용병',
+          playerId: p.id || null,
+          isGuest: !!p.isGuest,
+          guest_name: p.guestName || null,
+        })),
       })
     }
 
@@ -1289,7 +1297,7 @@ sessionsRoutes.get('/:id/ai-analysis', async (c) => {
           const role = calculateRole(m)
           return { name: m.name || m.nickname, overall: overall.toFixed(1), attack: role.attack.toFixed(1), defense: role.defense.toFixed(1), isGuest: false }
         }
-        return { name: m.guest_name, overall: '5.0', attack: '5.0', defense: '5.0', isGuest: true }
+        return { name: m.guest_name, overall: '75.0', attack: '75.0', defense: '75.0', isGuest: true }
       })
 
       const avgOverall = membersWithOverall.length > 0 ? membersWithOverall.reduce((sum: number, m: any) => sum + parseFloat(m.overall), 0) / membersWithOverall.length : 0

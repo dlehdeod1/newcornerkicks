@@ -4,6 +4,7 @@ import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth'
 
 import { getSeasonDateRange, getClubSeasonStartMonth } from '../utils/season'
 import { refreshChemistryCache } from '../utils/chemistry'
+import { getSeasonSummaryStats } from '../utils/seasonStats'
 
 const rankingsRoutes = new Hono<{ Bindings: Env }>()
 
@@ -36,39 +37,10 @@ rankingsRoutes.get('/', optionalAuthMiddleware, async (c) => {
     rankings = JSON.parse(cache.data as string)
   }
 
-  // 실시간 통계 데이터 계산
+  // 실시간 통계 — 공용 유틸 사용 (stats.ts와 동일 소스)
   const totalPlayers = rankings.filter((p: any) => p.attendance > 0).length
-  const totalGoals = rankings.reduce((sum: number, p: any) => sum + (p.goals || 0), 0)
-  const totalAssists = rankings.reduce((sum: number, p: any) => sum + (p.assists || 0), 0)
-  const totalDefenses = rankings.reduce((sum: number, p: any) => sum + (p.defenses || 0), 0)
-
-  // 세션 수
-  const sessionCount = await c.env.DB.prepare(`
-    SELECT COUNT(*) as count FROM sessions WHERE session_date BETWEEN ? AND ? AND club_id = ?
-  `).bind(yearStart, yearEnd, clubId).first()
-
-  // 경기 수
-  const matchCount = await c.env.DB.prepare(`
-    SELECT COUNT(*) as count FROM matches m
-    JOIN sessions s ON m.session_id = s.id
-    WHERE s.session_date BETWEEN ? AND ? AND s.club_id = ?
-  `).bind(yearStart, yearEnd, clubId).first()
-
-  // 세션당 평균 참석자 수 계산
-  const avgAttendanceResult = await c.env.DB.prepare(`
-    SELECT AVG(att_count) as avg FROM (
-      SELECT session_id, COUNT(*) as att_count FROM attendance a
-      JOIN sessions s ON a.session_id = s.id
-      WHERE s.session_date BETWEEN ? AND ?
-      GROUP BY session_id
-    )
-  `).bind(yearStart, yearEnd).first()
-
-  // 평균 계산
-  const totalSessions = (sessionCount?.count as number) || 0
-  const totalMatches = (matchCount?.count as number) || 0
-  const avgGoalsPerMatch = totalMatches > 0 ? totalGoals / totalMatches : 0
-  const avgAttendancePerSession = (avgAttendanceResult?.avg as number) || 0
+  const summary = await getSeasonSummaryStats(c.env.DB, clubId, yearStart, yearEnd)
+  const { totalGoals, totalAssists, totalDefenses, totalSessions, totalMatches, avgGoalsPerMatch, avgAttendancePerSession } = summary
 
   // 랭킹별 정렬
   const goalRanking = [...rankings].sort((a, b) => (b.goals || 0) - (a.goals || 0)).filter(p => p.goals > 0)

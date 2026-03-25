@@ -67,6 +67,7 @@ playersRoutes.get('/', optionalAuthMiddleware, async (c) => {
     ...player,
     has_my_rating: myRatingsMap.has(player.id),
     my_rating: myRatingsMap.get(player.id) || null,
+    futsal_dna: getFutsalDNA(player),
   }))
 
   return c.json({ players: playersWithRatingStatus })
@@ -285,8 +286,6 @@ playersRoutes.delete('/admin/users/:userId', authMiddleware('ADMIN'), async (c) 
 
   // FK 제약 있는 테이블부터 삭제 (foreign_keys = ON 이므로 순서 중요)
   await c.env.DB.prepare('DELETE FROM profiles WHERE user_id = ?').bind(userId).run()
-  await c.env.DB.prepare('DELETE FROM abilities WHERE user_id = ?').bind(userId).run()
-  await c.env.DB.prepare('DELETE FROM ability_logs WHERE user_id = ?').bind(userId).run()
   await c.env.DB.prepare('DELETE FROM session_mvp_votes WHERE voter_user_id = ?').bind(userId).run()
 
   // 이 유저의 능력치 평가 삭제
@@ -743,15 +742,14 @@ playersRoutes.delete('/:id', authMiddleware('ADMIN'), async (c) => {
     c.env.DB.prepare('DELETE FROM player_badges WHERE player_id = ?').bind(id),
     c.env.DB.prepare('DELETE FROM player_match_stats WHERE player_id = ?').bind(id),
     c.env.DB.prepare('DELETE FROM attendance WHERE player_id = ?').bind(id),
-    c.env.DB.prepare('DELETE FROM team_members WHERE player_id = ?').bind(id),       // team_players → team_members
+    c.env.DB.prepare('DELETE FROM team_members WHERE player_id = ?').bind(id),
     c.env.DB.prepare('DELETE FROM match_events WHERE player_id = ?').bind(id),
     c.env.DB.prepare('DELETE FROM match_events WHERE assister_id = ?').bind(id),
-    c.env.DB.prepare('DELETE FROM session_mvp WHERE player_id = ?').bind(id),
+    c.env.DB.prepare('DELETE FROM session_mvp_votes WHERE player_id = ?').bind(id),
+    c.env.DB.prepare('DELETE FROM session_mvp_results WHERE player_id = ?').bind(id),
     c.env.DB.prepare('DELETE FROM player_settlements WHERE player_id = ?').bind(id),
     c.env.DB.prepare('DELETE FROM player_preferences WHERE player_id = ?').bind(id),
     c.env.DB.prepare('DELETE FROM player_preferences WHERE target_player_id = ?').bind(id),
-    c.env.DB.prepare('DELETE FROM stat_changes WHERE player_id = ?').bind(id),
-    c.env.DB.prepare('DELETE FROM chemistry_edges WHERE player_a_id = ? OR player_b_id = ?').bind(id, id),
     c.env.DB.prepare('DELETE FROM player_tag_votes WHERE player_id = ?').bind(id),
     c.env.DB.prepare('DELETE FROM player_chemistry_cache WHERE player_id = ? OR partner_id = ?').bind(id, id),
     c.env.DB.prepare('DELETE FROM players WHERE id = ?').bind(id),

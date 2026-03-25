@@ -10,6 +10,8 @@ import 'settlements_screen.dart';
 import 'announcements_screen.dart';
 import 'board_screen.dart';
 import 'admin_exemptions_screen.dart';
+import 'admin_dashboard_screen.dart';
+import 'abilities_screen.dart';
 import '../widgets/tip_banner.dart';
 
 class ClubScreen extends StatefulWidget {
@@ -367,12 +369,12 @@ class _ClubScreenState extends State<ClubScreen> {
         _quickLink(Icons.people_outline, '멤버', AppColors.teal, () {
           // 이미 아래에 멤버 목록이 있으므로 스크롤
         }),
+        _quickLink(Icons.bar_chart, '능력치', AppColors.cyan, () {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const AbilitiesScreen()));
+        }),
         if (auth.isAdmin) ...[
-          _quickLink(Icons.campaign, '공지 관리', AppColors.amber, () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const AnnouncementsScreen(isAdmin: true)));
-          }),
-          _quickLink(Icons.shield_outlined, '회비 면제', AppColors.violet, () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminExemptionsScreen()));
+          _quickLink(Icons.dashboard, '관리자', AppColors.purple, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDashboardScreen()));
           }),
         ],
       ],
@@ -380,7 +382,7 @@ class _ClubScreenState extends State<ClubScreen> {
   }
 
   Widget _quickLink(IconData icon, String label, Color color, VoidCallback onTap) {
-    // Calculate width: 4 items per row when admin, 3 otherwise
+    // Calculate width: 4 items per row
     final screenWidth = MediaQuery.of(context).size.width;
     final itemWidth = (screenWidth - 40 - 30) / 4; // 40 padding, 30 spacing for 4 items
 
@@ -408,9 +410,11 @@ class _ClubScreenState extends State<ClubScreen> {
   }
 
   Widget _buildSubscriptionCard() {
-    final isPro = _subscription?['isPro'] == true;
+    // _subscription API 결과 또는 auth.isPro fallback
+    final auth = context.read<AuthService>();
+    final isPro = _subscription?['isPro'] == true || auth.isPro;
     final sub = _subscription?['subscription'];
-    final expiresAt = sub?['expiresAt'];
+    final expiresAt = sub?['expiresAt'] ?? sub?['expires_at'];
 
     return Container(
       padding: const EdgeInsets.all(20),
