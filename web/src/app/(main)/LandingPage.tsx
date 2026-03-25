@@ -170,9 +170,9 @@ export default function LandingPage() {
             </div>
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">PRO</h3>
             <p className="text-3xl font-bold text-slate-900 dark:text-white mb-1">
-              9,900<span className="text-base font-normal text-slate-500">원/월</span>
+              4,900<span className="text-base font-normal text-slate-500">원/월</span>
             </p>
-            <p className="text-sm text-slate-500 mb-6">연 결제 시 99,000원/년</p>
+            <p className="text-sm text-slate-500 mb-6">연 결제 시 39,000원/년</p>
             <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
               <PlanFeature text="무료 플랜의 모든 기능" />
               <PlanFeature text="AI 기반 밸런스 팀 편성" />

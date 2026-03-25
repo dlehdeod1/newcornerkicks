@@ -13,17 +13,22 @@ const STAT_LABELS: Record<string, string> = {
   sessionWins: '승', sessionLosses: '패', contribution: '공헌도',
 }
 
-const BASE_STATS = ['goals', 'assists', 'mvpScore']
-const FALLBACK_ORDER = ['mvpCount', 'attackPoints', 'winRate', 'games']
+const STAT_PRIORITY = ['goals', 'assists', 'mvpScore', 'mvpCount', 'attackPoints', 'winRate', 'games', 'contribution']
 
+// 정렬 기준 제외하고 우선순위대로 최대 6개 반환
 function getVisibleStats(sortBy: string): string[] {
-  const visible = BASE_STATS.filter(s => s !== sortBy)
-  for (const f of FALLBACK_ORDER) {
-    if (visible.length >= 3) break
-    if (f !== sortBy && !visible.includes(f)) visible.push(f)
-  }
-  return visible.slice(0, 3)
+  return STAT_PRIORITY.filter(s => s !== sortBy).slice(0, 6)
 }
+
+// 반응형 breakpoint 클래스: 인덱스별로 다른 breakpoint에서 표시
+const RESPONSIVE_CLASS = [
+  'hidden sm:block',   // 0,1: sm부터
+  'hidden sm:block',
+  'hidden md:block',   // 2,3: md부터
+  'hidden md:block',
+  'hidden lg:block',   // 4,5: lg부터
+  'hidden lg:block',
+]
 
 function getStatValue(player: any, key: string): string {
   if (key === 'attackPoints') return String((player.goals || 0) + (player.assists || 0))
@@ -100,8 +105,8 @@ function CompactRow({
           <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">{STAT_LABELS[sortBy] || sortBy}</div>
           <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{getStatValue(player, sortBy)}</div>
         </div>
-        {visibleStats.map(key => (
-          <div key={key} className="text-center shrink-0 hidden sm:block">
+        {visibleStats.map((key, i) => (
+          <div key={key} className={cn('text-center shrink-0', RESPONSIVE_CLASS[i] || 'hidden lg:block')}>
             <div className="text-[9px] text-slate-400">{STAT_LABELS[key]}</div>
             <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">{getStatValue(player, key)}</div>
           </div>
