@@ -423,7 +423,30 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
                     오늘의 MVP
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                    골2점 어시1점 수비0.5점 우승1.5점
+                    {(() => {
+                      const weights = club?.mvpWeights || {}
+                      const enabled = new Set(club?.enabledEvents || [])
+                      const labels: Record<string, string> = {
+                        GOAL: '골', ASSIST: '어시', SESSION_WIN: '우승',
+                        DEFENSE: '수비', TACKLE: '태클', INTERCEPTION: '인터셉트',
+                        CLEARANCE: '클리어', SAVE: '세이브', KEY_PASS: '키패스',
+                        DRIBBLE: '드리블', SHOT_ON: '유효슈팅', SHOT_OFF: '슈팅',
+                      }
+                      const parts: string[] = []
+                      const order = ['GOAL', 'ASSIST', 'SESSION_WIN', 'DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE', 'SAVE', 'KEY_PASS', 'DRIBBLE', 'SHOT_ON', 'SHOT_OFF']
+                      const defaults: Record<string, number> = {
+                        GOAL: 2.0, ASSIST: 1.5, SESSION_WIN: 3.0, DEFENSE: 0.5,
+                        TACKLE: 0.6, INTERCEPTION: 0.6, CLEARANCE: 0.6, SAVE: 0.8,
+                        KEY_PASS: 0.7, DRIBBLE: 0.5, SHOT_ON: 0.4, SHOT_OFF: 0.1,
+                      }
+                      for (const key of order) {
+                        if (key === 'ASSIST' || key === 'SESSION_WIN' || enabled.has(key)) {
+                          const w = weights[key] ?? defaults[key] ?? 0
+                          if (w > 0) parts.push(`${labels[key]}${w}점`)
+                        }
+                      }
+                      return parts.join(' ') || '골2점 어시1.5점 우승3점'
+                    })()}
                   </p>
                 </div>
               </div>

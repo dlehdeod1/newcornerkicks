@@ -169,8 +169,8 @@ function ClubBoardSection({ token, isLoggedIn }: { token: string | null; isLogge
 
   return (
     <>
-      {/* Write button + Tabs row */}
-      <div className="flex items-center justify-between mb-6">
+      {/* Category tabs */}
+      <div className="mb-6">
         <div className="flex gap-2 overflow-x-auto pb-1">
           {clubCategories.map((cat) => (
             <button
@@ -187,16 +187,18 @@ function ClubBoardSection({ token, isLoggedIn }: { token: string | null; isLogge
             </button>
           ))}
         </div>
-        {!isNoticeTab && (
-          <Link
-            href={`/board/write?category=${activeTab}`}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors flex-shrink-0 ml-4"
-          >
-            <Plus className="w-4 h-4" />
-            글 작성
-          </Link>
-        )}
       </div>
+
+      {/* FAB: 글 작성 */}
+      {!isNoticeTab && (
+        <Link
+          href={`/board/write?category=${activeTab}`}
+          className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95"
+          title="글 작성"
+        >
+          <Plus className="w-6 h-6" />
+        </Link>
+      )}
 
       {isLoading ? (
         <LoadingSpinner />
@@ -244,8 +246,8 @@ function CommunitySection({ token }: { token: string | null }) {
 
   return (
     <>
-      {/* Tabs + Write button */}
-      <div className="flex items-center justify-between mb-6">
+      {/* Category tabs */}
+      <div className="mb-6">
         <div className="flex gap-2 overflow-x-auto pb-1">
           {communityCategories.map(cat => {
             const color = badgeColors[cat.color]
@@ -265,14 +267,16 @@ function CommunitySection({ token }: { token: string | null }) {
             )
           })}
         </div>
-        <Link
-          href={`/community/write?category=${activeTab}`}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl text-sm font-medium shadow-sm transition-all flex-shrink-0 ml-4"
-        >
-          <Plus className="w-4 h-4" />
-          글 작성
-        </Link>
       </div>
+
+      {/* FAB: 글 작성 */}
+      <Link
+        href={`/community/write?category=${activeTab}`}
+        className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-full shadow-lg shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95"
+        title="글 작성"
+      >
+        <Plus className="w-6 h-6" />
+      </Link>
 
       {/* Filters */}
       {showFilters && (

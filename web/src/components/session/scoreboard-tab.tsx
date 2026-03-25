@@ -140,35 +140,38 @@ export function ScoreboardTab({ sessionId, teams, matches, onRefetch }: Props) {
           size="sm"
           onClick={() => setShowMatchManager(true)}
           className="flex items-center gap-2"
+          title="경기 일정 관리"
         >
           <Plus className="w-4 h-4" />
-          경기 일정 관리
+          <span className="hidden sm:inline">경기 일정 관리</span>
         </Button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <button
             onClick={() => setViewMode('table')}
+            title="테이블 뷰"
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+              'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               viewMode === 'table'
                 ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
             )}
           >
             <List className="w-4 h-4" />
-            테이블 뷰
+            <span className="hidden sm:inline">테이블 뷰</span>
           </button>
           <button
             onClick={() => setViewMode('timeline')}
+            title="하이라이트 뷰"
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+              'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               viewMode === 'timeline'
                 ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
             )}
           >
             <Zap className="w-4 h-4" />
-            하이라이트 뷰
+            <span className="hidden sm:inline">하이라이트 뷰</span>
           </button>
         </div>
       </div>

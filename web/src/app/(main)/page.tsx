@@ -275,7 +275,7 @@ export default function HomePage() {
             color="purple"
           />
           <QuickMenuCard
-            href="/community"
+            href="/board"
             icon={<Globe className="w-6 h-6" />}
             title="커뮤니티"
             description="팀 모집 & 매칭"
