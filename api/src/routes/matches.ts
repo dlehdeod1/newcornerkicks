@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import type { Env } from '../index'
 import { optionalAuthMiddleware, authMiddleware } from '../middleware/auth'
+import { autoSettleSession } from './sessions'
 
 const matchesRoutes = new Hono<{ Bindings: Env }>()
 
@@ -327,6 +328,11 @@ matchesRoutes.post('/:id/events', authMiddleware(), async (c) => {
     // 랭킹 캐시 무효화
     await invalidateRankingsCache(c.env.DB, Number(matchId))
 
+    // 정산 재계산 (골 변경 시 순위 바뀔 수 있음)
+    if (data.eventType === 'GOAL') {
+      await recalculateSettlement(c.env.DB, Number(matchId))
+    }
+
     return c.json({
       id: result.meta.last_row_id,
       message: '이벤트가 기록되었습니다.',
@@ -372,6 +378,11 @@ matchesRoutes.delete('/:id/events/:eventId', authMiddleware(), async (c) => {
 
     // 랭킹 캐시 무효화
     await invalidateRankingsCache(c.env.DB, Number(matchId))
+
+    // 골 삭제 시 정산 재계산
+    if ((event as any).event_type === 'GOAL') {
+      await recalculateSettlement(c.env.DB, Number(matchId))
+    }
 
     return c.json({ message: '이벤트가 삭제되었습니다.' })
   } catch (err: any) {
@@ -556,6 +567,28 @@ async function awardBadgesForMatch(db: D1Database, matchId: number) {
         VALUES (?, ?, ?)
       `).bind(playerId, code, now).run()
     }
+  }
+}
+
+// 경기 결과 변경 시 정산 재계산 (세션이 ended/completed이고 settlement 있을 때만)
+async function recalculateSettlement(db: any, matchId: number) {
+  try {
+    const match = await db.prepare(
+      'SELECT session_id FROM matches WHERE id = ?'
+    ).bind(matchId).first() as any
+    if (!match) return
+
+    const session = await db.prepare(
+      'SELECT id, status FROM sessions WHERE id = ?'
+    ).bind(match.session_id).first() as any
+    if (!session || !['ended', 'completed'].includes(session.status)) return
+
+    // 기존 정산 삭제 후 재생성
+    await db.prepare('DELETE FROM session_payments WHERE session_id = ?').bind(session.id).run()
+    await db.prepare('DELETE FROM settlements WHERE session_id = ?').bind(session.id).run()
+    await autoSettleSession(db, session.id)
+  } catch (e) {
+    console.error(`recalculateSettlement failed for match ${matchId}:`, e)
   }
 }
 

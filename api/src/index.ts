@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { authRoutes } from './routes/auth'
-import { sessionsRoutes } from './routes/sessions'
+import { sessionsRoutes, autoSettleSession } from './routes/sessions'
 import { playersRoutes } from './routes/players'
 import { matchesRoutes } from './routes/matches'
 import { rankingsRoutes } from './routes/rankings'
@@ -111,15 +111,29 @@ async function autoTransitionSessions(env: Env) {
   const timeKST = kstNow.toISOString().split('T')[1].substring(0, 5)
   const now = Math.floor(Date.now() / 1000)
 
-  await env.DB.prepare(`
-    UPDATE sessions SET status = 'ended', updated_at = ?
+  // 1. end_time 지난 세션 → ended로 전환
+  const transitioning = await env.DB.prepare(`
+    SELECT id FROM sessions
     WHERE status IN ('recruiting', 'open', 'closed')
       AND end_time IS NOT NULL
       AND (
         session_date < ?
         OR (session_date = ? AND end_time <= ?)
       )
-  `).bind(now, todayKST, todayKST, timeKST).run()
+  `).bind(todayKST, todayKST, timeKST).all()
+
+  for (const session of transitioning.results as any[]) {
+    await env.DB.prepare(
+      'UPDATE sessions SET status = ?, updated_at = ? WHERE id = ?'
+    ).bind('ended', now, session.id).run()
+
+    // 자동 정산 생성
+    try {
+      await autoSettleSession(env.DB, session.id)
+    } catch (e) {
+      console.error(`autoSettleSession failed for session ${session.id}:`, e)
+    }
+  }
 }
 
 // 매시간 실행: 만료된 구독 → 'expired' 처리 + 클럽 plan_type → 'free' 다운그레이드

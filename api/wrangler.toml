@@ -17,4 +17,4 @@ binding = "PHOTOS"
 bucket_name = "cornerkicks-photos"
 
 [triggers]
-crons = ["0 * * * *"]
+crons = ["*/10 * * * *"]

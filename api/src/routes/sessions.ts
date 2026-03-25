@@ -279,9 +279,15 @@ sessionsRoutes.put('/:id', authMiddleware('ADMIN'), async (c) => {
     UPDATE sessions SET ${updates.join(', ')} WHERE id = ?
   `).bind(...params).run()
 
-  // 세션이 ended 상태가 되면 자동 정산 처리
-  if (status === 'ended') {
-    await autoSettleSession(c.env.DB, Number(id))
+  // 세션이 ended 또는 completed 상태가 되면 자동 정산 처리
+  // (관리자가 ended를 건너뛰고 바로 completed로 변경하는 경우 대응)
+  if (status === 'ended' || status === 'completed') {
+    const existingSettlement = await c.env.DB.prepare(
+      'SELECT id FROM settlements WHERE session_id = ?'
+    ).bind(id).first()
+    if (!existingSettlement) {
+      await autoSettleSession(c.env.DB, Number(id))
+    }
   }
 
   return c.json({ message: '세션이 수정되었습니다.' })
@@ -2111,4 +2117,4 @@ sessionsRoutes.delete('/:id', authMiddleware(), async (c) => {
   return c.json({ ok: true })
 })
 
-export { sessionsRoutes }
+export { sessionsRoutes, autoSettleSession }
