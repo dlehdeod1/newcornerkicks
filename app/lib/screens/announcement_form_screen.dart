@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../config/api_config.dart';
+import '../utils/snackbar_helper.dart';
 
 class AnnouncementFormScreen extends StatefulWidget {
   final Map<String, dynamic>? existing;
@@ -67,9 +68,7 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
     } catch (e) {
       setState(() => _uploading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('이미지 업로드 실패: $e'), backgroundColor: AppColors.red),
-        );
+        showError(context, '이미지 업로드 실패: $e');
       }
     }
   }
@@ -78,15 +77,11 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
     final title = _titleController.text.trim();
     final content = _contentController.text.trim();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('제목을 입력해주세요'), backgroundColor: AppColors.red),
-      );
+      showError(context, '제목을 입력해주세요');
       return;
     }
     if (content.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('내용을 입력해주세요'), backgroundColor: AppColors.red),
-      );
+      showError(context, '내용을 입력해주세요');
       return;
     }
 
@@ -112,9 +107,7 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
     } catch (e) {
       setState(() => _saving = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e'), backgroundColor: AppColors.red),
-        );
+        showError(context, '저장 실패: $e');
       }
     }
   }

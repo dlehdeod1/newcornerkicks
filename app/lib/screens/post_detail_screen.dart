@@ -4,6 +4,7 @@ import '../theme/app_colors.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../config/api_config.dart';
+import '../utils/snackbar_helper.dart';
 import 'post_form_screen.dart';
 
 class PostDetailScreen extends StatefulWidget {
@@ -76,9 +77,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       await _load();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('댓글 작성 실패: $e'), backgroundColor: AppColors.red),
-        );
+        showError(context, '댓글 작성 실패: $e');
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -110,9 +109,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('삭제 실패: $e'), backgroundColor: AppColors.red),
-        );
+        showError(context, '삭제 실패: $e');
       }
     }
   }
@@ -142,9 +139,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       await _load();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('삭제 실패: $e'), backgroundColor: AppColors.red),
-        );
+        showError(context, '삭제 실패: $e');
       }
     }
   }

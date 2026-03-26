@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
+import '../utils/snackbar_helper.dart';
 import '../widgets/tip_banner.dart';
 import 'player_detail_screen.dart';
 
@@ -408,7 +409,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await _loadSummary();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: AppColors.red));
+        showError(context, '$e');
       }
     }
   }
@@ -510,9 +511,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               currentPrefs.remove(p['id']);
                             } else {
                               if (currentPrefs.length >= 3) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('최대 3명까지 등록 가능합니다'), backgroundColor: AppColors.red),
-                                );
+                                showError(context, '최대 3명까지 등록 가능합니다');
                                 return;
                               }
                               await _api.addPreference(p['id'], auth.token!);
@@ -701,15 +700,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await _api.request('/auth/link-google', method: 'POST', body: {'idToken': idToken}, token: auth.token);
       setState(() => _googleLinked = true);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${account.email} Google 계정이 연동되었습니다'), backgroundColor: AppColors.primary),
-        );
+        showSuccess(context, '${account.email} Google 계정이 연동되었습니다');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', '')), backgroundColor: AppColors.red),
-        );
+        showError(context, e.toString().replaceFirst('Exception: ', ''));
       }
     } finally {
       if (mounted) setState(() => _googleLinking = false);
@@ -735,15 +730,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await _api.request('/auth/link-google', method: 'DELETE', token: auth.token);
       setState(() => _googleLinked = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Google 연동이 해제되었습니다'), backgroundColor: AppColors.primary),
-        );
+        showSuccess(context, 'Google 연동이 해제되었습니다');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', '')), backgroundColor: AppColors.red),
-        );
+        showError(context, e.toString().replaceFirst('Exception: ', ''));
       }
     }
   }
@@ -777,9 +768,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () async {
               if (newCtrl.text != confirmCtrl.text) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('새 비밀번호가 일치하지 않습니다'), backgroundColor: AppColors.red),
-                );
+                showError(context, '새 비밀번호가 일치하지 않습니다');
                 return;
               }
               try {
@@ -789,15 +778,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 }, token: auth.token);
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('비밀번호가 변경되었습니다'), backgroundColor: AppColors.primary),
-                  );
+                  showSuccess(context, '비밀번호가 변경되었습니다');
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('$e'), backgroundColor: AppColors.red),
-                  );
+                  showError(context, '$e');
                 }
               }
             },
@@ -840,7 +825,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () async {
               if (nicknameCtrl.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('닉네임을 입력해주세요'), backgroundColor: AppColors.red));
+                showError(context, '닉네임을 입력해주세요');
                 return;
               }
               try {
@@ -851,11 +836,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (mounted) {
                   _loadProfile();
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('닉네임이 변경되었습니다'), backgroundColor: AppColors.primary));
+                  showSuccess(context, '닉네임이 변경되었습니다');
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: AppColors.red));
+                  showError(context, '$e');
                 }
               }
             },

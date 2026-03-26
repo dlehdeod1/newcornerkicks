@@ -8,6 +8,7 @@ import 'session_detail_screen.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/tip_banner.dart';
+import '../utils/snackbar_helper.dart';
 
 class SessionsScreen extends StatefulWidget {
   const SessionsScreen({super.key});
@@ -47,9 +48,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
   Future<void> _toggleRsvp(dynamic session) async {
     final auth = context.read<AuthService>();
     if (auth.token == null || auth.player == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('선수 연동 후 참석 투표가 가능합니다'), backgroundColor: AppColors.blue),
-      );
+      showInfo(context, '선수 연동 후 참석 투표가 가능합니다');
       return;
     }
     final sid = session['id'] as int;
@@ -239,9 +238,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                           } catch (e) {
                             if (ctx.mounted) {
                               setS(() => saving = false);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red),
-                              );
+                              showError(context, e.toString());
                             }
                           }
                         },

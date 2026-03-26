@@ -98,61 +98,65 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                       ? '📅'
                                       : '🔔';
 
-                          return GestureDetector(
-                            onTap: () async {
-                              if (!isRead) {
-                                final token = auth.token;
-                                if (token != null) {
-                                  await ApiService().markNotificationRead(n['id'], token);
-                                  _load();
+                          return Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(14),
+                              onTap: () async {
+                                if (!isRead) {
+                                  final token = auth.token;
+                                  if (token != null) {
+                                    await ApiService().markNotificationRead(n['id'], token);
+                                    _load();
+                                  }
                                 }
-                              }
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: isRead ? AppColors.bgCard : AppColors.bgCard.withAlpha(230),
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: isRead ? AppColors.surfaceTint : AppColors.primary.withAlpha(51),
-                                ),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(icon, style: const TextStyle(fontSize: 22)),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          n['title'] ?? '알림',
-                                          style: TextStyle(
-                                            color: isRead ? Colors.white54 : Colors.white,
-                                            fontWeight: isRead ? FontWeight.normal : FontWeight.w600,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                        if (n['body'] != null) ...[
-                                          const SizedBox(height: 4),
-                                          Text(n['body'], style: const TextStyle(color: Colors.white38, fontSize: 12)),
-                                        ],
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          _formatTime(n['created_at']),
-                                          style: const TextStyle(color: Colors.white24, fontSize: 11),
-                                        ),
-                                      ],
-                                    ),
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: isRead ? AppColors.bgCard : AppColors.bgCard.withAlpha(230),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: isRead ? AppColors.surfaceTint : AppColors.primary.withAlpha(51),
                                   ),
-                                  if (!isRead)
-                                    Container(
-                                      width: 8, height: 8,
-                                      decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(icon, style: const TextStyle(fontSize: 22)),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            n['title'] ?? '알림',
+                                            style: TextStyle(
+                                              color: isRead ? Colors.white54 : Colors.white,
+                                              fontWeight: isRead ? FontWeight.normal : FontWeight.w600,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          if (n['body'] != null) ...[
+                                            const SizedBox(height: 4),
+                                            Text(n['body'], style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                                          ],
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            _formatTime(n['created_at']),
+                                            style: const TextStyle(color: Colors.white24, fontSize: 11),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                ],
+                                    if (!isRead)
+                                      Container(
+                                        width: 8, height: 8,
+                                        decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                                      ),
+                                  ],
+                                ),
                               ),
                             ),
                           );

@@ -8,6 +8,7 @@ import { sessionsApi } from '@/lib/api'
 import { AttendanceEditorModal } from './attendance-editor-modal'
 import { TeamParserModal } from './team-parser-modal'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface Props {
   session: any
@@ -43,16 +44,17 @@ export function OverviewTab({ session, attendance, teams, onRefetch }: Props) {
     try {
       const result = await sessionsApi.createTeams(session.id, { attendees: buildAttendees(), useAI: false }, token!)
       if (result?.limitReached) {
-        alert(result.message || 'AI 편성 한도에 도달했습니다.')
+        toast.error(result.message || 'AI 편성 한도에 도달했습니다.')
         return
       }
       if (result?.locked) {
         router.push('/upgrade')
         return
       }
+      toast.success('팀이 편성되었습니다.')
       onRefetch()
     } catch (err: any) {
-      alert(err.message || '팀 편성에 실패했습니다.')
+      toast.error(err.message || '팀 편성에 실패했습니다.')
     } finally {
       setLoading(false)
     }
@@ -60,7 +62,7 @@ export function OverviewTab({ session, attendance, teams, onRefetch }: Props) {
 
   const handleCreateTeamsAI = async () => {
     if (aiRemaining <= 0) {
-      alert('이번 달 AI 팀 편성 횟수를 모두 사용했습니다.')
+      toast.error('이번 달 AI 팀 편성 횟수를 모두 사용했습니다.')
       return
     }
     if (!window.confirm(`AI로 팀을 편성하시겠습니까? (잔여 ${aiRemaining}회)`)) return
@@ -69,16 +71,17 @@ export function OverviewTab({ session, attendance, teams, onRefetch }: Props) {
     try {
       const result = await sessionsApi.createTeams(session.id, { attendees: buildAttendees(), useAI: true }, token!)
       if (result?.limitReached) {
-        alert(result.message || 'AI 편성 한도에 도달했습니다.')
+        toast.error(result.message || 'AI 편성 한도에 도달했습니다.')
         return
       }
       if (result?.locked) {
         router.push('/upgrade')
         return
       }
+      toast.success('AI 팀이 편성되었습니다.')
       onRefetch()
     } catch (err: any) {
-      alert(err.message || 'AI 팀 편성에 실패했습니다.')
+      toast.error(err.message || 'AI 팀 편성에 실패했습니다.')
     } finally {
       setAiLoading(false)
     }

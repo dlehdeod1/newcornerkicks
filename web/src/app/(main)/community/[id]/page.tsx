@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth'
 import { communityApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import { toast } from 'sonner'
 import { RichContent } from '@/components/ui/rich-content'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://cornerkicks-api.conerkicks.workers.dev'
@@ -50,7 +51,13 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
 
   const deleteMutation = useMutation({
     mutationFn: () => communityApi.delete(postId, token!),
-    onSuccess: () => router.push('/community'),
+    onSuccess: () => {
+      toast.success('게시글이 삭제되었습니다.')
+      router.push('/community')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '게시글 삭제에 실패했습니다.')
+    },
   })
 
   const toggleStatusMutation = useMutation({
@@ -58,7 +65,13 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
       const newStatus = post.status === 'open' ? 'closed' : 'open'
       return communityApi.update(postId, { status: newStatus }, token!)
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['community', postId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['community', postId] })
+      toast.success('모집 상태가 변경되었습니다.')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '상태 변경에 실패했습니다.')
+    },
   })
 
   const addCommentMutation = useMutation({
@@ -67,11 +80,20 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
       setComment('')
       queryClient.invalidateQueries({ queryKey: ['community', postId] })
     },
+    onError: (error: any) => {
+      toast.error(error.message || '댓글 작성에 실패했습니다.')
+    },
   })
 
   const deleteCommentMutation = useMutation({
     mutationFn: (commentId: number) => communityApi.deleteComment(postId, commentId, token!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['community', postId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['community', postId] })
+      toast.success('댓글이 삭제되었습니다.')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '댓글 삭제에 실패했습니다.')
+    },
   })
 
   if (isLoading) {

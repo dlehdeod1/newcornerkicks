@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../utils/snackbar_helper.dart';
 
 class AdminExemptionsScreen extends StatefulWidget {
   const AdminExemptionsScreen({super.key});
@@ -37,9 +38,7 @@ class _AdminExemptionsScreenState extends State<AdminExemptionsScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('로드 실패: $e'), backgroundColor: AppColors.red),
-        );
+        showError(context, '로드 실패: $e');
       }
     }
   }
@@ -56,9 +55,7 @@ class _AdminExemptionsScreenState extends State<AdminExemptionsScreen> {
       await _load();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('변경 실패: $e'), backgroundColor: AppColors.red),
-        );
+        showError(context, '변경 실패: $e');
       }
     }
   }
@@ -105,9 +102,7 @@ class _AdminExemptionsScreenState extends State<AdminExemptionsScreen> {
       await _load();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e'), backgroundColor: AppColors.red),
-        );
+        showError(context, '저장 실패: $e');
       }
     }
   }

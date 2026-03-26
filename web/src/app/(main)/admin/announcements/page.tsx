@@ -8,6 +8,7 @@ import { Bell, Pin, Trash2, Pencil, Plus, ArrowLeft, ImageIcon, X, AlertCircle }
 import { useAuthStore, useAuthHydrated } from '@/stores/auth'
 import { announcementsApi, uploadsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import { toast } from 'sonner'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://cornerkicks-api.conerkicks.workers.dev'
 
@@ -74,6 +75,10 @@ function AdminAnnouncementsContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] })
       resetForm()
+      toast.success('공지가 등록되었습니다.')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '공지 등록에 실패했습니다.')
     },
   })
 
@@ -83,7 +88,11 @@ function AdminAnnouncementsContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] })
       resetForm()
+      toast.success('공지가 수정되었습니다.')
       router.push('/admin/announcements')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '공지 수정에 실패했습니다.')
     },
   })
 
@@ -92,6 +101,10 @@ function AdminAnnouncementsContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] })
       setDeleteTarget(null)
+      toast.success('공지가 삭제되었습니다.')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '공지 삭제에 실패했습니다.')
     },
   })
 
@@ -111,7 +124,7 @@ function AdminAnnouncementsContent() {
       const result = await uploadsApi.uploadImage(file, 'announcements', token)
       setImageUrl(result.url)
     } catch (err: any) {
-      alert(err.message || '이미지 업로드 실패')
+      toast.error(err.message || '이미지 업로드에 실패했습니다.')
     } finally {
       setUploading(false)
     }

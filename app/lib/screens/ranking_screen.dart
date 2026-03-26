@@ -234,48 +234,56 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => _showYearPicker(),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceBorder,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.surfaceTint),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('$_selectedYear시즌', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
-                  const SizedBox(width: 6),
-                  Icon(Icons.expand_more, color: AppColors.textHint, size: 18),
-                ],
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              onTap: () => _showYearPicker(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceBorder,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  border: Border.all(color: AppColors.surfaceTint),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('$_selectedYear시즌', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                    const SizedBox(width: 6),
+                    Icon(Icons.expand_more, color: AppColors.textHint, size: 18),
+                  ],
+                ),
               ),
             ),
           ),
           const Spacer(),
           if (context.read<AuthService>().isAdmin)
-            GestureDetector(
-              onTap: _refreshing ? null : () async {
-                setState(() => _refreshing = true);
-                try {
-                  await _api.refreshRankings(_selectedYear, context.read<AuthService>().token!);
-                  await _loadRankings();
-                  _funStats = null; // 통계도 갱신 필요
-                } catch (_) {} finally {
-                  if (mounted) setState(() => _refreshing = false);
-                }
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceBorder,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.surfaceTint),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                onTap: _refreshing ? null : () async {
+                  setState(() => _refreshing = true);
+                  try {
+                    await _api.refreshRankings(_selectedYear, context.read<AuthService>().token!);
+                    await _loadRankings();
+                    _funStats = null; // 통계도 갱신 필요
+                  } catch (_) {} finally {
+                    if (mounted) setState(() => _refreshing = false);
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceBorder,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    border: Border.all(color: AppColors.surfaceTint),
+                  ),
+                  child: _refreshing
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2))
+                      : const Icon(Icons.refresh, size: 16, color: Colors.white54),
                 ),
-                child: _refreshing
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2))
-                    : const Icon(Icons.refresh, size: 16, color: Colors.white54),
               ),
             ),
         ],
@@ -423,30 +431,34 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
             final color = cat['color'] as Color;
             return Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: GestureDetector(
-                onTap: () => setState(() => _sortBy = cat['key']),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isActive ? color.withAlpha(26) : AppColors.surfaceBorder,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: isActive ? color.withAlpha(102) : AppColors.surfaceTint),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(cat['icon'], style: const TextStyle(fontSize: 13)),
-                      const SizedBox(width: 5),
-                      Text(
-                        cat['label'],
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                          color: isActive ? color : AppColors.textSecondary,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                  onTap: () => setState(() => _sortBy = cat['key']),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isActive ? color.withAlpha(26) : AppColors.surfaceBorder,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+                      border: Border.all(color: isActive ? color.withAlpha(102) : AppColors.surfaceTint),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(cat['icon'], style: const TextStyle(fontSize: 13)),
+                        const SizedBox(width: 5),
+                        Text(
+                          cat['label'],
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                            color: isActive ? color : AppColors.textSecondary,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -482,49 +494,53 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
           final color = isFirst ? AppColors.amber : idx == 1 ? AppColors.slateLight : AppColors.bronze;
 
           return Expanded(
-            child: GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(
-                builder: (_) => PlayerDetailScreen(playerId: player['id']),
-              )),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Column(
-                  children: [
-                    Container(
-                      width: isFirst ? 60 : 48,
-                      height: isFirst ? 60 : 48,
-                      decoration: BoxDecoration(
-                        color: color.withAlpha(20),
-                        borderRadius: BorderRadius.circular(isFirst ? 18 : 14),
-                        border: Border.all(color: color.withAlpha(102), width: isFirst ? 2 : 1),
-                      ),
-                      child: Center(
-                        child: Text(
-                          name.toString().isNotEmpty ? name.toString()[0] : '?',
-                          style: TextStyle(fontSize: isFirst ? 22 : 18, fontWeight: FontWeight.bold, color: color),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () => Navigator.push(context, MaterialPageRoute(
+                  builder: (_) => PlayerDetailScreen(playerId: player['id']),
+                )),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: isFirst ? 60 : 48,
+                        height: isFirst ? 60 : 48,
+                        decoration: BoxDecoration(
+                          color: color.withAlpha(20),
+                          borderRadius: BorderRadius.circular(isFirst ? 18 : 14),
+                          border: Border.all(color: color.withAlpha(102), width: isFirst ? 2 : 1),
+                        ),
+                        child: Center(
+                          child: Text(
+                            name.toString().isNotEmpty ? name.toString()[0] : '?',
+                            style: TextStyle(fontSize: isFirst ? 22 : 18, fontWeight: FontWeight.bold, color: color),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(medal, style: TextStyle(fontSize: isFirst ? 20 : 16)),
-                    Text(
-                      name.toString().length > 4 ? '${name.toString().substring(0, 4)}...' : name.toString(),
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                    Text('$val', style: TextStyle(fontSize: isFirst ? 18 : 15, fontWeight: FontWeight.bold, color: color)),
-                    const SizedBox(height: 6),
-                    Container(
-                      height: height,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [color, color.withAlpha(153)],
-                        ),
-                        borderRadius: const BorderRadius.only(topLeft: Radius.circular(10), topRight: Radius.circular(10)),
+                      const SizedBox(height: 6),
+                      Text(medal, style: TextStyle(fontSize: isFirst ? 20 : 16)),
+                      Text(
+                        name.toString().length > 4 ? '${name.toString().substring(0, 4)}...' : name.toString(),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
-                    ),
-                  ],
+                      Text('$val', style: TextStyle(fontSize: isFirst ? 18 : 15, fontWeight: FontWeight.bold, color: color)),
+                      const SizedBox(height: 6),
+                      Container(
+                        height: height,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [color, color.withAlpha(153)],
+                          ),
+                          borderRadius: const BorderRadius.only(topLeft: Radius.circular(10), topRight: Radius.circular(10)),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -561,70 +577,74 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
     else if (rank == 3) { rankDisplay = '🥉'; }
     else { rankDisplay = '$rank'; }
 
-    return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(
-        builder: (_) => PlayerDetailScreen(playerId: player['id']),
-      )),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: isMe ? AppColors.primary.withAlpha(15) : rank <= 3 ? color.withAlpha(8) : AppColors.surfaceBorder,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: isMe ? AppColors.primary.withAlpha(60) : rank <= 3 ? color.withAlpha(26) : AppColors.surfaceTint),
-        ),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 32,
-              child: Center(
-                child: rank <= 3
-                    ? Text(rankDisplay, style: const TextStyle(fontSize: 16))
-                    : Text(rankDisplay, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textHint)),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: color.withAlpha(15),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: rank <= 3 ? color.withAlpha(51) : AppColors.surfaceTint),
-              ),
-              child: Center(
-                child: Text(
-                  name.toString().isNotEmpty ? name.toString()[0] : '?',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: rank <= 3 ? color : AppColors.textSecondary),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => Navigator.push(context, MaterialPageRoute(
+          builder: (_) => PlayerDetailScreen(playerId: player['id']),
+        )),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: isMe ? AppColors.primary.withAlpha(15) : rank <= 3 ? color.withAlpha(8) : AppColors.surfaceBorder,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: isMe ? AppColors.primary.withAlpha(60) : rank <= 3 ? color.withAlpha(26) : AppColors.surfaceTint),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 32,
+                child: Center(
+                  child: rank <= 3
+                      ? Text(rankDisplay, style: const TextStyle(fontSize: 16))
+                      : Text(rankDisplay, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textHint)),
                 ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
-                  if (player['attendance'] != null || player['winRate'] != null)
-                    Text(
-                      [
-                        if (player['attendance'] != null) '${player['attendance']}경기',
-                        if (player['winRate'] != null) '승률 ${(player['winRate'] as num).toInt()}%',
-                      ].join(' / '),
-                      style: TextStyle(fontSize: 11, color: AppColors.iconInactive),
-                    ),
-                ],
+              const SizedBox(width: 10),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withAlpha(15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: rank <= 3 ? color.withAlpha(51) : AppColors.surfaceTint),
+                ),
+                child: Center(
+                  child: Text(
+                    name.toString().isNotEmpty ? name.toString()[0] : '?',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: rank <= 3 ? color : AppColors.textSecondary),
+                  ),
+                ),
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceBorder,
-                borderRadius: BorderRadius.circular(10),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+                    if (player['attendance'] != null || player['winRate'] != null)
+                      Text(
+                        [
+                          if (player['attendance'] != null) '${player['attendance']}경기',
+                          if (player['winRate'] != null) '승률 ${(player['winRate'] as num).toInt()}%',
+                        ].join(' / '),
+                        style: TextStyle(fontSize: 11, color: AppColors.iconInactive),
+                      ),
+                  ],
+                ),
               ),
-              child: Text('$val', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
-            ),
-          ],
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceBorder,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text('$val', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+              ),
+            ],
+          ),
         ),
       ),
     );

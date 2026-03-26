@@ -4,6 +4,7 @@ import '../theme/app_colors.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../config/api_config.dart';
+import '../utils/snackbar_helper.dart';
 import 'announcement_form_screen.dart';
 
 class AnnouncementDetailScreen extends StatefulWidget {
@@ -66,9 +67,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('삭제 실패: $e'), backgroundColor: AppColors.red),
-        );
+        showError(context, '삭제 실패: $e');
       }
     }
   }

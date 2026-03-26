@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../utils/snackbar_helper.dart';
 import 'player_detail_screen.dart';
 
 class AdminPlayersScreen extends StatefulWidget {
@@ -158,9 +159,11 @@ class _AdminPlayersScreenState extends State<AdminPlayersScreen> {
 
   void _snack(String msg, {bool error = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: error ? AppColors.red : AppColors.primary, duration: const Duration(seconds: 2)),
-    );
+    if (error) {
+      showError(context, msg);
+    } else {
+      showSuccess(context, msg);
+    }
   }
 
   @override

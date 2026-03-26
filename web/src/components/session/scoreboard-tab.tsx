@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { MatchRecorder } from './match-recorder'
 import { MatchTimeline } from '@/components/match/match-timeline'
 import { useAuthStore } from '@/stores/auth'
+import { toast } from 'sonner'
 
 // vest_color → hex 매핑
 const vestColorHex: Record<string, string> = {
@@ -388,13 +389,25 @@ function MatchManager({
   const createMatchMutation = useMutation({
     mutationFn: (data: { team1Id: number; team2Id: number }) =>
       matchesApi.create({ sessionId, ...data }, token || undefined),
-    onSuccess: onRefetch,
+    onSuccess: () => {
+      toast.success('경기가 추가되었습니다.')
+      onRefetch()
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '경기 추가에 실패했습니다.')
+    },
   })
 
   // 경기 삭제
   const deleteMatchMutation = useMutation({
     mutationFn: (matchId: number) => matchesApi.delete(matchId, token || undefined),
-    onSuccess: onRefetch,
+    onSuccess: () => {
+      toast.success('경기가 삭제되었습니다.')
+      onRefetch()
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '경기 삭제에 실패했습니다.')
+    },
   })
 
   const handleDeleteMatch = (matchId: number) => {

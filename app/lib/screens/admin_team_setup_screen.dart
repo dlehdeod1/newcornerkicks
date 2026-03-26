@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../utils/futsal_dna.dart';
+import '../utils/snackbar_helper.dart';
 
 class AdminTeamSetupScreen extends StatefulWidget {
   final int sessionId;
@@ -185,9 +186,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red),
-        );
+        showError(context, e.toString());
       }
     }
   }
@@ -256,9 +255,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
     } catch (e) {
       if (mounted) {
         setState(() => _assigning = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red),
-        );
+        showError(context, e.toString());
       }
     }
   }
@@ -473,9 +470,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
     } catch (e) {
       if (mounted) {
         setState(() => _assigning = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red),
-        );
+        showError(context, e.toString());
       }
     }
   }
@@ -749,13 +744,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
           GestureDetector(
             onTap: () {
               Clipboard.setData(ClipboardData(text: _buildTemplate()));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('투표 템플릿이 복사됐습니다'),
-                  backgroundColor: AppColors.primary,
-                  duration: Duration(seconds: 2),
-                ),
-              );
+              showSuccess(context, '투표 템플릿이 복사됐습니다');
             },
             child: Container(
               width: double.infinity,

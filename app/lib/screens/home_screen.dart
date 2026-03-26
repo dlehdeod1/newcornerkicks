@@ -222,18 +222,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                   const Spacer(),
-                  GestureDetector(
-                    onTap: () async {
-                      await Navigator.push(context, MaterialPageRoute(builder: (_) => const AnnouncementsScreen()));
-                      setState(() => _loading = true);
-                      _loadData();
-                    },
-                    child: Row(
-                      children: [
-                        Text('전체 보기', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
-                        const SizedBox(width: 2),
-                        Icon(Icons.chevron_right, size: 16, color: AppColors.textHint),
-                      ],
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      onTap: () async {
+                        await Navigator.push(context, MaterialPageRoute(builder: (_) => const AnnouncementsScreen()));
+                        setState(() => _loading = true);
+                        _loadData();
+                      },
+                      child: Row(
+                        children: [
+                          Text('전체 보기', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
+                          const SizedBox(width: 2),
+                          Icon(Icons.chevron_right, size: 16, color: AppColors.textHint),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -460,57 +464,61 @@ class _HomeScreenState extends State<HomeScreen> {
     final isRead = a['is_read'] == 1 || a['is_read'] == true;
     final title = a['title'] ?? '';
 
-    return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AnnouncementDetailScreen(announcementId: a['id'] as int)),
-        );
-        setState(() => _loading = true);
-        _loadData();
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceBorder,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isRead ? AppColors.surfaceTint : AppColors.primary.withAlpha(80),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => AnnouncementDetailScreen(announcementId: a['id'] as int)),
+          );
+          setState(() => _loading = true);
+          _loadData();
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceBorder,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isRead ? AppColors.surfaceTint : AppColors.primary.withAlpha(80),
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            if (isPinned) ...[
-              Icon(Icons.push_pin, size: 14, color: AppColors.amber),
-              const SizedBox(width: 8),
-            ],
-            if (!isRead) ...[
-              Container(
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 8),
-            ],
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isRead ? FontWeight.w400 : FontWeight.w600,
-                  color: isRead ? AppColors.textSecondary : Colors.white,
+          child: Row(
+            children: [
+              if (isPinned) ...[
+                Icon(Icons.push_pin, size: 14, color: AppColors.amber),
+                const SizedBox(width: 8),
+              ],
+              if (!isRead) ...[
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: isRead ? FontWeight.w400 : FontWeight.w600,
+                    color: isRead ? AppColors.textSecondary : Colors.white,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              _formatAnnouncementDate(a['created_at']),
-              style: TextStyle(fontSize: 11, color: AppColors.iconInactive),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Text(
+                _formatAnnouncementDate(a['created_at']),
+                style: TextStyle(fontSize: 11, color: AppColors.iconInactive),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -530,63 +538,67 @@ class _HomeScreenState extends State<HomeScreen> {
       default: statusColor = AppColors.primary; statusLabel = '진행중'; break;
     }
 
-    return GestureDetector(
-      onTap: () {
-        if (session['id'] != null) {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: session['id'])));
-        }
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: statusColor.withAlpha(20),
-                borderRadius: BorderRadius.circular(14),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        onTap: () {
+          if (session['id'] != null) {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: session['id'])));
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: statusColor.withAlpha(20),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      dateStr.length >= 10 ? dateStr.substring(5, 7) : '-',
+                      style: TextStyle(fontSize: 10, color: statusColor.withAlpha(179)),
+                    ),
+                    Text(
+                      dateStr.length >= 10 ? dateStr.substring(8, 10) : '-',
+                      style: TextStyle(fontSize: 16, color: statusColor, fontWeight: FontWeight.bold, height: 1.1),
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    dateStr.length >= 10 ? dateStr.substring(5, 7) : '-',
-                    style: TextStyle(fontSize: 10, color: statusColor.withAlpha(179)),
-                  ),
-                  Text(
-                    dateStr.length >= 10 ? dateStr.substring(8, 10) : '-',
-                    style: TextStyle(fontSize: 16, color: statusColor, fontWeight: FontWeight.bold, height: 1.1),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
-                  const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: statusColor.withAlpha(20),
-                          borderRadius: BorderRadius.circular(6),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: statusColor.withAlpha(20),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(statusLabel, style: TextStyle(fontSize: 10, color: statusColor, fontWeight: FontWeight.w600)),
                         ),
-                        child: Text(statusLabel, style: TextStyle(fontSize: 10, color: statusColor, fontWeight: FontWeight.w600)),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(dateStr, style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 8),
+                        Text(dateStr, style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Icon(Icons.chevron_right, color: AppColors.iconInactive, size: 20),
-          ],
+              Icon(Icons.chevron_right, color: AppColors.iconInactive, size: 20),
+            ],
+          ),
         ),
       ),
     );
@@ -636,32 +648,36 @@ class _QuickMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceBorder,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.surfaceTint),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: color.withAlpha(26),
-                borderRadius: BorderRadius.circular(10),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceBorder,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            border: Border.all(color: AppColors.surfaceTint),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: color.withAlpha(26),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 18),
               ),
-              child: Icon(icon, color: color, size: 18),
-            ),
-            const SizedBox(height: 8),
-            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
-            Text(subtitle, style: TextStyle(fontSize: 10, color: AppColors.textHint)),
-          ],
+              const SizedBox(height: 8),
+              Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+              Text(subtitle, style: TextStyle(fontSize: 10, color: AppColors.textHint)),
+            ],
+          ),
         ),
       ),
     );

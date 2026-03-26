@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { matchesApi } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { cn } from '@/lib/cn'
+import { toast } from 'sonner'
 
 interface Props {
   match: any
@@ -82,6 +83,9 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
       refetch()
       onRefetch()
     },
+    onError: (error: any) => {
+      toast.error(error.message || '이벤트 기록에 실패했습니다.')
+    },
   })
 
   const deleteEventMutation = useMutation({
@@ -90,13 +94,21 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
       refetch()
       onRefetch()
     },
+    onError: (error: any) => {
+      toast.error(error.message || '이벤트 삭제에 실패했습니다.')
+    },
   })
 
   const updateMatchMutation = useMutation({
     mutationFn: (data: any) => matchesApi.update(match.id, data, token || undefined),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       refetch()
       onRefetch()
+      if (variables.status === 'playing') toast.success('경기가 시작되었습니다.')
+      else if (variables.status === 'completed') toast.success('경기가 완료 처리되었습니다.')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '경기 상태 변경에 실패했습니다.')
     },
   })
 

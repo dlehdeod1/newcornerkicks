@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
+import '../utils/snackbar_helper.dart';
 
 class MatchResultPopup {
   static Future<void> show(
@@ -351,9 +352,7 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
       await Share.shareXFiles([XFile(file.path)], text: '⚽ 경기 결과');
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('이미지 생성 실패: $e'), backgroundColor: Colors.red),
-        );
+        showError(context, '이미지 생성 실패: $e');
       }
     } finally {
       if (mounted) setState(() => _capturing = false);
@@ -363,9 +362,7 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
   Future<void> _copyText(String text) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('클립보드에 복사됐습니다 ✓'), backgroundColor: AppColors.primary, duration: Duration(seconds: 2)),
-      );
+      showSuccess(context, '클립보드에 복사됐습니다 ✓');
     }
   }
 

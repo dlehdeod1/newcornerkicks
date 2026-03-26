@@ -19,6 +19,7 @@ import {
   ShieldAlert,
 } from 'lucide-react'
 import { useAuthStore, useAuthHydrated } from '@/stores/auth'
+import { toast } from 'sonner'
 import { playersApi, adminApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
@@ -48,9 +49,10 @@ export default function AdminPlayersPage() {
     mutationFn: (playerId: number) => playersApi.approveLink(playerId, token!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['players'] })
+      toast.success('연동이 승인되었습니다.')
     },
     onError: (error: any) => {
-      alert(error.message || '승인 중 오류가 발생했습니다.')
+      toast.error(error.message || '승인 중 오류가 발생했습니다.')
     },
   })
 
@@ -59,9 +61,10 @@ export default function AdminPlayersPage() {
       playersApi.update(id, { isGuest: isGuest ? 1 : 0 }, token!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['players'] })
+      toast.success('용병 상태가 변경되었습니다.')
     },
     onError: (error: any) => {
-      alert(error.message || '변경 중 오류가 발생했습니다.')
+      toast.error(error.message || '변경 중 오류가 발생했습니다.')
     },
   })
 
@@ -72,7 +75,7 @@ export default function AdminPlayersPage() {
       setResetModal({ playerName: player?.name || '', tempPassword: data.tempPassword })
     },
     onError: (error: any) => {
-      alert(error.message || '비밀번호 초기화 중 오류가 발생했습니다.')
+      toast.error(error.message || '비밀번호 초기화 중 오류가 발생했습니다.')
     },
   })
 
@@ -84,21 +87,21 @@ export default function AdminPlayersPage() {
       setRelinkModal(null)
       setUserSearch('')
       setAllUsers([])
-      alert(userId ? '연동이 변경되었습니다.' : '연동이 해제되었습니다.')
+      toast.success(userId ? '연동이 변경되었습니다.' : '연동이 해제되었습니다.')
     },
     onError: (error: any) => {
-      alert(error.message || '연동 변경 중 오류가 발생했습니다.')
+      toast.error(error.message || '연동 변경 중 오류가 발생했습니다.')
     },
   })
 
   const recalculateMutation = useMutation({
     mutationFn: () => adminApi.recalculateAllStats(token!),
     onSuccess: (data) => {
-      alert(data.message || '능력치가 재계산되었습니다.')
+      toast.success(data.message || '능력치가 재계산되었습니다.')
       queryClient.invalidateQueries({ queryKey: ['players'] })
     },
     onError: (error: any) => {
-      alert(error.message || '재계산 중 오류가 발생했습니다.')
+      toast.error(error.message || '재계산 중 오류가 발생했습니다.')
     },
   })
 
@@ -107,10 +110,10 @@ export default function AdminPlayersPage() {
     onSuccess: (_, playerId) => {
       const player = players.find((p: any) => p.id === playerId)
       queryClient.invalidateQueries({ queryKey: ['players'] })
-      alert(`"${player?.name || '선수'}"이(가) 삭제되었습니다.`)
+      toast.success(`"${player?.name || '선수'}"이(가) 삭제되었습니다.`)
     },
     onError: (error: any) => {
-      alert(error.message || '삭제 중 오류가 발생했습니다.')
+      toast.error(error.message || '삭제 중 오류가 발생했습니다.')
     },
   })
 
@@ -320,7 +323,7 @@ export default function AdminPlayersPage() {
             <button
               onClick={() => {
                 navigator.clipboard.writeText(resetModal.tempPassword)
-                alert('클립보드에 복사되었습니다.')
+                toast.success('클립보드에 복사되었습니다.')
               }}
               className="w-full py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-sm font-medium transition-colors"
             >

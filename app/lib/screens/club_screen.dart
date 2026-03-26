@@ -13,6 +13,7 @@ import 'admin_exemptions_screen.dart';
 import 'admin_dashboard_screen.dart';
 import 'abilities_screen.dart';
 import '../widgets/tip_banner.dart';
+import '../utils/snackbar_helper.dart';
 
 class ClubScreen extends StatefulWidget {
   const ClubScreen({super.key});
@@ -191,9 +192,7 @@ class _ClubScreenState extends State<ClubScreen> {
                 GestureDetector(
                   onTap: () {
                     Clipboard.setData(ClipboardData(text: inviteCode));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('초대 코드가 복사되었습니다'), backgroundColor: AppColors.primary, duration: Duration(seconds: 2)),
-                    );
+                    showSuccess(context, '초대 코드가 복사되었습니다');
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

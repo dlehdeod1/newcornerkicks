@@ -3,6 +3,7 @@ import '../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
+import '../utils/snackbar_helper.dart';
 
 class AdminClubSettingsScreen extends StatefulWidget {
   const AdminClubSettingsScreen({super.key});
@@ -124,9 +125,7 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
 
     // GOAL is mandatory
     if (!_enabledEvents.contains('GOAL')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('득점(GOAL)은 필수 기록 항목입니다.'), backgroundColor: AppColors.red),
-      );
+      showError(context, '득점(GOAL)은 필수 기록 항목입니다.');
       return;
     }
 
@@ -146,17 +145,13 @@ class _AdminClubSettingsScreenState extends State<AdminClubSettingsScreen> {
       }, token);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('설정이 저장되었습니다'), backgroundColor: AppColors.primary, duration: Duration(seconds: 2)),
-        );
+        showSuccess(context, '설정이 저장되었습니다');
         // Refresh auth service club info
         await context.read<AuthService>().refreshClub();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red),
-        );
+        showError(context, e.toString());
       }
     } finally {
       if (mounted) setState(() => _saving = false);

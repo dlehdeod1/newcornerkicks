@@ -4,6 +4,7 @@ import '../theme/app_colors.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../config/api_config.dart';
+import '../utils/snackbar_helper.dart';
 import 'community_post_form_screen.dart';
 
 const _categoryLabels = {'free': '자유', 'recruit': '팀 모집', 'mercenary': '용병 모집', 'match': '매칭', 'review': '경기 후기', 'patchnote': '패치노트'};
@@ -52,7 +53,7 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
       _comments = (_post?['comments'] as List?) ?? [];
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('로딩 실패: $e')));
+        showError(context, '로딩 실패: $e');
       }
     }
     if (mounted) setState(() => _loading = false);
@@ -73,7 +74,7 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
       await _loadPost();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('댓글 작성 실패: $e')));
+        showError(context, '댓글 작성 실패: $e');
       }
     }
     if (mounted) setState(() => _sending = false);
@@ -89,7 +90,7 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
       await _loadPost();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('삭제 실패: $e')));
+        showError(context, '삭제 실패: $e');
       }
     }
   }
@@ -118,7 +119,7 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('삭제 실패: $e')));
+        showError(context, '삭제 실패: $e');
       }
     }
   }
@@ -137,7 +138,7 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
       await _loadPost();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('상태 변경 실패: $e')));
+        showError(context, '상태 변경 실패: $e');
       }
     }
   }

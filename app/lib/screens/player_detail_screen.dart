@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../utils/snackbar_helper.dart';
 
 class PlayerDetailScreen extends StatefulWidget {
   final int playerId;
@@ -68,9 +69,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
       } else {
         if (_prefCount >= 3) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('선호 선수는 최대 3명까지 등록 가능합니다'), backgroundColor: AppColors.red),
-            );
+            showError(context, '선호 선수는 최대 3명까지 등록 가능합니다');
           }
           return;
         }
@@ -79,9 +78,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', '')), backgroundColor: AppColors.red),
-        );
+        showError(context, e.toString().replaceFirst('Exception: ', ''));
       }
     } finally {
       if (mounted) setState(() => _favLoading = false);
@@ -184,7 +181,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
     final auth = context.read<AuthService>();
     final token = auth.token;
     if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('로그인이 필요합니다')));
+      showError(context, '로그인이 필요합니다');
       return;
     }
 
@@ -276,11 +273,11 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
                         if (ctx.mounted) Navigator.pop(ctx);
                         _load(); // 새로고침
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('평가가 등록되었습니다 ✅'), backgroundColor: AppColors.primary));
+                          showSuccess(context, '평가가 등록되었습니다 ✅');
                         }
                       } catch (e) {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: AppColors.red));
+                          showError(context, '$e');
                         }
                       }
                     },

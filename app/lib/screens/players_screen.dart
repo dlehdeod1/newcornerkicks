@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'player_detail_screen.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/empty_state.dart';
+import '../utils/snackbar_helper.dart';
 
 class PlayersScreen extends StatefulWidget {
   const PlayersScreen({super.key});
@@ -83,9 +84,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                   _load();
                 } catch (e) {
                   setS(() => saving = false);
-                  if (ctx.mounted) ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red),
-                  );
+                  if (ctx.mounted) showError(context, e.toString());
                 }
               },
               style: ElevatedButton.styleFrom(

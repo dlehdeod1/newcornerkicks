@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/auth'
 import { settlementsApi, paymentsApi, clubsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import { toast } from 'sonner'
 
 interface Props {
   sessionId: number
@@ -84,14 +85,26 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
   const paidMutation = useMutation({
     mutationFn: ({ paymentId, paid, depositorName }: { paymentId: number; paid: boolean; depositorName?: string }) =>
       paymentsApi.updatePaid(paymentId, paid, token!, depositorName),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['session-payments', sessionId] }),
+    onSuccess: (_, { paid }) => {
+      queryClient.invalidateQueries({ queryKey: ['session-payments', sessionId] })
+      toast.success(paid ? '입금 확인되었습니다.' : '입금 확인이 취소되었습니다.')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '납부 상태 변경에 실패했습니다.')
+    },
   })
 
   // 면제 mutation
   const exemptMutation = useMutation({
     mutationFn: ({ paymentId, exempt }: { paymentId: number; exempt: boolean }) =>
       paymentsApi.updateExempt(paymentId, exempt, token!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['session-payments', sessionId] }),
+    onSuccess: (_, { exempt }) => {
+      queryClient.invalidateQueries({ queryKey: ['session-payments', sessionId] })
+      toast.success(exempt ? '면제 처리되었습니다.' : '면제가 취소되었습니다.')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '면제 상태 변경에 실패했습니다.')
+    },
   })
 
   // 비용 추가 mutation
@@ -103,6 +116,10 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
       setNewExpDesc('')
       setNewExpAmount('')
       setAddingExpense(false)
+      toast.success('비용이 추가되었습니다.')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '비용 추가에 실패했습니다.')
     },
   })
 
@@ -110,7 +127,13 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
   const deleteExpenseMutation = useMutation({
     mutationFn: (expenseId: number) =>
       paymentsApi.deleteExpense(sessionId, expenseId, token!),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['session-payments', sessionId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['session-payments', sessionId] })
+      toast.success('비용이 삭제되었습니다.')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '비용 삭제에 실패했습니다.')
+    },
   })
 
   // 정산 완료 mutation
@@ -118,7 +141,11 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
     mutationFn: () => settlementsApi.complete(sessionId, undefined, token!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
+      toast.success('정산이 완료되었습니다. 랭킹에 반영됩니다.')
       onRefetch()
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '정산 처리 중 오류가 발생했습니다.')
     },
   })
 

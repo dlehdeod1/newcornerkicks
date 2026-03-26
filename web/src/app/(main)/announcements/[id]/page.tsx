@@ -9,6 +9,7 @@ import { Bell, Pin, ArrowLeft, Pencil, Trash2 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { announcementsApi } from '@/lib/api'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://cornerkicks-api.conerkicks.workers.dev'
 
@@ -36,7 +37,11 @@ export default function AnnouncementDetailPage() {
     mutationFn: () => announcementsApi.delete(id, token!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] })
+      toast.success('공지가 삭제되었습니다.')
       router.push('/announcements')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '공지 삭제에 실패했습니다.')
     },
   })
 

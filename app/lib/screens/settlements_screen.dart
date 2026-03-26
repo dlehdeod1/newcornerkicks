@@ -3,6 +3,7 @@ import '../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../utils/snackbar_helper.dart';
 
 class SettlementsScreen extends StatefulWidget {
   const SettlementsScreen({super.key});
@@ -670,8 +671,7 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
       await _load();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.toString())));
+        showError(context, e.toString());
       }
     }
   }

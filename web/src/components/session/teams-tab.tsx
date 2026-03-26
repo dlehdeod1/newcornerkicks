@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/components/ui/button'
 import { sessionsApi } from '@/lib/api'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface Props {
   teams: any[]
@@ -214,17 +215,18 @@ export function TeamsTab({ teams, sessionId, session, attendance, onRefetch }: P
 
     setIsReforming(true)
     try {
-      if (!token) { alert('로그인이 필요합니다.'); return }
+      if (!token) { toast.error('로그인이 필요합니다.'); return }
       const attendees = buildAttendees()
-      if (attendees.length === 0) { alert('참석자가 없어 팀을 편성할 수 없습니다.'); return }
+      if (attendees.length === 0) { toast.error('참석자가 없어 팀을 편성할 수 없습니다.'); return }
       const result = await sessionsApi.createTeams(sessionId, { attendees, useAI: false }, token)
-      if (result?.limitReached) { alert(result.message || 'AI 편성 한도에 도달했습니다.'); return }
+      if (result?.limitReached) { toast.error(result.message || 'AI 편성 한도에 도달했습니다.'); return }
       if (result?.locked) { router.push('/upgrade'); return }
       setAiAnalysis(new Map())
+      toast.success('팀이 재편성되었습니다.')
       onRefetch()
     } catch (err: any) {
       console.error('Reform teams error:', err)
-      alert(err.message || '팀 재편성에 실패했습니다.')
+      toast.error(err.message || '팀 재편성에 실패했습니다.')
     } finally {
       setIsReforming(false)
     }
@@ -232,24 +234,25 @@ export function TeamsTab({ teams, sessionId, session, attendance, onRefetch }: P
 
   const handleReformTeamsAI = async () => {
     if (aiRemaining <= 0) {
-      alert('이번 달 AI 팀 편성 횟수를 모두 사용했습니다.')
+      toast.error('이번 달 AI 팀 편성 횟수를 모두 사용했습니다.')
       return
     }
     if (!window.confirm(`AI로 팀을 다시 편성하시겠습니까? (잔여 ${aiRemaining}회)\n기존 팀과 경기 기록이 초기화됩니다.`)) return
 
     setIsAiReforming(true)
     try {
-      if (!token) { alert('로그인이 필요합니다.'); return }
+      if (!token) { toast.error('로그인이 필요합니다.'); return }
       const attendees = buildAttendees()
-      if (attendees.length === 0) { alert('참석자가 없어 팀을 편성할 수 없습니다.'); return }
+      if (attendees.length === 0) { toast.error('참석자가 없어 팀을 편성할 수 없습니다.'); return }
       const result = await sessionsApi.createTeams(sessionId, { attendees, useAI: true }, token)
-      if (result?.limitReached) { alert(result.message || 'AI 편성 한도에 도달했습니다.'); return }
+      if (result?.limitReached) { toast.error(result.message || 'AI 편성 한도에 도달했습니다.'); return }
       if (result?.locked) { router.push('/upgrade'); return }
       setAiAnalysis(new Map())
+      toast.success('AI 팀이 재편성되었습니다.')
       onRefetch()
     } catch (err: any) {
       console.error('Reform teams AI error:', err)
-      alert(err.message || 'AI 팀 재편성에 실패했습니다.')
+      toast.error(err.message || 'AI 팀 재편성에 실패했습니다.')
     } finally {
       setIsAiReforming(false)
     }
@@ -279,7 +282,7 @@ export function TeamsTab({ teams, sessionId, session, attendance, onRefetch }: P
       // 에러가 있으면 표시
       if (data.error) {
         console.warn('AI Analysis error from server:', data.error)
-        alert(`AI 분석 오류: ${data.error}`)
+        toast.error(`AI 분석 오류: ${data.error}`)
       }
 
       // 팀별로 분석 결과를 Map에 저장 (팀 이름으로 매핑)
@@ -295,7 +298,7 @@ export function TeamsTab({ teams, sessionId, session, attendance, onRefetch }: P
       setAiAnalysis(analysisMap)
     } catch (err: any) {
       console.error('AI analysis error:', err)
-      alert(err.message || 'AI 분석에 실패했습니다.')
+      toast.error(err.message || 'AI 분석에 실패했습니다.')
     } finally {
       setIsAnalyzing(false)
     }
@@ -322,9 +325,10 @@ export function TeamsTab({ teams, sessionId, session, attendance, onRefetch }: P
       }
 
       setAiAnalysis(new Map())
+      toast.success('팀이 해체되었습니다.')
       onRefetch()
     } catch (err: any) {
-      alert(err.message || '팀 해체에 실패했습니다.')
+      toast.error(err.message || '팀 해체에 실패했습니다.')
     } finally {
       setIsDisbanding(false)
     }

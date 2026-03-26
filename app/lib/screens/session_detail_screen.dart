@@ -4,6 +4,7 @@ import '../theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../utils/snackbar_helper.dart';
 import 'admin_team_setup_screen.dart';
 import 'match_result_popup.dart';
 import '../widgets/league_standings_widget.dart';
@@ -67,9 +68,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('에러: $e'), backgroundColor: AppColors.red, duration: const Duration(seconds: 6)),
-        );
+        showError(context, '에러: $e');
       }
     }
   }
@@ -104,9 +103,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('삭제 실패: $e'), backgroundColor: AppColors.red),
-        );
+        showError(context, '삭제 실패: $e');
       }
     }
   }
@@ -148,9 +145,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                       );
                       await _loadSession();
                     } catch (e) {
-                      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red),
-                      );
+                      if (mounted) showError(context, e.toString());
                     }
                   },
                   child: Container(
@@ -1198,13 +1193,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
           _elapsedSeconds % (_alertIntervalMinutes * 60) == 0 &&
           _elapsedSeconds < _matchDurationMinutes * 60) {
         final remaining = (_matchDurationMinutes * 60 - _elapsedSeconds) ~/ 60;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${_elapsedSeconds ~/ 60}분 경과 (${remaining}분 남음)'),
-            backgroundColor: AppColors.blue,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        showInfo(context, '${_elapsedSeconds ~/ 60}분 경과 (${remaining}분 남음)');
       }
     });
   }

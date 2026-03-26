@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
@@ -128,100 +129,104 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
-                          child: GestureDetector(
-                            onTap: () {
-                              auth.setActiveClub(Map<String, dynamic>.from(club));
-                              Navigator.of(context).pop();
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: isActive
-                                    ? AppColors.primary.withAlpha(20)
-                                    : AppColors.surfaceBorder,
-                                borderRadius: BorderRadius.circular(18),
-                                border: Border.all(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(18),
+                              onTap: () {
+                                auth.setActiveClub(Map<String, dynamic>.from(club));
+                                Navigator.of(context).pop();
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
                                   color: isActive
-                                      ? AppColors.primary.withAlpha(128)
-                                      : AppColors.surfaceTint,
+                                      ? AppColors.primary.withAlpha(20)
+                                      : AppColors.surfaceBorder,
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(
+                                    color: isActive
+                                        ? AppColors.primary.withAlpha(128)
+                                        : AppColors.surfaceTint,
+                                  ),
                                 ),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Row(
-                                  children: [
-                                    _buildClubAvatar(club, index, 52),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Flexible(
-                                                child: Text(
-                                                  clubName,
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    children: [
+                                      _buildClubAvatar(club, index, 52),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    clubName,
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.white,
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis,
                                                   ),
-                                                  overflow: TextOverflow.ellipsis,
                                                 ),
-                                              ),
-                                              if (isActive) ...[
-                                                const SizedBox(width: 8),
+                                                if (isActive) ...[
+                                                  const SizedBox(width: 8),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: AppColors.primary.withAlpha(30),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                      border: Border.all(color: AppColors.primary.withAlpha(100)),
+                                                    ),
+                                                    child: const Text(
+                                                      '현재',
+                                                      style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Row(
+                                              children: [
                                                 Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                                   decoration: BoxDecoration(
-                                                    color: AppColors.primary.withAlpha(30),
+                                                    color: AppColors.surfaceBorder,
                                                     borderRadius: BorderRadius.circular(6),
-                                                    border: Border.all(color: AppColors.primary.withAlpha(100)),
                                                   ),
-                                                  child: const Text(
-                                                    '현재',
-                                                    style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600),
-                                                  ),
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Row(
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                                decoration: BoxDecoration(
-                                                  color: AppColors.surfaceBorder,
-                                                  borderRadius: BorderRadius.circular(6),
-                                                ),
-                                                child: Text(
-                                                  _roleLabel(role),
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    color: AppColors.textSecondary,
-                                                    fontWeight: FontWeight.w500,
+                                                  child: Text(
+                                                    _roleLabel(role),
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      color: AppColors.textSecondary,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                slug,
-                                                style: TextStyle(fontSize: 12, color: AppColors.iconInactive),
-                                              ),
-                                              if (playerName != null) ...[
+                                                const SizedBox(width: 6),
                                                 Text(
-                                                  ' · $playerName',
-                                                  style: TextStyle(fontSize: 12, color: AppColors.textHint),
-                                                  overflow: TextOverflow.ellipsis,
+                                                  slug,
+                                                  style: TextStyle(fontSize: 12, color: AppColors.iconInactive),
                                                 ),
+                                                if (playerName != null) ...[
+                                                  Text(
+                                                    ' · $playerName',
+                                                    style: TextStyle(fontSize: 12, color: AppColors.textHint),
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ],
                                               ],
-                                            ],
-                                          ),
-                                        ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    const Icon(Icons.chevron_right, color: Colors.white38, size: 20),
-                                  ],
+                                      const Icon(Icons.chevron_right, color: Colors.white38, size: 20),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -307,32 +312,36 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceBorder,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.surfaceTint),
-        ),
-        child: Column(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                gradient: gradient != null ? LinearGradient(colors: gradient!) : null,
-                color: gradient == null ? AppColors.surfaceTint : null,
-                borderRadius: BorderRadius.circular(12),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceBorder,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            border: Border.all(color: AppColors.surfaceTint),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  gradient: gradient != null ? LinearGradient(colors: gradient!) : null,
+                  color: gradient == null ? AppColors.surfaceTint : null,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: Colors.white, size: 20),
               ),
-              child: Icon(icon, color: Colors.white, size: 20),
-            ),
-            const SizedBox(height: 8),
-            Text(label, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 2),
-            Text(subtitle, style: TextStyle(color: AppColors.textHint, fontSize: 11)),
-          ],
+              const SizedBox(height: 8),
+              Text(label, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 2),
+              Text(subtitle, style: TextStyle(color: AppColors.textHint, fontSize: 11)),
+            ],
+          ),
         ),
       ),
     );
@@ -531,19 +540,23 @@ class _CreateModalState extends State<_CreateModal> {
 }
 
 Widget _buildBtn({required String label, required bool loading, required VoidCallback onTap}) {
-  return GestureDetector(
-    onTap: loading ? null : onTap,
-    child: Container(
-      width: double.infinity,
-      height: 48,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [AppColors.primary, AppColors.teal]),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Center(
-        child: loading
-            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-            : Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+  return Material(
+    color: Colors.transparent,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+      onTap: loading ? null : onTap,
+      child: Container(
+        width: double.infinity,
+        height: 48,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [AppColors.primary, AppColors.teal]),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        ),
+        child: Center(
+          child: loading
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+        ),
       ),
     ),
   );

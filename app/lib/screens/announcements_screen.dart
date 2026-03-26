@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import 'announcement_detail_screen.dart';
@@ -113,20 +114,23 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
     final title = item['title'] ?? '';
     final authorName = item['author_name'] ?? '';
 
-    return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AnnouncementDetailScreen(announcementId: item['id'] as int)),
-        );
-        _load();
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceBorder,
-          borderRadius: BorderRadius.circular(20),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => AnnouncementDetailScreen(announcementId: item['id'] as int)),
+          );
+          _load();
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceBorder,
+            borderRadius: BorderRadius.circular(AppTheme.radiusXl),
           border: Border.all(
             color: isRead ? AppColors.surfaceBorder : AppColors.primary.withAlpha(80),
           ),
@@ -163,6 +167,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

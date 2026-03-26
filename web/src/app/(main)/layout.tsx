@@ -1,4 +1,5 @@
 import { Header } from '@/components/layout/header'
+import { Toaster } from 'sonner'
 
 export default function MainLayout({
   children,
@@ -15,6 +16,7 @@ export default function MainLayout({
 
       <Header />
       <main className="relative z-10">{children}</main>
+      <Toaster position="top-center" richColors />
     </div>
   )
 }

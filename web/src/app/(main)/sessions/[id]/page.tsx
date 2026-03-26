@@ -10,6 +10,7 @@ import { sessionsApi, paymentsApi, clubsApi } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 import { OverviewTab } from '@/components/session/overview-tab'
 import { TeamsTab } from '@/components/session/teams-tab'
 import { ScoreboardTab } from '@/components/session/scoreboard-tab'
@@ -170,10 +171,11 @@ export default function SessionDetailPage() {
                   setIsDeleting(true)
                   try {
                     await sessionsApi.delete(sessionId, token)
+                    toast.success('세션이 삭제되었습니다.')
                     router.push('/sessions')
                   } catch (err) {
                     console.error('세션 삭제 실패:', err)
-                    alert('세션 삭제에 실패했습니다.')
+                    toast.error('세션 삭제에 실패했습니다.')
                   } finally {
                     setIsDeleting(false)
                     setIsDeleteConfirmOpen(false)

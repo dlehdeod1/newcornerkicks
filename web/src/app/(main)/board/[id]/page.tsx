@@ -10,6 +10,7 @@ import { MessageSquare, Pin, ArrowLeft, Pencil, Trash2, X, Send, BarChart3, Chec
 import { useAuthStore } from '@/stores/auth'
 import { postsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import { toast } from 'sonner'
 import { RichContent } from '@/components/ui/rich-content'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://cornerkicks-api.conerkicks.workers.dev'
@@ -57,7 +58,11 @@ export default function PostDetailPage() {
     mutationFn: () => postsApi.delete(id, token!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
+      toast.success('게시글이 삭제되었습니다.')
       router.push('/board')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '게시글 삭제에 실패했습니다.')
     },
   })
 
@@ -67,6 +72,9 @@ export default function PostDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['posts', id] })
       setCommentText('')
     },
+    onError: (error: any) => {
+      toast.error(error.message || '댓글 작성에 실패했습니다.')
+    },
   })
 
   const deleteCommentMutation = useMutation({
@@ -74,6 +82,10 @@ export default function PostDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts', id] })
       setDeleteCommentId(null)
+      toast.success('댓글이 삭제되었습니다.')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '댓글 삭제에 실패했습니다.')
     },
   })
 

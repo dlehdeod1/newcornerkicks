@@ -215,24 +215,27 @@ class _BoardScreenState extends State<BoardScreen> with TickerProviderStateMixin
     final title = item['title'] ?? '';
     final authorName = item['author_name'] ?? '';
 
-    return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AnnouncementDetailScreen(announcementId: item['id'] as int)),
-        );
-        _loadTab('notice');
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceBorder,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isRead ? AppColors.surfaceBorder : AppColors.primary.withAlpha(80),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => AnnouncementDetailScreen(announcementId: item['id'] as int)),
+          );
+          _loadTab('notice');
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceBorder,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            border: Border.all(
+              color: isRead ? AppColors.surfaceBorder : AppColors.primary.withAlpha(80),
+            ),
           ),
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -263,6 +266,7 @@ class _BoardScreenState extends State<BoardScreen> with TickerProviderStateMixin
           ],
         ),
       ),
+      ),
     );
   }
 
@@ -276,22 +280,25 @@ class _BoardScreenState extends State<BoardScreen> with TickerProviderStateMixin
     final catLabel = _categoryLabels[category] ?? category;
     final catColor = _categoryColors[category] ?? AppColors.primary;
 
-    return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => PostDetailScreen(postId: item['id'] as int)),
-        );
-        _loadTab(category);
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceBorder,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.surfaceBorder),
-        ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => PostDetailScreen(postId: item['id'] as int)),
+          );
+          _loadTab(category);
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceBorder,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            border: Border.all(color: AppColors.surfaceBorder),
+          ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -327,6 +334,7 @@ class _BoardScreenState extends State<BoardScreen> with TickerProviderStateMixin
             Text(authorName, style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
           ],
         ),
+      ),
       ),
     );
   }

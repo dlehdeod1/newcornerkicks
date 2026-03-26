@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../utils/snackbar_helper.dart';
 import 'session_detail_screen.dart';
 import 'announcements_screen.dart';
 import 'admin_club_settings_screen.dart';
@@ -115,9 +116,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               if (nameCtrl.text.trim().length >= 2) {
                 Navigator.pop(ctx, true);
               } else {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(content: Text('이름은 2자 이상 입력하세요'), backgroundColor: AppColors.red, duration: Duration(seconds: 2)),
-                );
+                showError(ctx, '이름은 2자 이상 입력하세요');
               }
             },
             child: const Text('등록', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
@@ -134,21 +133,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         final nickname = nicknameCtrl.text.trim().isEmpty ? null : nicknameCtrl.text.trim();
         final res = await _api.createPlayer(nameCtrl.text.trim(), nickname: nickname, token: token);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${nameCtrl.text.trim()} 선수가 등록되었습니다'),
-              backgroundColor: AppColors.primary,
-              duration: const Duration(seconds: 2),
-            ),
-          );
+          showSuccess(context, '${nameCtrl.text.trim()} 선수가 등록되었습니다');
           setState(() => _loading = true);
           await _load();
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('선수 등록 실패: $e'), backgroundColor: AppColors.red, duration: const Duration(seconds: 2)),
-          );
+          showError(context, '선수 등록 실패: $e');
         }
       }
     }
@@ -275,15 +266,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   final token = context.read<AuthService>().token!;
                   await _api.refreshRankings(DateTime.now().year, token);
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('랭킹이 갱신되었습니다'), backgroundColor: AppColors.primary, duration: Duration(seconds: 2)),
-                    );
+                    showSuccess(context, '랭킹이 갱신되었습니다');
                   }
                 } catch (_) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('랭킹 갱신 실패'), backgroundColor: AppColors.red, duration: Duration(seconds: 2)),
-                    );
+                    showError(context, '랭킹 갱신 실패');
                   }
                 } finally {
                   if (mounted) setState(() => _refreshingRankings = false);

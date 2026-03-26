@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import 'community_post_detail_screen.dart';
@@ -205,26 +206,30 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
               ),
               const SizedBox(width: 10),
               // Open only toggle
-              GestureDetector(
-                onTap: () {
-                  setState(() => _openOnly = !_openOnly);
-                  _loadPosts();
-                },
-                child: Container(
-                  height: 36,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  decoration: BoxDecoration(
-                    color: _openOnly ? AppColors.primary.withAlpha(26) : AppColors.surfaceBorder,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: _openOnly ? AppColors.primary.withAlpha(80) : AppColors.surfaceTint),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '모집중',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: _openOnly ? AppColors.primary : AppColors.textHint,
-                        fontWeight: _openOnly ? FontWeight.w600 : FontWeight.normal,
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () {
+                    setState(() => _openOnly = !_openOnly);
+                    _loadPosts();
+                  },
+                  child: Container(
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: _openOnly ? AppColors.primary.withAlpha(26) : AppColors.surfaceBorder,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: _openOnly ? AppColors.primary.withAlpha(80) : AppColors.surfaceTint),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '모집중',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: _openOnly ? AppColors.primary : AppColors.textHint,
+                          fontWeight: _openOnly ? FontWeight.w600 : FontWeight.normal,
+                        ),
                       ),
                     ),
                   ),
@@ -242,24 +247,28 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
                 final selected = _selectedDay == e.key;
                 return Padding(
                   padding: const EdgeInsets.only(right: 6),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() => _selectedDay = selected ? null : e.key);
-                      _loadPosts();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: selected ? AppColors.primary.withAlpha(26) : AppColors.surfaceBorder,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: selected ? AppColors.primary.withAlpha(80) : AppColors.surfaceTint),
-                      ),
-                      child: Text(
-                        e.value,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: selected ? AppColors.primary : AppColors.textHint,
-                          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      onTap: () {
+                        setState(() => _selectedDay = selected ? null : e.key);
+                        _loadPosts();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: selected ? AppColors.primary.withAlpha(26) : AppColors.surfaceBorder,
+                          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                          border: Border.all(color: selected ? AppColors.primary.withAlpha(80) : AppColors.surfaceTint),
+                        ),
+                        child: Text(
+                          e.value,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: selected ? AppColors.primary : AppColors.textHint,
+                            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                          ),
                         ),
                       ),
                     ),
@@ -298,92 +307,96 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
       } catch (_) {}
     }
 
-    return GestureDetector(
-      onTap: () async {
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => CommunityPostDetailScreen(postId: post['id'] as int)),
-        );
-        if (result == true) _loadPosts();
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceBorder,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.surfaceBorder),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title row
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (commentCount > 0) ...[
-                  const SizedBox(width: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.chat_bubble_outline, size: 13, color: AppColors.textHint),
-                      const SizedBox(width: 3),
-                      Text('$commentCount', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-            const SizedBox(height: 8),
-            // Author / club / date
-            Row(
-              children: [
-                Text(authorName, style: TextStyle(fontSize: 12, color: AppColors.textHint)),
-                if (clubName != null && clubName.isNotEmpty) ...[
-                  Text(' · ', style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
-                  Text(clubName, style: TextStyle(fontSize: 12, color: catColor.withAlpha(179))),
-                ],
-                Text(' · ', style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
-                Text(dateStr, style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
-              ],
-            ),
-            // Recruit/match/mercenary metadata chips
-            if (isRecruit) ...[
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => CommunityPostDetailScreen(postId: post['id'] as int)),
+          );
+          if (result == true) _loadPosts();
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceBorder,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.surfaceBorder),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title row
+              Row(
                 children: [
-                  if (region != null) _chip(region, catColor),
-                  if (dayOfWeek != null) _chip(dayLabels[dayOfWeek] ?? dayOfWeek, catColor),
-                  if (skillLevel != null) _chip(skillLabels[skillLevel] ?? skillLevel, catColor),
-                  if (headcount != null) _chip('$headcount명 모집', catColor),
-                  if (status != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: status == 'open' ? AppColors.primary.withAlpha(20) : AppColors.slate.withAlpha(20),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        status == 'open' ? '모집중' : '마감',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: status == 'open' ? AppColors.primary : AppColors.slate,
-                        ),
-                      ),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                  ),
+                  if (commentCount > 0) ...[
+                    const SizedBox(width: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.chat_bubble_outline, size: 13, color: AppColors.textHint),
+                        const SizedBox(width: 3),
+                        Text('$commentCount', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
+                      ],
+                    ),
+                  ],
                 ],
               ),
+              const SizedBox(height: 8),
+              // Author / club / date
+              Row(
+                children: [
+                  Text(authorName, style: TextStyle(fontSize: 12, color: AppColors.textHint)),
+                  if (clubName != null && clubName.isNotEmpty) ...[
+                    Text(' · ', style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
+                    Text(clubName, style: TextStyle(fontSize: 12, color: catColor.withAlpha(179))),
+                  ],
+                  Text(' · ', style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
+                  Text(dateStr, style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
+                ],
+              ),
+              // Recruit/match/mercenary metadata chips
+              if (isRecruit) ...[
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    if (region != null) _chip(region, catColor),
+                    if (dayOfWeek != null) _chip(dayLabels[dayOfWeek] ?? dayOfWeek, catColor),
+                    if (skillLevel != null) _chip(skillLabels[skillLevel] ?? skillLevel, catColor),
+                    if (headcount != null) _chip('$headcount명 모집', catColor),
+                    if (status != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: status == 'open' ? AppColors.primary.withAlpha(20) : AppColors.slate.withAlpha(20),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          status == 'open' ? '모집중' : '마감',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: status == 'open' ? AppColors.primary : AppColors.slate,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
