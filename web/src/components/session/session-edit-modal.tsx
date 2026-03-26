@@ -66,7 +66,7 @@ export function SessionEditModal({ session, isOpen, onClose, onSave }: Props) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div role="dialog" aria-modal="true" aria-label="세션 수정" className="fixed inset-0 z-50 flex items-center justify-center" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
       {/* 백드롭 */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"

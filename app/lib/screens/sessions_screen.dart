@@ -107,7 +107,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
       case 'open': return AppColors.primary;
       case 'closed': return AppColors.blue;
       case 'ended': return AppColors.orange;
-      case 'completed': return AppColors.slate;
+      case 'completed': return AppColors.teal;
       default: return Colors.white38;
     }
   }

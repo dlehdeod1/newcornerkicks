@@ -160,7 +160,7 @@ export function AttendanceEditorModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div role="dialog" aria-modal="true" aria-label="출석 편집" className="fixed inset-0 z-50 flex items-center justify-center" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
       {/* 백드롭 */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"

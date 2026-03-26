@@ -532,7 +532,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Color statusColor;
     String statusLabel;
     switch (status) {
-      case 'completed': statusColor = AppColors.slate; statusLabel = '정산완료'; break;
+      case 'completed': statusColor = AppColors.teal; statusLabel = '정산완료'; break;
       case 'ended': statusColor = AppColors.orange; statusLabel = '경기완료'; break;
       case 'closed': statusColor = AppColors.blue; statusLabel = '마감'; break;
       default: statusColor = AppColors.primary; statusLabel = '진행중'; break;

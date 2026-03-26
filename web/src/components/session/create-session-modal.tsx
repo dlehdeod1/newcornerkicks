@@ -112,7 +112,7 @@ export function CreateSessionModal({ onClose, onCreated }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    <div role="dialog" aria-modal="true" aria-label="세션 생성" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
       <div className="w-full max-w-lg bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl">
         {/* 헤더 */}
         <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">

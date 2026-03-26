@@ -169,7 +169,7 @@ export function Header() {
           )}
 
           {/* 데스크탑 네비게이션 */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200 dark:border-slate-800/50">
+          <nav aria-label="주 메뉴" className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200 dark:border-slate-800/50">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -273,7 +273,7 @@ export function Header() {
 
       {/* 모바일 메뉴 */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 dark:border-slate-800/50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl">
+        <nav aria-label="모바일 메뉴" className="md:hidden border-t border-slate-200 dark:border-slate-800/50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl">
           <div className="px-4 py-4 space-y-1">
             {/* 모바일: 클럽 전환 */}
             {mounted && isLoggedIn && clubs.length > 1 && (
@@ -402,7 +402,7 @@ export function Header() {
               )}
             </div>
           </div>
-        </div>
+        </nav>
       )}
     </header>
   )

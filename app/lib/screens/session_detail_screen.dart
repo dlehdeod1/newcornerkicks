@@ -115,7 +115,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
       {'value': 'recruiting', 'label': '모집중', 'color': AppColors.primary},
       {'value': 'closed', 'label': '마감', 'color': AppColors.blue},
       {'value': 'ended', 'label': '경기완료', 'color': AppColors.orange},
-      {'value': 'completed', 'label': '정산완료', 'color': AppColors.slate},
+      {'value': 'completed', 'label': '정산완료', 'color': AppColors.teal},
     ];
     await showModalBottomSheet(
       context: context,
@@ -996,79 +996,181 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
           ),
           const SizedBox(height: 20),
 
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surfaceBorder,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.surfaceTint),
-            ),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(Icons.bar_chart, size: 16, color: AppColors.textSecondary),
-                      const SizedBox(width: 8),
-                      const Text('세션 기록', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
-                    ],
-                  ),
-                ),
-                Divider(height: 1, color: AppColors.surfaceTint),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 24),
-                      const Expanded(flex: 3, child: Text('선수', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54))),
-                      const Expanded(child: Center(child: Text('골', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54)))),
-                      const Expanded(child: Center(child: Text('도움', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54)))),
-                      if (hasDefense)
-                        const Expanded(child: Center(child: Text('수비', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54)))),
-                      const Expanded(child: Center(child: Text('MVP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54)))),
-                    ],
-                  ),
-                ),
-                ...sorted.asMap().entries.map((entry) {
-                  final idx = entry.key;
-                  final p = entry.value;
-                  String rankIcon;
-                  if (idx == 0) {
-                    rankIcon = '🥇';
-                  } else if (idx == 1) {
-                    rankIcon = '🥈';
-                  } else if (idx == 2) {
-                    rankIcon = '🥉';
-                  } else {
-                    rankIcon = '${idx + 1}';
-                  }
+          // 팀별 통계 비교 바 (2팀 전용)
+          if (_teams.length == 2) ...[
+            _buildTeamComparisonBar(teamStandings, completedMatches, enabledEvents),
+            const SizedBox(height: 16),
+          ],
 
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          // 팀별 기록 섹션
+          ..._teams.map((team) {
+            final teamId = team['id'];
+            final standing = teamStandings[teamId];
+            final memberKeys = (standing?['memberKeys'] as Set?) ?? {};
+            final teamPlayers = sorted.where((p) {
+              final pid = p['id'];
+              final key = pid != null ? 'p_$pid' : 'g_${p['name']}';
+              return memberKeys.contains(key);
+            }).toList();
+            final vestColor = AppColors.fromVestColor(team['vest_color'] as String?);
+            final teamName = team['name'] ?? '팀';
+            final pts = standing?['points'] ?? 0;
+            final gf = standing?['goalsFor'] ?? 0;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceBorder,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: vestColor.withAlpha(60)),
+              ),
+              child: Column(
+                children: [
+                  // 팀 헤더
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      border: Border(top: BorderSide(color: AppColors.surfaceBorder)),
-                      color: idx == 0 ? AppColors.amber.withAlpha(8) : null,
+                      color: vestColor.withAlpha(15),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
                     ),
                     child: Row(
                       children: [
-                        SizedBox(width: 24, child: Center(child: Text(rankIcon, style: TextStyle(fontSize: idx < 3 ? 14 : 12, color: AppColors.textHint)))),
-                        Expanded(flex: 3, child: Text(p['name'], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white))),
-                        Expanded(child: Center(child: Text('${p['goals']}', style: const TextStyle(fontSize: 13, color: AppColors.primary)))),
-                        Expanded(child: Center(child: Text('${p['assists']}', style: const TextStyle(fontSize: 13, color: AppColors.blue)))),
-                        if (hasDefense)
-                          Expanded(child: Center(child: Text('${p['defenses']}', style: const TextStyle(fontSize: 13, color: AppColors.purple)))),
-                        Expanded(child: Center(child: Text(
-                          (p['mvpScore'] as double).toStringAsFixed(1),
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.amber),
-                        ))),
+                        Container(
+                          width: 12, height: 12,
+                          decoration: BoxDecoration(color: vestColor, shape: BoxShape.circle),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(teamName, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: vestColor)),
+                        const Spacer(),
+                        Text('$pts점 · $gf골', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                       ],
                     ),
-                  );
-                }),
-                const SizedBox(height: 8),
-              ],
+                  ),
+                  // 테이블 헤더
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 24),
+                        const Expanded(flex: 3, child: Text('선수', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54))),
+                        const Expanded(child: Center(child: Text('골', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54)))),
+                        const Expanded(child: Center(child: Text('도움', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54)))),
+                        if (hasDefense)
+                          const Expanded(child: Center(child: Text('수비', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54)))),
+                        const Expanded(child: Center(child: Text('MVP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white54)))),
+                      ],
+                    ),
+                  ),
+                  ...teamPlayers.asMap().entries.map((entry) {
+                    final idx = entry.key;
+                    final p = entry.value;
+                    String rankIcon;
+                    if (idx == 0) { rankIcon = '🥇'; }
+                    else if (idx == 1) { rankIcon = '🥈'; }
+                    else if (idx == 2) { rankIcon = '🥉'; }
+                    else { rankIcon = '${idx + 1}'; }
+
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        border: Border(top: BorderSide(color: AppColors.surfaceBorder)),
+                        color: idx == 0 ? vestColor.withAlpha(8) : null,
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(width: 24, child: Center(child: Text(rankIcon, style: TextStyle(fontSize: idx < 3 ? 14 : 12, color: AppColors.textHint)))),
+                          Expanded(flex: 3, child: Text(p['name'], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white))),
+                          Expanded(child: Center(child: Text('${p['goals']}', style: const TextStyle(fontSize: 13, color: AppColors.primary)))),
+                          Expanded(child: Center(child: Text('${p['assists']}', style: const TextStyle(fontSize: 13, color: AppColors.blue)))),
+                          if (hasDefense)
+                            Expanded(child: Center(child: Text('${p['defenses']}', style: const TextStyle(fontSize: 13, color: AppColors.purple)))),
+                          Expanded(child: Center(child: Text(
+                            (p['mvpScore'] as double).toStringAsFixed(1),
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.amber),
+                          ))),
+                        ],
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTeamComparisonBar(
+    Map<int, Map<String, dynamic>> teamStandings,
+    List<dynamic> completedMatches,
+    List<String> enabledEvents,
+  ) {
+    final teamIds = _teams.map((t) => t['id'] as int).toList();
+    if (teamIds.length != 2) return const SizedBox();
+    final t1Id = teamIds[0];
+    final t2Id = teamIds[1];
+    final t1 = teamStandings[t1Id] ?? {};
+    final t2 = teamStandings[t2Id] ?? {};
+    final t1Name = _teams[0]['name'] ?? '팀 1';
+    final t2Name = _teams[1]['name'] ?? '팀 2';
+    final t1Color = AppColors.fromVestColor(_teams[0]['vest_color'] as String?);
+    final t2Color = AppColors.fromVestColor(_teams[1]['vest_color'] as String?);
+
+    final t1Goals = (t1['goalsFor'] ?? 0) as int;
+    final t2Goals = (t2['goalsFor'] ?? 0) as int;
+    final t1Pts = (t1['points'] ?? 0) as int;
+    final t2Pts = (t2['points'] ?? 0) as int;
+
+    Widget barRow(String label, int left, int right, Color lColor, Color rColor) {
+      final total = left + right;
+      final leftFlex = total == 0 ? 1 : left;
+      final rightFlex = total == 0 ? 1 : right;
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            SizedBox(width: 24, child: Text('$left', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: lColor), textAlign: TextAlign.center)),
+            const SizedBox(width: 6),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Row(
+                  children: [
+                    Expanded(flex: leftFlex.clamp(1, 999), child: Container(height: 10, color: lColor.withAlpha(120))),
+                    Expanded(flex: rightFlex.clamp(1, 999), child: Container(height: 10, color: rColor.withAlpha(120))),
+                  ],
+                ),
+              ),
             ),
+            const SizedBox(width: 6),
+            SizedBox(width: 24, child: Text('$right', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: rColor), textAlign: TextAlign.center)),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceBorder,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.surfaceTint),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(t1Name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t1Color)),
+              const Text('팀 비교', style: TextStyle(fontSize: 12, color: Colors.white54)),
+              Text(t2Name, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: t2Color)),
+            ],
           ),
+          const SizedBox(height: 8),
+          barRow('골', t1Goals, t2Goals, t1Color, t2Color),
+          barRow('승점', t1Pts, t2Pts, t1Color, t2Color),
         ],
       ),
     );
@@ -1801,7 +1903,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
               final name = e['player_name'] ?? e['guest_name'] ?? '?';
               final assister = e['assister_name'];
               final eventTeamId = e['team_id'];
-              final isTeam1 = eventTeamId == team1Id;
+              final isTeam1 = eventTeamId != null && eventTeamId.toString() == team1Id.toString();
               final eventTime = e['event_time'] as int? ?? 0;
               final timeStr = _formatTime(eventTime);
               final isTemp = (e['id'] as int? ?? 0) < 0;
