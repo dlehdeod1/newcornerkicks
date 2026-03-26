@@ -139,6 +139,12 @@ class ApiService {
   Future<dynamic> deleteSession(int id, String token) =>
       request('/sessions/$id', method: 'DELETE', token: token);
 
+  Future<dynamic> duplicateSession(int sessionId, String sessionDate, {String? title, required String token}) =>
+      request('/sessions/$sessionId/duplicate', method: 'POST', body: {
+        'sessionDate': sessionDate,
+        if (title != null) 'title': title,
+      }, token: token);
+
   // Rankings
   Future<dynamic> getRankings({int? year, String? token}) =>
       request('/rankings${year != null ? '?year=$year' : ''}', token: token);

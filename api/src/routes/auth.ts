@@ -578,4 +578,83 @@ authRoutes.post('/google', async (c) => {
   }
 })
 
+// 계정 삭제 (회원 탈퇴)
+authRoutes.delete('/account', async (c) => {
+  const authHeader = c.req.header('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return c.json({ error: '인증이 필요합니다.' }, 401)
+  }
+
+  try {
+    const token = authHeader.slice(7)
+    const secret = new TextEncoder().encode(c.env.JWT_SECRET)
+    const { payload } = await jose.jwtVerify(token, secret)
+    const userId = payload.userId as string
+
+    const body = await c.req.json().catch(() => ({})) as any
+    const { password } = body
+
+    // 비밀번호 확인 (Google 전용 계정은 비밀번호 없을 수 있음)
+    const user = await c.env.DB.prepare(
+      'SELECT password, google_id FROM users WHERE id = ?'
+    ).bind(userId).first<{ password: string | null; google_id: string | null }>()
+
+    if (!user) {
+      return c.json({ error: '사용자를 찾을 수 없습니다.' }, 404)
+    }
+
+    // 비밀번호가 있는 계정은 확인 필수
+    if (user.password && !user.google_id) {
+      if (!password) {
+        return c.json({ error: '비밀번호를 입력해주세요.' }, 400)
+      }
+      const isHashed = user.password.startsWith('$2a$') || user.password.startsWith('$2b$')
+      const match = isHashed
+        ? await bcrypt.compare(password, user.password)
+        : user.password === password
+      if (!match) {
+        return c.json({ error: '비밀번호가 일치하지 않습니다.' }, 400)
+      }
+    }
+
+    // 연관 데이터 삭제 (순서 중요: FK 의존성)
+    // 1. player 관련
+    const players = await c.env.DB.prepare(
+      'SELECT id FROM players WHERE user_id = ?'
+    ).bind(userId).all()
+    const playerIds = (players.results as any[]).map(p => p.id)
+
+    for (const pid of playerIds) {
+      await c.env.DB.prepare('DELETE FROM player_preferences WHERE player_id = ? OR target_player_id = ?').bind(pid, pid).run()
+      await c.env.DB.prepare('DELETE FROM player_abilities WHERE player_id = ? OR rater_id = ?').bind(pid, pid).run()
+      await c.env.DB.prepare('DELETE FROM session_payments WHERE player_id = ?').bind(pid).run()
+      await c.env.DB.prepare('DELETE FROM team_members WHERE player_id = ?').bind(pid).run()
+      await c.env.DB.prepare('DELETE FROM attendance WHERE player_id = ?').bind(pid).run()
+      // match_events: player_id와 assister_id를 null로 (이벤트 기록은 보존)
+      await c.env.DB.prepare('UPDATE match_events SET player_id = NULL WHERE player_id = ?').bind(pid).run()
+      await c.env.DB.prepare('UPDATE match_events SET assister_id = NULL WHERE assister_id = ?').bind(pid).run()
+    }
+
+    // 2. notifications, subscriptions
+    await c.env.DB.prepare('DELETE FROM notifications WHERE user_id = ?').bind(userId).run()
+
+    // 3. club_members (클럽 탈퇴)
+    await c.env.DB.prepare('DELETE FROM club_members WHERE user_id = ?').bind(userId).run()
+
+    // 4. players
+    await c.env.DB.prepare('DELETE FROM players WHERE user_id = ?').bind(userId).run()
+
+    // 5. posts/comments
+    await c.env.DB.prepare('UPDATE posts SET author_id = NULL WHERE author_id = ?').bind(userId).run()
+    await c.env.DB.prepare('UPDATE post_comments SET author_id = NULL WHERE author_id = ?').bind(userId).run()
+
+    // 6. user 삭제
+    await c.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId).run()
+
+    return c.json({ message: '계정이 삭제되었습니다. 이용해 주셔서 감사합니다.' })
+  } catch {
+    return c.json({ error: '유효하지 않은 토큰입니다.' }, 401)
+  }
+})
+
 export { authRoutes }

@@ -5,7 +5,7 @@ export const runtime = 'edge'
 import { useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Calendar, MapPin, Users, Trophy, BarChart3, Clock, Settings, Coins, Trash2 } from 'lucide-react'
+import { Calendar, MapPin, Users, Trophy, BarChart3, Clock, Settings, Coins, Trash2, Copy } from 'lucide-react'
 import { sessionsApi, paymentsApi, clubsApi } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { cn } from '@/lib/cn'
@@ -28,6 +28,10 @@ export default function SessionDetailPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isDuplicateOpen, setIsDuplicateOpen] = useState(false)
+  const [isDuplicating, setIsDuplicating] = useState(false)
+  const [dupDate, setDupDate] = useState('')
+  const [dupTitle, setDupTitle] = useState('')
   const router = useRouter()
   const queryClient = useQueryClient()
   const { data, isLoading, refetch } = useQuery({
@@ -108,6 +112,21 @@ export default function SessionDetailPage() {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => {
+                  // 기본 날짜: 원본 + 7일
+                  const srcDate = new Date(session.session_date)
+                  srcDate.setDate(srcDate.getDate() + 7)
+                  setDupDate(srcDate.toISOString().slice(0, 10))
+                  setDupTitle(session.title || '')
+                  setIsDuplicateOpen(true)
+                }}
+              >
+                <Copy className="w-4 h-4 mr-1.5" />
+                복사
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setIsEditModalOpen(true)}
               >
                 <Settings className="w-4 h-4 mr-1.5" />
@@ -184,6 +203,63 @@ export default function SessionDetailPage() {
                 className="bg-red-500 hover:bg-red-600 text-white"
               >
                 {isDeleting ? '삭제 중...' : '삭제'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 세션 복사 모달 */}
+      {isDuplicateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setIsDuplicateOpen(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-6 max-w-sm mx-4 shadow-xl w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">세션 복사</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">기존 세션의 설정을 복사하여 새 세션을 만듭니다.</p>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">날짜</label>
+            <input
+              type="date"
+              value={dupDate}
+              onChange={(e) => setDupDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white mb-3 text-sm"
+            />
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">제목</label>
+            <input
+              type="text"
+              value={dupTitle}
+              onChange={(e) => setDupTitle(e.target.value)}
+              placeholder="세션 제목"
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white mb-4 text-sm"
+            />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setIsDuplicateOpen(false)}>
+                취소
+              </Button>
+              <Button
+                size="sm"
+                disabled={isDuplicating || !dupDate}
+                onClick={async () => {
+                  if (!token || !dupDate) return
+                  setIsDuplicating(true)
+                  try {
+                    const res = await sessionsApi.duplicate(sessionId, {
+                      sessionDate: dupDate,
+                      ...(dupTitle.trim() ? { title: dupTitle.trim() } : {}),
+                    }, token)
+                    toast.success('세션이 복제되었습니다.')
+                    setIsDuplicateOpen(false)
+                    if (res?.id) {
+                      router.push(`/sessions/${res.id}`)
+                    }
+                  } catch (err) {
+                    console.error('세션 복사 실패:', err)
+                    toast.error('세션 복사에 실패했습니다.')
+                  } finally {
+                    setIsDuplicating(false)
+                  }
+                }}
+                className="bg-primary hover:bg-primary/90 text-white"
+              >
+                {isDuplicating ? '복사 중...' : '복사하기'}
               </Button>
             </div>
           </div>

@@ -121,6 +121,9 @@ export const sessionsApi = {
 
   delete: (id: number, token: string) =>
     api(`/sessions/${id}`, { method: 'DELETE', token }),
+
+  duplicate: (id: number, data: { sessionDate: string; title?: string }, token: string) =>
+    api(`/sessions/${id}/duplicate`, { method: 'POST', body: data, token }),
 }
 
 // Players API

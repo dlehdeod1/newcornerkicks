@@ -2048,6 +2048,85 @@ sessionsRoutes.post('/:id/settlement-remind', authMiddleware('ADMIN'), async (c)
   return c.json({ ok: true, sentCount: userIds.length })
 })
 
+// 세션 복제 (관리자)
+sessionsRoutes.post('/:id/duplicate', authMiddleware('ADMIN'), async (c) => {
+  try {
+    const sourceId = Number(c.req.param('id'))
+    const clubId = (c as any).clubId
+    if (!clubId) return c.json({ error: '클럽에 소속되어 있지 않습니다.' }, 403)
+
+    const body = await c.req.json()
+    const schema = z.object({
+      sessionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      title: z.string().optional(),
+    })
+    const data = schema.parse(body)
+
+    // 원본 세션 조회
+    const source = await c.env.DB.prepare(
+      'SELECT * FROM sessions WHERE id = ? AND club_id = ?'
+    ).bind(sourceId, clubId).first<any>()
+
+    if (!source) return c.json({ error: '원본 세션을 찾을 수 없습니다.' }, 404)
+
+    const now = Math.floor(Date.now() / 1000)
+    const newTitle = data.title || source.title || '코너킥스 정기 풋살'
+
+    const result = await c.env.DB.prepare(`
+      INSERT INTO sessions (club_id, session_date, title, location, start_time, end_time, target_members, status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'recruiting', ?)
+    `).bind(
+      clubId,
+      data.sessionDate,
+      newTitle,
+      source.location || null,
+      source.start_time || null,
+      source.end_time || null,
+      source.target_members || null,
+      now
+    ).run()
+
+    const sessionId = result.meta.last_row_id
+
+    // 자동 알림: 세션 생성 시 클럽 전체 멤버에게 알림
+    try {
+      const notifConfig = await c.env.DB.prepare(
+        'SELECT notification_config FROM clubs WHERE id = ?'
+      ).bind(clubId).first<{ notification_config: string }>()
+      const config = JSON.parse(notifConfig?.notification_config ?? '{}')
+
+      if (config.sessionCreated !== false) {
+        const members = await c.env.DB.prepare(
+          'SELECT user_id FROM club_members WHERE club_id = ?'
+        ).bind(clubId).all()
+
+        const creatorId = (c as any).userId
+        for (const m of members.results as any[]) {
+          if (m.user_id === creatorId) continue
+          await c.env.DB.prepare(
+            `INSERT INTO notifications (user_id, type, title, message, link_url, is_read, created_at)
+             VALUES (?, 'session_created', ?, ?, ?, 0, ?)`
+          ).bind(
+            m.user_id,
+            '새 세션 생성',
+            `${data.sessionDate} 세션이 생성되었습니다. 참석 여부를 알려주세요!`,
+            `/sessions/${sessionId}`,
+            now
+          ).run()
+        }
+      }
+    } catch {}
+
+    return c.json({
+      id: sessionId,
+      message: '세션이 복제되었습니다.',
+    }, 201)
+  } catch (e: any) {
+    if (e instanceof z.ZodError) return c.json({ error: '입력값이 올바르지 않습니다.', details: e.errors }, 400)
+    throw e
+  }
+})
+
 // 세션 삭제 (관리자만, hard delete)
 sessionsRoutes.delete('/:id', authMiddleware(), async (c) => {
   const sessionId = Number(c.req.param('id'))

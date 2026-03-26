@@ -107,9 +107,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final weight = p['weightKg'];
     final birthYear = p['birthYear'];
 
-    if (height == null && weight == null && birthYear == null) return const SizedBox.shrink();
+    if (height == null && weight == null && birthYear == null) {
+      return GestureDetector(
+        onTap: () => _showBodyInfoDialog(),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceBorder,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.surfaceTint),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.straighten, size: 20, color: AppColors.textHint),
+              const SizedBox(width: 12),
+              Expanded(child: Text('신체 정보를 입력하면 더 정확한 팀 밸런싱이 가능해요', style: TextStyle(fontSize: 13, color: AppColors.textHint))),
+              Icon(Icons.chevron_right, size: 18, color: AppColors.iconInactive),
+            ],
+          ),
+        ),
+      );
+    }
 
-    return Container(
+    return GestureDetector(
+      onTap: () => _showBodyInfoDialog(),
+      child: Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surfaceBorder,
@@ -131,8 +153,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _bodyInfoItem(Icons.cake, '출생', '$birthYear'),
             ],
           ),
+          const SizedBox(height: 8),
+          Center(child: Text('탭하여 수정', style: TextStyle(fontSize: 11, color: AppColors.textHint))),
         ],
       ),
+    ),
     );
   }
 
@@ -682,6 +707,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             }
           },
         ),
+        const SizedBox(height: 24),
+        _menuItem(
+          icon: Icons.delete_forever,
+          label: '회원 탈퇴',
+          color: AppColors.red,
+          onTap: () => _showDeleteAccountDialog(auth),
+        ),
       ],
     );
   }
@@ -845,6 +877,134 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }
             },
             child: const Text('변경', style: TextStyle(color: AppColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBodyInfoDialog() {
+    final p = _summary?['player'];
+    final heightCtrl = TextEditingController(text: p?['heightCm']?.toString() ?? '');
+    final weightCtrl = TextEditingController(text: p?['weightKg']?.toString() ?? '');
+    final birthYearCtrl = TextEditingController(text: p?['birthYear']?.toString() ?? '');
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('신체 정보 수정', style: TextStyle(color: Colors.white, fontSize: 17)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _bodyTextField(heightCtrl, '키 (cm)', TextInputType.number),
+            const SizedBox(height: 12),
+            _bodyTextField(weightCtrl, '몸무게 (kg)', TextInputType.number),
+            const SizedBox(height: 12),
+            _bodyTextField(birthYearCtrl, '출생연도 (예: 1995)', TextInputType.number),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('취소', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final auth = context.read<AuthService>();
+              final body = <String, dynamic>{};
+              if (heightCtrl.text.isNotEmpty) body['heightCm'] = int.tryParse(heightCtrl.text);
+              if (weightCtrl.text.isNotEmpty) body['weightKg'] = int.tryParse(weightCtrl.text);
+              if (birthYearCtrl.text.isNotEmpty) body['birthYear'] = int.tryParse(birthYearCtrl.text);
+
+              if (body.isEmpty) {
+                Navigator.pop(ctx);
+                return;
+              }
+
+              try {
+                await _api.request('/auth/profile', method: 'PUT', body: body, token: auth.token);
+                if (ctx.mounted) Navigator.pop(ctx);
+                if (mounted) {
+                  _loadSummary();
+                  showSuccess(context, '신체 정보가 업데이트되었습니다');
+                }
+              } catch (e) {
+                if (mounted) showError(context, '$e');
+              }
+            },
+            child: const Text('저장', style: TextStyle(color: AppColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  TextField _bodyTextField(TextEditingController ctrl, String hint, TextInputType type) => TextField(
+    controller: ctrl,
+    keyboardType: type,
+    style: const TextStyle(color: Colors.white),
+    decoration: InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.white38),
+      filled: true,
+      fillColor: AppColors.bgBase,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    ),
+  );
+
+  void _showDeleteAccountDialog(AuthService auth) {
+    final isGoogle = auth.user?['googleLinked'] == true;
+    final pwCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('회원 탈퇴', style: TextStyle(color: AppColors.red, fontSize: 17, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              '정말로 탈퇴하시겠습니까?\n\n모든 데이터가 삭제되며 복구할 수 없습니다.',
+              style: TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+            if (!isGoogle) ...[
+              const SizedBox(height: 16),
+              _pwField(pwCtrl, '비밀번호 확인'),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('취소', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (!isGoogle && pwCtrl.text.isEmpty) {
+                showError(context, '비밀번호를 입력해주세요');
+                return;
+              }
+
+              try {
+                final body = <String, dynamic>{};
+                if (!isGoogle) body['password'] = pwCtrl.text;
+
+                await _api.request('/auth/account', method: 'DELETE', body: body, token: auth.token);
+                if (ctx.mounted) Navigator.pop(ctx);
+                if (mounted) {
+                  showSuccess(context, '계정이 삭제되었습니다');
+                  await auth.logout();
+                }
+              } catch (e) {
+                if (mounted) showError(context, '$e');
+              }
+            },
+            child: const Text('탈퇴하기', style: TextStyle(color: AppColors.red)),
           ),
         ],
       ),

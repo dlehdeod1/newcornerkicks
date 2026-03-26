@@ -119,6 +119,145 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
     }
   }
 
+  Future<void> _showDuplicateSheet() async {
+    if (_session == null) return;
+    final auth = context.read<AuthService>();
+    if (auth.token == null) return;
+
+    final sourceDate = _session!['session_date'] as String? ?? '';
+    DateTime defaultDate;
+    try {
+      defaultDate = DateTime.parse(sourceDate).add(const Duration(days: 7));
+    } catch (_) {
+      defaultDate = DateTime.now().add(const Duration(days: 7));
+    }
+
+    DateTime selectedDate = defaultDate;
+    final titleController = TextEditingController(text: _session!['title'] ?? '');
+
+    final result = await showModalBottomSheet<Map<String, String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.bgCard,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(ctx).viewInsets.bottom + 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('세션 복사', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text('기존 세션의 설정을 복사하여 새 세션을 만듭니다.', style: TextStyle(color: Colors.white54, fontSize: 13)),
+              const SizedBox(height: 16),
+              const Text('날짜', style: TextStyle(color: Colors.white70, fontSize: 13)),
+              const SizedBox(height: 6),
+              GestureDetector(
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: ctx,
+                    initialDate: selectedDate,
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                    builder: (context, child) => Theme(
+                      data: ThemeData.dark().copyWith(
+                        colorScheme: const ColorScheme.dark(primary: AppColors.primary),
+                      ),
+                      child: child!,
+                    ),
+                  );
+                  if (picked != null) {
+                    setSheetState(() => selectedDate = picked);
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceBorder,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.surfaceTint),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_today, color: Colors.white54, size: 18),
+                      const SizedBox(width: 10),
+                      Text(
+                        '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text('제목', style: TextStyle(color: Colors.white70, fontSize: 13)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: titleController,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: AppColors.surfaceBorder,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.surfaceTint)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.surfaceTint)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  hintText: '세션 제목',
+                  hintStyle: const TextStyle(color: Colors.white38),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                    final dateStr = '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+                    Navigator.pop(ctx, {
+                      'sessionDate': dateStr,
+                      'title': titleController.text.trim(),
+                    });
+                  },
+                  child: const Text('복사하기', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (result == null || !mounted) return;
+
+    try {
+      final res = await _api.duplicateSession(
+        widget.sessionId,
+        result['sessionDate']!,
+        title: result['title']!.isNotEmpty ? result['title'] : null,
+        token: auth.token!,
+      );
+      if (mounted) {
+        showSuccess(context, '세션이 복제되었습니다.');
+        final newId = res['id'];
+        if (newId != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => SessionDetailScreen(sessionId: newId)),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) showError(context, '복제 실패: $e');
+    }
+  }
+
   Future<void> _showStatusSheet(String? current) async {
     final auth = context.read<AuthService>();
     if (auth.token == null) return;
@@ -228,8 +367,19 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
               color: AppColors.bgCard,
               onSelected: (value) {
                 if (value == 'delete') _confirmDeleteSession();
+                if (value == 'duplicate') _showDuplicateSheet();
               },
               itemBuilder: (_) => [
+                const PopupMenuItem(
+                  value: 'duplicate',
+                  child: Row(
+                    children: [
+                      Icon(Icons.copy, color: Colors.white70, size: 20),
+                      SizedBox(width: 8),
+                      Text('세션 복사', style: TextStyle(color: Colors.white70)),
+                    ],
+                  ),
+                ),
                 const PopupMenuItem(
                   value: 'delete',
                   child: Row(
