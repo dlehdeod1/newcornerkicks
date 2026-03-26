@@ -109,7 +109,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _announcement == null
-              ? Center(child: Text('공지를 불러올 수 없습니다', style: TextStyle(color: Colors.white.withAlpha(102))))
+              ? Center(child: Text('공지를 불러올 수 없습니다', style: TextStyle(color: AppColors.textHint)))
               : SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
                   child: _buildContent(),
@@ -161,17 +161,17 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         // Author + date
         Row(
           children: [
-            Icon(Icons.person_outline, size: 14, color: Colors.white.withAlpha(102)),
+            Icon(Icons.person_outline, size: 14, color: AppColors.textHint),
             const SizedBox(width: 4),
-            Text(a['author_name'] ?? '', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(153))),
+            Text(a['author_name'] ?? '', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
             const SizedBox(width: 16),
-            Icon(Icons.access_time, size: 14, color: Colors.white.withAlpha(102)),
+            Icon(Icons.access_time, size: 14, color: AppColors.textHint),
             const SizedBox(width: 4),
-            Text(_formatDate(a['created_at']), style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(102))),
+            Text(_formatDate(a['created_at']), style: TextStyle(fontSize: 13, color: AppColors.textHint)),
           ],
         ),
         const SizedBox(height: 24),
-        Divider(color: Colors.white.withAlpha(20)),
+        Divider(color: AppColors.surfaceTint),
         const SizedBox(height: 24),
         // Image
         if (imageUrl != null && imageUrl.isNotEmpty) ...[
@@ -189,7 +189,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         // Content
         Text(
           a['content'] ?? '',
-          style: TextStyle(fontSize: 15, color: Colors.white.withAlpha(220), height: 1.6),
+          style: TextStyle(fontSize: 15, color: AppColors.textSecondary, height: 1.6),
         ),
         const SizedBox(height: 40),
       ],

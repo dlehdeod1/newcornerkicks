@@ -177,7 +177,7 @@ class _AbilitiesScreenState extends State<AbilitiesScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: rank <= 3 ? [AppColors.gold, AppColors.silver, AppColors.bronze][rank - 1] : Colors.white.withAlpha(77),
+                      color: rank <= 3 ? [AppColors.gold, AppColors.silver, AppColors.bronze][rank - 1] : AppColors.iconInactive,
                     ),
                   ),
                 ),
@@ -226,7 +226,7 @@ class _AbilitiesScreenState extends State<AbilitiesScreen> {
                           _miniStat('피지컬', p['physical']),
                           Text(
                             '평가 ${ratingCount}건',
-                            style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(51)),
+                            style: TextStyle(fontSize: 10, color: AppColors.iconInactive),
                           ),
                         ],
                       ),
@@ -237,7 +237,7 @@ class _AbilitiesScreenState extends State<AbilitiesScreen> {
                 Icon(
                   isExpanded ? Icons.expand_less : Icons.expand_more,
                   size: 20,
-                  color: Colors.white.withAlpha(51),
+                  color: AppColors.iconInactive,
                 ),
               ],
             ),
@@ -253,13 +253,13 @@ class _AbilitiesScreenState extends State<AbilitiesScreen> {
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Row(
                     children: [
-                      SizedBox(width: 60, child: Text(_statLabels[k]!, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(128)))),
+                      SizedBox(width: 60, child: Text(_statLabels[k]!, style: TextStyle(fontSize: 11, color: AppColors.textHint))),
                       Expanded(
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(3),
                           child: LinearProgressIndicator(
                             value: v / 100,
-                            backgroundColor: Colors.white.withAlpha(13),
+                            backgroundColor: AppColors.surfaceTint,
                             color: _overallColor(v),
                             minHeight: 6,
                           ),
@@ -292,7 +292,7 @@ class _AbilitiesScreenState extends State<AbilitiesScreen> {
       padding: const EdgeInsets.only(right: 10),
       child: Text(
         '$label $v',
-        style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(102)),
+        style: TextStyle(fontSize: 10, color: AppColors.textHint),
       ),
     );
   }

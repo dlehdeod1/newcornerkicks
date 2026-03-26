@@ -60,7 +60,7 @@ class _MainShellState extends State<MainShell> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text('나중에', style: TextStyle(color: Colors.white.withAlpha(102))),
+                child: Text('나중에', style: TextStyle(color: AppColors.textHint)),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -87,8 +87,8 @@ class _MainShellState extends State<MainShell> {
         decoration: BoxDecoration(
           color: AppColors.bgCard,
           border: Border(
-            top: BorderSide(color: Colors.white.withAlpha(13)),
-            bottom: BorderSide(color: Colors.white.withAlpha(13)),
+            top: BorderSide(color: AppColors.surfaceTint),
+            bottom: BorderSide(color: AppColors.surfaceTint),
           ),
         ),
         child: Row(
@@ -96,7 +96,7 @@ class _MainShellState extends State<MainShell> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(26),
+                color: AppColors.surfaceHighlight,
                 borderRadius: BorderRadius.circular(4),
               ),
               child: const Text('광고', style: TextStyle(color: Colors.white38, fontSize: 9)),
@@ -174,7 +174,7 @@ class _MainShellState extends State<MainShell> {
               ),
               if (hasMultiClubs) ...[
                 const SizedBox(width: 4),
-                Icon(Icons.arrow_drop_down, color: Colors.white.withAlpha(153), size: 20),
+                Icon(Icons.arrow_drop_down, color: AppColors.textSecondary, size: 20),
               ],
             ],
           ),
@@ -201,7 +201,7 @@ class _MainShellState extends State<MainShell> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: AppColors.bgCard,
-          border: Border(top: BorderSide(color: Colors.white.withAlpha(26))),
+          border: Border(top: BorderSide(color: AppColors.surfaceHighlight)),
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,

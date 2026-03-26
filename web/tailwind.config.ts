@@ -32,6 +32,9 @@ const config: Config = {
         },
         border: 'hsl(var(--border))',
         ring: 'hsl(var(--ring))',
+        destructive: 'hsl(var(--destructive))',
+        success: 'hsl(var(--success))',
+        warning: 'hsl(var(--warning))',
         // 레거시 다크 테마용 (기존 코드 호환)
         dark: {
           bg: '#0f172a',

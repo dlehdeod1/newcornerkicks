@@ -72,7 +72,7 @@ class _HallOfFameScreenState extends State<HallOfFameScreen> {
               color: i >= 3 ? AppColors.bgCard : null,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: i == 0 ? AppColors.amberLight.withAlpha(51) : Colors.white.withAlpha(13),
+                color: i == 0 ? AppColors.amberLight.withAlpha(51) : AppColors.surfaceBorder,
               ),
             ),
             child: Row(

@@ -160,7 +160,7 @@ class _ClubScreenState extends State<ClubScreen> {
           ),
           const SizedBox(height: 12),
           Text(clubName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-          Text('@$slug', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(102))),
+          Text('@$slug', style: TextStyle(fontSize: 13, color: AppColors.textHint)),
           const SizedBox(height: 12),
           // 뱃지 행
           Row(
@@ -179,14 +179,14 @@ class _ClubScreenState extends State<ClubScreen> {
           // 초대 코드
           if (inviteCode.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Divider(color: Colors.white.withAlpha(20)),
+            Divider(color: AppColors.surfaceTint),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.link, size: 14, color: Colors.white.withAlpha(102)),
+                Icon(Icons.link, size: 14, color: AppColors.textHint),
                 const SizedBox(width: 6),
-                Text('초대 코드', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
+                Text('초대 코드', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
                 const SizedBox(width: 12),
                 GestureDetector(
                   onTap: () {
@@ -240,15 +240,15 @@ class _ClubScreenState extends State<ClubScreen> {
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(8),
+          color: AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withAlpha(20)),
+          border: Border.all(color: AppColors.surfaceTint),
         ),
         child: Column(
           children: [
-            Icon(Icons.bar_chart, size: 32, color: Colors.white.withAlpha(51)),
+            Icon(Icons.bar_chart, size: 32, color: AppColors.iconInactive),
             const SizedBox(height: 8),
-            Text('시즌 기록이 없습니다', style: TextStyle(color: Colors.white.withAlpha(102))),
+            Text('시즌 기록이 없습니다', style: TextStyle(color: AppColors.textHint)),
           ],
         ),
       );
@@ -260,9 +260,9 @@ class _ClubScreenState extends State<ClubScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
+        color: AppColors.surfaceBorder,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppColors.surfaceTint),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,7 +322,7 @@ class _ClubScreenState extends State<ClubScreen> {
             Text(icon, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 4),
             Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
-            Text(label, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(153))),
+            Text(label, style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
           ],
         ),
       ),
@@ -333,18 +333,18 @@ class _ClubScreenState extends State<ClubScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(5),
+        color: AppColors.surfaceBorder,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withAlpha(13)),
+        border: Border.all(color: AppColors.surfaceBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 15, color: Colors.white.withAlpha(102)),
+              Icon(icon, size: 15, color: AppColors.textHint),
               const SizedBox(width: 6),
-              Text(label, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
+              Text(label, style: TextStyle(fontSize: 12, color: AppColors.textHint)),
             ],
           ),
           const SizedBox(height: 4),
@@ -422,17 +422,17 @@ class _ClubScreenState extends State<ClubScreen> {
         gradient: LinearGradient(
           colors: isPro
               ? [AppColors.amber.withAlpha(20), AppColors.amber.withAlpha(10)]
-              : [Colors.white.withAlpha(8), Colors.white.withAlpha(5)],
+              : [AppColors.surfaceBorder, AppColors.surfaceBorder],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isPro ? AppColors.amber.withAlpha(51) : Colors.white.withAlpha(20)),
+        border: Border.all(color: isPro ? AppColors.amber.withAlpha(51) : AppColors.surfaceTint),
       ),
       child: Row(
         children: [
           Container(
             width: 44, height: 44,
             decoration: BoxDecoration(
-              color: isPro ? AppColors.amber.withAlpha(30) : Colors.white.withAlpha(13),
+              color: isPro ? AppColors.amber.withAlpha(30) : AppColors.surfaceBorder,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -456,12 +456,12 @@ class _ClubScreenState extends State<ClubScreen> {
                 if (isPro && expiresAt != null)
                   Text(
                     '만료: $expiresAt',
-                    style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102)),
+                    style: TextStyle(fontSize: 11, color: AppColors.textHint),
                   )
                 else if (!isPro)
                   Text(
                     'PRO로 업그레이드하면 케미스트리, 스트릭 등을 이용할 수 있어요',
-                    style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102)),
+                    style: TextStyle(fontSize: 11, color: AppColors.textHint),
                   ),
               ],
             ),
@@ -484,9 +484,9 @@ class _ClubScreenState extends State<ClubScreen> {
   Widget _buildMemberList() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
+        color: AppColors.surfaceBorder,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppColors.surfaceTint),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -509,14 +509,14 @@ class _ClubScreenState extends State<ClubScreen> {
           else if (_players.isEmpty)
             Padding(
               padding: const EdgeInsets.all(20),
-              child: Center(child: Text('멤버가 없습니다', style: TextStyle(color: Colors.white.withAlpha(102)))),
+              child: Center(child: Text('멤버가 없습니다', style: TextStyle(color: AppColors.textHint))),
             )
           else
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _players.length,
-              separatorBuilder: (_, __) => Divider(height: 1, color: Colors.white.withAlpha(13)),
+              separatorBuilder: (_, __) => Divider(height: 1, color: AppColors.surfaceBorder),
               itemBuilder: (context, index) {
                 final p = _players[index];
                 final name = p['name'] ?? '?';
@@ -536,8 +536,8 @@ class _ClubScreenState extends State<ClubScreen> {
                     child: Center(child: Text(initial, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white))),
                   ),
                   title: Text(name, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
-                  subtitle: nick != null ? Text(nick, style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 12)) : null,
-                  trailing: Icon(Icons.chevron_right, size: 18, color: Colors.white.withAlpha(64)),
+                  subtitle: nick != null ? Text(nick, style: TextStyle(color: AppColors.textHint, fontSize: 12)) : null,
+                  trailing: Icon(Icons.chevron_right, size: 18, color: AppColors.iconInactive),
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => PlayerDetailScreen(playerId: p['id'])));
                   },

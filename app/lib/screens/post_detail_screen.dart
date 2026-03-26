@@ -197,7 +197,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _post == null
-              ? Center(child: Text('게시글을 찾을 수 없습니다', style: TextStyle(color: Colors.white.withAlpha(102))))
+              ? Center(child: Text('게시글을 찾을 수 없습니다', style: TextStyle(color: AppColors.textHint)))
               : Column(
                   children: [
                     Expanded(
@@ -276,9 +276,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            Text(post['author_name'] ?? '', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(179))),
+            Text(post['author_name'] ?? '', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
             const SizedBox(width: 12),
-            Text(_formatDate(post['created_at']), style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(77))),
+            Text(_formatDate(post['created_at']), style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
           ],
         ),
       ],
@@ -308,13 +308,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(8),
+            color: AppColors.surfaceBorder,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withAlpha(15)),
+            border: Border.all(color: AppColors.surfaceTint),
           ),
           child: Text(
             post['content'] ?? '',
-            style: TextStyle(fontSize: 15, color: Colors.white.withAlpha(220), height: 1.6),
+            style: TextStyle(fontSize: 15, color: AppColors.textSecondary, height: 1.6),
           ),
         ),
       ],
@@ -327,11 +327,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       children: [
         Row(
           children: [
-            Icon(Icons.chat_bubble_outline, size: 16, color: Colors.white.withAlpha(128)),
+            Icon(Icons.chat_bubble_outline, size: 16, color: AppColors.textHint),
             const SizedBox(width: 6),
             Text(
               '댓글 ${_comments.length}',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(179)),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -340,7 +340,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Text('아직 댓글이 없습니다', style: TextStyle(color: Colors.white.withAlpha(77), fontSize: 13)),
+              child: Text('아직 댓글이 없습니다', style: TextStyle(color: AppColors.iconInactive, fontSize: 13)),
             ),
           )
         else
@@ -363,9 +363,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(5),
+          color: AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withAlpha(10)),
+          border: Border.all(color: AppColors.surfaceBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,15 +374,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               children: [
                 Text(
                   comment['author_name'] ?? '',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(179)),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
                 ),
                 const SizedBox(width: 8),
-                Text(_formatDate(comment['created_at']), style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(64))),
+                Text(_formatDate(comment['created_at']), style: TextStyle(fontSize: 11, color: AppColors.iconInactive)),
                 if (isMine) ...[
                   const Spacer(),
                   GestureDetector(
                     onTap: () => _deleteComment(comment['id'] as int),
-                    child: Icon(Icons.close, size: 14, color: Colors.white.withAlpha(51)),
+                    child: Icon(Icons.close, size: 14, color: AppColors.iconInactive),
                   ),
                 ],
               ],
@@ -390,7 +390,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             const SizedBox(height: 6),
             Text(
               comment['content'] ?? '',
-              style: TextStyle(fontSize: 14, color: Colors.white.withAlpha(204), height: 1.4),
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.4),
             ),
           ],
         ),
@@ -403,7 +403,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       padding: EdgeInsets.fromLTRB(16, 10, 16, MediaQuery.of(context).padding.bottom + 10),
       decoration: BoxDecoration(
         color: AppColors.bgCard,
-        border: Border(top: BorderSide(color: Colors.white.withAlpha(15))),
+        border: Border(top: BorderSide(color: AppColors.surfaceTint)),
       ),
       child: Row(
         children: [
@@ -413,17 +413,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
                 hintText: '댓글을 입력하세요...',
-                hintStyle: TextStyle(color: Colors.white.withAlpha(64)),
+                hintStyle: TextStyle(color: AppColors.iconInactive),
                 filled: true,
-                fillColor: Colors.white.withAlpha(8),
+                fillColor: AppColors.surfaceBorder,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.white.withAlpha(15)),
+                  borderSide: BorderSide(color: AppColors.surfaceTint),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.white.withAlpha(15)),
+                  borderSide: BorderSide(color: AppColors.surfaceTint),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),

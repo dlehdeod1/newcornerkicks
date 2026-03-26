@@ -52,6 +52,38 @@ class AppColors {
   static const silver = Color(0xFF94A3B8); // 2위 은
   static const bronze = Color(0xFFD97706); // 3위 동
 
+  // ─── 시맨틱 텍스트 (다크 모드 기본) ──────────────────────────────
+  /// 보조 텍스트 65% — alpha 153~220 대체
+  static const textSecondary = Color.fromRGBO(255, 255, 255, 0.65);
+  /// 힌트 텍스트 50% — alpha 100~128 대체
+  static const textHint      = Color.fromRGBO(255, 255, 255, 0.50);
+  /// 비활성 아이콘/텍스트 30% — alpha 51~80 대체
+  static const iconInactive  = Color.fromRGBO(255, 255, 255, 0.30);
+
+  // ─── 시맨틱 표면 (다크 모드 기본) ──────────────────────────────
+  /// 미묘한 배경 tint ~8% — alpha 13~20 대체
+  static const surfaceTint   = Color.fromRGBO(255, 255, 255, 0.08);
+  /// 미묘한 보더/구분선 ~6% — alpha 5~12 대체
+  static const surfaceBorder = Color.fromRGBO(255, 255, 255, 0.06);
+  /// 강조 표면 ~10% — alpha 26~40 대체
+  static const surfaceHighlight = Color.fromRGBO(255, 255, 255, 0.10);
+
+  // ─── 테마 인식 헬퍼 (Phase 5 라이트모드 대비) ──────────────────
+  static Color adaptiveTextSecondary(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? textSecondary
+          : const Color.fromRGBO(0, 0, 0, 0.60);
+
+  static Color adaptiveTextHint(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? textHint
+          : const Color.fromRGBO(0, 0, 0, 0.45);
+
+  static Color adaptiveIconInactive(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? iconInactive
+          : const Color.fromRGBO(0, 0, 0, 0.25);
+
   // ─── 외부 브랜드 ───────────────────────────────────────────────
   static const google = Color(0xFF4285F4); // Google 브랜드 블루
 

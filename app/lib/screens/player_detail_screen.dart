@@ -252,7 +252,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
                               value: tempStats[key]!,
                               min: 0, max: 100, divisions: 100,
                               activeColor: AppColors.primary,
-                              inactiveColor: Colors.white.withAlpha(26),
+                              inactiveColor: AppColors.surfaceHighlight,
                               onChanged: (val) => setModalState(() => tempStats[key] = val),
                             ),
                           ],
@@ -326,7 +326,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
             decoration: BoxDecoration(
               color: AppColors.bgCard,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withAlpha(13)),
+              border: Border.all(color: AppColors.surfaceTint),
             ),
             child: Row(
               children: [
@@ -406,7 +406,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
             decoration: BoxDecoration(
               color: AppColors.bgCard,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withAlpha(13)),
+              border: Border.all(color: AppColors.surfaceTint),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,7 +431,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
             decoration: BoxDecoration(
               color: AppColors.bgCard,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withAlpha(13)),
+              border: Border.all(color: AppColors.surfaceTint),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,7 +448,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
                           borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
                             value: e.value / 100,
-                            backgroundColor: Colors.white.withAlpha(13),
+                            backgroundColor: AppColors.surfaceTint,
                             color: _getStatColor(e.value),
                             minHeight: 8,
                           ),
@@ -482,7 +482,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
       decoration: BoxDecoration(
         color: AppColors.bgCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withAlpha(13)),
+        border: Border.all(color: AppColors.surfaceTint),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -552,7 +552,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: (score / 100).clamp(0.0, 1.0),
-                        backgroundColor: Colors.white.withAlpha(13),
+                        backgroundColor: AppColors.surfaceTint,
                         color: AppColors.primary,
                         minHeight: 6,
                       ),
@@ -575,7 +575,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
       decoration: BoxDecoration(
         color: AppColors.bgCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withAlpha(13)),
+        border: Border.all(color: AppColors.surfaceTint),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -635,10 +635,10 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
             margin: const EdgeInsets.only(right: 8),
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
             decoration: BoxDecoration(
-              color: val > 0 ? AppColors.primary.withValues(alpha: 0.08) : Colors.white.withAlpha(8),
+              color: val > 0 ? AppColors.primary.withValues(alpha: 0.08) : AppColors.surfaceBorder,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: val > 0 ? AppColors.primary.withAlpha(51) : Colors.white.withAlpha(13),
+                color: val > 0 ? AppColors.primary.withAlpha(51) : AppColors.surfaceTint,
               ),
             ),
             child: Column(
@@ -737,7 +737,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
                     decoration: BoxDecoration(
                       color: active ? AppColors.primary.withAlpha(26) : AppColors.bgCard,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: active ? AppColors.primary.withAlpha(77) : Colors.white.withAlpha(13)),
+                      border: Border.all(color: active ? AppColors.primary.withAlpha(77) : AppColors.surfaceTint),
                     ),
                     child: Row(
                       children: [
@@ -748,7 +748,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
                         const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(color: Colors.white.withAlpha(active ? 26 : 13), borderRadius: BorderRadius.circular(6)),
+                          decoration: BoxDecoration(color: active ? AppColors.surfaceHighlight : AppColors.surfaceTint, borderRadius: BorderRadius.circular(6)),
                           child: Text('${t['count']}', style: TextStyle(color: active ? AppColors.primary : Colors.white38, fontSize: 11, fontWeight: FontWeight.bold)),
                         ),
                       ],
@@ -854,7 +854,7 @@ class _RadarChartPainter extends CustomPainter {
     final angle = 2 * pi / n;
 
     // Grid
-    final gridPaint = Paint()..color = Colors.white.withAlpha(26)..style = PaintingStyle.stroke..strokeWidth = 1;
+    final gridPaint = Paint()..color = AppColors.surfaceHighlight..style = PaintingStyle.stroke..strokeWidth = 1;
     for (int level = 1; level <= 5; level++) {
       final r = radius * level / 5;
       final path = Path();

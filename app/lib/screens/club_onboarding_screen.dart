@@ -65,7 +65,7 @@ class _ClubOnboardingScreenState extends State<ClubOnboardingScreen>
             Text(
               '초대 코드로 기존 클럽에 참여하거나\n새 클럽을 만들어보세요',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.white.withAlpha(153), height: 1.5),
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5),
             ),
             const SizedBox(height: 32),
             // 탭
@@ -73,7 +73,7 @@ class _ClubOnboardingScreenState extends State<ClubOnboardingScreen>
               margin: const EdgeInsets.symmetric(horizontal: 24),
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(10),
+                color: AppColors.surfaceBorder,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: TabBar(
@@ -110,7 +110,7 @@ class _ClubOnboardingScreenState extends State<ClubOnboardingScreen>
                 onPressed: () => context.read<AuthService>().logout(),
                 child: Text(
                   '다른 계정으로 로그인',
-                  style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 13),
+                  style: TextStyle(color: AppColors.textHint, fontSize: 13),
                 ),
               ),
             ),
@@ -199,7 +199,7 @@ class _JoinTabState extends State<_JoinTab> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(8),
+              color: AppColors.surfaceBorder,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
@@ -209,7 +209,7 @@ class _JoinTabState extends State<_JoinTab> {
                 Expanded(
                   child: Text(
                     '초대 코드는 클럽 관리자에게 받을 수 있습니다.',
-                    style: TextStyle(color: Colors.white.withAlpha(153), fontSize: 13, height: 1.4),
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
                   ),
                 ),
               ],
@@ -304,7 +304,7 @@ class _CreateTabState extends State<_CreateTab> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('클럽 ID', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(179), fontWeight: FontWeight.w500)),
+              Text('클럽 ID', style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -325,12 +325,12 @@ class _CreateTabState extends State<_CreateTab> {
                       },
                       decoration: InputDecoration(
                         hintText: '예: cornerkicks',
-                        hintStyle: TextStyle(color: Colors.white.withAlpha(77)),
+                        hintStyle: TextStyle(color: AppColors.iconInactive),
                         filled: true,
-                        fillColor: Colors.white.withAlpha(10),
+                        fillColor: AppColors.surfaceBorder,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.white.withAlpha(26)),
+                          borderSide: BorderSide(color: AppColors.surfaceHighlight),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -339,7 +339,7 @@ class _CreateTabState extends State<_CreateTab> {
                                 ? AppColors.primary.withAlpha(128)
                                 : _slugStatus == 'taken'
                                     ? Colors.red.withAlpha(128)
-                                    : Colors.white.withAlpha(26),
+                                    : AppColors.surfaceHighlight,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -386,7 +386,7 @@ class _CreateTabState extends State<_CreateTab> {
               const SizedBox(height: 4),
               Text(
                 '영문 소문자, 숫자, -, _ 만 사용 가능',
-                style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(77)),
+                style: TextStyle(fontSize: 11, color: AppColors.iconInactive),
               ),
             ],
           ),
@@ -430,7 +430,7 @@ Widget _buildInput({
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label, style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(179), fontWeight: FontWeight.w500)),
+      Text(label, style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
       const SizedBox(height: 8),
       TextField(
         controller: controller,
@@ -439,16 +439,16 @@ Widget _buildInput({
         onSubmitted: onSubmitted,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.white.withAlpha(77)),
+          hintStyle: TextStyle(color: AppColors.iconInactive),
           filled: true,
-          fillColor: Colors.white.withAlpha(10),
+          fillColor: AppColors.surfaceBorder,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.white.withAlpha(26)),
+            borderSide: BorderSide(color: AppColors.surfaceHighlight),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.white.withAlpha(26)),
+            borderSide: BorderSide(color: AppColors.surfaceHighlight),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),

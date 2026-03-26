@@ -74,7 +74,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.notifications_off_outlined, size: 48, color: Colors.white.withAlpha(51)),
+                          Icon(Icons.notifications_off_outlined, size: 48, color: AppColors.iconInactive),
                           const SizedBox(height: 12),
                           const Text('알림이 없습니다', style: TextStyle(color: Colors.white38)),
                         ],
@@ -115,7 +115,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 color: isRead ? AppColors.bgCard : AppColors.bgCard.withAlpha(230),
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
-                                  color: isRead ? Colors.white.withAlpha(13) : AppColors.primary.withAlpha(51),
+                                  color: isRead ? AppColors.surfaceTint : AppColors.primary.withAlpha(51),
                                 ),
                               ),
                               child: Row(

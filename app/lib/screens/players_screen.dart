@@ -60,7 +60,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text('취소', style: TextStyle(color: Colors.white.withAlpha(102))),
+              child: Text('취소', style: TextStyle(color: AppColors.textHint)),
             ),
             ElevatedButton(
               onPressed: saving ? null : () async {
@@ -107,9 +107,9 @@ class _PlayersScreenState extends State<PlayersScreen> {
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.white.withAlpha(77), fontSize: 13),
+          hintStyle: TextStyle(color: AppColors.iconInactive, fontSize: 13),
           filled: true,
-          fillColor: Colors.white.withAlpha(13),
+          fillColor: AppColors.surfaceTint,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
@@ -182,7 +182,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                             decoration: BoxDecoration(
                               color: AppColors.bgCard,
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: Colors.white.withAlpha(13)),
+                              border: Border.all(color: AppColors.surfaceTint),
                             ),
                             child: Row(
                               children: [

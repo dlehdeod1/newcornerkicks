@@ -147,16 +147,16 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
               style: const TextStyle(color: Colors.white, fontSize: 16),
               decoration: InputDecoration(
                 hintText: '제목',
-                hintStyle: TextStyle(color: Colors.white.withAlpha(77)),
+                hintStyle: TextStyle(color: AppColors.iconInactive),
                 filled: true,
-                fillColor: Colors.white.withAlpha(8),
+                fillColor: AppColors.surfaceBorder,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.white.withAlpha(15)),
+                  borderSide: BorderSide(color: AppColors.surfaceBorder),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.white.withAlpha(15)),
+                  borderSide: BorderSide(color: AppColors.surfaceBorder),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -172,16 +172,16 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
               maxLines: 10,
               decoration: InputDecoration(
                 hintText: '내용을 입력하세요',
-                hintStyle: TextStyle(color: Colors.white.withAlpha(77)),
+                hintStyle: TextStyle(color: AppColors.iconInactive),
                 filled: true,
-                fillColor: Colors.white.withAlpha(8),
+                fillColor: AppColors.surfaceBorder,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.white.withAlpha(15)),
+                  borderSide: BorderSide(color: AppColors.surfaceBorder),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(color: Colors.white.withAlpha(15)),
+                  borderSide: BorderSide(color: AppColors.surfaceBorder),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -191,15 +191,15 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
             ),
             const SizedBox(height: 20),
             // Image picker
-            Text('이미지', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(204))),
+            Text('이미지', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
             const SizedBox(height: 10),
             if (_uploading)
               Container(
                 height: 120,
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(8),
+                  color: AppColors.surfaceBorder,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white.withAlpha(15)),
+                  border: Border.all(color: AppColors.surfaceBorder),
                 ),
                 child: const Center(child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2)),
               )
@@ -217,7 +217,7 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
                               height: 200,
-                              color: Colors.white.withAlpha(8),
+                              color: AppColors.surfaceBorder,
                               child: const Center(child: Icon(Icons.broken_image, color: Colors.white38)),
                             ),
                           ),
@@ -245,17 +245,17 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
                 child: Container(
                   height: 120,
                   decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(8),
+                    color: AppColors.surfaceBorder,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.white.withAlpha(15), style: BorderStyle.solid),
+                    border: Border.all(color: AppColors.surfaceBorder, style: BorderStyle.solid),
                   ),
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.add_photo_alternate_outlined, size: 32, color: Colors.white.withAlpha(77)),
+                        Icon(Icons.add_photo_alternate_outlined, size: 32, color: AppColors.iconInactive),
                         const SizedBox(height: 8),
-                        Text('이미지 추가', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(77))),
+                        Text('이미지 추가', style: TextStyle(fontSize: 13, color: AppColors.iconInactive)),
                       ],
                     ),
                   ),
@@ -266,14 +266,14 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(8),
+                color: AppColors.surfaceBorder,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white.withAlpha(15)),
+                border: Border.all(color: AppColors.surfaceBorder),
               ),
               child: SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('상단 고정', style: TextStyle(color: Colors.white, fontSize: 15)),
-                subtitle: Text('공지 목록 최상단에 표시됩니다', style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 12)),
+                subtitle: Text('공지 목록 최상단에 표시됩니다', style: TextStyle(color: AppColors.textHint, fontSize: 12)),
                 value: _isPinned,
                 activeColor: AppColors.primary,
                 onChanged: (v) => setState(() => _isPinned = v),

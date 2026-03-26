@@ -88,9 +88,9 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.campaign_outlined, size: 48, color: Colors.white.withAlpha(51)),
+                              Icon(Icons.campaign_outlined, size: 48, color: AppColors.iconInactive),
                               const SizedBox(height: 12),
-                              Text('공지가 없습니다', style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 15)),
+                              Text('공지가 없습니다', style: TextStyle(color: AppColors.textHint, fontSize: 15)),
                             ],
                           ),
                         ),
@@ -125,10 +125,10 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(8),
+          color: AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isRead ? Colors.white.withAlpha(15) : AppColors.primary.withAlpha(80),
+            color: isRead ? AppColors.surfaceBorder : AppColors.primary.withAlpha(80),
           ),
         ),
         child: Column(
@@ -142,7 +142,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                 ],
                 _typeBadge(isSystem),
                 const Spacer(),
-                Text(_formatDate(item['created_at']), style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(77))),
+                Text(_formatDate(item['created_at']), style: TextStyle(fontSize: 11, color: AppColors.iconInactive)),
               ],
             ),
             const SizedBox(height: 10),
@@ -151,7 +151,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: isRead ? FontWeight.w400 : FontWeight.w700,
-                color: isRead ? Colors.white.withAlpha(153) : Colors.white,
+                color: isRead ? AppColors.textSecondary : Colors.white,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -159,7 +159,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
             const SizedBox(height: 6),
             Text(
               authorName,
-              style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(77)),
+              style: TextStyle(fontSize: 12, color: AppColors.iconInactive),
             ),
           ],
         ),

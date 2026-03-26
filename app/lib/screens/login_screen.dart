@@ -136,14 +136,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   const SizedBox(height: 20),
                   const Text('CornerKicks', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
                   const SizedBox(height: 4),
-                  Text('풋살 동호회 관리 플랫폼', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(128))),
+                  Text('풋살 동호회 관리 플랫폼', style: TextStyle(fontSize: 13, color: AppColors.textHint)),
                   const SizedBox(height: 32),
 
                   // 탭
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(13),
+                      color: AppColors.surfaceTint,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: TabBar(
@@ -212,12 +212,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   const SizedBox(height: 16),
                   // 구분선
                   Row(children: [
-                    Expanded(child: Divider(color: Colors.white.withAlpha(38))),
+                    Expanded(child: Divider(color: AppColors.surfaceHighlight)),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text('또는', style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 12)),
+                      child: Text('또는', style: TextStyle(color: AppColors.textHint, fontSize: 12)),
                     ),
-                    Expanded(child: Divider(color: Colors.white.withAlpha(38))),
+                    Expanded(child: Divider(color: AppColors.surfaceHighlight)),
                   ]),
                   const SizedBox(height: 16),
                   // 구글 로그인
@@ -227,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     child: OutlinedButton(
                       onPressed: _loading ? null : _googleLogin,
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.white.withAlpha(64)),
+                        side: BorderSide(color: AppColors.iconInactive),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                       child: Row(
@@ -337,18 +337,18 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       onSubmitted: onSubmitted,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white.withAlpha(102)),
+        hintStyle: TextStyle(color: AppColors.textHint),
         filled: true,
-        fillColor: Colors.white.withAlpha(18),
+        fillColor: AppColors.surfaceTint,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
-        prefixIcon: Icon(icon, color: Colors.white.withAlpha(128), size: 20),
+        prefixIcon: Icon(icon, color: AppColors.textHint, size: 20),
         suffixIcon: onToggleObscure != null
             ? IconButton(
-                icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, color: Colors.white.withAlpha(128), size: 20),
+                icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, color: AppColors.textHint, size: 20),
                 onPressed: onToggleObscure,
               )
             : null,

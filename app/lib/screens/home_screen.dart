@@ -206,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     '공지사항',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(204), letterSpacing: 0.5),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textSecondary, letterSpacing: 0.5),
                   ),
                   if (_unreadCount > 0) ...[
                     const SizedBox(width: 8),
@@ -228,9 +228,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     child: Row(
                       children: [
-                        Text('전체 보기', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
+                        Text('전체 보기', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
                         const SizedBox(width: 2),
-                        Icon(Icons.chevron_right, size: 16, color: Colors.white.withAlpha(102)),
+                        Icon(Icons.chevron_right, size: 16, color: AppColors.textHint),
                       ],
                     ),
                   ),
@@ -246,19 +246,19 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.white.withAlpha(13), Colors.white.withAlpha(8)],
+                  colors: [AppColors.surfaceTint, AppColors.surfaceBorder],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withAlpha(20)),
+                border: Border.all(color: AppColors.surfaceTint),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.bar_chart_rounded, color: Colors.white.withAlpha(153), size: 18),
+                      Icon(Icons.bar_chart_rounded, color: AppColors.textSecondary, size: 18),
                       const SizedBox(width: 8),
                       Text(
                         _myStats?['sessionDate'] != null
@@ -267,11 +267,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 return d != null ? '최근 세션 (${d.month}/${d.day})' : '최근 세션 기록';
                               }()
                             : '최근 세션 기록',
-                        style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(153), fontWeight: FontWeight.w500),
+                        style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                       ),
                       const Spacer(),
                       if (auth.player == null)
-                        Text('선수 미연동', style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(77))),
+                        Text('선수 미연동', style: TextStyle(fontSize: 11, color: AppColors.iconInactive)),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -304,7 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   else
                     Text(
                       auth.player != null ? '기록이 없습니다' : '선수 연동 후 기록이 표시됩니다',
-                      style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 14),
+                      style: TextStyle(color: AppColors.textHint, fontSize: 14),
                     ),
                 ],
               ),
@@ -314,7 +314,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // 빠른 메뉴
             Text(
               '빠른 메뉴',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(204), letterSpacing: 0.5),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textSecondary, letterSpacing: 0.5),
             ),
             const SizedBox(height: 12),
             GridView.count(
@@ -374,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 24),
               Text(
                 '시즌 요약',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(204), letterSpacing: 0.5),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textSecondary, letterSpacing: 0.5),
               ),
               const SizedBox(height: 12),
               Row(
@@ -395,14 +395,14 @@ class _HomeScreenState extends State<HomeScreen> {
             // 지난 세션
             Text(
               '지난 세션',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(204), letterSpacing: 0.5),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textSecondary, letterSpacing: 0.5),
             ),
             const SizedBox(height: 12),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(8),
+                color: AppColors.surfaceBorder,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withAlpha(15)),
+                border: Border.all(color: AppColors.surfaceTint),
               ),
               child: _loading
                   ? const Padding(
@@ -416,7 +416,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Center(
                             child: Text(
                               '완료된 세션이 없습니다.',
-                              style: TextStyle(color: Colors.white.withAlpha(77), fontSize: 14),
+                              style: TextStyle(color: AppColors.iconInactive, fontSize: 14),
                             ),
                           ),
                         ),
@@ -446,10 +446,10 @@ class _HomeScreenState extends State<HomeScreen> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(8),
+          color: AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isRead ? Colors.white.withAlpha(15) : AppColors.primary.withAlpha(80),
+            color: isRead ? AppColors.surfaceTint : AppColors.primary.withAlpha(80),
           ),
         ),
         child: Row(
@@ -472,7 +472,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: isRead ? FontWeight.w400 : FontWeight.w600,
-                  color: isRead ? Colors.white.withAlpha(153) : Colors.white,
+                  color: isRead ? AppColors.textSecondary : Colors.white,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -481,7 +481,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 8),
             Text(
               _formatAnnouncementDate(a['created_at']),
-              style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(64)),
+              style: TextStyle(fontSize: 11, color: AppColors.iconInactive),
             ),
           ],
         ),
@@ -552,13 +552,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Text(statusLabel, style: TextStyle(fontSize: 10, color: statusColor, fontWeight: FontWeight.w600)),
                       ),
                       const SizedBox(width: 8),
-                      Text(dateStr, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(77))),
+                      Text(dateStr, style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
                     ],
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: Colors.white.withAlpha(51), size: 20),
+            Icon(Icons.chevron_right, color: AppColors.iconInactive, size: 20),
           ],
         ),
       ),
@@ -590,7 +590,7 @@ class _StatMini extends StatelessWidget {
             Text(icon, style: const TextStyle(fontSize: 15)),
             const SizedBox(height: 4),
             Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-            Text(label, style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(128))),
+            Text(label, style: TextStyle(fontSize: 10, color: AppColors.textHint)),
           ],
         ),
       ),
@@ -614,9 +614,9 @@ class _QuickMenu extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(8),
+          color: AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withAlpha(15)),
+          border: Border.all(color: AppColors.surfaceTint),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -633,7 +633,7 @@ class _QuickMenu extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
-            Text(subtitle, style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(102))),
+            Text(subtitle, style: TextStyle(fontSize: 10, color: AppColors.textHint)),
           ],
         ),
       ),
@@ -665,7 +665,7 @@ class _SummaryStat extends StatelessWidget {
             const SizedBox(height: 6),
             Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
             const SizedBox(height: 2),
-            Text(label, style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(128))),
+            Text(label, style: TextStyle(fontSize: 10, color: AppColors.textHint)),
           ],
         ),
       ),

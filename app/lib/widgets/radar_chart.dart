@@ -43,7 +43,7 @@ class _RadarChartPainter extends CustomPainter {
     final angle = 2 * pi / n;
 
     // Grid
-    final gridPaint = Paint()..color = Colors.white.withAlpha(26)..style = PaintingStyle.stroke..strokeWidth = 1;
+    final gridPaint = Paint()..color = AppColors.surfaceHighlight..style = PaintingStyle.stroke..strokeWidth = 1;
     for (int level = 1; level <= 5; level++) {
       final r = radius * level / 5;
       final path = Path();

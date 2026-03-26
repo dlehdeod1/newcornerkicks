@@ -75,7 +75,7 @@ class _AdminExemptionsScreenState extends State<AdminExemptionsScreen> {
           style: const TextStyle(color: Colors.white, fontSize: 14),
           decoration: InputDecoration(
             hintText: '면제 사유를 입력하세요 (선택)',
-            hintStyle: TextStyle(color: Colors.white.withAlpha(77)),
+            hintStyle: TextStyle(color: AppColors.iconInactive),
             filled: true,
             fillColor: AppColors.bgBase,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
@@ -158,8 +158,8 @@ class _AdminExemptionsScreenState extends State<AdminExemptionsScreen> {
                     style: const TextStyle(color: Colors.white, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: '이름 검색...',
-                      hintStyle: TextStyle(color: Colors.white.withAlpha(77)),
-                      prefixIcon: Icon(Icons.search, color: Colors.white.withAlpha(77), size: 20),
+                      hintStyle: TextStyle(color: AppColors.iconInactive),
+                      prefixIcon: Icon(Icons.search, color: AppColors.iconInactive, size: 20),
                       filled: true,
                       fillColor: AppColors.bgCard,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
@@ -173,7 +173,7 @@ class _AdminExemptionsScreenState extends State<AdminExemptionsScreen> {
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.all(32),
-                        child: Text('멤버가 없습니다', style: TextStyle(color: Colors.white.withAlpha(102))),
+                        child: Text('멤버가 없습니다', style: TextStyle(color: AppColors.textHint)),
                       ),
                     )
                   else
@@ -218,7 +218,7 @@ class _AdminExemptionsScreenState extends State<AdminExemptionsScreen> {
       decoration: BoxDecoration(
         color: AppColors.bgCard,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: hasExempt ? AppColors.violet.withAlpha(60) : Colors.white.withAlpha(13)),
+        border: Border.all(color: hasExempt ? AppColors.violet.withAlpha(60) : AppColors.surfaceTint),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,7 +228,7 @@ class _AdminExemptionsScreenState extends State<AdminExemptionsScreen> {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: hasExempt ? AppColors.violet.withAlpha(40) : Colors.white.withAlpha(15),
+                backgroundColor: hasExempt ? AppColors.violet.withAlpha(40) : AppColors.surfaceTint,
                 child: Text(
                   name.toString().isNotEmpty ? name.toString()[0] : '?',
                   style: TextStyle(
@@ -246,7 +246,7 @@ class _AdminExemptionsScreenState extends State<AdminExemptionsScreen> {
                     Text(name.toString(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
                     Text(
                       '@$username · ${role == 'owner' ? '오너' : role == 'admin' ? '관리자' : '멤버'}',
-                      style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102)),
+                      style: TextStyle(fontSize: 11, color: AppColors.textHint),
                     ),
                   ],
                 ),
@@ -285,9 +285,9 @@ class _AdminExemptionsScreenState extends State<AdminExemptionsScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(5),
+                  color: AppColors.surfaceBorder,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.white.withAlpha(8)),
+                  border: Border.all(color: AppColors.surfaceBorder),
                 ),
                 child: Text(
                   reason != null && reason.toString().isNotEmpty
@@ -297,7 +297,7 @@ class _AdminExemptionsScreenState extends State<AdminExemptionsScreen> {
                     fontSize: 12,
                     color: reason != null && reason.toString().isNotEmpty
                         ? AppColors.violet
-                        : Colors.white.withAlpha(77),
+                        : AppColors.iconInactive,
                   ),
                 ),
               ),
@@ -314,10 +314,10 @@ class _AdminExemptionsScreenState extends State<AdminExemptionsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? AppColors.violet.withAlpha(25) : Colors.white.withAlpha(5),
+          color: active ? AppColors.violet.withAlpha(25) : AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: active ? AppColors.violet.withAlpha(80) : Colors.white.withAlpha(15),
+            color: active ? AppColors.violet.withAlpha(80) : AppColors.surfaceTint,
           ),
         ),
         child: Row(
@@ -326,7 +326,7 @@ class _AdminExemptionsScreenState extends State<AdminExemptionsScreen> {
             Icon(
               active ? Icons.check_circle : Icons.circle_outlined,
               size: 16,
-              color: active ? AppColors.violet : Colors.white.withAlpha(77),
+              color: active ? AppColors.violet : AppColors.iconInactive,
             ),
             const SizedBox(width: 6),
             Text(
@@ -334,7 +334,7 @@ class _AdminExemptionsScreenState extends State<AdminExemptionsScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: active ? AppColors.violet : Colors.white.withAlpha(128),
+                color: active ? AppColors.violet : AppColors.textHint,
               ),
             ),
           ],

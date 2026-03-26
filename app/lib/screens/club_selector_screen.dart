@@ -106,7 +106,7 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
                         const SizedBox(height: 6),
                         Text(
                           '활성 클럽을 선택하세요',
-                          style: TextStyle(fontSize: 14, color: Colors.white.withAlpha(128)),
+                          style: TextStyle(fontSize: 14, color: AppColors.textHint),
                         ),
                         const SizedBox(height: 24),
                       ],
@@ -137,12 +137,12 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
                               decoration: BoxDecoration(
                                 color: isActive
                                     ? AppColors.primary.withAlpha(20)
-                                    : Colors.white.withAlpha(8),
+                                    : AppColors.surfaceBorder,
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
                                   color: isActive
                                       ? AppColors.primary.withAlpha(128)
-                                      : Colors.white.withAlpha(20),
+                                      : AppColors.surfaceTint,
                                 ),
                               ),
                               child: Padding(
@@ -191,14 +191,14 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                                 decoration: BoxDecoration(
-                                                  color: Colors.white.withAlpha(15),
+                                                  color: AppColors.surfaceBorder,
                                                   borderRadius: BorderRadius.circular(6),
                                                 ),
                                                 child: Text(
                                                   _roleLabel(role),
                                                   style: TextStyle(
                                                     fontSize: 11,
-                                                    color: Colors.white.withAlpha(180),
+                                                    color: AppColors.textSecondary,
                                                     fontWeight: FontWeight.w500,
                                                   ),
                                                 ),
@@ -206,12 +206,12 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
                                               const SizedBox(width: 6),
                                               Text(
                                                 slug,
-                                                style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(80)),
+                                                style: TextStyle(fontSize: 12, color: AppColors.iconInactive),
                                               ),
                                               if (playerName != null) ...[
                                                 Text(
                                                   ' · $playerName',
-                                                  style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120)),
+                                                  style: TextStyle(fontSize: 12, color: AppColors.textHint),
                                                   overflow: TextOverflow.ellipsis,
                                                 ),
                                               ],
@@ -271,7 +271,7 @@ class _ClubSelectorScreenState extends State<ClubSelectorScreen> {
                 onPressed: () => context.read<AuthService>().logout(),
                 child: Text(
                   '다른 계정으로 로그인',
-                  style: TextStyle(color: Colors.white.withAlpha(80), fontSize: 12),
+                  style: TextStyle(color: AppColors.iconInactive, fontSize: 12),
                 ),
               ),
             ),
@@ -312,9 +312,9 @@ class _ActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(8),
+          color: AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withAlpha(20)),
+          border: Border.all(color: AppColors.surfaceTint),
         ),
         child: Column(
           children: [
@@ -323,7 +323,7 @@ class _ActionButton extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 gradient: gradient != null ? LinearGradient(colors: gradient!) : null,
-                color: gradient == null ? Colors.white.withAlpha(20) : null,
+                color: gradient == null ? AppColors.surfaceTint : null,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: Colors.white, size: 20),
@@ -331,7 +331,7 @@ class _ActionButton extends StatelessWidget {
             const SizedBox(height: 8),
             Text(label, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
             const SizedBox(height: 2),
-            Text(subtitle, style: TextStyle(color: Colors.white.withAlpha(100), fontSize: 11)),
+            Text(subtitle, style: TextStyle(color: AppColors.textHint, fontSize: 11)),
           ],
         ),
       ),
@@ -393,11 +393,11 @@ class _JoinModalState extends State<_JoinModal> {
             onSubmitted: (_) => _join(),
             decoration: InputDecoration(
               hintText: 'CK2025',
-              hintStyle: TextStyle(color: Colors.white.withAlpha(60), letterSpacing: 4),
+              hintStyle: TextStyle(color: AppColors.iconInactive, letterSpacing: 4),
               filled: true,
-              fillColor: Colors.white.withAlpha(10),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withAlpha(26))),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withAlpha(26))),
+              fillColor: AppColors.surfaceBorder,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.surfaceHighlight)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.surfaceHighlight)),
               focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
             ),
           ),
@@ -493,7 +493,7 @@ class _CreateModalState extends State<_CreateModal> {
             },
           ),
           const SizedBox(height: 4),
-          Text('영문 소문자, 숫자, -, _ 만 사용 가능', style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(80))),
+          Text('영문 소문자, 숫자, -, _ 만 사용 가능', style: TextStyle(fontSize: 11, color: AppColors.iconInactive)),
           if (_error != null) ...[
             const SizedBox(height: 10),
             Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13)),
@@ -517,12 +517,12 @@ class _CreateModalState extends State<_CreateModal> {
       onChanged: onChanged,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white.withAlpha(60), fontSize: 14),
+        hintStyle: TextStyle(color: AppColors.iconInactive, fontSize: 14),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: Colors.white.withAlpha(10),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withAlpha(26))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withAlpha(26))),
+        fillColor: AppColors.surfaceBorder,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.surfaceHighlight)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.surfaceHighlight)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       ),
@@ -573,7 +573,7 @@ class _ModalOverlay extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.bgCard,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withAlpha(20)),
+              border: Border.all(color: AppColors.surfaceTint),
             ),
             child: child,
           ),

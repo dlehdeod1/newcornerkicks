@@ -183,14 +183,14 @@ class _PostFormScreenState extends State<PostFormScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Category dropdown
-            Text('카테고리', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(179))),
+            Text('카테고리', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(8),
+                color: AppColors.surfaceBorder,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withAlpha(15)),
+                border: Border.all(color: AppColors.surfaceTint),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
@@ -211,7 +211,7 @@ class _PostFormScreenState extends State<PostFormScreen> {
             const SizedBox(height: 20),
 
             // Title
-            Text('제목', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(179))),
+            Text('제목', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
             const SizedBox(height: 8),
             TextField(
               controller: _titleCtrl,
@@ -221,7 +221,7 @@ class _PostFormScreenState extends State<PostFormScreen> {
             const SizedBox(height: 20),
 
             // Content
-            Text('내용', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(179))),
+            Text('내용', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
             const SizedBox(height: 8),
             TextField(
               controller: _contentCtrl,
@@ -232,7 +232,7 @@ class _PostFormScreenState extends State<PostFormScreen> {
             const SizedBox(height: 20),
 
             // Image
-            Text('이미지', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(179))),
+            Text('이미지', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
             const SizedBox(height: 8),
             _buildImagePicker(),
             const SizedBox(height: 20),
@@ -242,9 +242,9 @@ class _PostFormScreenState extends State<PostFormScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(8),
+                  color: AppColors.surfaceBorder,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withAlpha(15)),
+                  border: Border.all(color: AppColors.surfaceTint),
                 ),
                 child: Row(
                   children: [
@@ -308,7 +308,7 @@ class _PostFormScreenState extends State<PostFormScreen> {
               errorBuilder: (_, __, ___) => Container(
                 height: 200,
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(8),
+                  color: AppColors.surfaceBorder,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Center(child: Icon(Icons.broken_image, color: Colors.white24, size: 40)),
@@ -340,16 +340,16 @@ class _PostFormScreenState extends State<PostFormScreen> {
         width: double.infinity,
         height: 100,
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(8),
+          color: AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withAlpha(15), style: BorderStyle.solid),
+          border: Border.all(color: AppColors.surfaceTint, style: BorderStyle.solid),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_photo_alternate_outlined, size: 32, color: Colors.white.withAlpha(64)),
+            Icon(Icons.add_photo_alternate_outlined, size: 32, color: AppColors.iconInactive),
             const SizedBox(height: 6),
-            Text('이미지 추가', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(64))),
+            Text('이미지 추가', style: TextStyle(fontSize: 13, color: AppColors.iconInactive)),
           ],
         ),
       ),
@@ -359,17 +359,17 @@ class _PostFormScreenState extends State<PostFormScreen> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: Colors.white.withAlpha(51)),
+      hintStyle: TextStyle(color: AppColors.iconInactive),
       filled: true,
-      fillColor: Colors.white.withAlpha(8),
+      fillColor: AppColors.surfaceBorder,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.white.withAlpha(15)),
+        borderSide: BorderSide(color: AppColors.surfaceTint),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.white.withAlpha(15)),
+        borderSide: BorderSide(color: AppColors.surfaceTint),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

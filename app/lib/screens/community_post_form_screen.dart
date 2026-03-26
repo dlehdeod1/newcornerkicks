@@ -175,15 +175,15 @@ class _CommunityPostFormScreenState extends State<CommunityPostFormScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: selected ? AppColors.primary.withAlpha(26) : Colors.white.withAlpha(10),
+                      color: selected ? AppColors.primary.withAlpha(26) : AppColors.surfaceBorder,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: selected ? AppColors.primary.withAlpha(80) : Colors.white.withAlpha(20)),
+                      border: Border.all(color: selected ? AppColors.primary.withAlpha(80) : AppColors.surfaceTint),
                     ),
                     child: Text(
                       e.value,
                       style: TextStyle(
                         fontSize: 13,
-                        color: selected ? AppColors.primary : Colors.white.withAlpha(153),
+                        color: selected ? AppColors.primary : AppColors.textSecondary,
                         fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                       ),
                     ),
@@ -216,14 +216,14 @@ class _CommunityPostFormScreenState extends State<CommunityPostFormScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(5),
+                  color: AppColors.surfaceBorder,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white.withAlpha(15)),
+                  border: Border.all(color: AppColors.surfaceBorder),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('모집 정보', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(204))),
+                    Text('모집 정보', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
                     const SizedBox(height: 16),
 
                     // Region
@@ -258,16 +258,16 @@ class _CommunityPostFormScreenState extends State<CommunityPostFormScreen> {
                             width: 40,
                             height: 36,
                             decoration: BoxDecoration(
-                              color: selected ? AppColors.primary.withAlpha(26) : Colors.white.withAlpha(10),
+                              color: selected ? AppColors.primary.withAlpha(26) : AppColors.surfaceBorder,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: selected ? AppColors.primary.withAlpha(80) : Colors.white.withAlpha(20)),
+                              border: Border.all(color: selected ? AppColors.primary.withAlpha(80) : AppColors.surfaceTint),
                             ),
                             child: Center(
                               child: Text(
                                 e.value,
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: selected ? AppColors.primary : Colors.white.withAlpha(128),
+                                  color: selected ? AppColors.primary : AppColors.textHint,
                                   fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                                 ),
                               ),
@@ -316,7 +316,7 @@ class _CommunityPostFormScreenState extends State<CommunityPostFormScreen> {
   }
 
   Widget _sectionLabel(String text) {
-    return Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white.withAlpha(153)));
+    return Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textSecondary));
   }
 
   Widget _textField(TextEditingController ctrl, String hint, {int maxLines = 1, TextInputType? keyboardType}) {
@@ -327,12 +327,12 @@ class _CommunityPostFormScreenState extends State<CommunityPostFormScreen> {
       style: const TextStyle(fontSize: 14, color: Colors.white),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(fontSize: 14, color: Colors.white.withAlpha(64)),
+        hintStyle: TextStyle(fontSize: 14, color: AppColors.iconInactive),
         filled: true,
-        fillColor: Colors.white.withAlpha(10),
+        fillColor: AppColors.surfaceBorder,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withAlpha(20))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withAlpha(20))),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.surfaceTint)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.surfaceTint)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary)),
       ),
     );
@@ -343,18 +343,18 @@ class _CommunityPostFormScreenState extends State<CommunityPostFormScreen> {
       height: 44,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(10),
+        color: AppColors.surfaceBorder,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppColors.surfaceTint),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
-          hint: Text(hint, style: TextStyle(fontSize: 14, color: Colors.white.withAlpha(64))),
+          hint: Text(hint, style: TextStyle(fontSize: 14, color: AppColors.iconInactive)),
           dropdownColor: AppColors.bgCard,
           isExpanded: true,
           style: const TextStyle(fontSize: 14, color: Colors.white),
-          icon: Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.white.withAlpha(128)),
+          icon: Icon(Icons.keyboard_arrow_down, size: 18, color: AppColors.textHint),
           items: items,
           onChanged: onChanged,
         ),
@@ -424,16 +424,16 @@ class _CommunityPostFormScreenState extends State<CommunityPostFormScreen> {
         width: double.infinity,
         height: 100,
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(8),
+          color: AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withAlpha(20), style: BorderStyle.solid),
+          border: Border.all(color: AppColors.surfaceTint, style: BorderStyle.solid),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_photo_alternate_outlined, size: 28, color: Colors.white.withAlpha(77)),
+            Icon(Icons.add_photo_alternate_outlined, size: 28, color: AppColors.iconInactive),
             const SizedBox(height: 6),
-            Text('이미지 추가', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(77))),
+            Text('이미지 추가', style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
           ],
         ),
       ),

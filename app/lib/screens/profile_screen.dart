@@ -111,14 +111,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
+        color: AppColors.surfaceBorder,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppColors.surfaceTint),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('신체 정보', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(153), letterSpacing: 1)),
+          Text('신체 정보', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary, letterSpacing: 1)),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -139,11 +139,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Expanded(
       child: Column(
         children: [
-          Icon(icon, size: 18, color: Colors.white.withAlpha(128)),
+          Icon(icon, size: 18, color: AppColors.textHint),
           const SizedBox(height: 6),
           Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 2),
-          Text(label, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102))),
+          Text(label, style: TextStyle(fontSize: 11, color: AppColors.textHint)),
         ],
       ),
     );
@@ -157,9 +157,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
+        color: AppColors.surfaceBorder,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppColors.surfaceTint),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,7 +167,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('$year 시즌 기록', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(153), letterSpacing: 1)),
+              Text('$year 시즌 기록', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary, letterSpacing: 1)),
               if (_summary?['player'] != null)
                 GestureDetector(
                   onTap: () {
@@ -207,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 6),
           Text('${value ?? 0}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 2),
-          Text(label, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(128))),
+          Text(label, style: TextStyle(fontSize: 11, color: AppColors.textHint)),
         ],
       ),
     );
@@ -230,14 +230,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
+        color: AppColors.surfaceBorder,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppColors.surfaceTint),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('능력치', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(153), letterSpacing: 1)),
+          Text('능력치', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary, letterSpacing: 1)),
           const SizedBox(height: 12),
           if (ab != null) ...[
             Row(
@@ -256,7 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text('종합', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
-                      Text('${ab['raterCount']}명 평가', style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(102))),
+                      Text('${ab['raterCount']}명 평가', style: TextStyle(fontSize: 10, color: AppColors.textHint)),
                     ],
                   ),
                 ),
@@ -270,7 +270,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ] else
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Text('평가 데이터 없음', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
+              child: Text('평가 데이터 없음', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
             ),
         ],
       ),
@@ -283,7 +283,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          SizedBox(width: 28, child: Text(label, style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(153)))),
+          SizedBox(width: 28, child: Text(label, style: TextStyle(fontSize: 10, color: AppColors.textSecondary))),
           const SizedBox(width: 6),
           Expanded(
             child: ClipRRect(
@@ -291,13 +291,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: LinearProgressIndicator(
                 value: v / 100,
                 minHeight: 6,
-                backgroundColor: Colors.white.withAlpha(20),
+                backgroundColor: AppColors.surfaceTint,
                 valueColor: AlwaysStoppedAnimation(color),
               ),
             ),
           ),
           const SizedBox(width: 6),
-          SizedBox(width: 22, child: Text('${v.round()}', textAlign: TextAlign.right, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(204)))),
+          SizedBox(width: 22, child: Text('${v.round()}', textAlign: TextAlign.right, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.textSecondary))),
         ],
       ),
     );
@@ -309,9 +309,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
+        color: AppColors.surfaceBorder,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppColors.surfaceTint),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,7 +320,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               const Icon(Icons.favorite, size: 14, color: AppColors.red),
               const SizedBox(width: 4),
-              Text('선호 선수 (${prefs.length}/3)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(153), letterSpacing: 1)),
+              Text('선호 선수 (${prefs.length}/3)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary, letterSpacing: 1)),
             ],
           ),
           const SizedBox(height: 12),
@@ -331,9 +331,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Center(
               child: Column(
                 children: [
-                  Icon(Icons.favorite_border, size: 28, color: Colors.white.withAlpha(51)),
+                  Icon(Icons.favorite_border, size: 28, color: AppColors.iconInactive),
                   const SizedBox(height: 6),
-                  Text('같이 뛰고 싶은\n선수를 선택하세요', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102))),
+                  Text('같이 뛰고 싶은\n선수를 선택하세요', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: AppColors.textHint)),
                 ],
               ),
             ),
@@ -367,7 +367,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(10),
+          color: AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -387,7 +387,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white), overflow: TextOverflow.ellipsis),
                   if (p['nickname'] != null)
-                    Text(p['nickname'], style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(102)), overflow: TextOverflow.ellipsis),
+                    Text(p['nickname'], style: TextStyle(fontSize: 10, color: AppColors.textHint), overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
@@ -496,13 +496,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         leading: Container(
                           width: 36, height: 36,
                           decoration: BoxDecoration(
-                            color: isFav ? AppColors.red.withAlpha(26) : Colors.white.withAlpha(13),
+                            color: isFav ? AppColors.red.withAlpha(26) : AppColors.surfaceTint,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Center(child: Text((p['name'] ?? '?')[0], style: TextStyle(fontWeight: FontWeight.bold, color: isFav ? AppColors.red : Colors.white70))),
                         ),
                         title: Text(p['name'] ?? '?', style: const TextStyle(fontSize: 14, color: Colors.white)),
-                        subtitle: p['nickname'] != null ? Text(p['nickname'], style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102))) : null,
+                        subtitle: p['nickname'] != null ? Text(p['nickname'], style: TextStyle(fontSize: 11, color: AppColors.textHint)) : null,
                         trailing: GestureDetector(
                           onTap: () async {
                             if (isFav) {
@@ -548,9 +548,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
+        color: AppColors.surfaceBorder,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppColors.surfaceTint),
       ),
       child: Column(
         children: [
@@ -574,7 +574,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: () => _showNicknameDialog(auth),
                   child: Container(
                     padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(color: Colors.white.withAlpha(20), shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: AppColors.surfaceTint, shape: BoxShape.circle),
                     child: const Icon(Icons.edit, size: 14, color: Colors.white70),
                   ),
                 ),
@@ -584,7 +584,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (player?['nickname'] != null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('(${player!['nickname']})', style: TextStyle(fontSize: 14, color: Colors.white.withAlpha(128))),
+              child: Text('(${player!['nickname']})', style: TextStyle(fontSize: 14, color: AppColors.textHint)),
             ),
           const SizedBox(height: 10),
           Row(
@@ -598,7 +598,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           const SizedBox(height: 14),
-          Divider(color: Colors.white.withAlpha(20)),
+          Divider(color: AppColors.surfaceTint),
           const SizedBox(height: 10),
           _infoRow(Icons.mail_outline, email),
           const SizedBox(height: 6),
@@ -623,9 +623,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _infoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.white.withAlpha(102)),
+        Icon(icon, size: 16, color: AppColors.textHint),
         const SizedBox(width: 8),
-        Expanded(child: Text(text, style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(153)))),
+        Expanded(child: Text(text, style: TextStyle(fontSize: 13, color: AppColors.textSecondary))),
       ],
     );
   }
@@ -886,9 +886,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(5),
+          color: AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withAlpha(13)),
+          border: Border.all(color: AppColors.surfaceTint),
         ),
         child: Row(
           children: [
@@ -896,7 +896,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(width: 12),
             Text(label, style: TextStyle(fontSize: 15, color: color)),
             const Spacer(),
-            Icon(Icons.chevron_right, size: 18, color: Colors.white.withAlpha(64)),
+            Icon(Icons.chevron_right, size: 18, color: AppColors.iconInactive),
           ],
         ),
       ),

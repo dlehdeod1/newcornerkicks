@@ -444,10 +444,10 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
                           padding: const EdgeInsets.symmetric(vertical: 6),
                           minimumSize: Size.zero,
                         ),
-                        child: Text('닫기', style: TextStyle(color: Colors.white.withAlpha(77), fontSize: 12)),
+                        child: Text('닫기', style: TextStyle(color: AppColors.iconInactive, fontSize: 12)),
                       ),
                     ),
-                    Container(width: 1, height: 14, color: Colors.white.withAlpha(26)),
+                    Container(width: 1, height: 14, color: AppColors.surfaceHighlight),
                     Expanded(
                       child: TextButton(
                         onPressed: () async {
@@ -459,7 +459,7 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
                           padding: const EdgeInsets.symmetric(vertical: 6),
                           minimumSize: Size.zero,
                         ),
-                        child: Text('다시 보지 않기', style: TextStyle(color: Colors.white.withAlpha(77), fontSize: 12)),
+                        child: Text('다시 보지 않기', style: TextStyle(color: AppColors.iconInactive, fontSize: 12)),
                       ),
                     ),
                   ],
@@ -539,7 +539,7 @@ class _MatchResultCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white), overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 3),
-                Text(dateStr, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(153))),
+                Text(dateStr, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
               ],
             ),
           ),
@@ -561,9 +561,9 @@ class _MatchResultCard extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 6),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isFirst ? AppColors.amber.withAlpha(20) : Colors.white.withAlpha(8),
+                    color: isFirst ? AppColors.amber.withAlpha(20) : AppColors.surfaceBorder,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: isFirst ? AppColors.amber.withAlpha(51) : Colors.white.withAlpha(13)),
+                    border: Border.all(color: isFirst ? AppColors.amber.withAlpha(51) : AppColors.surfaceTint),
                   ),
                   child: Row(
                     children: [
@@ -586,12 +586,12 @@ class _MatchResultCard extends StatelessWidget {
                         }).toList(),
                       ),
                       const SizedBox(width: 8),
-                      Text(gdStr, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102))),
+                      Text(gdStr, style: TextStyle(fontSize: 11, color: AppColors.textHint)),
                       const SizedBox(width: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                         decoration: BoxDecoration(
-                          color: isFirst ? AppColors.amber.withAlpha(40) : Colors.white.withAlpha(13),
+                          color: isFirst ? AppColors.amber.withAlpha(40) : AppColors.surfaceTint,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text('${t['points']}pt', style: TextStyle(
@@ -696,12 +696,12 @@ class _MatchResultCard extends StatelessWidget {
               const Text('⭐', style: TextStyle(fontSize: 28)),
               const SizedBox(width: 12),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('오늘의 MVP', style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(204), fontWeight: FontWeight.w600)),
+                Text('오늘의 MVP', style: TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
                 Text(mvp['name'] as String? ?? '?', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white)),
               ]),
               const Spacer(),
               Text(mvpScore.toStringAsFixed(1), style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: Colors.white)),
-              Text('점', style: TextStyle(fontSize: 14, color: Colors.white.withAlpha(179))),
+              Text('점', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
             ],
           ),
         ),
@@ -827,7 +827,7 @@ class _ActionBtn extends StatelessWidget {
                 : Icon(icon, color: color, size: 22),
             const SizedBox(height: 4),
             Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color), textAlign: TextAlign.center),
-            Text(subtitle, style: TextStyle(fontSize: 9, color: Colors.white.withAlpha(77)), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(subtitle, style: TextStyle(fontSize: 9, color: AppColors.iconInactive), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
           ],
         ),
       ),

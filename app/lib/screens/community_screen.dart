@@ -49,7 +49,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
           indicatorColor: AppColors.primary,
           indicatorWeight: 3,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white.withAlpha(102),
+          unselectedLabelColor: AppColors.textHint,
           labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
           tabs: _categoryKeys.map((k) => Tab(text: categoryLabels[k])).toList(),
         ),
@@ -146,9 +146,9 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
                           Center(
                             child: Column(
                               children: [
-                                Icon(Icons.article_outlined, size: 48, color: Colors.white.withAlpha(51)),
+                                Icon(Icons.article_outlined, size: 48, color: AppColors.iconInactive),
                                 const SizedBox(height: 12),
-                                Text('게시글이 없습니다', style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 14)),
+                                Text('게시글이 없습니다', style: TextStyle(color: AppColors.textHint, fontSize: 14)),
                               ],
                             ),
                           ),
@@ -179,20 +179,20 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
                   height: 36,
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(10),
+                    color: AppColors.surfaceBorder,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.white.withAlpha(20)),
+                    border: Border.all(color: AppColors.surfaceTint),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedRegion,
-                      hint: Text('지역', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(128))),
+                      hint: Text('지역', style: TextStyle(fontSize: 13, color: AppColors.textHint)),
                       dropdownColor: AppColors.bgCard,
                       isExpanded: true,
                       style: const TextStyle(fontSize: 13, color: Colors.white),
-                      icon: Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.white.withAlpha(128)),
+                      icon: Icon(Icons.keyboard_arrow_down, size: 18, color: AppColors.textHint),
                       items: [
-                        DropdownMenuItem<String>(value: null, child: Text('전체', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(179)))),
+                        DropdownMenuItem<String>(value: null, child: Text('전체', style: TextStyle(fontSize: 13, color: AppColors.textSecondary))),
                         ...regionOptions.map((r) => DropdownMenuItem(value: r, child: Text(r))),
                       ],
                       onChanged: (v) {
@@ -214,16 +214,16 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
                   height: 36,
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
-                    color: _openOnly ? AppColors.primary.withAlpha(26) : Colors.white.withAlpha(10),
+                    color: _openOnly ? AppColors.primary.withAlpha(26) : AppColors.surfaceBorder,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: _openOnly ? AppColors.primary.withAlpha(80) : Colors.white.withAlpha(20)),
+                    border: Border.all(color: _openOnly ? AppColors.primary.withAlpha(80) : AppColors.surfaceTint),
                   ),
                   child: Center(
                     child: Text(
                       '모집중',
                       style: TextStyle(
                         fontSize: 13,
-                        color: _openOnly ? AppColors.primary : Colors.white.withAlpha(128),
+                        color: _openOnly ? AppColors.primary : AppColors.textHint,
                         fontWeight: _openOnly ? FontWeight.w600 : FontWeight.normal,
                       ),
                     ),
@@ -250,15 +250,15 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
-                        color: selected ? AppColors.primary.withAlpha(26) : Colors.white.withAlpha(10),
+                        color: selected ? AppColors.primary.withAlpha(26) : AppColors.surfaceBorder,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: selected ? AppColors.primary.withAlpha(80) : Colors.white.withAlpha(20)),
+                        border: Border.all(color: selected ? AppColors.primary.withAlpha(80) : AppColors.surfaceTint),
                       ),
                       child: Text(
                         e.value,
                         style: TextStyle(
                           fontSize: 12,
-                          color: selected ? AppColors.primary : Colors.white.withAlpha(128),
+                          color: selected ? AppColors.primary : AppColors.textHint,
                           fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                         ),
                       ),
@@ -310,9 +310,9 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(8),
+          color: AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withAlpha(15)),
+          border: Border.all(color: AppColors.surfaceBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,9 +332,9 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
                   const SizedBox(width: 8),
                   Row(
                     children: [
-                      Icon(Icons.chat_bubble_outline, size: 13, color: Colors.white.withAlpha(102)),
+                      Icon(Icons.chat_bubble_outline, size: 13, color: AppColors.textHint),
                       const SizedBox(width: 3),
-                      Text('$commentCount', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
+                      Text('$commentCount', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
                     ],
                   ),
                 ],
@@ -344,13 +344,13 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
             // Author / club / date
             Row(
               children: [
-                Text(authorName, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(128))),
+                Text(authorName, style: TextStyle(fontSize: 12, color: AppColors.textHint)),
                 if (clubName != null && clubName.isNotEmpty) ...[
-                  Text(' · ', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(64))),
+                  Text(' · ', style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
                   Text(clubName, style: TextStyle(fontSize: 12, color: catColor.withAlpha(179))),
                 ],
-                Text(' · ', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(64))),
-                Text(dateStr, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(77))),
+                Text(' · ', style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
+                Text(dateStr, style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
               ],
             ),
             // Recruit/match/mercenary metadata chips

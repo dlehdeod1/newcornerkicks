@@ -158,9 +158,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
                     decoration: BoxDecoration(
-                      color: isCurrent ? color.withAlpha(26) : Colors.white.withAlpha(8),
+                      color: isCurrent ? color.withAlpha(26) : AppColors.surfaceBorder,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: isCurrent ? color.withAlpha(77) : Colors.white.withAlpha(20)),
+                      border: Border.all(color: isCurrent ? color.withAlpha(77) : AppColors.surfaceTint),
                     ),
                     child: Row(
                       children: [
@@ -241,7 +241,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _session == null
-              ? Center(child: Text('세션을 찾을 수 없습니다', style: TextStyle(color: Colors.white.withAlpha(128))))
+              ? Center(child: Text('세션을 찾을 수 없습니다', style: TextStyle(color: AppColors.textHint)))
               : Column(
                   children: [
                     _buildHeader(),
@@ -322,16 +322,16 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(10),
+                      color: AppColors.surfaceBorder,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.white.withAlpha(26)),
+                      border: Border.all(color: AppColors.surfaceHighlight),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.edit_outlined, size: 12, color: Colors.white.withAlpha(153)),
+                        Icon(Icons.edit_outlined, size: 12, color: AppColors.textSecondary),
                         const SizedBox(width: 4),
-                        Text('상태 변경', style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(153))),
+                        Text('상태 변경', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                       ],
                     ),
                   ),
@@ -375,7 +375,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _teams.isEmpty
                       ? AppColors.primary
-                      : Colors.white.withAlpha(20),
+                      : AppColors.surfaceTint,
                   foregroundColor: _teams.isEmpty ? AppColors.bgBase : Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 11),
@@ -393,9 +393,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(6),
+        color: AppColors.surfaceBorder,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isGoing ? AppColors.primary.withAlpha(51) : Colors.white.withAlpha(15)),
+        border: Border.all(color: isGoing ? AppColors.primary.withAlpha(51) : AppColors.surfaceTint),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -462,7 +462,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
             ),
           ] else ...[
             const SizedBox(height: 8),
-            Text('아직 참석 투표가 없습니다', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(77))),
+            Text('아직 참석 투표가 없습니다', style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
           ],
         ],
       ),
@@ -473,9 +473,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: Colors.white.withAlpha(128)),
+        Icon(icon, size: 14, color: AppColors.textHint),
         const SizedBox(width: 4),
-        Text(text, style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(153))),
+        Text(text, style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
       ],
     );
   }
@@ -483,7 +483,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
   Widget _buildTabs() {
     final hasTeams = _teams.isNotEmpty;
     return Container(
-      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.white.withAlpha(26)))),
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.surfaceHighlight))),
       child: TabBar(
         controller: _tabController,
         isScrollable: false,
@@ -494,9 +494,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
         labelPadding: EdgeInsets.zero,
         tabs: [
           const Tab(text: '개요/참석'),
-          Tab(child: Text('팀 구성', style: TextStyle(color: hasTeams ? null : Colors.white.withAlpha(51)))),
-          Tab(child: Text('점수판', style: TextStyle(color: hasTeams ? null : Colors.white.withAlpha(51)))),
-          Tab(child: Text('선수 스탯', style: TextStyle(color: hasTeams ? null : Colors.white.withAlpha(51)))),
+          Tab(child: Text('팀 구성', style: TextStyle(color: hasTeams ? null : AppColors.iconInactive))),
+          Tab(child: Text('점수판', style: TextStyle(color: hasTeams ? null : AppColors.iconInactive))),
+          Tab(child: Text('선수 스탯', style: TextStyle(color: hasTeams ? null : AppColors.iconInactive))),
         ],
       ),
     );
@@ -546,7 +546,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
           ),
           const SizedBox(height: 12),
           displayAttendees.isEmpty
-              ? Text('참석자가 없습니다', style: TextStyle(color: Colors.white.withAlpha(77), fontSize: 14))
+              ? Text('참석자가 없습니다', style: TextStyle(color: AppColors.iconInactive, fontSize: 14))
               : Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -558,10 +558,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                     return Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: isGuest ? AppColors.amber.withAlpha(20) : Colors.white.withAlpha(10),
+                        color: isGuest ? AppColors.amber.withAlpha(20) : AppColors.surfaceBorder,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isGuest ? AppColors.amber.withAlpha(51) : Colors.white.withAlpha(20),
+                          color: isGuest ? AppColors.amber.withAlpha(51) : AppColors.surfaceTint,
                         ),
                       ),
                       child: Row(
@@ -599,7 +599,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
   // ─── 팀 구성 탭 ───
   Widget _buildTeamsTab() {
     if (_teams.isEmpty) {
-      return Center(child: Text('팀 편성이 아직 없습니다', style: TextStyle(color: Colors.white.withAlpha(102))));
+      return Center(child: Text('팀 편성이 아직 없습니다', style: TextStyle(color: AppColors.textHint)));
     }
 
     return ListView.builder(
@@ -652,9 +652,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(8),
+                      color: AppColors.surfaceBorder,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.white.withAlpha(13)),
+                      border: Border.all(color: AppColors.surfaceTint),
                     ),
                     child: Text(playerName.toString(), style: const TextStyle(fontSize: 13, color: Colors.white)),
                   );
@@ -670,7 +670,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
   // ─── 점수판 탭 ───
   Widget _buildScoreboardTab() {
     if (_matches.isEmpty) {
-      return Center(child: Text('경기 기록이 없습니다', style: TextStyle(color: Colors.white.withAlpha(102))));
+      return Center(child: Text('경기 기록이 없습니다', style: TextStyle(color: AppColors.textHint)));
     }
 
     final auth = context.read<AuthService>();
@@ -711,9 +711,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
           if (completedMatches.isNotEmpty && _teams.length >= 2) ...[
             LeagueStandingsWidget(completedMatches: completedMatches, teams: _teams),
             const SizedBox(height: 16),
-            Divider(color: Colors.white.withAlpha(15)),
+            Divider(color: AppColors.surfaceTint),
             const SizedBox(height: 8),
-            Text('경기 기록', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(153))),
+            Text('경기 기록', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
             const SizedBox(height: 10),
           ],
           // 경기 카드
@@ -749,16 +749,16 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(8),
+          color: AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withAlpha(20)),
+          border: Border.all(color: AppColors.surfaceTint),
         ),
         child: Column(
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('$matchNo경기', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(128))),
+                Text('$matchNo경기', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
                 Row(
                   children: [
                     Container(
@@ -768,7 +768,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                     ),
                     if (auth.isAdmin) ...[
                       const SizedBox(width: 6),
-                      Icon(Icons.edit_note, size: 16, color: Colors.white.withAlpha(64)),
+                      Icon(Icons.edit_note, size: 16, color: AppColors.iconInactive),
                     ],
                   ],
                 ),
@@ -801,7 +801,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text('VS', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white.withAlpha(64))),
+                  child: Text('VS', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.iconInactive)),
                 ),
                 // 팀2 (원정)
                 Expanded(
@@ -817,7 +817,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
             ),
             if (events.isNotEmpty) ...[
               const SizedBox(height: 12),
-              Divider(color: Colors.white.withAlpha(20)),
+              Divider(color: AppColors.surfaceTint),
               const SizedBox(height: 8),
               ...events.map((e) {
                 final type = e['event_type'] ?? '';
@@ -833,7 +833,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                       Text(playerName, style: const TextStyle(fontSize: 13, color: Colors.white)),
                       if (assisterName != null && assisterName.toString().isNotEmpty) ...[
                         const SizedBox(width: 4),
-                        Text('($assisterName)', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
+                        Text('($assisterName)', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
                       ],
                     ],
                   ),
@@ -849,7 +849,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
   // ─── 선수 스탯 탭 ───
   Widget _buildStatsTab() {
     if (_matches.isEmpty) {
-      return Center(child: Text('경기 기록이 없습니다', style: TextStyle(color: Colors.white.withAlpha(102))));
+      return Center(child: Text('경기 기록이 없습니다', style: TextStyle(color: AppColors.textHint)));
     }
 
     // 클럽 가중치 설정
@@ -965,7 +965,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
 
     final sorted = playerStats.values.toList()..sort((a, b) => (b['mvpScore'] as double).compareTo(a['mvpScore'] as double));
     if (sorted.isEmpty) {
-      return Center(child: Text('완료된 경기가 없습니다', style: TextStyle(color: Colors.white.withAlpha(102))));
+      return Center(child: Text('완료된 경기가 없습니다', style: TextStyle(color: AppColors.textHint)));
     }
 
     final enabledEvents = context.read<AuthService>().enabledEvents;
@@ -1003,9 +1003,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
 
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(8),
+              color: AppColors.surfaceBorder,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withAlpha(20)),
+              border: Border.all(color: AppColors.surfaceTint),
             ),
             child: Column(
               children: [
@@ -1013,13 +1013,13 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      Icon(Icons.bar_chart, size: 16, color: Colors.white.withAlpha(153)),
+                      Icon(Icons.bar_chart, size: 16, color: AppColors.textSecondary),
                       const SizedBox(width: 8),
                       const Text('세션 기록', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
                     ],
                   ),
                 ),
-                Divider(height: 1, color: Colors.white.withAlpha(20)),
+                Divider(height: 1, color: AppColors.surfaceTint),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   child: Row(
@@ -1051,12 +1051,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
-                      border: Border(top: BorderSide(color: Colors.white.withAlpha(8))),
+                      border: Border(top: BorderSide(color: AppColors.surfaceBorder)),
                       color: idx == 0 ? AppColors.amber.withAlpha(8) : null,
                     ),
                     child: Row(
                       children: [
-                        SizedBox(width: 24, child: Center(child: Text(rankIcon, style: TextStyle(fontSize: idx < 3 ? 14 : 12, color: Colors.white.withAlpha(128))))),
+                        SizedBox(width: 24, child: Center(child: Text(rankIcon, style: TextStyle(fontSize: idx < 3 ? 14 : 12, color: AppColors.textHint)))),
                         Expanded(flex: 3, child: Text(p['name'], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white))),
                         Expanded(child: Center(child: Text('${p['goals']}', style: const TextStyle(fontSize: 13, color: AppColors.primary)))),
                         Expanded(child: Center(child: Text('${p['assists']}', style: const TextStyle(fontSize: 13, color: AppColors.blue)))),
@@ -1095,7 +1095,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
               children: [
                 Text(icon, style: const TextStyle(fontSize: 16)),
                 const SizedBox(width: 6),
-                Text(title, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(153))),
+                Text(title, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
               ],
             ),
             const SizedBox(height: 8),
@@ -1233,7 +1233,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('경기 시간', style: TextStyle(color: Colors.white.withAlpha(153), fontSize: 13)),
+              Text('경기 시간', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 6, runSpacing: 6,
@@ -1242,7 +1242,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                     decoration: BoxDecoration(
-                      color: tempDuration == min ? AppColors.primary : Colors.white.withAlpha(15),
+                      color: tempDuration == min ? AppColors.primary : AppColors.surfaceTint,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text('${min}분', style: TextStyle(
@@ -1254,7 +1254,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                 )).toList(),
               ),
               const SizedBox(height: 16),
-              Text('중간 알림 간격', style: TextStyle(color: Colors.white.withAlpha(153), fontSize: 13)),
+              Text('중간 알림 간격', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 6, runSpacing: 6,
@@ -1263,7 +1263,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                     decoration: BoxDecoration(
-                      color: tempInterval == min ? AppColors.blue : Colors.white.withAlpha(15),
+                      color: tempInterval == min ? AppColors.blue : AppColors.surfaceTint,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(min == 0 ? '없음' : '${min}분마다', style: TextStyle(
@@ -1279,7 +1279,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text('취소', style: TextStyle(color: Colors.white.withAlpha(102))),
+              child: Text('취소', style: TextStyle(color: AppColors.textHint)),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
@@ -1470,7 +1470,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
           colors: [AppColors.bgCard, AppColors.bgBase.withAlpha(200)],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppColors.surfaceTint),
       ),
       child: Column(
         children: [
@@ -1478,20 +1478,20 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Expanded(child: Column(children: [
-                Text(team1['name'] ?? 'A팀', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(153))),
+                Text(team1['name'] ?? 'A팀', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                 Text('${_goalCount(team1Id)}', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.white)),
               ])),
               Column(children: [
                 if (isPlaying) ...[
                   Text(_formatTime(_elapsedSeconds), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
-                  Text('/ ${_formatTime(totalSeconds)}', style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(77))),
+                  Text('/ ${_formatTime(totalSeconds)}', style: TextStyle(fontSize: 10, color: AppColors.iconInactive)),
                   const SizedBox(height: 6),
                   _actionChip('✓ 완료', AppColors.blue, () {
                     _stopTimer();
                     _updateStatus('completed');
                   }),
                 ] else if (status == 'pending') ...[
-                  Text('VS', style: TextStyle(fontSize: 14, color: Colors.white.withAlpha(64))),
+                  Text('VS', style: TextStyle(fontSize: 14, color: AppColors.iconInactive)),
                   const SizedBox(height: 8),
                   _actionChip('▶ 시작', AppColors.primary, _showTimerSetupDialog),
                 ] else ...[
@@ -1506,7 +1506,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                 ],
               ]),
               Expanded(child: Column(children: [
-                Text(team2['name'] ?? 'B팀', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(153))),
+                Text(team2['name'] ?? 'B팀', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                 Text('${_goalCount(team2Id)}', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.white)),
               ])),
             ],
@@ -1517,7 +1517,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: progress,
-                backgroundColor: Colors.white.withAlpha(20),
+                backgroundColor: AppColors.surfaceTint,
                 valueColor: AlwaysStoppedAnimation<Color>(
                   remaining <= 60 ? AppColors.red : AppColors.primary,
                 ),
@@ -1549,7 +1549,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppColors.surfaceTint),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1652,7 +1652,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                 const Text('⚽ 어시스트 선택', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.amber)),
                 GestureDetector(
                   onTap: () => setState(() { _assistScorerPlayerId = null; _assistScorerGuestName = null; _assistTeamId = null; }),
-                  child: Text('취소', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(153))),
+                  child: Text('취소', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
                 ),
               ],
             ),
@@ -1685,7 +1685,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(8),
+                      color: AppColors.surfaceBorder,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: AppColors.amber.withAlpha(40)),
                     ),
@@ -1709,7 +1709,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withAlpha(20)),
+        border: Border.all(color: AppColors.surfaceTint),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1784,9 +1784,9 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
   Widget _buildEventLog(int team1Id, int team2Id) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(5),
+        color: AppColors.surfaceBorder,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withAlpha(13)),
+        border: Border.all(color: AppColors.surfaceTint),
       ),
       child: Column(
         children: [
@@ -1796,14 +1796,14 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
               children: [
                 const Text('📋 기록', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                 const SizedBox(width: 6),
-                Text('(${_events.length})', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
+                Text('(${_events.length})', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
               ],
             ),
           ),
           if (_events.isEmpty)
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Text('아직 기록이 없습니다', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(102))),
+              child: Text('아직 기록이 없습니다', style: TextStyle(fontSize: 13, color: AppColors.textHint)),
             )
           else
             ..._events.reversed.take(15).map((e) {
@@ -1819,7 +1819,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
 
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.white.withAlpha(8)))),
+                decoration: BoxDecoration(border: Border(top: BorderSide(color: AppColors.surfaceBorder))),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -1836,7 +1836,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                                   fontWeight: FontWeight.w500,
                                 )),
                                 if (assister != null && assister.toString().isNotEmpty)
-                                  Text('↗ $assister', style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(102))),
+                                  Text('↗ $assister', style: TextStyle(fontSize: 10, color: AppColors.textHint)),
                               ],
                             )
                           : const SizedBox(),
@@ -1846,7 +1846,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(icon, style: TextStyle(fontSize: 16, color: isTemp ? Colors.white38 : null)),
-                        Text(timeStr, style: TextStyle(fontSize: 9, color: Colors.white.withAlpha(77))),
+                        Text(timeStr, style: TextStyle(fontSize: 9, color: AppColors.iconInactive)),
                       ],
                     ),
                     // 팀 2 side (right)
@@ -1862,7 +1862,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                                   fontWeight: FontWeight.w500,
                                 ), textAlign: TextAlign.right),
                                 if (assister != null && assister.toString().isNotEmpty)
-                                  Text('$assister ↗', style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(102))),
+                                  Text('$assister ↗', style: TextStyle(fontSize: 10, color: AppColors.textHint)),
                               ],
                             )
                           : const SizedBox(),
@@ -1872,7 +1872,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                     if (!isTemp)
                       GestureDetector(
                         onTap: () => _deleteEvent(e['id']),
-                        child: Icon(Icons.close, size: 14, color: Colors.white.withAlpha(51)),
+                        child: Icon(Icons.close, size: 14, color: AppColors.iconInactive),
                       )
                     else
                       const SizedBox(width: 14),

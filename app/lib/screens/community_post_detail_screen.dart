@@ -102,7 +102,7 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
         title: const Text('삭제', style: TextStyle(color: Colors.white)),
         content: const Text('이 게시글을 삭제하시겠습니까?', style: TextStyle(color: Colors.white70)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('취소', style: TextStyle(color: Colors.white.withAlpha(128)))),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('취소', style: TextStyle(color: AppColors.textHint))),
           TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('삭제', style: TextStyle(color: AppColors.red))),
         ],
       ),
@@ -177,7 +177,7 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2))
           : _post == null
-              ? Center(child: Text('게시글을 찾을 수 없습니다', style: TextStyle(color: Colors.white.withAlpha(128))))
+              ? Center(child: Text('게시글을 찾을 수 없습니다', style: TextStyle(color: AppColors.textHint)))
               : Column(
                   children: [
                     Expanded(
@@ -288,13 +288,13 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
         const SizedBox(height: 10),
         Row(
           children: [
-            Text(authorName, style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(153))),
+            Text(authorName, style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
             if (clubName != null && clubName.isNotEmpty) ...[
-              Text(' · ', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(64))),
+              Text(' · ', style: TextStyle(fontSize: 13, color: AppColors.iconInactive)),
               Text(clubName, style: TextStyle(fontSize: 13, color: catColor.withAlpha(179))),
             ],
-            Text(' · ', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(64))),
-            Text(dateStr, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
+            Text(' · ', style: TextStyle(fontSize: 13, color: AppColors.iconInactive)),
+            Text(dateStr, style: TextStyle(fontSize: 12, color: AppColors.textHint)),
           ],
         ),
       ],
@@ -322,7 +322,7 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
         ],
         Text(
           content,
-          style: TextStyle(fontSize: 15, color: Colors.white.withAlpha(217), height: 1.6),
+          style: TextStyle(fontSize: 15, color: AppColors.textSecondary, height: 1.6),
         ),
       ],
     );
@@ -340,9 +340,9 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(8),
+        color: AppColors.surfaceBorder,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withAlpha(15)),
+        border: Border.all(color: AppColors.surfaceBorder),
       ),
       child: Wrap(
         spacing: 8,
@@ -386,16 +386,16 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
       children: [
         Row(
           children: [
-            Icon(Icons.chat_bubble_outline, size: 16, color: Colors.white.withAlpha(153)),
+            Icon(Icons.chat_bubble_outline, size: 16, color: AppColors.textSecondary),
             const SizedBox(width: 6),
-            Text('댓글 ${_comments.length}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(204))),
+            Text('댓글 ${_comments.length}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
           ],
         ),
         const SizedBox(height: 12),
         if (_comments.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: Text('첫 댓글을 작성해보세요', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(77)))),
+            child: Center(child: Text('첫 댓글을 작성해보세요', style: TextStyle(fontSize: 13, color: AppColors.iconInactive))),
           )
         else
           ..._comments.map((c) {
@@ -420,28 +420,28 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(5),
+                color: AppColors.surfaceBorder,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white.withAlpha(10)),
+                border: Border.all(color: AppColors.surfaceBorder),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Text(cAuthor, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(204))),
+                      Text(cAuthor, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
                       const SizedBox(width: 8),
-                      Text(cDate, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(77))),
+                      Text(cDate, style: TextStyle(fontSize: 11, color: AppColors.iconInactive)),
                       const Spacer(),
                       if (isMine && cId != null)
                         GestureDetector(
                           onTap: () => _deleteComment(cId),
-                          child: Icon(Icons.close, size: 14, color: Colors.white.withAlpha(77)),
+                          child: Icon(Icons.close, size: 14, color: AppColors.iconInactive),
                         ),
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(cContent, style: TextStyle(fontSize: 14, color: Colors.white.withAlpha(179), height: 1.4)),
+                  Text(cContent, style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.4)),
                 ],
               ),
             );
@@ -460,7 +460,7 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
       ),
       decoration: BoxDecoration(
         color: AppColors.bgCard,
-        border: Border(top: BorderSide(color: Colors.white.withAlpha(15))),
+        border: Border(top: BorderSide(color: AppColors.surfaceBorder)),
       ),
       child: Row(
         children: [
@@ -470,9 +470,9 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
               style: const TextStyle(fontSize: 14, color: Colors.white),
               decoration: InputDecoration(
                 hintText: '댓글을 입력하세요...',
-                hintStyle: TextStyle(fontSize: 14, color: Colors.white.withAlpha(77)),
+                hintStyle: TextStyle(fontSize: 14, color: AppColors.iconInactive),
                 filled: true,
-                fillColor: Colors.white.withAlpha(10),
+                fillColor: AppColors.surfaceBorder,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
               ),

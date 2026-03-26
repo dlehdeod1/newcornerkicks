@@ -373,7 +373,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
               const SizedBox(height: 4),
               Text(
                 currentTeam != null ? '현재: ${_vestLabels[currentTeam]}팀' : '미배정',
-                style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 12),
+                style: TextStyle(color: AppColors.textHint, fontSize: 12),
               ),
               const SizedBox(height: 16),
               // 팀 선택 버튼들
@@ -420,7 +420,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                       setState(() => _teamAssignments[currentTeam].remove(key));
                       Navigator.pop(ctx);
                     },
-                    child: Text('미배정으로', style: TextStyle(color: Colors.white.withAlpha(128), fontSize: 13)),
+                    child: Text('미배정으로', style: TextStyle(color: AppColors.textHint, fontSize: 13)),
                   ),
                 ),
             ],
@@ -528,7 +528,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
           margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
           padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(10),
+            color: AppColors.surfaceBorder,
             borderRadius: BorderRadius.circular(12),
           ),
           child: TabBar(
@@ -550,7 +550,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
               Text(
                 '$_totalCount명 선택 (선수 ${_selected.length} + 용병 ${_guests.length})',
                 style: TextStyle(
-                  color: _totalCount >= 4 ? AppColors.primary : Colors.white.withAlpha(102),
+                  color: _totalCount >= 4 ? AppColors.primary : AppColors.textHint,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -567,7 +567,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                   }),
                   child: Text(
                     _selected.length == _allPlayers.length ? '전체 해제' : '전체 선택',
-                    style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 12),
+                    style: TextStyle(color: AppColors.textHint, fontSize: 12),
                   ),
                 ),
             ],
@@ -603,9 +603,9 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                     style: const TextStyle(color: Colors.white, fontSize: 13),
                     decoration: InputDecoration(
                       hintText: '용병 이름 입력',
-                      hintStyle: TextStyle(color: Colors.white.withAlpha(51), fontSize: 13),
+                      hintStyle: TextStyle(color: AppColors.iconInactive, fontSize: 13),
                       filled: true,
-                      fillColor: Colors.white.withAlpha(8),
+                      fillColor: AppColors.surfaceBorder,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                     ),
@@ -670,7 +670,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
     }
     if (_allPlayers.isEmpty) {
       return Center(
-        child: Text('등록된 선수가 없습니다', style: TextStyle(color: Colors.white.withAlpha(77))),
+        child: Text('등록된 선수가 없습니다', style: TextStyle(color: AppColors.iconInactive)),
       );
     }
     return ListView.builder(
@@ -688,10 +688,10 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
             margin: const EdgeInsets.only(bottom: 6),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
             decoration: BoxDecoration(
-              color: checked ? AppColors.primary.withAlpha(20) : Colors.white.withAlpha(8),
+              color: checked ? AppColors.primary.withAlpha(20) : AppColors.surfaceBorder,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: checked ? AppColors.primary.withAlpha(77) : Colors.white.withAlpha(13),
+                color: checked ? AppColors.primary.withAlpha(77) : AppColors.surfaceTint,
               ),
             ),
             child: Row(
@@ -728,7 +728,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                 if (p['nickname'] != null && p['nickname'] != p['name'])
                   Text(
                     p['nickname'] as String,
-                    style: TextStyle(color: Colors.white.withAlpha(77), fontSize: 12),
+                    style: TextStyle(color: AppColors.iconInactive, fontSize: 12),
                     overflow: TextOverflow.ellipsis,
                   ),
               ],
@@ -776,13 +776,13 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Text('탭하면 복사', style: TextStyle(color: Colors.white.withAlpha(77), fontSize: 11)),
+                  Text('탭하면 복사', style: TextStyle(color: AppColors.iconInactive, fontSize: 11)),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 12),
-          Text('투표 결과 붙여넣기', style: TextStyle(color: Colors.white.withAlpha(153), fontSize: 12)),
+          Text('투표 결과 붙여넣기', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
           const SizedBox(height: 6),
           Expanded(
             flex: 3,
@@ -794,9 +794,9 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
               style: const TextStyle(color: Colors.white, fontSize: 13),
               decoration: InputDecoration(
                 hintText: '카톡 채팅 내용을 붙여넣어 주세요',
-                hintStyle: TextStyle(color: Colors.white.withAlpha(51), fontSize: 12),
+                hintStyle: TextStyle(color: AppColors.iconInactive, fontSize: 12),
                 filled: true,
-                fillColor: Colors.white.withAlpha(8),
+                fillColor: AppColors.surfaceBorder,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -812,7 +812,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
             child: OutlinedButton(
               onPressed: _parseKakao,
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Colors.white.withAlpha(38)),
+                side: BorderSide(color: AppColors.surfaceHighlight),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 padding: const EdgeInsets.symmetric(vertical: 11),
               ),
@@ -825,7 +825,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(8),
+                color: AppColors.surfaceBorder,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -915,7 +915,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('닫기', style: TextStyle(color: Colors.white.withAlpha(102))),
+            child: Text('닫기', style: TextStyle(color: AppColors.textHint)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -997,7 +997,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                   child: OutlinedButton(
                     onPressed: canAssign ? _enterManualMode : null,
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: canAssign ? Colors.white.withAlpha(51) : Colors.white.withAlpha(13)),
+                      side: BorderSide(color: canAssign ? AppColors.iconInactive : AppColors.surfaceTint),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
@@ -1013,7 +1013,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: AppColors.bgBase,
-                        disabledBackgroundColor: Colors.white.withAlpha(20),
+                        disabledBackgroundColor: AppColors.surfaceTint,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                       child: _assigning
@@ -1038,7 +1038,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.deepPurple,
                           foregroundColor: Colors.white,
-                          disabledBackgroundColor: Colors.white.withAlpha(20),
+                          disabledBackgroundColor: AppColors.surfaceTint,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
                         child: _assigning
@@ -1053,7 +1053,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                                   ),
                                   Text(
                                     '($aiRemaining회 남음)',
-                                    style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(179)),
+                                    style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
                                   ),
                                 ],
                               ),
@@ -1084,7 +1084,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
           margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(10),
+            color: AppColors.surfaceBorder,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -1124,7 +1124,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
               Text(
                 '배정: $totalAssigned / $_totalCount명',
                 style: TextStyle(
-                  color: totalAssigned == _totalCount ? AppColors.primary : Colors.white.withAlpha(128),
+                  color: totalAssigned == _totalCount ? AppColors.primary : AppColors.textHint,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1145,7 +1145,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
             children: [
               // 미배정 영역
               if (unassigned.isNotEmpty) ...[
-                Text('미배정', style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 12, fontWeight: FontWeight.w600)),
+                Text('미배정', style: TextStyle(color: AppColors.textHint, fontSize: 12, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 6),
                 Wrap(
                   spacing: 6,
@@ -1171,7 +1171,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.bgBase,
-                  disabledBackgroundColor: Colors.white.withAlpha(20),
+                  disabledBackgroundColor: AppColors.surfaceTint,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: _assigning
@@ -1246,7 +1246,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
               spacing: 6,
               children: posMap.entries.map((e) => Text(
                 '${e.key} ${e.value}',
-                style: TextStyle(color: Colors.white.withAlpha(77), fontSize: 10),
+                style: TextStyle(color: AppColors.iconInactive, fontSize: 10),
               )).toList(),
             ),
           ],
@@ -1261,7 +1261,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text('탭하여 선수를 배정하세요', style: TextStyle(color: Colors.white.withAlpha(38), fontSize: 12)),
+                child: Text('탭하여 선수를 배정하세요', style: TextStyle(color: AppColors.surfaceHighlight, fontSize: 12)),
               ),
             ),
         ],
@@ -1284,14 +1284,14 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
               ? AppColors.amber.withAlpha(20)
               : teamIdx != null
                   ? color.withAlpha(20)
-                  : Colors.white.withAlpha(10),
+                  : AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isGuest
                 ? AppColors.amber.withAlpha(51)
                 : teamIdx != null
                     ? color.withAlpha(40)
-                    : Colors.white.withAlpha(26),
+                    : AppColors.surfaceHighlight,
           ),
         ),
         child: Row(
@@ -1327,16 +1327,16 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
           margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(8),
+            color: AppColors.surfaceBorder,
             borderRadius: BorderRadius.circular(14),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _statItem('총 인원', '$_totalCount명'),
-              Container(width: 1, height: 28, color: Colors.white.withAlpha(26)),
+              Container(width: 1, height: 28, color: AppColors.surfaceHighlight),
               _statItem('팀 수', '${_resultTeams.length}팀'),
-              Container(width: 1, height: 28, color: Colors.white.withAlpha(26)),
+              Container(width: 1, height: 28, color: AppColors.surfaceHighlight),
               _statItem('경기 수', '${_resultMatches.length}경기'),
             ],
           ),
@@ -1404,9 +1404,9 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(10),
+                color: AppColors.surfaceBorder,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withAlpha(20)),
+                border: Border.all(color: AppColors.surfaceTint),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1417,7 +1417,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('VS', style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 12, fontWeight: FontWeight.bold)),
+                    child: Text('VS', style: TextStyle(color: AppColors.textHint, fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                   Text(
                     team2['name'] as String? ?? 'B팀',
@@ -1431,14 +1431,14 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withAlpha(6),
+                color: AppColors.surfaceBorder,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('${members1.length}명', style: TextStyle(color: color1, fontSize: 14, fontWeight: FontWeight.bold)),
-                  Text(' : ', style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 14)),
+                  Text(' : ', style: TextStyle(color: AppColors.textHint, fontSize: 14)),
                   Text('${members2.length}명', style: TextStyle(color: color2, fontSize: 14, fontWeight: FontWeight.bold)),
                   const SizedBox(width: 8),
                   Text(
@@ -1518,7 +1518,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
               }).toList(),
             )
           else
-            Text('${team['playerCount'] ?? 0}명', style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 12)),
+            Text('${team['playerCount'] ?? 0}명', style: TextStyle(color: AppColors.textHint, fontSize: 12)),
           if (keyPlayer != null) ...[
             const SizedBox(height: 8),
             Row(
@@ -1527,7 +1527,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
                 Expanded(
                   child: Text(
                     keyPlayer as String,
-                    style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 11),
+                    style: TextStyle(color: AppColors.textHint, fontSize: 11),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -1543,7 +1543,7 @@ class _AdminTeamSetupScreenState extends State<AdminTeamSetupScreen>
         children: [
           Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 2),
-          Text(label, style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 11)),
+          Text(label, style: TextStyle(color: AppColors.textHint, fontSize: 11)),
         ],
       );
 }

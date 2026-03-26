@@ -75,10 +75,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: '이름 *',
-                labelStyle: TextStyle(color: Colors.white.withAlpha(128)),
+                labelStyle: TextStyle(color: AppColors.textHint),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.white.withAlpha(30)),
+                  borderSide: BorderSide(color: AppColors.surfaceHighlight),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -92,10 +92,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: '닉네임 (선택)',
-                labelStyle: TextStyle(color: Colors.white.withAlpha(128)),
+                labelStyle: TextStyle(color: AppColors.textHint),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.white.withAlpha(30)),
+                  borderSide: BorderSide(color: AppColors.surfaceHighlight),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -108,7 +108,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('취소', style: TextStyle(color: Colors.white.withAlpha(128))),
+            child: Text('취소', style: TextStyle(color: AppColors.textHint)),
           ),
           TextButton(
             onPressed: () {
@@ -220,7 +220,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 const SizedBox(height: 8),
                 Text(item['value'] as String, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
                 const SizedBox(height: 2),
-                Text(item['label'] as String, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102))),
+                Text(item['label'] as String, style: TextStyle(fontSize: 11, color: AppColors.textHint)),
               ],
             ),
           ),
@@ -235,9 +235,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       children: [
         Row(
           children: [
-            Icon(Icons.flash_on, size: 16, color: Colors.white.withAlpha(128)),
+            Icon(Icons.flash_on, size: 16, color: AppColors.textHint),
             const SizedBox(width: 6),
-            Text('빠른 실행', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(179))),
+            Text('빠른 실행', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
           ],
         ),
         const SizedBox(height: 12),
@@ -347,7 +347,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           const SizedBox(height: 8),
           Text(
             '아직 계정과 연동되지 않은 선수입니다. 선수에게 초대 코드를 공유하세요.',
-            style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(128)),
+            style: TextStyle(fontSize: 12, color: AppColors.textHint),
           ),
           const SizedBox(height: 10),
           ...unlinked.take(5).map((p) {
@@ -369,7 +369,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     const SizedBox(width: 10),
                     Text(name, style: const TextStyle(fontSize: 13, color: Colors.white)),
                     const Spacer(),
-                    Icon(Icons.chevron_right, size: 16, color: Colors.white.withAlpha(51)),
+                    Icon(Icons.chevron_right, size: 16, color: AppColors.iconInactive),
                   ],
                 ),
               ),
@@ -378,7 +378,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           if (unlinked.length > 5)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('외 ${unlinked.length - 5}명', style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(77))),
+              child: Text('외 ${unlinked.length - 5}명', style: TextStyle(fontSize: 11, color: AppColors.iconInactive)),
             ),
         ],
       ),
@@ -393,9 +393,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       children: [
         Row(
           children: [
-            Icon(Icons.history, size: 16, color: Colors.white.withAlpha(128)),
+            Icon(Icons.history, size: 16, color: AppColors.textHint),
             const SizedBox(width: 6),
-            Text('최근 세션', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(179))),
+            Text('최근 세션', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
           ],
         ),
         const SizedBox(height: 12),
@@ -403,11 +403,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(5),
+              color: AppColors.surfaceBorder,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withAlpha(13)),
+              border: Border.all(color: AppColors.surfaceTint),
             ),
-            child: Center(child: Text('세션이 없습니다', style: TextStyle(fontSize: 13, color: Colors.white.withAlpha(77)))),
+            child: Center(child: Text('세션이 없습니다', style: TextStyle(fontSize: 13, color: AppColors.iconInactive))),
           )
         else
           ...recent.map((s) {
@@ -446,9 +446,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(5),
+                  color: AppColors.surfaceBorder,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white.withAlpha(13)),
+                  border: Border.all(color: AppColors.surfaceTint),
                 ),
                 child: Row(
                   children: [
@@ -460,7 +460,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           const SizedBox(height: 2),
                           Text(
                             '$date / ${attendeeCount}명',
-                            style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(77)),
+                            style: TextStyle(fontSize: 11, color: AppColors.iconInactive),
                           ),
                         ],
                       ),

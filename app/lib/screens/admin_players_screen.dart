@@ -149,7 +149,7 @@ class _AdminPlayersScreenState extends State<AdminPlayersScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: Text(message, style: const TextStyle(color: Colors.white, fontSize: 14)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('취소', style: TextStyle(color: Colors.white.withAlpha(128)))),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('취소', style: TextStyle(color: AppColors.textHint))),
           TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('확인', style: TextStyle(color: AppColors.red, fontWeight: FontWeight.bold))),
         ],
       ),
@@ -186,8 +186,8 @@ class _AdminPlayersScreenState extends State<AdminPlayersScreen> {
                     style: const TextStyle(color: Colors.white, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: '이름, 닉네임, 이메일 검색',
-                      hintStyle: TextStyle(color: Colors.white.withAlpha(77)),
-                      prefixIcon: Icon(Icons.search, color: Colors.white.withAlpha(77), size: 20),
+                      hintStyle: TextStyle(color: AppColors.iconInactive),
+                      prefixIcon: Icon(Icons.search, color: AppColors.iconInactive, size: 20),
                       filled: true,
                       fillColor: AppColors.bgCard,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
@@ -215,7 +215,7 @@ class _AdminPlayersScreenState extends State<AdminPlayersScreen> {
                 // List
                 Expanded(
                   child: filtered.isEmpty
-                      ? Center(child: Text('선수가 없습니다', style: TextStyle(color: Colors.white.withAlpha(77))))
+                      ? Center(child: Text('선수가 없습니다', style: TextStyle(color: AppColors.iconInactive)))
                       : RefreshIndicator(
                           color: AppColors.primary,
                           onRefresh: () async {
@@ -239,13 +239,13 @@ class _AdminPlayersScreenState extends State<AdminPlayersScreen> {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
-        label: Text(label, style: TextStyle(fontSize: 12, color: selected ? Colors.white : Colors.white.withAlpha(153))),
+        label: Text(label, style: TextStyle(fontSize: 12, color: selected ? Colors.white : AppColors.textSecondary)),
         selected: selected,
         onSelected: (_) => setState(() => _filter = f),
         backgroundColor: AppColors.bgCard,
         selectedColor: AppColors.primary.withAlpha(40),
         checkmarkColor: AppColors.primary,
-        side: BorderSide(color: selected ? AppColors.primary.withAlpha(100) : Colors.white.withAlpha(20)),
+        side: BorderSide(color: selected ? AppColors.primary.withAlpha(100) : AppColors.surfaceTint),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         padding: const EdgeInsets.symmetric(horizontal: 4),
       ),
@@ -317,7 +317,7 @@ class _AdminPlayersScreenState extends State<AdminPlayersScreen> {
                       Text(name.toString(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
                       if (nickname != null && nickname.toString().isNotEmpty) ...[
                         const SizedBox(width: 6),
-                        Text('($nickname)', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(102))),
+                        Text('($nickname)', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
                       ],
                       const SizedBox(width: 8),
                       Container(
@@ -331,12 +331,12 @@ class _AdminPlayersScreenState extends State<AdminPlayersScreen> {
                   Row(
                     children: [
                       if (email.isNotEmpty) ...[
-                        Icon(Icons.email, size: 11, color: Colors.white.withAlpha(51)),
+                        Icon(Icons.email, size: 11, color: AppColors.iconInactive),
                         const SizedBox(width: 3),
-                        Flexible(child: Text(email, style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(77)), overflow: TextOverflow.ellipsis)),
+                        Flexible(child: Text(email, style: TextStyle(fontSize: 11, color: AppColors.iconInactive), overflow: TextOverflow.ellipsis)),
                         const SizedBox(width: 8),
                       ],
-                      Text('${attendance}경기  ${goals}골  평가${ratingCount}건', style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(77))),
+                      Text('${attendance}경기  ${goals}골  평가${ratingCount}건', style: TextStyle(fontSize: 11, color: AppColors.iconInactive)),
                     ],
                   ),
                 ],
@@ -344,7 +344,7 @@ class _AdminPlayersScreenState extends State<AdminPlayersScreen> {
             ),
             // Actions popup
             PopupMenuButton<String>(
-              icon: Icon(Icons.more_vert, size: 18, color: Colors.white.withAlpha(102)),
+              icon: Icon(Icons.more_vert, size: 18, color: AppColors.textHint),
               color: AppColors.bgCard,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               onSelected: (action) {

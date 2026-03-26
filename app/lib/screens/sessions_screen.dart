@@ -175,9 +175,9 @@ class _SessionsScreenState extends State<SessionsScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                   decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(10),
+                    color: AppColors.surfaceBorder,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withAlpha(26)),
+                    border: Border.all(color: AppColors.surfaceHighlight),
                   ),
                   child: Row(
                     children: [
@@ -199,9 +199,9 @@ class _SessionsScreenState extends State<SessionsScreen> {
                 style: const TextStyle(color: Colors.white, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: '세션 제목 (선택)',
-                  hintStyle: TextStyle(color: Colors.white.withAlpha(77), fontSize: 13),
+                  hintStyle: TextStyle(color: AppColors.iconInactive, fontSize: 13),
                   filled: true,
-                  fillColor: Colors.white.withAlpha(10),
+                  fillColor: AppColors.surfaceBorder,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -313,7 +313,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                 Container(
                   width: 72, height: 72,
                   decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(10),
+                    color: AppColors.surfaceBorder,
                     borderRadius: BorderRadius.circular(22),
                   ),
                   child: const Center(child: Text('📅', style: TextStyle(fontSize: 32))),
@@ -321,7 +321,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                 const SizedBox(height: 16),
                 const Text('세션이 없습니다', style: TextStyle(color: Colors.white54, fontSize: 16)),
                 const SizedBox(height: 8),
-                Text('아직 등록된 세션이 없어요', style: TextStyle(color: Colors.white.withAlpha(77), fontSize: 13)),
+                Text('아직 등록된 세션이 없어요', style: TextStyle(color: AppColors.iconInactive, fontSize: 13)),
               ],
             ),
           ),
@@ -351,9 +351,9 @@ class _SessionsScreenState extends State<SessionsScreen> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(8),
+          color: AppColors.surfaceBorder,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isGoing ? AppColors.primary.withAlpha(51) : Colors.white.withAlpha(15)),
+          border: Border.all(color: isGoing ? AppColors.primary.withAlpha(51) : AppColors.surfaceTint),
         ),
         child: Column(
           children: [
@@ -399,7 +399,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                             child: Text(_statusLabel(status), style: TextStyle(fontSize: 10, color: statusColor, fontWeight: FontWeight.w600)),
                           ),
                           const SizedBox(width: 8),
-                          Text(_formatDate(dateStr), style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(77))),
+                          Text(_formatDate(dateStr), style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
                         ],
                       ),
                     ],
@@ -409,10 +409,10 @@ class _SessionsScreenState extends State<SessionsScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Icon(Icons.chevron_right, color: Colors.white.withAlpha(51), size: 18),
+                    Icon(Icons.chevron_right, color: AppColors.iconInactive, size: 18),
                     if (rsvpCount > 0) ...[
                       const SizedBox(height: 4),
-                      Text('$rsvpCount명', style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(102))),
+                      Text('$rsvpCount명', style: TextStyle(fontSize: 11, color: AppColors.textHint)),
                     ],
                   ],
                 ),
@@ -430,10 +430,10 @@ class _SessionsScreenState extends State<SessionsScreen> {
                   decoration: BoxDecoration(
                     color: isGoing
                         ? AppColors.primary.withAlpha(26)
-                        : Colors.white.withAlpha(8),
+                        : AppColors.surfaceBorder,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: isGoing ? AppColors.primary.withAlpha(77) : Colors.white.withAlpha(20),
+                      color: isGoing ? AppColors.primary.withAlpha(77) : AppColors.surfaceTint,
                     ),
                   ),
                   child: Row(
@@ -447,7 +447,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: isGoing ? AppColors.primary : Colors.white.withAlpha(153),
+                            color: isGoing ? AppColors.primary : AppColors.textSecondary,
                           ),
                         ),
                       const SizedBox(width: 6),
@@ -456,7 +456,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: isGoing ? FontWeight.w600 : FontWeight.normal,
-                          color: isGoing ? AppColors.primary : Colors.white.withAlpha(153),
+                          color: isGoing ? AppColors.primary : AppColors.textSecondary,
                         ),
                       ),
                     ],

@@ -28,7 +28,7 @@ class LeagueStandingsWidget extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [Color(0xFF1a2040), Color(0xFF101528)],
         ),
-        border: Border.all(color: Colors.white.withAlpha(12)),
+        border: Border.all(color: AppColors.surfaceBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(50),
@@ -66,12 +66,12 @@ class LeagueStandingsWidget extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(8),
+                    color: AppColors.surfaceBorder,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     '${completedMatches.length}경기',
-                    style: TextStyle(fontSize: 11, color: Colors.white.withAlpha(100), fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: 11, color: AppColors.textHint, fontWeight: FontWeight.w500),
                   ),
                 ),
               ],
@@ -82,8 +82,8 @@ class LeagueStandingsWidget extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(color: Colors.white.withAlpha(8)),
-                bottom: BorderSide(color: Colors.white.withAlpha(8)),
+                top: BorderSide(color: AppColors.surfaceBorder),
+                bottom: BorderSide(color: AppColors.surfaceBorder),
               ),
             ),
             child: Row(
@@ -122,7 +122,7 @@ class LeagueStandingsWidget extends StatelessWidget {
             return Container(
               decoration: BoxDecoration(
                 color: isFirst ? AppColors.amber.withAlpha(10) : null,
-                border: Border(top: BorderSide(color: Colors.white.withAlpha(6))),
+                border: Border(top: BorderSide(color: AppColors.surfaceBorder)),
               ),
               child: IntrinsicHeight(
                 child: Row(
@@ -163,7 +163,7 @@ class LeagueStandingsWidget extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: isFirst ? FontWeight.w700 : FontWeight.w500,
-                                  color: isFirst ? Colors.white : Colors.white.withAlpha(210),
+                                  color: isFirst ? Colors.white : AppColors.textSecondary,
                                   letterSpacing: -0.2,
                                 ),
                                 overflow: TextOverflow.ellipsis,
@@ -196,13 +196,13 @@ class LeagueStandingsWidget extends StatelessWidget {
                             color: isFirst
                                 ? AppColors.amber
                                 : points > 0
-                                    ? Colors.white.withAlpha(15)
+                                    ? AppColors.surfaceTint
                                     : Colors.transparent,
                             borderRadius: BorderRadius.circular(6),
                             border: isFirst
                                 ? null
                                 : points > 0
-                                    ? Border.all(color: Colors.white.withAlpha(15))
+                                    ? Border.all(color: AppColors.surfaceTint)
                                     : null,
                           ),
                           child: Text(
@@ -252,7 +252,7 @@ class LeagueStandingsWidget extends StatelessWidget {
     }
     return Text(
       '${rank + 1}',
-      style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(100), fontWeight: FontWeight.w500),
+      style: TextStyle(fontSize: 12, color: AppColors.textHint, fontWeight: FontWeight.w500),
     );
   }
 
@@ -262,7 +262,7 @@ class LeagueStandingsWidget extends StatelessWidget {
       child: Center(
         child: Text(
           text,
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white.withAlpha(80), letterSpacing: 0.5),
+          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.iconInactive, letterSpacing: 0.5),
         ),
       ),
     );
@@ -287,7 +287,7 @@ class LeagueStandingsWidget extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 10, color: Colors.white.withAlpha(80))),
+        Text(label, style: TextStyle(fontSize: 10, color: AppColors.iconInactive)),
       ],
     );
   }

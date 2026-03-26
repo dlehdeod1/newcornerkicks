@@ -110,7 +110,7 @@ class _MemberView extends StatelessWidget {
               Text(
                 '내 참가비 현황',
                 style: TextStyle(
-                  color: Colors.white.withAlpha(153),
+                  color: AppColors.textSecondary,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,
@@ -127,7 +127,7 @@ class _MemberView extends StatelessWidget {
                   Container(
                     width: 1,
                     height: 36,
-                    color: Colors.white.withAlpha(20),
+                    color: AppColors.surfaceTint,
                     margin: const EdgeInsets.symmetric(horizontal: 16),
                   ),
                   _StatCol(
@@ -197,7 +197,7 @@ class _StatCol extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 3),
-        Text(label, style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 11)),
+        Text(label, style: TextStyle(color: AppColors.textHint, fontSize: 11)),
       ],
     );
   }
@@ -255,7 +255,7 @@ class _PaymentTile extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(10),
+              color: AppColors.surfaceBorder,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
@@ -279,7 +279,7 @@ class _PaymentTile extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   dateStr,
-                  style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 11),
+                  style: TextStyle(color: AppColors.textHint, fontSize: 11),
                 ),
               ],
             ),
@@ -361,7 +361,7 @@ class _AdminView extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.bgCard,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withAlpha(13)),
+              border: Border.all(color: AppColors.surfaceTint),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,7 +369,7 @@ class _AdminView extends StatelessWidget {
                 Text(
                   '클럽 정산 현황',
                   style: TextStyle(
-                    color: Colors.white.withAlpha(153),
+                    color: AppColors.textSecondary,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
@@ -386,7 +386,7 @@ class _AdminView extends StatelessWidget {
                     Container(
                       width: 1,
                       height: 36,
-                      color: Colors.white.withAlpha(20),
+                      color: AppColors.surfaceTint,
                       margin: const EdgeInsets.symmetric(horizontal: 16),
                     ),
                     _StatCol(
@@ -398,7 +398,7 @@ class _AdminView extends StatelessWidget {
                     const Spacer(),
                     Text(
                       '${sessions.length}개 세션',
-                      style: TextStyle(color: Colors.white.withAlpha(76), fontSize: 11),
+                      style: TextStyle(color: AppColors.iconInactive, fontSize: 11),
                     ),
                   ],
                 ),
@@ -452,7 +452,7 @@ class _SessionRow extends StatelessWidget {
           border: Border.all(
             color: isFullyPaid
                 ? AppColors.primary.withAlpha(40)
-                : Colors.white.withAlpha(13),
+                : AppColors.surfaceTint,
           ),
         ),
         child: Column(
@@ -555,7 +555,7 @@ class _SessionRow extends StatelessWidget {
                         ),
                       ),
                     const SizedBox(height: 4),
-                    Icon(Icons.chevron_right, color: Colors.white.withAlpha(51), size: 18),
+                    Icon(Icons.chevron_right, color: AppColors.iconInactive, size: 18),
                   ],
                 ),
               ],
@@ -576,7 +576,7 @@ class _SessionRow extends StatelessWidget {
                             Text(
                               '징수 ₩${_fmt(paidAmt)} / 총 ₩${_fmt(totalAmt)}',
                               style: TextStyle(
-                                color: Colors.white.withAlpha(153),
+                                color: AppColors.textSecondary,
                                 fontSize: 11,
                               ),
                             ),
@@ -598,7 +598,7 @@ class _SessionRow extends StatelessWidget {
                           borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
                             value: totalAmt > 0 ? (paidAmt / totalAmt).clamp(0.0, 1.0) : 0,
-                            backgroundColor: Colors.white.withAlpha(20),
+                            backgroundColor: AppColors.surfaceTint,
                             valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
                             minHeight: 6,
                           ),
@@ -704,7 +704,7 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                   decoration: BoxDecoration(
                     color: AppColors.bgCard,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withAlpha(13)),
+                    border: Border.all(color: AppColors.surfaceTint),
                   ),
                   child: Column(
                     children: [
@@ -735,7 +735,7 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(8),
+                            color: AppColors.surfaceBorder,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Column(
@@ -748,7 +748,7 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                                       Text(
                                         '총 징수 대상',
                                         style: TextStyle(
-                                          color: Colors.white.withAlpha(153),
+                                          color: AppColors.textSecondary,
                                           fontSize: 11,
                                         ),
                                       ),
@@ -768,7 +768,7 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                                       Text(
                                         '납부 ',
                                         style: TextStyle(
-                                          color: Colors.white.withAlpha(153),
+                                          color: AppColors.textSecondary,
                                           fontSize: 11,
                                         ),
                                       ),
@@ -783,7 +783,7 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                                       Text(
                                         ' / ${totalAmt > 0 ? ((paidAmt / totalAmt) * 100).round() : 0}%',
                                         style: TextStyle(
-                                          color: Colors.white.withAlpha(102),
+                                          color: AppColors.textHint,
                                           fontSize: 11,
                                         ),
                                       ),
@@ -798,7 +798,7 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                                   value: totalAmt > 0
                                       ? (paidAmt / totalAmt).clamp(0.0, 1.0)
                                       : 0,
-                                  backgroundColor: Colors.white.withAlpha(20),
+                                  backgroundColor: AppColors.surfaceTint,
                                   valueColor: const AlwaysStoppedAnimation<Color>(
                                       AppColors.primary),
                                   minHeight: 7,
@@ -956,7 +956,7 @@ class _SummaryChip extends StatelessWidget {
                   color: color, fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 2),
           Text(label,
-              style: TextStyle(color: Colors.white.withAlpha(102), fontSize: 11)),
+              style: TextStyle(color: AppColors.textHint, fontSize: 11)),
         ],
       ),
     );
