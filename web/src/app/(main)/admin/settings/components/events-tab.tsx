@@ -114,7 +114,7 @@ export default function EventsTab({ club, token, onUpdate, onDirtyChange }: Sett
                 disabled={!!loading}
                 className={cn(
                   'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                  value ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                  value ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'
                 )}
               >
                 <span className={cn(
@@ -153,7 +153,7 @@ export default function EventsTab({ club, token, onUpdate, onDirtyChange }: Sett
                 className={cn(
                   'flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left',
                   active
-                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+                    ? 'border-primary bg-primary/5'
                     : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                 )}
               >
@@ -161,7 +161,7 @@ export default function EventsTab({ club, token, onUpdate, onDirtyChange }: Sett
                 <div>
                   <p className={cn(
                     'text-sm font-medium',
-                    active ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'
+                    active ? 'text-primary' : 'text-slate-700 dark:text-slate-300'
                   )}>{label}</p>
                   <p className="text-xs text-slate-400">{desc}</p>
                 </div>
@@ -184,7 +184,7 @@ export default function EventsTab({ club, token, onUpdate, onDirtyChange }: Sett
                 className={cn(
                   'flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left',
                   active
-                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+                    ? 'border-primary bg-primary/5'
                     : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                 )}
               >
@@ -192,7 +192,7 @@ export default function EventsTab({ club, token, onUpdate, onDirtyChange }: Sett
                 <div>
                   <p className={cn(
                     'text-sm font-medium',
-                    active ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'
+                    active ? 'text-primary' : 'text-slate-700 dark:text-slate-300'
                   )}>{label}</p>
                   <p className="text-xs text-slate-400">{desc}</p>
                 </div>
@@ -226,7 +226,7 @@ export default function EventsTab({ club, token, onUpdate, onDirtyChange }: Sett
                   disabled
                     ? 'opacity-40 cursor-not-allowed border-slate-200 dark:border-slate-700'
                     : active
-                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+                      ? 'border-primary bg-primary/5'
                       : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                 )}
               >
@@ -234,7 +234,7 @@ export default function EventsTab({ club, token, onUpdate, onDirtyChange }: Sett
                 <div>
                   <p className={cn(
                     'text-sm font-medium',
-                    active ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'
+                    active ? 'text-primary' : 'text-slate-700 dark:text-slate-300'
                   )}>{label}</p>
                   <p className="text-xs text-slate-400">{desc}</p>
                 </div>

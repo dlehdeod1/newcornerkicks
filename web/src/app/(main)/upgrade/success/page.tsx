@@ -41,7 +41,7 @@ function SuccessContent() {
   if (status === 'loading') {
     return (
       <div className="text-center py-20">
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
         <p className="text-slate-500">결제를 처리하고 있습니다...</p>
       </div>
     )
@@ -51,7 +51,7 @@ function SuccessContent() {
     return (
       <div className="text-center py-20">
         <p className="text-red-500 mb-4">{message}</p>
-        <button onClick={() => router.push('/upgrade')} className="text-emerald-600 hover:underline">
+        <button onClick={() => router.push('/upgrade')} className="text-primary hover:underline">
           다시 시도하기
         </button>
       </div>
@@ -60,7 +60,7 @@ function SuccessContent() {
 
   return (
     <div className="text-center py-20">
-      <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full mb-6 shadow-lg shadow-emerald-500/30">
+      <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary to-teal-600 rounded-full mb-6 shadow-lg shadow-primary/30">
         <Crown className="w-10 h-10 text-white" />
       </div>
       <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-3">PRO 구독 완료!</h1>
@@ -69,7 +69,7 @@ function SuccessContent() {
       </p>
       <button
         onClick={() => router.push('/')}
-        className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+        className="px-8 py-3 bg-gradient-to-r from-primary to-teal-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
       >
         홈으로 가기
       </button>

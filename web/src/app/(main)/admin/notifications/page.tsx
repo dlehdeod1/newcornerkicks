@@ -128,11 +128,11 @@ export default function AdminNotificationsPage() {
 
       {/* 성공 메시지 */}
       {success && (
-        <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl p-4 border border-emerald-200 dark:border-emerald-500/30 mb-6 flex items-center gap-3">
-          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+        <div className="bg-primary/5 rounded-2xl p-4 border border-primary/30 mb-6 flex items-center gap-3">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <Check className="w-4 h-4 text-white" />
           </div>
-          <p className="text-emerald-700 dark:text-emerald-400 font-medium">
+          <p className="text-primary font-medium">
             알림이 성공적으로 발송되었습니다!
           </p>
         </div>
@@ -178,20 +178,20 @@ export default function AdminNotificationsPage() {
                   className={cn(
                     'p-4 rounded-xl border-2 transition-all text-center',
                     type === nt.value
-                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+                      ? 'border-primary bg-primary/5'
                       : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                   )}
                 >
                   <Icon className={cn(
                     'w-6 h-6 mx-auto mb-2',
                     type === nt.value
-                      ? 'text-emerald-600 dark:text-emerald-400'
+                      ? 'text-primary'
                       : 'text-slate-400'
                   )} />
                   <span className={cn(
                     'text-sm font-medium',
                     type === nt.value
-                      ? 'text-emerald-700 dark:text-emerald-400'
+                      ? 'text-primary'
                       : 'text-slate-600 dark:text-slate-400'
                   )}>
                     {nt.label}

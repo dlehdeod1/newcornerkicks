@@ -253,7 +253,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
           <button
             onClick={handleCaptureImage}
             disabled={capturing}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg bg-primary hover:bg-primary-hover text-white transition-colors disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
             {capturing ? '캡처 중...' : '이미지 저장'}

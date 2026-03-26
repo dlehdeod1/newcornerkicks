@@ -206,7 +206,7 @@ export function MvpVoting({ sessionId, attendance, sessionStatus, matches = [], 
             </p>
           </div>
           {!isVotingClosed && myVote && (
-            <span className="shrink-0 px-2 py-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-medium rounded-full flex items-center gap-1">
+            <span className="shrink-0 px-2 py-1 bg-primary/10 text-primary text-[10px] font-medium rounded-full flex items-center gap-1">
               <Check className="w-2.5 h-2.5" />투표완료
             </span>
           )}
@@ -336,7 +336,7 @@ export function MvpVoting({ sessionId, attendance, sessionStatus, matches = [], 
                     className={cn(
                       'px-2 py-1.5 rounded-lg text-xs font-medium transition-all border truncate',
                       selectedPlayerId === player.id
-                        ? 'bg-emerald-500 text-white border-emerald-500'
+                        ? 'bg-primary text-white border-primary'
                         : myVote?.voted_player_id === player.id
                         ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'
                         : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'

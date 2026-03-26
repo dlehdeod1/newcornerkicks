@@ -171,8 +171,8 @@ function AdminAnnouncementsContent() {
         <Link href="/admin" className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl flex items-center justify-center">
-          <Bell className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+          <Bell className="w-5 h-5 text-primary" />
         </div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
           공지 관리
@@ -195,7 +195,7 @@ function AdminAnnouncementsContent() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="공지 제목을 입력하세요"
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors"
+            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors"
             required
           />
         </div>
@@ -210,7 +210,7 @@ function AdminAnnouncementsContent() {
             onChange={(e) => setContent(e.target.value)}
             placeholder="공지 내용을 입력하세요"
             rows={6}
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors resize-y"
+            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors resize-y"
             required
           />
         </div>
@@ -266,7 +266,7 @@ function AdminAnnouncementsContent() {
               type="checkbox"
               checked={isPinned}
               onChange={(e) => setIsPinned(e.target.checked)}
-              className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-emerald-500 focus:ring-emerald-500/50"
+              className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary/50"
             />
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1">
               <Pin className="w-4 h-4" />
@@ -280,7 +280,7 @@ function AdminAnnouncementsContent() {
           <button
             type="submit"
             disabled={isSaving || !title.trim() || !content.trim()}
-            className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSaving ? '저장 중...' : editId ? '수정 완료' : '공지 등록'}
           </button>
@@ -325,7 +325,7 @@ function AdminAnnouncementsContent() {
                 <div className="flex items-center gap-2 flex-shrink-0 ml-3">
                   <Link
                     href={`/admin/announcements?edit=${a.id}`}
-                    className="p-2 text-slate-400 hover:text-emerald-500 transition-colors"
+                    className="p-2 text-slate-400 hover:text-primary transition-colors"
                   >
                     <Pencil className="w-4 h-4" />
                   </Link>

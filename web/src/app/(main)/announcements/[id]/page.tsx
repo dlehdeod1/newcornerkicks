@@ -43,7 +43,7 @@ export default function AnnouncementDetailPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -53,7 +53,7 @@ export default function AnnouncementDetailPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         <p className="text-slate-500">공지를 찾을 수 없습니다.</p>
-        <Link href="/announcements" className="text-emerald-600 hover:underline mt-4 inline-block">
+        <Link href="/announcements" className="text-primary hover:underline mt-4 inline-block">
           목록으로 돌아가기
         </Link>
       </div>
@@ -86,7 +86,7 @@ export default function AnnouncementDetailPage() {
               시스템
             </span>
           ) : (
-            <span className="px-2.5 py-1 text-xs font-medium bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full">
+            <span className="px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
               클럽
             </span>
           )}

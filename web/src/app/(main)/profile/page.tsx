@@ -180,7 +180,7 @@ export default function ProfilePage() {
   if (!hydrated) {
     return (
       <div className="flex justify-center items-center py-20">
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -223,15 +223,15 @@ export default function ProfilePage() {
         </div>
       )}
       {success && (
-        <div className="p-3 bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
-          <p className="text-sm text-emerald-600 dark:text-emerald-400">{success}</p>
+        <div className="p-3 bg-primary/10 border border-primary/20 rounded-xl">
+          <p className="text-sm text-primary">{success}</p>
         </div>
       )}
 
       {/* 프로필 카드 */}
       <div className="bg-white dark:bg-white/[0.03] rounded-2xl p-6 border border-slate-200 dark:border-white/[0.08]">
         <div className="flex flex-col items-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg mb-3">
+          <div className="w-20 h-20 bg-gradient-to-br from-primary to-teal-500 rounded-2xl flex items-center justify-center shadow-lg mb-3">
             <span className="text-3xl font-bold text-white">
               {player?.name?.charAt(0) || user.username.charAt(0)}
             </span>
@@ -262,7 +262,7 @@ export default function ProfilePage() {
               {user.role === 'ADMIN' ? '관리자' : '멤버'}
             </span>
             {player && (
-              <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/25">
+              <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-primary/5 text-primary border border-primary/20">
                 선수 연동됨
               </span>
             )}
@@ -303,7 +303,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-2 gap-3">
           <Link
             href={`/players/${summaryPlayer.id}`}
-            className="group relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:scale-[1.02] transition-all"
+            className="group relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-primary to-teal-600 shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02] transition-all"
           >
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-3">
@@ -410,14 +410,14 @@ export default function ProfilePage() {
           >
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-semibold text-slate-400 dark:text-white/40 uppercase tracking-wider">능력치</p>
-              <span className="text-xs text-emerald-500 group-hover:text-emerald-600 flex items-center gap-0.5">
+              <span className="text-xs text-primary group-hover:text-primary-hover flex items-center gap-0.5">
                 상세 <ChevronRight className="w-3 h-3" />
               </span>
             </div>
             {abilities ? (
               <>
                 <div className="flex items-center gap-2.5 mb-3">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center">
                     <span className="text-lg font-bold text-white">{abilities.overall}</span>
                   </div>
                   <div>
@@ -430,7 +430,7 @@ export default function ProfilePage() {
                     { label: '슈팅', value: abilities.shooting, color: 'bg-red-500' },
                     { label: '패스', value: abilities.passing, color: 'bg-amber-500' },
                     { label: '수비', value: abilities.marking, color: 'bg-blue-500' },
-                    { label: '체력', value: abilities.stamina, color: 'bg-emerald-500' },
+                    { label: '체력', value: abilities.stamina, color: 'bg-primary' },
                   ].map(({ label, value, color }) => (
                     <div key={label} className="flex items-center gap-2">
                       <span className="text-xs text-slate-500 dark:text-white/60 w-7">{label}</span>
@@ -457,7 +457,7 @@ export default function ProfilePage() {
                 </p>
               </div>
               {preferences.length < 3 && (
-                <button onClick={() => setShowPrefModal(true)} className="text-xs text-emerald-500 hover:text-emerald-600">+ 추가</button>
+                <button onClick={() => setShowPrefModal(true)} className="text-xs text-primary hover:text-primary-hover">+ 추가</button>
               )}
             </div>
             {preferences.length > 0 ? (
@@ -484,13 +484,13 @@ export default function ProfilePage() {
               <div className="text-center py-4">
                 <Heart className="w-7 h-7 mx-auto mb-2 text-slate-300 dark:text-white/20" />
                 <p className="text-sm text-slate-400 dark:text-white/40 mb-1">같이 뛰고 싶은<br/>선수를 선택하세요</p>
-                <button onClick={() => setShowPrefModal(true)} className="text-sm text-emerald-500 hover:text-emerald-600">선수 선택하기</button>
+                <button onClick={() => setShowPrefModal(true)} className="text-sm text-primary hover:text-primary-hover">선수 선택하기</button>
               </div>
             )}
             {preferences.length < 3 && preferences.length > 0 && (
               <button
                 onClick={() => setShowPrefModal(true)}
-                className="mt-2 w-full py-2 rounded-xl text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
+                className="mt-2 w-full py-2 rounded-xl text-xs font-semibold text-primary bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors"
               >
                 + 추가
               </button>
@@ -506,7 +506,7 @@ export default function ProfilePage() {
             onClick={openEditModal}
             className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors"
           >
-            <Edit3 className="w-5 h-5 text-emerald-500" />
+            <Edit3 className="w-5 h-5 text-primary" />
             <span className="text-sm font-medium text-slate-700 dark:text-white/80">프로필 수정</span>
             <ChevronRight className="w-4 h-4 text-slate-400 dark:text-white/25 ml-auto" />
           </button>

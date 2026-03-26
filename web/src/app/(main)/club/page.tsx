@@ -78,7 +78,7 @@ export default function ClubPage() {
   if (!hydrated) {
     return (
       <div className="flex justify-center items-center py-20">
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -116,7 +116,7 @@ export default function ClubPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-24">
-          <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : !club ? (
         <div className="text-center py-20">
@@ -129,7 +129,7 @@ export default function ClubPage() {
       ) : (
         <div className="space-y-4">
           {/* 클럽 헤더 카드 */}
-          <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg shadow-emerald-500/20">
+          <div className="bg-gradient-to-br from-primary to-teal-600 rounded-2xl p-6 text-white shadow-lg shadow-primary/20">
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -196,8 +196,8 @@ export default function ClubPage() {
                 className={cn(
                   'flex items-center gap-2 px-4 py-4 rounded-xl font-medium text-sm transition-all',
                   copied
-                    ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400'
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary/5 hover:text-primary'
                 )}
               >
                 {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
@@ -214,7 +214,7 @@ export default function ClubPage() {
             <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-emerald-500" />
+                  <TrendingUp className="w-4 h-4 text-primary" />
                   {currentYear}년 시즌 스탯
                 </h3>
                 {playerRank ? (
@@ -248,7 +248,7 @@ export default function ClubPage() {
               <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <Link
                   href={`/ranking/${player.id}`}
-                  className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 font-medium"
+                  className="text-sm text-primary hover:text-primary-hover font-medium"
                 >
                   상세 기록 보기 →
                 </Link>
@@ -259,13 +259,13 @@ export default function ClubPage() {
           {/* 구독 플랜 */}
           <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
             <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Crown className="w-4 h-4 text-emerald-500" />
+              <Crown className="w-4 h-4 text-primary" />
               플랜
             </h3>
             {club.isPro ? (
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 rounded-full text-sm font-medium border border-emerald-300 dark:border-emerald-500/30">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-primary/20 to-teal-500/20 text-primary rounded-full text-sm font-medium border border-primary/30">
                     <Zap className="w-3.5 h-3.5" />
                     {club.planType === 'developer' ? 'Developer' : 'PRO'}
                   </span>
@@ -285,7 +285,7 @@ export default function ClubPage() {
                   <span className="inline-flex px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full text-sm font-medium">FREE</span>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">AI 팀 편성 등 프리미엄 기능을 사용해보세요</p>
                 </div>
-                <Link href="/upgrade" className="ml-4 flex-shrink-0 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity">
+                <Link href="/upgrade" className="ml-4 flex-shrink-0 px-4 py-2 bg-gradient-to-r from-primary to-teal-600 text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity">
                   업그레이드
                 </Link>
               </div>
@@ -295,7 +295,7 @@ export default function ClubPage() {
           {/* 멤버 목록 */}
           <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
-              <Users className="w-4 h-4 text-emerald-500" />
+              <Users className="w-4 h-4 text-primary" />
               <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 멤버
               </h3>
@@ -307,7 +307,7 @@ export default function ClubPage() {
               {sortedMembers.map((member) => {
                 const content = (
                   <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
                       {member.photo_url ? (
                         <Image
                           src={`${API_BASE}${member.photo_url}`}
@@ -317,7 +317,7 @@ export default function ClubPage() {
                           className="object-cover w-full h-full"
                         />
                       ) : (
-                        <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span className="text-sm font-semibold text-primary">
                           {member.name.charAt(0)}
                         </span>
                       )}
@@ -434,7 +434,7 @@ function ClubMenuItem({
 }) {
   const colorClasses = {
     blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
-    emerald: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+    emerald: 'bg-primary/10 text-primary',
     amber: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
     purple: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400',
   }
@@ -462,7 +462,7 @@ function MiniStatCard({
   icon: React.ReactNode; label: string; value: string | number; color: 'emerald' | 'amber' | 'blue' | 'purple'
 }) {
   const colorClasses = {
-    emerald: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30',
+    emerald: 'bg-primary/10 text-primary border-primary/20',
     amber: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30',
     blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/30',
     purple: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-500/30',

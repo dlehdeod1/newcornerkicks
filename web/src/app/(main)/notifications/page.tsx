@@ -10,7 +10,7 @@ import { cn } from '@/lib/cn'
 
 const notificationTypeConfig: Record<string, { icon: string; color: string; label: string }> = {
   session_created: { icon: '📅', color: 'bg-blue-500', label: '새 세션' },
-  team_assigned: { icon: '👕', color: 'bg-emerald-500', label: '팀 배정' },
+  team_assigned: { icon: '👕', color: 'bg-primary', label: '팀 배정' },
   match_result: { icon: '⚽', color: 'bg-amber-500', label: '경기 결과' },
   settlement: { icon: '💰', color: 'bg-green-500', label: '정산' },
   badge_earned: { icon: '🏆', color: 'bg-purple-500', label: '배지 획득' },
@@ -66,7 +66,7 @@ export default function NotificationsPage() {
         </p>
         <Link
           href="/login"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl transition-colors"
         >
           로그인하기
         </Link>
@@ -101,7 +101,7 @@ export default function NotificationsPage() {
         {unreadCount > 0 && (
           <button
             onClick={() => markAllAsReadMutation.mutate()}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-primary hover:bg-primary/5 rounded-xl transition-colors"
           >
             <CheckCheck className="w-4 h-4" />
             모두 읽음
@@ -149,7 +149,7 @@ export default function NotificationsPage() {
                 <div
                   className={cn(
                     'flex gap-4 p-4 sm:p-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group',
-                    !notification.is_read && 'bg-emerald-50/50 dark:bg-emerald-500/5'
+                    !notification.is_read && 'bg-primary/5'
                   )}
                   onClick={() => {
                     if (!notification.is_read) {
@@ -172,7 +172,7 @@ export default function NotificationsPage() {
                         'text-xs px-2 py-0.5 rounded-full',
                         config.color + '/20',
                         notification.type === 'session_created' && 'text-blue-600 dark:text-blue-400',
-                        notification.type === 'team_assigned' && 'text-emerald-600 dark:text-emerald-400',
+                        notification.type === 'team_assigned' && 'text-primary',
                         notification.type === 'match_result' && 'text-amber-600 dark:text-amber-400',
                         notification.type === 'settlement' && 'text-green-600 dark:text-green-400',
                         notification.type === 'badge_earned' && 'text-purple-600 dark:text-purple-400',
@@ -181,7 +181,7 @@ export default function NotificationsPage() {
                         {config.label}
                       </span>
                       {!notification.is_read && (
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full shrink-0" />
+                        <div className="w-2 h-2 bg-primary rounded-full shrink-0" />
                       )}
                     </div>
                     <p className={cn(
@@ -208,7 +208,7 @@ export default function NotificationsPage() {
                           e.stopPropagation()
                           markAsReadMutation.mutate(notification.id)
                         }}
-                        className="p-2 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
                         title="읽음 표시"
                       >
                         <Check className="w-4 h-4" />

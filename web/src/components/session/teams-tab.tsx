@@ -355,7 +355,7 @@ export function TeamsTab({ teams, sessionId, session, attendance, onRefetch }: P
                   size="sm"
                   onClick={handleReformTeams}
                   loading={isReforming}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white border-0"
+                  className="bg-primary hover:bg-primary-hover text-white border-0"
                 >
                   <Wand2 className="w-4 h-4 mr-1.5" />
                   재편성

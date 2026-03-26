@@ -67,7 +67,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
             <User className="w-8 h-8 text-slate-400 dark:text-slate-600" />
           </div>
           <p className="text-slate-500 mb-4">선수를 찾을 수 없습니다.</p>
-          <Link href="/ranking" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300">
+          <Link href="/ranking" className="text-primary hover:text-primary-hover">
             랭킹으로 돌아가기
           </Link>
         </div>
@@ -128,7 +128,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
 
             {playerRank && (
               <div className="flex items-center gap-2 mb-4">
-                <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full text-sm font-medium border border-emerald-200 dark:border-emerald-500/30">
+                <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium border border-primary/20">
                   MVP 순위 {playerRank}위
                 </span>
                 <span className="text-sm text-slate-500">{currentYear}년 시즌</span>
@@ -187,7 +187,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
               amber: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30',
               blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-500/30',
               purple: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-500/30',
-              emerald: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30',
+              emerald: 'bg-primary/10 text-primary border-primary/20',
               orange: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-500/30',
             }
             const isActive = activeLogTab === tab.key
@@ -289,7 +289,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
       <div className="mt-6 text-center">
         <Link
           href={`/abilities/${id}`}
-          className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 font-medium transition-colors"
+          className="inline-flex items-center gap-2 text-primary hover:text-primary-hover font-medium transition-colors"
         >
           <TrendingUp className="w-4 h-4" />
           개인 능력치 보기 →
@@ -332,7 +332,7 @@ function StatBadge({ icon, label, value, color }: {
   color: 'emerald' | 'amber' | 'blue' | 'purple' | 'slate'
 }) {
   const colorClasses = {
-    emerald: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30',
+    emerald: 'bg-primary/10 text-primary border-primary/20',
     amber: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30',
     blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/30',
     purple: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-500/30',
@@ -357,10 +357,10 @@ function StatRow({ label, value, max, color, isDecimal = false }: {
   const numValue = typeof value === 'string' ? parseFloat(value) : value
   const percentage = Math.min((numValue / max) * 100, 100)
 
-  const barColors = { amber: 'bg-amber-500', blue: 'bg-blue-500', purple: 'bg-purple-500', emerald: 'bg-emerald-500', slate: 'bg-slate-500' }
+  const barColors = { amber: 'bg-amber-500', blue: 'bg-blue-500', purple: 'bg-purple-500', emerald: 'bg-primary', slate: 'bg-slate-500' }
   const textColors = {
     amber: 'text-amber-600 dark:text-amber-400', blue: 'text-blue-600 dark:text-blue-400',
-    purple: 'text-purple-600 dark:text-purple-400', emerald: 'text-emerald-600 dark:text-emerald-400',
+    purple: 'text-purple-600 dark:text-purple-400', emerald: 'text-primary',
     slate: 'text-slate-600 dark:text-slate-300',
   }
 

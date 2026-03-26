@@ -161,7 +161,7 @@ export default function AdminRankingsPage() {
           </span>
         </div>
         {refreshMutation.isSuccess && (
-          <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-sm">
+          <span className="flex items-center gap-1 text-primary text-sm">
             <CheckCircle className="w-4 h-4" />
             갱신 완료
           </span>
@@ -297,7 +297,7 @@ function RankingTable({ rankings, sortBy, sortOrder, onSort, enabledEvents }: {
                 onClick={() => onSort(col.key)}
                 className={cn(
                   'px-2 py-2.5 text-center text-xs font-semibold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors whitespace-nowrap',
-                  sortBy === col.key ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10' : 'text-slate-500'
+                  sortBy === col.key ? 'text-primary bg-primary/5' : 'text-slate-500'
                 )}
               >
                 {col.label}
@@ -328,7 +328,7 @@ function RankingTable({ rankings, sortBy, sortOrder, onSort, enabledEvents }: {
                   </span>
                 </td>
                 <td className="px-3 py-2.5">
-                  <Link href={`/ranking/${player.id}`} className="text-sm font-semibold text-slate-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                  <Link href={`/ranking/${player.id}`} className="text-sm font-semibold text-slate-900 dark:text-white hover:text-primary transition-colors">
                     {player.name}
                   </Link>
                 </td>
@@ -338,7 +338,7 @@ function RankingTable({ rankings, sortBy, sortOrder, onSort, enabledEvents }: {
                     className={cn(
                       'px-2 py-2.5 text-center text-sm tabular-nums',
                       sortBy === col.key
-                        ? 'font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-500/5'
+                        ? 'font-bold text-primary bg-primary/5'
                         : 'text-slate-700 dark:text-slate-300'
                     )}
                   >

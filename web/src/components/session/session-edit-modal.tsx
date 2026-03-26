@@ -78,7 +78,7 @@ export function SessionEditModal({ session, isOpen, onClose, onSave }: Props) {
         {/* 헤더 */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-emerald-500" />
+            <Calendar className="w-5 h-5 text-primary" />
             세션 정보 수정
           </h2>
           <button
@@ -101,7 +101,7 @@ export function SessionEditModal({ session, isOpen, onClose, onSave }: Props) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="코너킥스 정기 풋살"
-              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
 
@@ -115,7 +115,7 @@ export function SessionEditModal({ session, isOpen, onClose, onSave }: Props) {
               type="date"
               value={sessionDate}
               onChange={(e) => setSessionDate(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
 
@@ -130,7 +130,7 @@ export function SessionEditModal({ session, isOpen, onClose, onSave }: Props) {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="수성대 풋살장 2번구장"
-              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
 
@@ -145,7 +145,7 @@ export function SessionEditModal({ session, isOpen, onClose, onSave }: Props) {
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
             <div>
@@ -156,7 +156,7 @@ export function SessionEditModal({ session, isOpen, onClose, onSave }: Props) {
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
           </div>
@@ -174,7 +174,7 @@ export function SessionEditModal({ session, isOpen, onClose, onSave }: Props) {
                   value={baseFee}
                   onChange={(e) => setBaseFee(Number(e.target.value))}
                   step={1000}
-                  className="w-full px-4 py-3 pr-12 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-full px-4 py-3 pr-12 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">원</span>
               </div>
@@ -189,7 +189,7 @@ export function SessionEditModal({ session, isOpen, onClose, onSave }: Props) {
                   value={potTotal}
                   onChange={(e) => setPotTotal(Number(e.target.value))}
                   step={10000}
-                  className="w-full px-4 py-3 pr-12 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-full px-4 py-3 pr-12 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">원</span>
               </div>
@@ -214,7 +214,7 @@ export function SessionEditModal({ session, isOpen, onClose, onSave }: Props) {
                   className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     status === opt.value
                       ? opt.color === 'emerald'
-                        ? 'bg-emerald-500 text-white'
+                        ? 'bg-primary text-white'
                         : opt.color === 'amber'
                         ? 'bg-amber-500 text-white'
                         : 'bg-slate-500 text-white'

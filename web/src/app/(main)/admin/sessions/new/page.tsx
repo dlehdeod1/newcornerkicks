@@ -88,8 +88,8 @@ export default function NewSessionPage() {
       {/* 헤더 */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl flex items-center justify-center">
-            <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+            <Calendar className="w-5 h-5 text-primary" />
           </div>
           새 세션 만들기
         </h1>
@@ -119,7 +119,7 @@ export default function NewSessionPage() {
                 className={cn(
                   'px-4 py-2 rounded-xl text-sm font-medium transition-all',
                   sessionDate === qd.value
-                    ? 'bg-emerald-500 text-white'
+                    ? 'bg-primary text-white'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                 )}
               >
@@ -132,7 +132,7 @@ export default function NewSessionPage() {
             type="date"
             value={sessionDate}
             onChange={(e) => setSessionDate(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
             required
           />
         </div>
@@ -151,7 +151,7 @@ export default function NewSessionPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="코너킥스 정기 풋살"
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
           <p className="text-xs text-slate-500 mt-2">
             비워두면 "코너킥스 정기 풋살"로 자동 설정됩니다
@@ -160,8 +160,8 @@ export default function NewSessionPage() {
 
         {/* 미리보기 */}
         {sessionDate && (
-          <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl p-6 border border-emerald-200 dark:border-emerald-500/30">
-            <h3 className="font-semibold text-emerald-700 dark:text-emerald-400 mb-3 flex items-center gap-2">
+          <div className="bg-primary/5 rounded-2xl p-6 border border-primary/30">
+            <h3 className="font-semibold text-primary mb-3 flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
               미리보기
             </h3>
@@ -172,7 +172,7 @@ export default function NewSessionPage() {
               <p className="text-sm text-slate-500 mt-1">
                 {formatDate(sessionDate)}
               </p>
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">
+              <p className="text-xs text-primary mt-2">
                 ✓ 모집중 상태로 생성됩니다
               </p>
             </div>

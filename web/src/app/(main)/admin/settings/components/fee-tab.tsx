@@ -116,7 +116,7 @@ export default function FeeTab({ club, token, onUpdate, onDirtyChange }: Setting
               onClick={() => setSplitEnabled(!splitEnabled)}
               className={cn(
                 'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                splitEnabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                splitEnabled ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'
               )}
             >
               <span className={cn(
@@ -173,7 +173,7 @@ export default function FeeTab({ club, token, onUpdate, onDirtyChange }: Setting
               onClick={() => setRankDiffEnabled(!rankDiffEnabled)}
               className={cn(
                 'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                rankDiffEnabled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                rankDiffEnabled ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'
               )}
             >
               <span className={cn(

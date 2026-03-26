@@ -83,7 +83,7 @@ export default function StatsPage() {
         <select
           value={selectedYear}
           onChange={(e) => setSelectedYear(Number(e.target.value))}
-          className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
         >
           {[currentYear, currentYear - 1, currentYear - 2].map((year) => (
             <option key={year} value={year}>
@@ -175,7 +175,7 @@ export default function StatsPage() {
             {/* 수비 랭킹 */}
             <RankingCard
               title="수비 랭킹"
-              icon={<Shield className="w-5 h-5 text-emerald-500" />}
+              icon={<Shield className="w-5 h-5 text-primary" />}
               items={(rankings.defenseRanking || []).slice(0, 5)}
               valueKey="defenses"
               valueLabel="수비"
@@ -282,10 +282,10 @@ export default function StatsPage() {
             <div className="mt-8 space-y-4">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <User className="w-5 h-5 text-emerald-500" />
+                  <User className="w-5 h-5 text-primary" />
                   {player ? `${player.name}의 개인 통계` : '내 개인 통계'}
                 </h2>
-                <span className="text-xs bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-semibold">
+                <span className="text-xs bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-semibold">
                   나만의 통계
                 </span>
               </div>
@@ -388,7 +388,7 @@ export default function StatsPage() {
             {/* 평균 통계 */}
             <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
               <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-emerald-500" />
+                <TrendingUp className="w-5 h-5 text-primary" />
                 평균 통계
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -460,7 +460,7 @@ function StatCard({
 }) {
   const colorClasses = {
     blue: 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/30',
-    emerald: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30',
+    emerald: 'bg-primary/5 text-primary border-primary/20',
     red: 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30',
     amber: 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30',
   }
@@ -515,12 +515,12 @@ function RankingCard({
               return (
               <div key={item.id} className={cn(
                 'flex items-center gap-3 px-2 py-1 rounded-xl transition-colors',
-                isMe && 'bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-400 dark:ring-emerald-500'
+                isMe && 'bg-primary/5 ring-1 ring-primary'
               )}>
                 <span className={cn(
                   'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold',
                   isMe
-                    ? 'bg-emerald-200 dark:bg-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                    ? 'bg-primary/20 text-primary'
                     : index === 0 && 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
                   !isMe && index === 1 && 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
                   !isMe && index === 2 && 'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400',
@@ -531,15 +531,15 @@ function RankingCard({
                 <div className="flex-1 min-w-0 flex items-center gap-1">
                   <p className={cn(
                     'text-sm font-medium truncate',
-                    isMe ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-900 dark:text-white'
+                    isMe ? 'text-primary font-bold' : 'text-slate-900 dark:text-white'
                   )}>
                     {itemName}
                   </p>
-                  {isMe && <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold shrink-0">← 나</span>}
+                  {isMe && <span className="text-xs text-primary font-semibold shrink-0">← 나</span>}
                 </div>
                 <span className={cn(
                   'text-sm font-bold shrink-0',
-                  isMe ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'
+                  isMe ? 'text-primary' : 'text-slate-600 dark:text-slate-300'
                 )}>
                   {item[valueKey]}{valueLabel}
                 </span>
@@ -571,7 +571,7 @@ function highlightMyName(label: string, myName: string | null) {
         <span key={i}>
           {part}
           {i < parts.length - 1 && (
-            <span className="font-bold text-emerald-600 dark:text-emerald-400 underline underline-offset-2">
+            <span className="font-bold text-primary underline underline-offset-2">
               {myName}
             </span>
           )}
@@ -595,7 +595,7 @@ function MyStatCard({
   accentColor: 'emerald' | 'red' | 'blue' | 'amber'
 }) {
   const accentClasses = {
-    emerald: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/15',
+    emerald: 'text-primary bg-primary/5',
     red: 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-500/15',
     blue: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/15',
     amber: 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15',
@@ -707,7 +707,7 @@ function FunStatCard({
                 <div key={index} className={cn(
                   'flex items-center justify-between px-3 py-2 rounded-xl ring-1 ring-transparent transition-colors',
                   isMe
-                    ? 'ring-emerald-400 dark:ring-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+                    ? 'ring-primary bg-primary/5'
                     : index === 0
                       ? accentClasses[accentColor]
                       : 'bg-slate-50 dark:bg-slate-800/50'
@@ -716,7 +716,7 @@ function FunStatCard({
                     <span className={cn(
                       'text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center',
                       isMe
-                        ? 'bg-emerald-200 dark:bg-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                        ? 'bg-primary/20 text-primary'
                         : index === 0
                           ? 'bg-white/60 dark:bg-black/20'
                           : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
@@ -726,11 +726,11 @@ function FunStatCard({
                     <span className="text-sm font-medium text-slate-900 dark:text-white">
                       {highlightMyName(item.label, myName ?? null)}
                     </span>
-                    {isMe && <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">← 나</span>}
+                    {isMe && <span className="text-xs text-primary font-semibold">← 나</span>}
                   </div>
                   <span className={cn(
                     'text-sm font-bold',
-                    isMe ? 'text-emerald-600 dark:text-emerald-400' : index === 0 ? '' : 'text-slate-600 dark:text-slate-300'
+                    isMe ? 'text-primary' : index === 0 ? '' : 'text-slate-600 dark:text-slate-300'
                   )}>
                     {item.value}
                   </span>

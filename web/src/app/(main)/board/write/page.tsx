@@ -20,7 +20,7 @@ export default function BoardWritePage() {
   return (
     <Suspense fallback={
       <div className="flex justify-center items-center py-20">
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     }>
       <BoardWriteContent />
@@ -171,7 +171,7 @@ function BoardWriteContent() {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             {categoryOptions.map((opt) => (
               <option key={opt.key} value={opt.key}>
@@ -191,7 +191,7 @@ function BoardWriteContent() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="제목을 입력하세요"
-            className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
         </div>
 
@@ -205,7 +205,7 @@ function BoardWriteContent() {
             onChange={(e) => setContent(e.target.value)}
             placeholder="내용을 입력하세요"
             rows={10}
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-y"
+            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y"
           />
         </div>
 
@@ -265,7 +265,7 @@ function BoardWriteContent() {
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700 space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-emerald-500" />
+                    <BarChart3 className="w-4 h-4 text-primary" />
                     투표
                   </label>
                   <button
@@ -282,7 +282,7 @@ function BoardWriteContent() {
                   value={pollTitle}
                   onChange={(e) => setPollTitle(e.target.value)}
                   placeholder="투표 제목 (예: 다음 주 시간 투표)"
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
 
                 {pollOptions.map((opt, i) => (
@@ -296,7 +296,7 @@ function BoardWriteContent() {
                         setPollOptions(next)
                       }}
                       placeholder={`선택지 ${i + 1}`}
-                      className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                      className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
                     />
                     {pollOptions.length > 2 && (
                       <button
@@ -314,7 +314,7 @@ function BoardWriteContent() {
                   <button
                     type="button"
                     onClick={() => setPollOptions([...pollOptions, ''])}
-                    className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium"
+                    className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary-hover font-medium"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     선택지 추가
@@ -326,7 +326,7 @@ function BoardWriteContent() {
                     type="checkbox"
                     checked={pollAllowMultiple}
                     onChange={(e) => setPollAllowMultiple(e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-emerald-500 focus:ring-emerald-500"
+                    className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary"
                   />
                   <span className="text-xs text-slate-500 dark:text-slate-400">복수 선택 허용</span>
                 </label>
@@ -339,7 +339,7 @@ function BoardWriteContent() {
         {isAdmin && (
           <label className="flex items-center gap-3 cursor-pointer">
             <div
-              className={`relative w-10 h-6 rounded-full transition-colors ${isPinned ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+              className={`relative w-10 h-6 rounded-full transition-colors ${isPinned ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
               onClick={() => setIsPinned(!isPinned)}
             >
               <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${isPinned ? 'left-5' : 'left-1'}`} />
@@ -361,7 +361,7 @@ function BoardWriteContent() {
           <button
             type="submit"
             disabled={isPending}
-            className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+            className="px-6 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
           >
             {isPending ? '저장 중...' : editId ? '수정' : '작성'}
           </button>

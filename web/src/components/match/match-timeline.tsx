@@ -144,7 +144,7 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
             <span className={cn(
               'text-4xl font-black',
               isTeam1Winner
-                ? 'text-emerald-600 dark:text-emerald-400'
+                ? 'text-primary'
                 : 'text-slate-400 dark:text-slate-500'
             )}>
               {match.team1_score}
@@ -153,7 +153,7 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
             <span className={cn(
               'text-4xl font-black',
               isTeam2Winner
-                ? 'text-emerald-600 dark:text-emerald-400'
+                ? 'text-primary'
                 : 'text-slate-400 dark:text-slate-500'
             )}>
               {match.team2_score}
@@ -185,7 +185,7 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
                 무승부
               </span>
             ) : (
-              <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium rounded-full">
+              <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">
                 {isTeam1Winner ? team1?.team_name : team2?.team_name} 승리
               </span>
             )}

@@ -38,7 +38,7 @@ const timeSlotLabels: Record<string, string> = { morning: '오전', afternoon: '
 const skillLabels: Record<string, string> = { beginner: '입문', low: '초급', mid: '중급', high: '상급' }
 
 const badgeColors: Record<string, string> = {
-  emerald: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+  emerald: 'bg-primary/10 text-primary',
   amber: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
   blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
   purple: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400',
@@ -101,8 +101,8 @@ export default function BoardPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl flex items-center justify-center">
-            <MessageSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+            <MessageSquare className="w-5 h-5 text-primary" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">게시판</h1>
         </div>
@@ -181,7 +181,7 @@ function ClubBoardSection({ token, isLoggedIn }: { token: string | null; isLogge
               className={cn(
                 'px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap',
                 activeTab === cat.key
-                  ? 'bg-emerald-500 text-white shadow-sm'
+                  ? 'bg-primary text-white shadow-sm'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
               )}
             >
@@ -195,7 +195,7 @@ function ClubBoardSection({ token, isLoggedIn }: { token: string | null; isLogge
       {!isNoticeTab && (
         <Link
           href={`/board/write?category=${activeTab}`}
-          className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95"
+          className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 bg-primary hover:bg-primary-hover text-white rounded-full shadow-lg shadow-primary/30 transition-all hover:scale-105 active:scale-95"
           title="글 작성"
         >
           <Plus className="w-6 h-6" />
@@ -274,7 +274,7 @@ function CommunitySection({ token }: { token: string | null }) {
       {/* FAB: 글 작성 */}
       <Link
         href={`/community/write?category=${activeTab}`}
-        className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-full shadow-lg shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95"
+        className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 bg-gradient-to-r from-primary to-teal-500 hover:from-primary-hover hover:to-teal-600 text-white rounded-full shadow-lg shadow-primary/30 transition-all hover:scale-105 active:scale-95"
         title="글 작성"
       >
         <Plus className="w-6 h-6" />
@@ -292,7 +292,7 @@ function CommunitySection({ token }: { token: string | null }) {
             <select
               value={region}
               onChange={e => setRegion(e.target.value)}
-              className="w-full sm:w-48 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className="w-full sm:w-48 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               <option value="">전체</option>
               {regions.map(r => <option key={r} value={r}>{r}</option>)}
@@ -308,7 +308,7 @@ function CommunitySection({ token }: { token: string | null }) {
                   className={cn(
                     'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
                     selectedDays.includes(key)
-                      ? 'bg-emerald-500 text-white'
+                      ? 'bg-primary text-white'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                   )}
                 >
@@ -324,7 +324,7 @@ function CommunitySection({ token }: { token: string | null }) {
               className={cn(
                 'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
                 onlyOpen
-                  ? 'bg-emerald-500 text-white'
+                  ? 'bg-primary text-white'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
               )}
             >
@@ -363,7 +363,7 @@ function CommunitySection({ token }: { token: string | null }) {
                     {cat?.label || post.category}
                   </span>
                   {isRecruitOrMatch && post.status === 'open' && (
-                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
                       모집중
                     </span>
                   )}
@@ -373,7 +373,7 @@ function CommunitySection({ token }: { token: string | null }) {
                     </span>
                   )}
                 </div>
-                <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors mb-2 line-clamp-1">
+                <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors mb-2 line-clamp-1">
                   {post.title}
                 </h3>
                 {isRecruitOrMatch && (
@@ -437,7 +437,7 @@ function CommunitySection({ token }: { token: string | null }) {
 function LoadingSpinner() {
   return (
     <div className="flex justify-center py-20">
-      <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   )
 }
@@ -473,14 +473,14 @@ function NoticeList({ announcements }: { announcements: any[] }) {
                   공지
                 </span>
               </div>
-              <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
+              <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate">
                 {a.title}
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                 {a.author_name || '관리자'} · {formatDate(a.created_at)}
               </p>
             </div>
-            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors flex-shrink-0 mt-2" />
+            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-primary transition-colors flex-shrink-0 mt-2" />
           </div>
         </Link>
       ))}
@@ -499,7 +499,7 @@ function ClubPostList({ posts }: { posts: any[] }) {
   }
 
   const clubCategoryBadgeColors: Record<string, string> = {
-    free: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+    free: 'bg-primary/10 text-primary',
     review: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
     schedule: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
     notice: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400',
@@ -529,7 +529,7 @@ function ClubPostList({ posts }: { posts: any[] }) {
                   {clubCategories.find(c => c.key === post.category)?.label || post.category}
                 </span>
               </div>
-              <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
+              <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate">
                 {post.title}
               </h3>
               <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -547,7 +547,7 @@ function ClubPostList({ posts }: { posts: any[] }) {
                 )}
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors flex-shrink-0 mt-2" />
+            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-primary transition-colors flex-shrink-0 mt-2" />
           </div>
         </Link>
       ))}

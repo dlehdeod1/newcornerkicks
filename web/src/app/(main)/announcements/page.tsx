@@ -38,8 +38,8 @@ export default function AnnouncementsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl flex items-center justify-center">
-            <Bell className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+            <Bell className="w-5 h-5 text-primary" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -55,7 +55,7 @@ export default function AnnouncementsPage() {
         {isAdmin && (
           <Link
             href="/admin/announcements"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-xl text-sm font-medium transition-colors"
           >
             <Plus className="w-4 h-4" />
             새 공지 작성
@@ -66,7 +66,7 @@ export default function AnnouncementsPage() {
       {/* Content */}
       {isLoading ? (
         <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : announcements.length === 0 ? (
         <div className="text-center py-20">
@@ -83,7 +83,7 @@ export default function AnnouncementsPage() {
                 href={`/announcements/${a.id}`}
                 className={cn(
                   'block bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 shadow-sm hover:shadow-md transition-all group',
-                  isUnread && 'border-l-4 border-l-emerald-500'
+                  isUnread && 'border-l-4 border-l-primary'
                 )}
               >
                 <div className="flex items-start gap-4">
@@ -109,7 +109,7 @@ export default function AnnouncementsPage() {
                           시스템
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 text-xs font-medium bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full">
+                        <span className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
                           클럽
                         </span>
                       )}
@@ -117,7 +117,7 @@ export default function AnnouncementsPage() {
 
                     {/* Title */}
                     <h3 className={cn(
-                      'text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate',
+                      'text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate',
                       isUnread ? 'font-bold' : 'font-medium'
                     )}>
                       {a.title}
@@ -129,7 +129,7 @@ export default function AnnouncementsPage() {
                     </p>
                   </div>
 
-                  <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors flex-shrink-0 mt-2" />
+                  <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-primary transition-colors flex-shrink-0 mt-2" />
                 </div>
               </Link>
             )

@@ -176,7 +176,7 @@ export function AttendanceEditorModal({
         {/* 헤더 */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <User className="w-5 h-5 text-emerald-500" />
+            <User className="w-5 h-5 text-primary" />
             참석자 수정
           </h2>
           <button
@@ -194,7 +194,7 @@ export function AttendanceEditorModal({
             className={cn(
               'flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors',
               mode === 'manual'
-                ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-500'
+                ? 'text-primary border-b-2 border-primary'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
             )}
           >
@@ -206,7 +206,7 @@ export function AttendanceEditorModal({
             className={cn(
               'flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors',
               mode === 'parse'
-                ? 'text-emerald-600 dark:text-emerald-400 border-b-2 border-emerald-500'
+                ? 'text-primary border-b-2 border-primary'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
             )}
           >
@@ -224,7 +224,7 @@ export function AttendanceEditorModal({
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   참석자
                 </span>
-                <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+                <span className="text-sm text-primary font-medium">
                   {selectedPlayerIds.length + guestNames.length}명
                 </span>
               </div>
@@ -234,7 +234,7 @@ export function AttendanceEditorModal({
                   return (
                     <div
                       key={playerId}
-                      className="flex items-center gap-1 px-2.5 py-1 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-lg text-sm"
+                      className="flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-lg text-sm"
                     >
                       <span>{player?.name || player?.nickname}</span>
                       <button
@@ -291,7 +291,7 @@ export function AttendanceEditorModal({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="선수 검색..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
             </div>
@@ -311,7 +311,7 @@ export function AttendanceEditorModal({
                       className={cn(
                         'flex items-center gap-2 px-3 py-2.5 rounded-xl text-left transition-all',
                         isSelected
-                          ? 'bg-emerald-500 text-white'
+                          ? 'bg-primary text-white'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                       )}
                     >
@@ -355,7 +355,7 @@ export function AttendanceEditorModal({
                   두 글자 이름만 파싱되며, 동명이인은 용병으로 처리됩니다.
                 </p>
                 <textarea
-                  className="flex-1 min-h-[200px] px-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none"
+                  className="flex-1 min-h-[200px] px-4 py-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                   placeholder={`예시:\n2/11(수)\n민호 준모 호규 호재 상훈 상훈 주현 12명`}
                   value={kakaoText}
                   onChange={(e) => setKakaoText(e.target.value)}
@@ -382,8 +382,8 @@ export function AttendanceEditorModal({
                     <p className="text-xl font-bold text-slate-900 dark:text-white">{parseResult.totalCount}</p>
                     <p className="text-xs text-slate-500 mt-0.5">총 인원</p>
                   </div>
-                  <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-3">
-                    <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{parseResult.playerCount}</p>
+                  <div className="bg-primary/5 rounded-xl p-3">
+                    <p className="text-xl font-bold text-primary">{parseResult.playerCount}</p>
                     <p className="text-xs text-slate-500 mt-0.5">정회원</p>
                   </div>
                   <div className="bg-amber-50 dark:bg-amber-500/10 rounded-xl p-3">
@@ -404,7 +404,7 @@ export function AttendanceEditorModal({
                           a.isGuest
                             ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
                             : a.playerId
-                              ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                              ? 'bg-primary/10 text-primary'
                               : 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'
                         )}
                       >

@@ -30,7 +30,7 @@ export default function AdminSettingsPage() {
   return (
     <Suspense fallback={
       <div className="flex justify-center items-center py-20">
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     }>
       <AdminSettingsContent />
@@ -78,7 +78,7 @@ function AdminSettingsContent() {
         <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">접근 권한이 없습니다</h2>
         <p className="text-slate-500 mb-6">관리자만 접근할 수 있습니다.</p>
-        <Link href="/" className="text-emerald-600 hover:underline">홈으로 돌아가기</Link>
+        <Link href="/" className="text-primary hover:underline">홈으로 돌아가기</Link>
       </div>
     )
   }
@@ -86,7 +86,7 @@ function AdminSettingsContent() {
   if (isLoading || !club) {
     return (
       <div className="flex justify-center items-center py-20">
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }

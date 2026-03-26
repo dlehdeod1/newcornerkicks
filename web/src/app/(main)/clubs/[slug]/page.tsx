@@ -64,7 +64,7 @@ export default function ClubProfilePage() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -74,7 +74,7 @@ export default function ClubProfilePage() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         <p className="text-slate-500">클럽을 찾을 수 없습니다.</p>
-        <Link href="/clubs" className="text-emerald-600 hover:underline mt-4 inline-block">돌아가기</Link>
+        <Link href="/clubs" className="text-primary hover:underline mt-4 inline-block">돌아가기</Link>
       </div>
     )
   }
@@ -96,7 +96,7 @@ export default function ClubProfilePage() {
       {/* Club Header Card */}
       <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl border border-slate-200 dark:border-slate-800/50 shadow-sm overflow-hidden mb-6">
         {/* Hero gradient */}
-        <div className="h-24 bg-gradient-to-r from-emerald-500 to-teal-500 relative">
+        <div className="h-24 bg-gradient-to-r from-primary to-teal-500 relative">
           {club.isPro && (
             <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 bg-amber-500/90 backdrop-blur rounded-full text-xs font-bold text-white">
               <Crown className="w-3 h-3" />
@@ -115,7 +115,7 @@ export default function ClubProfilePage() {
                 className="w-20 h-20 rounded-2xl border-4 border-white dark:border-slate-900 object-cover shadow-lg"
               />
             ) : (
-              <div className="w-20 h-20 rounded-2xl border-4 border-white dark:border-slate-900 bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+              <div className="w-20 h-20 rounded-2xl border-4 border-white dark:border-slate-900 bg-gradient-to-br from-primary to-teal-600 flex items-center justify-center shadow-lg">
                 <span className="text-2xl font-bold text-white">{club.name.charAt(0)}</span>
               </div>
             )}
@@ -149,7 +149,7 @@ export default function ClubProfilePage() {
 
           {/* Member badge */}
           {isMember && (
-            <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-medium">
+            <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-medium">
               <Users className="w-3 h-3" />
               소속 멤버 ({data?.myRole === 'owner' ? '오너' : data?.myRole === 'admin' ? '관리자' : '멤버'})
             </div>
@@ -167,7 +167,7 @@ export default function ClubProfilePage() {
           {!myReview && !showReviewForm && (
             <button
               onClick={() => setShowReviewForm(true)}
-              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-xl text-sm font-medium transition-colors"
             >
               리뷰 작성
             </button>
@@ -176,7 +176,7 @@ export default function ClubProfilePage() {
 
         {/* My review or form */}
         {myReview && !showReviewForm && (
-          <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl border border-emerald-200 dark:border-emerald-500/30">
+          <div className="mb-6 p-4 bg-primary/5 rounded-xl border border-primary/20">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-slate-900 dark:text-white">내 리뷰</span>
@@ -189,7 +189,7 @@ export default function ClubProfilePage() {
                     setReviewRating(myReview.rating)
                     setReviewContent(myReview.content || '')
                   }}
-                  className="text-xs text-slate-500 hover:text-emerald-600 transition-colors"
+                  className="text-xs text-slate-500 hover:text-primary transition-colors"
                 >
                   수정
                 </button>
@@ -238,13 +238,13 @@ export default function ClubProfilePage() {
               onChange={(e) => setReviewContent(e.target.value)}
               placeholder="클럽에 대한 솔직한 후기를 남겨주세요 (선택)"
               rows={3}
-              className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none"
+              className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
             />
             <div className="flex gap-2">
               <button
                 onClick={() => reviewMutation.mutate()}
                 disabled={!reviewRating || reviewMutation.isPending}
-                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition-colors"
+                className="px-4 py-2 bg-primary hover:bg-primary-hover disabled:opacity-50 text-white rounded-xl text-sm font-medium transition-colors"
               >
                 {reviewMutation.isPending ? '저장 중...' : myReview ? '수정' : '등록'}
               </button>

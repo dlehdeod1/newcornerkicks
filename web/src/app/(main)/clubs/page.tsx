@@ -7,7 +7,7 @@ import { authApi, clubsApi } from '@/lib/api'
 import { Crown, Plus, Check, Users, ChevronRight, X } from 'lucide-react'
 
 const CLUB_GRADIENTS = [
-  'from-emerald-500 to-teal-600',
+  'from-primary to-teal-600',
   'from-blue-500 to-indigo-600',
   'from-purple-500 to-pink-600',
   'from-amber-500 to-orange-600',
@@ -60,7 +60,7 @@ export default function ClubsPage() {
                 onClick={() => handleSelectClub(club)}
                 className={`w-full text-left rounded-2xl p-5 border transition-all duration-200 ${
                   isActive
-                    ? 'border-emerald-500/50 bg-emerald-500/10 shadow-lg shadow-emerald-500/10'
+                    ? 'border-primary/50 bg-primary/10 shadow-lg shadow-primary/10'
                     : 'border-slate-700/50 bg-slate-800/40 hover:border-slate-600 hover:bg-slate-800/60'
                 }`}
               >
@@ -83,7 +83,7 @@ export default function ClubsPage() {
                         </span>
                       )}
                       {isActive && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex-shrink-0">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-primary/20 text-primary border border-primary/30 flex-shrink-0">
                           <Check className="w-3 h-3" />
                           현재
                         </span>
@@ -113,7 +113,7 @@ export default function ClubsPage() {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setShowJoinModal(true)}
-            className="flex flex-col items-center gap-2 p-5 rounded-2xl border border-dashed border-slate-600 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all"
+            className="flex flex-col items-center gap-2 p-5 rounded-2xl border border-dashed border-slate-600 hover:border-primary/50 hover:bg-primary/5 transition-all"
           >
             <div className="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center">
               <Users className="w-5 h-5 text-slate-300" />
@@ -124,9 +124,9 @@ export default function ClubsPage() {
 
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex flex-col items-center gap-2 p-5 rounded-2xl border border-dashed border-slate-600 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all"
+            className="flex flex-col items-center gap-2 p-5 rounded-2xl border border-dashed border-slate-600 hover:border-primary/50 hover:bg-primary/5 transition-all"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-600 flex items-center justify-center">
               <Plus className="w-5 h-5 text-white" />
             </div>
             <span className="text-sm font-medium text-slate-300">클럽 만들기</span>
@@ -210,14 +210,14 @@ function JoinClubModal({ token, onClose, onSuccess }: {
         onChange={(e) => setCode(e.target.value.toUpperCase())}
         onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
         placeholder="초대 코드 입력 (예: CK2025)"
-        className="w-full px-4 py-3 rounded-xl bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 mb-3 text-center tracking-widest font-mono text-lg"
+        className="w-full px-4 py-3 rounded-xl bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:outline-none focus:border-primary mb-3 text-center tracking-widest font-mono text-lg"
         maxLength={8}
       />
       {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
       <button
         onClick={handleJoin}
         disabled={loading}
-        className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 transition-all"
+        className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-teal-500 text-white font-semibold hover:from-primary-hover hover:to-teal-600 disabled:opacity-50 transition-all"
       >
         {loading ? '처리 중...' : '참여하기'}
       </button>
@@ -272,7 +272,7 @@ function CreateClubModal({ token, onClose, onSuccess }: {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="클럽 이름 (예: 코너킥스 FC)"
-          className="w-full px-4 py-3 rounded-xl bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500"
+          className="w-full px-4 py-3 rounded-xl bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:outline-none focus:border-primary"
         />
         <div className="relative">
           <input
@@ -285,10 +285,10 @@ function CreateClubModal({ token, onClose, onSuccess }: {
             }}
             placeholder="클럽 ID (예: cornerkicks)"
             className={`w-full px-4 py-3 rounded-xl bg-slate-700 border text-white placeholder-slate-400 focus:outline-none pr-10 ${
-              slugStatus === 'available' ? 'border-emerald-500' : slugStatus === 'taken' ? 'border-red-500' : 'border-slate-600 focus:border-emerald-500'
+              slugStatus === 'available' ? 'border-primary' : slugStatus === 'taken' ? 'border-red-500' : 'border-slate-600 focus:border-primary'
             }`}
           />
-          {slugStatus === 'available' && <Check className="absolute right-3 top-3.5 w-5 h-5 text-emerald-400" />}
+          {slugStatus === 'available' && <Check className="absolute right-3 top-3.5 w-5 h-5 text-primary" />}
           {slugStatus === 'taken' && <X className="absolute right-3 top-3.5 w-5 h-5 text-red-400" />}
         </div>
         <p className="text-xs text-slate-500">영문 소문자, 숫자, -, _ 만 사용 가능</p>
@@ -297,7 +297,7 @@ function CreateClubModal({ token, onClose, onSuccess }: {
       <button
         onClick={handleCreate}
         disabled={loading}
-        className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 transition-all"
+        className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-teal-500 text-white font-semibold hover:from-primary-hover hover:to-teal-600 disabled:opacity-50 transition-all"
       >
         {loading ? '처리 중...' : '클럽 만들기'}
       </button>

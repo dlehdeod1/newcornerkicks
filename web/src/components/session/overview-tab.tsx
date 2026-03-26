@@ -110,7 +110,7 @@ export function OverviewTab({ session, attendance, teams, onRefetch }: Props) {
                   <Button
                     onClick={handleCreateTeams}
                     loading={loading}
-                    className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-white"
+                    className="flex-1 sm:flex-none bg-primary hover:bg-primary-hover text-white"
                   >
                     <Wand2 className="w-4 h-4 mr-1.5" />
                     팀 편성

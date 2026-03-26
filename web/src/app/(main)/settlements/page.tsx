@@ -40,7 +40,7 @@ export default function SettlementsPage() {
         {club?.isPro && token && (
           <button
             onClick={() => exportApi.download(token, 'payments')}
-            className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1"
+            className="text-sm text-primary hover:text-primary-hover flex items-center gap-1"
           >
             CSV 내보내기
           </button>
@@ -50,7 +50,7 @@ export default function SettlementsPage() {
       {/* 시즌 요약 */}
       <div className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm mb-6">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
+          <TrendingUp className="w-5 h-5 text-primary" />
           {currentYear}년 시즌 요약
         </h2>
 
@@ -133,7 +133,7 @@ export default function SettlementsPage() {
             <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between">
                 <span className="text-slate-600 dark:text-slate-400">총 수익</span>
-                <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="text-2xl font-bold text-primary">
                   {formatAmount(history.reduce((sum: number, item: any) => sum + (item.amount || 0), 0))}원
                 </span>
               </div>
@@ -150,7 +150,7 @@ export default function SettlementsPage() {
           </p>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors"
           >
             로그인하기
           </Link>
@@ -186,7 +186,7 @@ function StatCard({
 }) {
   const colorClasses = {
     slate: 'bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400',
-    emerald: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+    emerald: 'bg-primary/10 text-primary',
     amber: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
     blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
   }
@@ -214,12 +214,12 @@ function SettlementHistoryItem({ item }: { item: any }) {
           'w-10 h-10 rounded-lg flex items-center justify-center',
           item.type === 'mvp'
             ? 'bg-amber-100 dark:bg-amber-500/20'
-            : 'bg-emerald-100 dark:bg-emerald-500/20'
+            : 'bg-primary/10'
         )}>
           {item.type === 'mvp' ? (
             <Trophy className="w-5 h-5 text-amber-600 dark:text-amber-400" />
           ) : (
-            <Coins className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <Coins className="w-5 h-5 text-primary" />
           )}
         </div>
         <div>
@@ -233,10 +233,10 @@ function SettlementHistoryItem({ item }: { item: any }) {
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+        <span className="text-lg font-bold text-primary">
           +{formatAmount(item.amount)}원
         </span>
-        <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-emerald-500 transition-colors" />
+        <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors" />
       </div>
     </Link>
   )

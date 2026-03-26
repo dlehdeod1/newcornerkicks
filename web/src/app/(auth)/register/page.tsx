@@ -48,14 +48,14 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 px-4 py-12">
       {/* 배경 효과 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
       </div>
 
       <div className="w-full max-w-md relative z-10">
         {/* 로고 */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl mb-4 shadow-lg shadow-emerald-500/20">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-teal-600 rounded-2xl mb-4 shadow-lg shadow-primary/20">
             <span className="text-3xl">⚽</span>
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
@@ -137,7 +137,7 @@ export default function RegisterPage() {
           <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 text-center">
             <p className="text-slate-500 text-sm">
               이미 계정이 있으신가요?{' '}
-              <Link href="/login" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 font-medium transition-colors">
+              <Link href="/login" className="text-primary hover:text-primary font-medium transition-colors">
                 로그인
               </Link>
             </p>

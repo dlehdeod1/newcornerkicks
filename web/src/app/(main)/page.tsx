@@ -100,9 +100,9 @@ export default function HomePage() {
       {/* 히어로 섹션 */}
       <section className="relative overflow-hidden">
         {/* 배경 그라데이션 */}
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/50 via-slate-50 to-teal-100/50 dark:from-emerald-900/20 dark:via-slate-900 dark:to-teal-900/20" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-slate-50 to-teal-100/50 dark:via-slate-900 dark:to-teal-900/20" />
         <div className="absolute inset-0">
-          <div className="absolute top-20 left-1/4 w-72 h-72 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-3xl" />
+          <div className="absolute top-20 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-1/4 w-72 h-72 bg-teal-500/10 dark:bg-teal-500/20 rounded-full blur-3xl" />
         </div>
 
@@ -111,12 +111,12 @@ export default function HomePage() {
             {/* 왼쪽: 텍스트 */}
             <div className="flex-1 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-slate-800/50 backdrop-blur rounded-full text-sm text-slate-600 dark:text-slate-300 mb-8 border border-slate-200 dark:border-slate-700/50 shadow-sm">
-                <span className="w-2 h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full animate-pulse" />
+                <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                 매주 수요일 21:00
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-slate-900 dark:text-white">
                 수요일의{' '}
-                <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 dark:from-emerald-400 dark:via-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-primary via-teal-500 to-cyan-500 bg-clip-text text-transparent">
                   열정
                 </span>
                 을<br />
@@ -128,7 +128,7 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
                   href="/sessions"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-2xl font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 active:scale-[0.98]"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-primary to-teal-500 hover:from-primary-hover hover:to-teal-600 rounded-2xl font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:shadow-primary/40 active:scale-[0.98]"
                 >
                   일정 확인하기
                   <ChevronRight className="w-5 h-5" />
@@ -193,7 +193,7 @@ export default function HomePage() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-              <Bell className="w-5 h-5 text-emerald-500" />
+              <Bell className="w-5 h-5 text-primary" />
               공지사항
               {announcementUnread > 0 && (
                 <span className="px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full">
@@ -203,7 +203,7 @@ export default function HomePage() {
             </h2>
             <Link
               href="/announcements"
-              className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 flex items-center gap-1"
+              className="text-sm text-primary hover:text-primary-hover flex items-center gap-1"
             >
               전체 보기 <ChevronRight className="w-4 h-4" />
             </Link>
@@ -222,7 +222,7 @@ export default function HomePage() {
                       시스템
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 text-xs font-medium bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full">
+                    <span className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
                       클럽
                     </span>
                   )}
@@ -230,7 +230,7 @@ export default function HomePage() {
                     {(() => { const d = new Date(a.created_at * 1000); return `${d.getMonth() + 1}월 ${d.getDate()}일` })()}
                   </span>
                 </div>
-                <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
+                <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate">
                   {a.title}
                 </h3>
               </Link>
@@ -294,7 +294,7 @@ export default function HomePage() {
                 <Trophy className="w-5 h-5 text-amber-500" />
                 시즌 랭킹
               </h2>
-              <Link href="/ranking" className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 flex items-center gap-1">
+              <Link href="/ranking" className="text-sm text-primary hover:text-primary-hover flex items-center gap-1">
                 전체 보기 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
@@ -329,13 +329,13 @@ export default function HomePage() {
           {/* 다음 세션 */}
           <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
             <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white mb-4">
-              <Calendar className="w-5 h-5 text-emerald-500" />
+              <Calendar className="w-5 h-5 text-primary" />
               다음 일정
             </h2>
             {nextSession ? (
               <Link href={`/sessions/${nextSession.id}`} className="block group">
-                <div className="p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 border border-emerald-200 dark:border-emerald-500/20 group-hover:border-emerald-300 dark:group-hover:border-emerald-500/30 transition-colors">
-                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-3">
+                <div className="p-5 rounded-xl bg-gradient-to-br from-primary/10 to-teal-50 dark:to-teal-500/10 border border-primary/20 group-hover:border-primary/30 transition-colors">
+                  <div className="flex items-center gap-2 text-primary mb-3">
                     <Clock className="w-4 h-4" />
                     <span className="text-sm font-medium">
                       {(() => {
@@ -355,7 +355,7 @@ export default function HomePage() {
                     </div>
                   )}
                   <div className="mt-4 flex items-center gap-2">
-                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                    <span className="px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary">
                       모집중
                     </span>
                     {nextSession.attendee_count != null && (
@@ -386,7 +386,7 @@ export default function HomePage() {
           </h2>
           <Link
             href="/sessions"
-            className="inline-flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 font-medium transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-primary hover:text-primary-hover font-medium transition-colors"
           >
             상세 보기
             <ChevronRight className="w-4 h-4" />
@@ -486,7 +486,7 @@ function RecentSessionHighlight({ session }: { session: any }) {
         </div>
         <Link
           href={`/sessions/${session.id}`}
-          className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
+          className="text-sm text-primary hover:underline"
         >
           상세보기 →
         </Link>
@@ -498,9 +498,9 @@ function RecentSessionHighlight({ session }: { session: any }) {
         </p>
       ) : (
         <div className="grid grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl">
+          <div className="text-center p-4 bg-primary/5 rounded-xl">
             <p className="text-sm text-slate-500 mb-1">득점왕</p>
-            <p className="font-bold text-emerald-600 dark:text-emerald-400">
+            <p className="font-bold text-primary">
               {topScorer?.name || '-'}
             </p>
             <p className="text-xs text-slate-400">{topScorer ? `${topScorer.goals}골` : '-'}</p>
@@ -537,14 +537,14 @@ function StatCard({
   color: 'emerald' | 'blue' | 'purple' | 'amber'
 }) {
   const colorClasses = {
-    emerald: 'from-emerald-100 to-emerald-50 dark:from-emerald-500/20 dark:to-emerald-600/10 border-emerald-200 dark:border-emerald-500/20',
+    emerald: 'from-primary/10 to-primary/5 border-primary/20',
     blue: 'from-blue-100 to-blue-50 dark:from-blue-500/20 dark:to-blue-600/10 border-blue-200 dark:border-blue-500/20',
     purple: 'from-purple-100 to-purple-50 dark:from-purple-500/20 dark:to-purple-600/10 border-purple-200 dark:border-purple-500/20',
     amber: 'from-amber-100 to-amber-50 dark:from-amber-500/20 dark:to-amber-600/10 border-amber-200 dark:border-amber-500/20',
   }
 
   const textColors = {
-    emerald: 'text-emerald-600 dark:text-emerald-400',
+    emerald: 'text-primary',
     blue: 'text-blue-600 dark:text-blue-400',
     purple: 'text-purple-600 dark:text-purple-400',
     amber: 'text-amber-600 dark:text-amber-400',
@@ -577,7 +577,7 @@ function QuickMenuCard({
   color: 'emerald' | 'amber' | 'blue' | 'purple' | 'teal'
 }) {
   const colorClasses = {
-    emerald: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-500/20',
+    emerald: 'bg-primary/10 text-primary group-hover:bg-primary/20',
     amber: 'bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-200 dark:group-hover:bg-amber-500/20',
     blue: 'bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-200 dark:group-hover:bg-blue-500/20',
     purple: 'bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:bg-purple-200 dark:group-hover:bg-purple-500/20',
@@ -592,7 +592,7 @@ function QuickMenuCard({
       <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 transition-colors ${colorClasses[color]}`}>
         {icon}
       </div>
-      <h3 className="font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{title}</h3>
+      <h3 className="font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">{title}</h3>
       <p className="text-sm text-slate-500">{description}</p>
     </Link>
   )

@@ -207,7 +207,7 @@ export default function SessionDetailPage() {
               className={cn(
                 'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                 activeTab === tab.id
-                  ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                  ? 'border-primary text-primary'
                   : tab.disabled
                     ? 'border-transparent text-slate-400 dark:text-slate-600 cursor-not-allowed'
                     : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-600'

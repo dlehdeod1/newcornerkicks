@@ -10,7 +10,7 @@ import { cn } from '@/lib/cn'
 
 const notificationTypeConfig: Record<string, { icon: string; color: string }> = {
   session_created: { icon: '📅', color: 'bg-blue-500' },
-  team_assigned: { icon: '👕', color: 'bg-emerald-500' },
+  team_assigned: { icon: '👕', color: 'bg-primary' },
   match_result: { icon: '⚽', color: 'bg-amber-500' },
   settlement: { icon: '💰', color: 'bg-green-500' },
   badge_earned: { icon: '🏆', color: 'bg-purple-500' },
@@ -104,7 +104,7 @@ export function NotificationDropdown() {
             {unreadCount > 0 && (
               <button
                 onClick={() => markAllAsReadMutation.mutate()}
-                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+                className="text-xs text-primary hover:underline flex items-center gap-1"
               >
                 <CheckCheck className="w-3 h-3" />
                 모두 읽음
@@ -147,7 +147,7 @@ export function NotificationDropdown() {
                     <div
                       className={cn(
                         'flex gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group',
-                        !notification.is_read && 'bg-emerald-50/50 dark:bg-emerald-500/5'
+                        !notification.is_read && 'bg-primary/5'
                       )}
                       onClick={() => handleNotificationClick(notification)}
                     >
@@ -171,7 +171,7 @@ export function NotificationDropdown() {
                             {notification.title}
                           </p>
                           {!notification.is_read && (
-                            <div className="w-2 h-2 bg-emerald-500 rounded-full shrink-0 mt-1.5" />
+                            <div className="w-2 h-2 bg-primary rounded-full shrink-0 mt-1.5" />
                           )}
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-500 mt-0.5 line-clamp-2">
@@ -220,7 +220,7 @@ export function NotificationDropdown() {
               <Link
                 href="/notifications"
                 onClick={() => setIsOpen(false)}
-                className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline block text-center"
+                className="text-sm text-primary hover:underline block text-center"
               >
                 모든 알림 보기
               </Link>

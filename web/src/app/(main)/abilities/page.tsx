@@ -188,7 +188,7 @@ export default function AbilitiesPage() {
               className={cn(
                 'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all',
                 showMyRatings
-                  ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
+                  ? 'bg-primary/10 text-primary'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
               )}
             >
@@ -205,7 +205,7 @@ export default function AbilitiesPage() {
               placeholder="선수 검색..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-56 pl-12 pr-4 py-2.5 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/50 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all shadow-sm text-sm"
+              className="w-full sm:w-56 pl-12 pr-4 py-2.5 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/50 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all shadow-sm text-sm"
             />
           </div>
 
@@ -239,19 +239,19 @@ export default function AbilitiesPage() {
 
       {/* 평가 진행률 (로그인 상태일 때만) */}
       {isLoggedIn && (
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl p-4 mb-6 border border-emerald-200 dark:border-emerald-500/30">
+        <div className="bg-gradient-to-r from-primary/10 to-teal-50 dark:to-teal-900/20 rounded-xl p-4 mb-6 border border-primary/20">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              <span className="font-medium text-emerald-700 dark:text-emerald-300">내 평가 진행률</span>
+              <CheckCircle2 className="w-5 h-5 text-primary" />
+              <span className="font-medium text-primary">내 평가 진행률</span>
             </div>
-            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+            <span className="text-sm font-bold text-primary">
               {ratedCount} / {totalCount}명
             </span>
           </div>
-          <div className="h-2 bg-emerald-200 dark:bg-emerald-800 rounded-full overflow-hidden">
+          <div className="h-2 bg-primary/20 rounded-full overflow-hidden">
             <div
-              className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+              className="h-full bg-primary rounded-full transition-all duration-500"
               style={{ width: `${totalCount > 0 ? (ratedCount / totalCount) * 100 : 0}%` }}
             />
           </div>
@@ -317,7 +317,7 @@ export default function AbilitiesPage() {
                           stat.color === 'red' && 'text-red-500',
                           stat.color === 'amber' && 'text-amber-500',
                           stat.color === 'blue' && 'text-blue-500',
-                          stat.color === 'emerald' && 'text-emerald-500'
+                          stat.color === 'emerald' && 'text-primary'
                         )}>
                           {stat.label.slice(0, 2)}
                           {isCurrentSort && <span className="text-[10px]">{sortDesc ? '↓' : '↑'}</span>}
@@ -345,7 +345,7 @@ export default function AbilitiesPage() {
                   const isEditing = editingPlayerId === player.id
                   const overall = calculateOverall(isEditing ? editRatings : (showMyRatings && player.my_rating ? player.my_rating : player))
                   const rowBg = isEditing
-                    ? 'bg-emerald-50 dark:bg-emerald-900/20'
+                    ? 'bg-primary/5'
                     : !player.has_my_rating && isLoggedIn
                     ? 'bg-amber-50/50 dark:bg-amber-900/10'
                     : 'bg-white dark:bg-slate-900/50'
@@ -356,7 +356,7 @@ export default function AbilitiesPage() {
                       className={cn(
                         'border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors',
                         !player.has_my_rating && isLoggedIn && 'bg-amber-50/50 dark:bg-amber-900/10',
-                        isEditing && 'bg-emerald-50 dark:bg-emerald-900/20'
+                        isEditing && 'bg-primary/5'
                       )}
                     >
                       {/* 고정 열: # */}
@@ -373,7 +373,7 @@ export default function AbilitiesPage() {
                           </div>
                           <Link
                             href={`/abilities/${player.id}`}
-                            className="font-medium text-slate-900 dark:text-white truncate hover:text-emerald-600 dark:hover:text-emerald-400 text-sm"
+                            className="font-medium text-slate-900 dark:text-white truncate hover:text-primary text-sm"
                           >
                             {player.name}
                           </Link>
@@ -405,7 +405,7 @@ export default function AbilitiesPage() {
                                   stat.color === 'red' && 'border-red-300 focus:ring-red-500 text-red-600 dark:text-red-400',
                                   stat.color === 'amber' && 'border-amber-300 focus:ring-amber-500 text-amber-600 dark:text-amber-400',
                                   stat.color === 'blue' && 'border-blue-300 focus:ring-blue-500 text-blue-600 dark:text-blue-400',
-                                  stat.color === 'emerald' && 'border-emerald-300 focus:ring-emerald-500 text-emerald-600 dark:text-emerald-400'
+                                  stat.color === 'emerald' && 'border-primary/30 focus:ring-primary text-primary'
                                 )}
                               />
                             ) : (
@@ -414,7 +414,7 @@ export default function AbilitiesPage() {
                                 value >= 70 && stat.color === 'red' && 'text-red-600 dark:text-red-400',
                                 value >= 70 && stat.color === 'amber' && 'text-amber-600 dark:text-amber-400',
                                 value >= 70 && stat.color === 'blue' && 'text-blue-600 dark:text-blue-400',
-                                value >= 70 && stat.color === 'emerald' && 'text-emerald-600 dark:text-emerald-400',
+                                value >= 70 && stat.color === 'emerald' && 'text-primary',
                                 value < 70 && 'text-slate-500'
                               )}>
                                 {value}
@@ -439,16 +439,16 @@ export default function AbilitiesPage() {
                               </button>
                               <button
                                 onClick={handleSaveEdit}
-                                className="p-1 rounded hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
+                                className="p-1 rounded hover:bg-primary/10"
                                 disabled={rateMutation.isPending}
                               >
-                                <Save className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                <Save className="w-4 h-4 text-primary" />
                               </button>
                             </div>
                           ) : (
                             <div className="flex items-center justify-center gap-0.5">
                               {player.has_my_rating && (
-                                <span className="px-1 py-0.5 bg-emerald-100 dark:bg-emerald-500/20 rounded text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                                <span className="px-1 py-0.5 bg-primary/10 rounded text-xs font-bold text-primary">
                                   {player.my_rating?.overall || 0}
                                 </span>
                               )}
@@ -494,7 +494,7 @@ function PlayerAbilityCard({ player, rank, isLoggedIn, showMyRatings }: { player
     <Link
       href={`/abilities/${player.id}`}
       className={cn(
-        'group block bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-900/80 rounded-2xl p-5 border hover:border-emerald-300 dark:hover:border-emerald-500/30 transition-all duration-300 shadow-sm',
+        'group block bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-900/80 rounded-2xl p-5 border hover:border-primary/30 transition-all duration-300 shadow-sm',
         !player.has_my_rating && isLoggedIn
           ? 'border-amber-300 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-900/10'
           : 'border-slate-200 dark:border-slate-800/50'
@@ -503,7 +503,7 @@ function PlayerAbilityCard({ player, rank, isLoggedIn, showMyRatings }: { player
       <div className="flex items-start gap-4">
         {/* 순위 & 프로필 */}
         <div className="relative">
-          <div className="w-14 h-14 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 rounded-xl flex items-center justify-center border border-slate-300 dark:border-slate-700 group-hover:border-emerald-300 dark:group-hover:border-emerald-500/30 transition-colors">
+          <div className="w-14 h-14 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 rounded-xl flex items-center justify-center border border-slate-300 dark:border-slate-700 group-hover:border-primary/30 transition-colors">
             {player.photo_url ? (
               <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover rounded-xl" />
             ) : (
@@ -517,7 +517,7 @@ function PlayerAbilityCard({ player, rank, isLoggedIn, showMyRatings }: { player
           {isLoggedIn && (
             <div className="absolute -bottom-1 -right-1">
               {player.has_my_rating ? (
-                <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">
+                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">
                   <CheckCircle2 className="w-3 h-3 text-white" />
                 </div>
               ) : (
@@ -532,7 +532,7 @@ function PlayerAbilityCard({ player, rank, isLoggedIn, showMyRatings }: { player
         {/* 정보 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
+            <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate">
               {player.name}
             </h3>
             {player.nickname && (
@@ -547,7 +547,7 @@ function PlayerAbilityCard({ player, rank, isLoggedIn, showMyRatings }: { player
             <span className="text-lg font-bold text-amber-600 dark:text-amber-400">{overall.toFixed(0)}</span>
             <span className="text-xs text-slate-500">종합</span>
             {showMyRatings && player.my_rating && (
-              <span className="text-xs bg-emerald-100 dark:bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-700 dark:text-emerald-300">내 평가</span>
+              <span className="text-xs bg-primary/10 px-1.5 py-0.5 rounded text-primary">내 평가</span>
             )}
           </div>
 
@@ -561,8 +561,8 @@ function PlayerAbilityCard({ player, rank, isLoggedIn, showMyRatings }: { player
         </div>
 
         {/* 화살표 */}
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800/50 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 transition-colors self-center">
-          <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800/50 group-hover:bg-primary/10 transition-colors self-center">
+          <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors" />
         </div>
       </div>
     </Link>
@@ -583,7 +583,7 @@ function AbilityMiniBar({
     red: 'bg-red-500',
     amber: 'bg-amber-500',
     blue: 'bg-blue-500',
-    emerald: 'bg-emerald-500',
+    emerald: 'bg-primary',
   }
 
   return (

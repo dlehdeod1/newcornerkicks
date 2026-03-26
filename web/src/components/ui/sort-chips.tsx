@@ -23,7 +23,7 @@ export function SortChips({
             'px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors',
             activeKey === chip.key
               ? 'bg-brand-green text-white shadow-sm'
-              : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-600'
+              : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-primary'
           )}
         >
           {chip.label}

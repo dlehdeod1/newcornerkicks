@@ -101,9 +101,9 @@ function CompactRow({
           </div>
           <span className="text-sm font-semibold text-slate-900 dark:text-white truncate">{player.name}</span>
         </div>
-        <div className="text-center bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-500/30 shrink-0">
-          <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">{STAT_LABELS[sortBy] || sortBy}</div>
-          <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{getStatValue(player, sortBy)}</div>
+        <div className="text-center bg-primary/5 px-2 py-1 rounded-lg border border-primary/30 shrink-0">
+          <div className="text-[9px] text-primary font-semibold">{STAT_LABELS[sortBy] || sortBy}</div>
+          <div className="text-sm font-bold text-primary">{getStatValue(player, sortBy)}</div>
         </div>
         {visibleStats.map((key, i) => (
           <div key={key} className={cn('text-center shrink-0', RESPONSIVE_CLASS[i] || 'hidden lg:block')}>
@@ -114,7 +114,7 @@ function CompactRow({
         <div className="shrink-0 flex items-center gap-1">
           <ChevronDown className={cn('w-4 h-4 text-slate-400 transition-transform', isExpanded && 'rotate-180')} />
           <Link href={`/ranking/${player.id}`} onClick={e => e.stopPropagation()}>
-            <ChevronRight className="w-4 h-4 text-slate-400 hover:text-emerald-500" />
+            <ChevronRight className="w-4 h-4 text-slate-400 hover:text-primary" />
           </Link>
         </div>
       </div>

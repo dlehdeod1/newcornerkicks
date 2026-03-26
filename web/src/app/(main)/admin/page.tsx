@@ -81,7 +81,7 @@ export default function AdminDashboardPage() {
       {/* 헤더 */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent flex items-center gap-3">
-          <LayoutDashboard className="w-8 h-8 text-emerald-500" />
+          <LayoutDashboard className="w-8 h-8 text-primary" />
           관리자 대시보드
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-2">
@@ -187,12 +187,12 @@ export default function AdminDashboardPage() {
         <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <h2 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-emerald-500" />
+              <Calendar className="w-5 h-5 text-primary" />
               최근 세션
             </h2>
             <Link
               href="/admin/sessions"
-              className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+              className="text-sm text-primary hover:underline flex items-center gap-1"
             >
               전체 보기
               <ChevronRight className="w-4 h-4" />
@@ -217,13 +217,13 @@ export default function AdminDashboardPage() {
                       session.status === 'recruiting'
                         ? 'bg-amber-100 dark:bg-amber-500/20'
                         : session.status === 'completed'
-                        ? 'bg-emerald-100 dark:bg-emerald-500/20'
+                        ? 'bg-primary/10'
                         : 'bg-slate-100 dark:bg-slate-800'
                     )}>
                       {session.status === 'recruiting' ? (
                         <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                       ) : session.status === 'completed' ? (
-                        <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                        <CheckCircle className="w-5 h-5 text-primary" />
                       ) : (
                         <Calendar className="w-5 h-5 text-slate-500" />
                       )}
@@ -261,7 +261,7 @@ function QuickActionCard({
   color: 'emerald' | 'blue' | 'amber' | 'purple'
 }) {
   const colorClasses = {
-    emerald: 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/25',
+    emerald: 'bg-primary hover:bg-primary-hover shadow-primary/25',
     blue: 'bg-blue-500 hover:bg-blue-600 shadow-blue-500/25',
     amber: 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/25',
     purple: 'bg-purple-500 hover:bg-purple-600 shadow-purple-500/25',

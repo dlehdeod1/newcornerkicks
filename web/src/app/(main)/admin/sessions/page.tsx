@@ -75,14 +75,14 @@ export default function AdminSessionsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Calendar className="w-6 h-6 text-emerald-500" />
+            <Calendar className="w-6 h-6 text-primary" />
             세션 관리
           </h1>
           <p className="text-slate-500 mt-1">세션을 생성하고 관리하세요</p>
         </div>
         <Link
           href="/admin/sessions/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
           새 세션
@@ -109,7 +109,7 @@ export default function AdminSessionsPage() {
               className={cn(
                 'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                 statusFilter === status
-                  ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
+                  ? 'bg-primary/10 text-primary'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
               )}
             >
@@ -159,24 +159,24 @@ function SessionCard({ session }: { session: any }) {
   return (
     <Link
       href={`/sessions/${session.id}`}
-      className="flex items-center justify-between p-4 bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-500/50 transition-colors group"
+      className="flex items-center justify-between p-4 bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-primary/50 transition-colors group"
     >
       <div className="flex items-center gap-4">
         <div className={cn(
           'w-12 h-12 rounded-xl flex items-center justify-center',
           config.color === 'amber' && 'bg-amber-100 dark:bg-amber-500/20',
           config.color === 'slate' && 'bg-slate-100 dark:bg-slate-800',
-          config.color === 'emerald' && 'bg-emerald-100 dark:bg-emerald-500/20',
+          config.color === 'emerald' && 'bg-primary/10',
         )}>
           <Icon className={cn(
             'w-6 h-6',
             config.color === 'amber' && 'text-amber-600 dark:text-amber-400',
             config.color === 'slate' && 'text-slate-500',
-            config.color === 'emerald' && 'text-emerald-600 dark:text-emerald-400',
+            config.color === 'emerald' && 'text-primary',
           )} />
         </div>
         <div>
-          <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+          <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
             {session.title || '코너킥스 정기 풋살'}
           </h3>
           <p className="text-sm text-slate-500">{session.session_date} • {session.start_time}</p>
@@ -187,11 +187,11 @@ function SessionCard({ session }: { session: any }) {
           'px-2 py-1 rounded-lg text-xs font-medium',
           config.color === 'amber' && 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
           config.color === 'slate' && 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400',
-          config.color === 'emerald' && 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+          config.color === 'emerald' && 'bg-primary/10 text-primary',
         )}>
           {config.label}
         </span>
-        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors" />
+        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-primary transition-colors" />
       </div>
     </Link>
   )

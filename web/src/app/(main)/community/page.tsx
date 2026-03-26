@@ -25,7 +25,7 @@ const timeSlotLabels: Record<string, string> = { morning: '오전', afternoon: '
 const skillLabels: Record<string, string> = { beginner: '입문', low: '초급', mid: '중급', high: '상급' }
 
 const categoryColorMap: Record<string, { badge: string; text: string }> = {
-  emerald: { badge: 'bg-emerald-100 dark:bg-emerald-500/20', text: 'text-emerald-600 dark:text-emerald-400' },
+  emerald: { badge: 'bg-primary/10', text: 'text-primary' },
   amber: { badge: 'bg-amber-100 dark:bg-amber-500/20', text: 'text-amber-600 dark:text-amber-400' },
   blue: { badge: 'bg-blue-100 dark:bg-blue-500/20', text: 'text-blue-600 dark:text-blue-400' },
   purple: { badge: 'bg-purple-100 dark:bg-purple-500/20', text: 'text-purple-600 dark:text-purple-400' },
@@ -77,7 +77,7 @@ function CommunityContent() {
         </h1>
         <Link
           href={`/community/write?category=${activeTab}`}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl text-sm font-medium shadow-sm transition-all"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary to-teal-500 hover:from-primary-hover hover:to-teal-600 text-white rounded-xl text-sm font-medium shadow-sm transition-all"
         >
           <Plus className="w-4 h-4" />
           글 작성
@@ -116,7 +116,7 @@ function CommunityContent() {
             <select
               value={region}
               onChange={e => setRegion(e.target.value)}
-              className="w-full sm:w-48 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className="w-full sm:w-48 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               <option value="">전체</option>
               {regions.map(r => (
@@ -136,7 +136,7 @@ function CommunityContent() {
                   className={cn(
                     'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
                     selectedDays.includes(key)
-                      ? 'bg-emerald-500 text-white'
+                      ? 'bg-primary text-white'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                   )}
                 >
@@ -154,7 +154,7 @@ function CommunityContent() {
               className={cn(
                 'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
                 onlyOpen
-                  ? 'bg-emerald-500 text-white'
+                  ? 'bg-primary text-white'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
               )}
             >
@@ -201,7 +201,7 @@ function CommunityContent() {
                     {cat?.label || post.category}
                   </span>
                   {isRecruitOrMatch && post.status === 'open' && (
-                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
                       모집중
                     </span>
                   )}
@@ -212,7 +212,7 @@ function CommunityContent() {
                   )}
                 </div>
 
-                <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors mb-2 line-clamp-1">
+                <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors mb-2 line-clamp-1">
                   {post.title}
                 </h3>
 

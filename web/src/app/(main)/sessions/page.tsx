@@ -88,10 +88,10 @@ export default function SessionsPage() {
 function SessionCard({ session }: { session: any }) {
   const statusConfig = {
     recruiting: {
-      bg: 'bg-emerald-100 dark:bg-emerald-500/10',
-      border: 'border-emerald-200 dark:border-emerald-500/30',
-      text: 'text-emerald-600 dark:text-emerald-400',
-      dot: 'bg-emerald-500 dark:bg-emerald-400',
+      bg: 'bg-primary/10',
+      border: 'border-primary/20',
+      text: 'text-primary',
+      dot: 'bg-primary',
       label: '모집중',
     },
     closed: {
@@ -111,7 +111,7 @@ function SessionCard({ session }: { session: any }) {
   return (
     <Link
       href={`/sessions/${session.id}`}
-      className="group block bg-white dark:bg-slate-900/50 backdrop-blur hover:bg-slate-50 dark:hover:bg-slate-900/80 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 hover:border-emerald-300 dark:hover:border-emerald-500/30 transition-all duration-300 shadow-sm"
+      className="group block bg-white dark:bg-slate-900/50 backdrop-blur hover:bg-slate-50 dark:hover:bg-slate-900/80 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 hover:border-primary/30 transition-all duration-300 shadow-sm"
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
@@ -138,7 +138,7 @@ function SessionCard({ session }: { session: any }) {
 
           {/* 날짜 */}
           <div className="flex items-baseline gap-2 mb-2">
-            <span className="text-2xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+            <span className="text-2xl font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
               {session.session_date}
             </span>
             <span className="text-sm text-slate-500">({dayOfWeek}요일)</span>
@@ -162,8 +162,8 @@ function SessionCard({ session }: { session: any }) {
           </div>
         </div>
 
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800/50 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 transition-colors">
-          <ChevronRight className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800/50 group-hover:bg-primary/10 transition-colors">
+          <ChevronRight className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors" />
         </div>
       </div>
     </Link>

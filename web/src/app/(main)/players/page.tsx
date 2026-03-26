@@ -44,7 +44,7 @@ export default function PlayersPage() {
             placeholder="선수 검색..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:w-72 pl-12 pr-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/50 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+            className="w-full sm:w-72 pl-12 pr-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/50 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
           />
         </div>
       </div>
@@ -124,7 +124,7 @@ function StatCard({
   color: 'emerald' | 'blue' | 'amber' | 'purple'
 }) {
   const colorClasses = {
-    emerald: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20',
+    emerald: 'bg-primary/10 text-primary border-primary/20',
     blue: 'bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/20',
     amber: 'bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/20',
     purple: 'bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-500/20',
@@ -143,17 +143,17 @@ function StatCard({
 
 function PlayerCard({ player }: { player: any }) {
   const overall = calculatePlayerOverall(player)
-  const overallColor = overall >= 7 ? 'text-emerald-600 dark:text-emerald-400' : overall >= 5 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'
+  const overallColor = overall >= 7 ? 'text-primary' : overall >= 5 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'
 
   return (
     <Link
       href={`/players/${player.id}`}
-      className="group block bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-900/80 rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 hover:border-emerald-500/30 transition-all duration-300 shadow-sm"
+      className="group block bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-900/80 rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 hover:border-primary/30 transition-all duration-300 shadow-sm"
     >
       <div className="flex items-center gap-4">
         {/* 프로필 */}
         <div className="relative">
-          <div className="w-14 h-14 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700 group-hover:border-emerald-500/30 transition-colors">
+          <div className="w-14 h-14 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700 group-hover:border-primary/30 transition-colors">
             {player.photo_url ? (
               <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover rounded-xl" />
             ) : (
@@ -161,14 +161,14 @@ function PlayerCard({ player }: { player: any }) {
             )}
           </div>
           {player.link_status === 'ACTIVE' && (
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-white dark:border-slate-900" />
           )}
         </div>
 
         {/* 정보 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
+            <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate">
               {player.name}
             </h3>
             {player.nickname && (
@@ -187,8 +187,8 @@ function PlayerCard({ player }: { player: any }) {
         </div>
 
         {/* 화살표 */}
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800/50 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 transition-colors">
-          <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800/50 group-hover:bg-primary/10 transition-colors">
+          <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors" />
         </div>
       </div>
 
@@ -206,7 +206,7 @@ function PlayerCard({ player }: { player: any }) {
 
 function StatBar({ label, value }: { label: string; value: number }) {
   const percentage = (value / 10) * 100
-  const color = value >= 7 ? 'bg-emerald-500' : value >= 5 ? 'bg-amber-500' : 'bg-slate-400 dark:bg-slate-600'
+  const color = value >= 7 ? 'bg-primary' : value >= 5 ? 'bg-amber-500' : 'bg-slate-400 dark:bg-slate-600'
 
   return (
     <div className="text-center">

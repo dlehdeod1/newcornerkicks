@@ -115,7 +115,7 @@ export function Header() {
                           className={cn(
                             'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors',
                             isActive
-                              ? 'bg-emerald-50 dark:bg-emerald-500/10'
+                              ? 'bg-primary/5'
                               : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                           )}
                         >
@@ -139,7 +139,7 @@ export function Header() {
                             </div>
                             <span className="text-xs text-slate-400">{c.myRole === 'owner' ? '오너' : c.myRole === 'admin' ? '관리자' : '멤버'}</span>
                           </div>
-                          {isActive && <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />}
+                          {isActive && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
                         </button>
                       )
                     })}
@@ -290,7 +290,7 @@ export function Header() {
                       }}
                       className={cn(
                         'w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-left transition-colors',
-                        isActive ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                        isActive ? 'bg-primary/5' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                       )}
                     >
                       {c.logoUrl ? (
@@ -305,7 +305,7 @@ export function Header() {
                         </div>
                       )}
                       <span className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{c.name}</span>
-                      {isActive && <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 ml-auto" />}
+                      {isActive && <Check className="w-4 h-4 text-primary flex-shrink-0 ml-auto" />}
                     </button>
                   )
                 })}

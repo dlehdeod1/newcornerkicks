@@ -162,7 +162,7 @@ function WriteContent() {
           <select
             value={category}
             onChange={e => setCategory(e.target.value)}
-            className="w-full sm:w-48 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className="w-full sm:w-48 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             {categories.map(c => (
               <option key={c.key} value={c.key}>{c.label}</option>
@@ -177,7 +177,7 @@ function WriteContent() {
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="제목을 입력하세요"
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
             maxLength={100}
           />
         </div>
@@ -190,7 +190,7 @@ function WriteContent() {
             onChange={e => setContent(e.target.value)}
             placeholder="내용을 입력하세요"
             rows={10}
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-y"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y"
           />
         </div>
 
@@ -218,7 +218,7 @@ function WriteContent() {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 text-sm text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               {uploading ? (
-                <span className="animate-spin w-4 h-4 border-2 border-slate-300 border-t-emerald-500 rounded-full" />
+                <span className="animate-spin w-4 h-4 border-2 border-slate-300 border-t-primary rounded-full" />
               ) : (
                 <ImageIcon className="w-4 h-4" />
               )}
@@ -245,7 +245,7 @@ function WriteContent() {
               <select
                 value={region}
                 onChange={e => setRegion(e.target.value)}
-                className="w-full sm:w-48 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="w-full sm:w-48 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
               >
                 <option value="">선택 안함</option>
                 {regions.map(r => (
@@ -266,7 +266,7 @@ function WriteContent() {
                     className={cn(
                       'px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
                       selectedDays.includes(key)
-                        ? 'bg-emerald-500 text-white'
+                        ? 'bg-primary text-white'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                     )}
                   >
@@ -282,7 +282,7 @@ function WriteContent() {
               <select
                 value={timeSlot}
                 onChange={e => setTimeSlot(e.target.value)}
-                className="w-full sm:w-48 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="w-full sm:w-48 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
               >
                 <option value="">선택 안함</option>
                 {timeSlots.map(t => (
@@ -297,7 +297,7 @@ function WriteContent() {
               <select
                 value={skillLevel}
                 onChange={e => setSkillLevel(e.target.value)}
-                className="w-full sm:w-48 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="w-full sm:w-48 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
               >
                 <option value="">선택 안함</option>
                 {skillLevels.map(s => (
@@ -316,7 +316,7 @@ function WriteContent() {
                 placeholder="예: 5"
                 min={1}
                 max={50}
-                className="w-32 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                className="w-32 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
           </div>
@@ -333,7 +333,7 @@ function WriteContent() {
           <button
             onClick={handleSubmit}
             disabled={isPending || !title.trim() || !content.trim()}
-            className="px-5 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+            className="px-5 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-primary to-teal-500 hover:from-primary-hover hover:to-teal-600 text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
           >
             {isPending ? '저장 중...' : isEdit ? '수정하기' : '작성하기'}
           </button>

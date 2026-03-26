@@ -21,7 +21,7 @@ const categoryLabels: Record<string, string> = {
 }
 
 const categoryBadgeColors: Record<string, string> = {
-  free: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+  free: 'bg-primary/10 text-primary',
   review: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
   schedule: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
 }
@@ -97,7 +97,7 @@ export default function PostDetailPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -107,7 +107,7 @@ export default function PostDetailPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         <p className="text-slate-500">게시글을 찾을 수 없습니다.</p>
-        <Link href="/board" className="text-emerald-600 hover:underline mt-4 inline-block">
+        <Link href="/board" className="text-primary hover:underline mt-4 inline-block">
           목록으로 돌아가기
         </Link>
       </div>
@@ -249,12 +249,12 @@ export default function PostDetailPage() {
             onChange={(e) => setCommentText(e.target.value)}
             placeholder="댓글을 입력하세요..."
             rows={2}
-            className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none"
+            className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
           />
           <button
             type="submit"
             disabled={!commentText.trim() || addCommentMutation.isPending}
-            className="self-end px-4 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:hover:bg-emerald-500 text-white rounded-xl text-sm font-medium transition-colors"
+            className="self-end px-4 py-3 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:hover:bg-primary text-white rounded-xl text-sm font-medium transition-colors"
           >
             <Send className="w-4 h-4" />
           </button>
@@ -313,7 +313,7 @@ function PollSection({ poll, onVote, onUnvote, isVoting }: {
   return (
     <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
       <div className="flex items-center gap-2 mb-4">
-        <BarChart3 className="w-5 h-5 text-emerald-500" />
+        <BarChart3 className="w-5 h-5 text-primary" />
         <h3 className="font-semibold text-slate-900 dark:text-white">{poll.title}</h3>
         {poll.allowMultiple && (
           <span className="text-xs text-slate-400">(복수 선택 가능)</span>
@@ -340,7 +340,7 @@ function PollSection({ poll, onVote, onUnvote, isVoting }: {
               className={cn(
                 'relative w-full text-left px-4 py-3 rounded-xl border transition-all overflow-hidden',
                 isSelected
-                  ? 'border-emerald-400 dark:border-emerald-500/50 bg-emerald-50 dark:bg-emerald-500/10'
+                  ? 'border-primary bg-primary/5'
                   : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800/50'
               )}
             >
@@ -350,7 +350,7 @@ function PollSection({ poll, onVote, onUnvote, isVoting }: {
                   className={cn(
                     'absolute inset-y-0 left-0 transition-all duration-500',
                     isSelected
-                      ? 'bg-emerald-100 dark:bg-emerald-500/15'
+                      ? 'bg-primary/10'
                       : 'bg-slate-100 dark:bg-slate-700/30'
                   )}
                   style={{ width: `${percentage}%` }}
@@ -359,10 +359,10 @@ function PollSection({ poll, onVote, onUnvote, isVoting }: {
 
               <div className="relative flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {isSelected && <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />}
+                  {isSelected && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
                   <span className={cn(
                     'text-sm font-medium',
-                    isSelected ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-700 dark:text-slate-300'
+                    isSelected ? 'text-primary' : 'text-slate-700 dark:text-slate-300'
                   )}>
                     {option.label}
                   </span>

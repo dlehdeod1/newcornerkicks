@@ -107,7 +107,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
             <User className="w-8 h-8 text-slate-400 dark:text-slate-600" />
           </div>
           <p className="text-slate-600 dark:text-slate-500 mb-4">선수를 찾을 수 없습니다.</p>
-          <Link href="/players" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300">
+          <Link href="/players" className="text-primary hover:text-primary-hover">
             선수 목록으로 돌아가기
           </Link>
         </div>
@@ -145,7 +145,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
               )}
             </div>
             {player.link_status === 'ACTIVE' && (
-              <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 flex items-center justify-center">
+              <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-primary rounded-full border-4 border-white dark:border-slate-900 flex items-center justify-center">
                 <span className="text-xs text-white">✓</span>
               </div>
             )}
@@ -181,7 +181,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
 
             <div className="flex flex-wrap items-center gap-3 mb-4">
               {player.link_status === 'ACTIVE' && (
-                <span className="px-3 py-1 text-sm bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-200 dark:border-emerald-500/30">
+                <span className="px-3 py-1 text-sm bg-primary/10 text-primary rounded-full border border-primary/20">
                   계정 연동됨
                 </span>
               )}
@@ -203,7 +203,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                 {player.tags.map((t: any) => (
                   <span
                     key={t.tag}
-                    className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs rounded-full"
+                    className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full"
                   >
                     {t.tag} ({t.votes})
                   </span>
@@ -228,7 +228,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       {/* 능력치 상세 */}
       <div className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-          <Activity className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          <Activity className="w-5 h-5 text-primary" />
           능력치 상세
         </h2>
 
@@ -292,14 +292,14 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
               <div className="space-y-3">
                 {chemistry.partners.slice(0, 3).map((p: any, i: number) => (
                   <div key={p.partner_id ?? i} className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-                    <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                       {i + 1}
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-slate-900 dark:text-white">{p.partner_name}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{typeof p.chem_score === 'number' ? p.chem_score.toFixed(1) : p.chem_score}</p>
+                      <p className="text-lg font-bold text-primary">{typeof p.chem_score === 'number' ? p.chem_score.toFixed(1) : p.chem_score}</p>
                       <p className="text-xs text-slate-500">케미 점수</p>
                     </div>
                   </div>
@@ -318,7 +318,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                 <p className="text-sm font-medium text-slate-900 dark:text-white mb-3">PRO 전용 기능</p>
                 <Link
                   href="/settings/subscription"
-                  className="inline-block px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors"
+                  className="inline-block px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-medium rounded-lg transition-colors"
                 >
                   PRO로 업그레이드
                 </Link>
@@ -374,7 +374,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                 <p className="text-sm font-medium text-slate-900 dark:text-white mb-3">PRO 전용 기능</p>
                 <Link
                   href="/settings/subscription"
-                  className="inline-block px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors"
+                  className="inline-block px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-medium rounded-lg transition-colors"
                 >
                   PRO로 업그레이드
                 </Link>
@@ -424,11 +424,11 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                     <span className="font-medium text-slate-900 dark:text-white">{match.team2_name}</span>
                   </div>
                   <div className="text-lg font-bold">
-                    <span className={match.team1_score > match.team2_score ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}>
+                    <span className={match.team1_score > match.team2_score ? 'text-primary' : 'text-slate-600 dark:text-slate-400'}>
                       {match.team1_score}
                     </span>
                     <span className="mx-1 text-slate-400">:</span>
-                    <span className={match.team2_score > match.team1_score ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}>
+                    <span className={match.team2_score > match.team1_score ? 'text-primary' : 'text-slate-600 dark:text-slate-400'}>
                       {match.team2_score}
                     </span>
                   </div>
@@ -468,8 +468,8 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
 
 function StatRow({ label, value }: { label: string; value: number }) {
   const percentage = (value / 10) * 100
-  const color = value >= 8 ? 'bg-emerald-500' : value >= 6 ? 'bg-teal-500' : value >= 4 ? 'bg-amber-500' : 'bg-red-500'
-  const textColor = value >= 8 ? 'text-emerald-600 dark:text-emerald-400' : value >= 6 ? 'text-teal-600 dark:text-teal-400' : value >= 4 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'
+  const color = value >= 8 ? 'bg-primary' : value >= 6 ? 'bg-teal-500' : value >= 4 ? 'bg-amber-500' : 'bg-red-500'
+  const textColor = value >= 8 ? 'text-primary' : value >= 6 ? 'text-teal-600 dark:text-teal-400' : value >= 4 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'
 
   return (
     <div className="flex items-center gap-4">

@@ -136,7 +136,7 @@ export default function RankingPage() {
             {club?.isPro && (
               <button
                 onClick={() => exportApi.download(token!, 'rankings', selectedYear)}
-                className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
+                className="text-xs text-primary hover:text-primary-hover"
               >
                 CSV
               </button>
@@ -145,7 +145,7 @@ export default function RankingPage() {
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="appearance-none pl-3 pr-8 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                className="appearance-none pl-3 pr-8 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
               >
                 {[2026, 2025, 2024].map((year) => (
                   <option key={year} value={year}>
@@ -166,7 +166,7 @@ export default function RankingPage() {
             placeholder="선수 검색..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
@@ -209,7 +209,7 @@ export default function RankingPage() {
                   </span>
                   <button
                     onClick={() => setShowAllColumns(!showAllColumns)}
-                    className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-semibold"
+                    className="text-xs text-primary hover:text-primary-hover font-semibold"
                   >
                     {showAllColumns ? '주요 컬럼만' : '전체 컬럼 보기'}
                   </button>
@@ -333,7 +333,7 @@ function ViewToggle({ viewMode, onToggle }: { viewMode: 'compact' | 'table'; onT
   return (
     <button
       onClick={onToggle}
-      className="shrink-0 p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+      className="shrink-0 p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-primary transition-colors"
       title={viewMode === 'compact' ? '테이블 뷰' : '리스트 뷰'}
     >
       {viewMode === 'compact' ? <TableProperties className="w-4 h-4" /> : <List className="w-4 h-4" />}
@@ -361,7 +361,7 @@ function SortableHeader({
   const isActive = currentSort === sortKey
 
   const colorClasses: Record<string, string> = {
-    emerald: 'text-emerald-600 dark:text-emerald-400',
+    emerald: 'text-primary',
     amber: 'text-amber-600 dark:text-amber-400',
     blue: 'text-blue-600 dark:text-blue-400',
     purple: 'text-purple-600 dark:text-purple-400',
@@ -378,7 +378,7 @@ function SortableHeader({
       <button
         onClick={() => onSort(sortKey)}
         className={cn(
-          'inline-flex items-center gap-1 text-xs font-semibold transition-colors hover:text-emerald-600 dark:hover:text-emerald-400',
+          'inline-flex items-center gap-1 text-xs font-semibold transition-colors hover:text-primary',
           isActive ? colorClasses[color] : 'text-slate-600 dark:text-slate-400'
         )}
       >
@@ -457,7 +457,7 @@ function Podium({ topThree, sortBy }: { topThree: any[]; sortBy: SortKey }) {
               rank === 1 ? 'text-base' : 'text-sm'
             )}>{player.name}</p>
             <p className={cn(
-              'font-bold text-emerald-600 dark:text-emerald-400',
+              'font-bold text-primary',
               rank === 1 ? 'text-xl' : 'text-lg'
             )}>{getValue(player)}</p>
           </Link>
@@ -478,16 +478,16 @@ function PlayerRow({ player, rank, sortBy, enabledEvents, showAllColumns }: { pl
   const getCellClass = (key: SortKey) => {
     if (sortBy !== key) return 'text-slate-700 dark:text-slate-300'
     const colors: Record<SortKey, string> = {
-      mvpCount: 'text-emerald-600 dark:text-emerald-400 font-bold',
+      mvpCount: 'text-primary font-bold',
       goals: 'text-amber-600 dark:text-amber-400 font-bold',
       assists: 'text-blue-600 dark:text-blue-400 font-bold',
       attackPoints: 'text-rose-600 dark:text-rose-400 font-bold',
       defenses: 'text-purple-600 dark:text-purple-400 font-bold',
       games: 'text-slate-700 dark:text-slate-300 font-bold',
-      sessionWins: 'text-emerald-600 dark:text-emerald-400 font-bold',
+      sessionWins: 'text-primary font-bold',
       sessionLosses: 'text-red-600 dark:text-red-400 font-bold',
       contribution: 'text-orange-600 dark:text-orange-400 font-bold',
-      winRate: 'text-emerald-600 dark:text-emerald-400 font-bold',
+      winRate: 'text-primary font-bold',
       tackles: 'text-purple-600 dark:text-purple-400 font-bold',
       interceptions: 'text-purple-600 dark:text-purple-400 font-bold',
       clearances: 'text-purple-600 dark:text-purple-400 font-bold',
@@ -524,7 +524,7 @@ function PlayerRow({ player, rank, sortBy, enabledEvents, showAllColumns }: { pl
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{player.name?.charAt(0)}</span>
             )}
           </div>
-          <span className="text-xs font-semibold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate max-w-[80px] sm:max-w-none">
+          <span className="text-xs font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate max-w-[80px] sm:max-w-none">
             {player.name}
           </span>
         </Link>
@@ -614,7 +614,7 @@ function PlayerRow({ player, rank, sortBy, enabledEvents, showAllColumns }: { pl
       </td>
       <td className="px-2 py-2.5">
         <Link href={'/ranking/' + player.id}>
-          <ChevronRight className="w-4 h-4 text-slate-400 hover:text-emerald-500 transition-colors" />
+          <ChevronRight className="w-4 h-4 text-slate-400 hover:text-primary transition-colors" />
         </Link>
       </td>
     </tr>

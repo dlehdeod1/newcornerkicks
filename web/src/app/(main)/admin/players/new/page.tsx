@@ -75,15 +75,15 @@ export default function NewPlayerPage() {
   if (createdPlayer) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-3xl p-8 border border-emerald-200 dark:border-emerald-500/30 text-center">
-          <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <div className="bg-primary/5 rounded-3xl p-8 border border-primary/30 text-center">
+          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8 text-white" />
           </div>
 
-          <h2 className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mb-2">
+          <h2 className="text-2xl font-bold text-primary mb-2">
             선수 등록 완료!
           </h2>
-          <p className="text-emerald-600 dark:text-emerald-300 mb-6">
+          <p className="text-primary mb-6">
             {name} 선수가 성공적으로 등록되었습니다.
           </p>
 
@@ -99,7 +99,7 @@ export default function NewPlayerPage() {
                 className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
               >
                 {copied ? (
-                  <Check className="w-5 h-5 text-emerald-500" />
+                  <Check className="w-5 h-5 text-primary" />
                 ) : (
                   <Copy className="w-5 h-5 text-slate-400" />
                 )}

@@ -36,7 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
               isActive(item)
-                ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border-l-2 border-emerald-500 -ml-[2px]'
+                ? 'bg-primary/5 text-primary font-semibold border-l-2 border-primary -ml-[2px]'
                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
             )}>
             <item.icon className="w-5 h-5 shrink-0" />
@@ -45,7 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         ))}
       </div>
       <div className="px-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-500 hover:text-emerald-600 transition-colors">
+        <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-500 hover:text-primary transition-colors">
           <Home className="w-5 h-5" /> 홈으로
         </Link>
       </div>

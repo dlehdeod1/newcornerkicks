@@ -97,7 +97,7 @@ export default function AbilityDetailPage({ params }: { params: Promise<{ id: st
             <User className="w-8 h-8 text-slate-400 dark:text-slate-600" />
           </div>
           <p className="text-slate-500 mb-4">선수를 찾을 수 없습니다.</p>
-          <Link href="/abilities" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300">
+          <Link href="/abilities" className="text-primary hover:text-primary-hover">
             능력치 목록으로 돌아가기
           </Link>
         </div>
@@ -178,14 +178,14 @@ export default function AbilityDetailPage({ params }: { params: Promise<{ id: st
 
       {/* 평가 모드 배너 */}
       {isRating && (
-        <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl p-5 border border-emerald-200 dark:border-emerald-500/30 mb-6">
+        <div className="bg-primary/5 rounded-2xl p-5 border border-primary/20 mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2 mb-1">
+              <h3 className="font-semibold text-primary flex items-center gap-2 mb-1">
                 <Edit3 className="w-5 h-5" />
                 능력치 평가 모드
               </h3>
-              <p className="text-sm text-emerald-600 dark:text-emerald-300">
+              <p className="text-sm text-primary">
                 슬라이더를 움직여 1~10 사이로 평가해주세요
               </p>
             </div>
@@ -288,7 +288,7 @@ export default function AbilityDetailPage({ params }: { params: Promise<{ id: st
             </div>
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 text-center">
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">최고 평가</p>
-              <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+              <p className="text-xl font-bold text-primary">
                 {Math.max(...existingRatings.map((r: any) => getRatingOverall(r))).toFixed(1)}점
               </p>
             </div>
@@ -327,7 +327,7 @@ function StatBadge({
     red: 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30',
     amber: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30',
     blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/30',
-    emerald: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30',
+    emerald: 'bg-primary/10 text-primary border-primary/20',
   }
 
   return (
@@ -357,21 +357,21 @@ function StatSection({
     red: 'text-red-600 dark:text-red-400',
     amber: 'text-amber-600 dark:text-amber-400',
     blue: 'text-blue-600 dark:text-blue-400',
-    emerald: 'text-emerald-600 dark:text-emerald-400',
+    emerald: 'text-primary',
   }
 
   const barColors = {
     red: 'bg-red-500',
     amber: 'bg-amber-500',
     blue: 'bg-blue-500',
-    emerald: 'bg-emerald-500',
+    emerald: 'bg-primary',
   }
 
   const sliderThumbColors = {
     red: '[&::-webkit-slider-thumb]:bg-red-500',
     amber: '[&::-webkit-slider-thumb]:bg-amber-500',
     blue: '[&::-webkit-slider-thumb]:bg-blue-500',
-    emerald: '[&::-webkit-slider-thumb]:bg-emerald-500',
+    emerald: '[&::-webkit-slider-thumb]:bg-primary',
   }
 
   return (

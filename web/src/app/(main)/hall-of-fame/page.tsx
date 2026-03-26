@@ -22,7 +22,7 @@ const categoryColors: Record<string, string> = {
   '득점왕': 'from-red-500 to-orange-500',
   '도움왕': 'from-blue-500 to-cyan-500',
   '공격포인트왕': 'from-rose-500 to-pink-500',
-  '수비왕': 'from-green-500 to-emerald-500',
+  '수비왕': 'from-green-500 to-primary',
   'MVP': 'from-amber-500 to-yellow-500',
   '승률왕': 'from-purple-500 to-pink-500',
   '출석왕': 'from-teal-500 to-green-500',
@@ -142,7 +142,7 @@ export default function HallOfFamePage() {
                         </p>
 
                         {/* 선수 이름 */}
-                        <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                        <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-primary transition-colors">
                           {honor.player.name}
                         </h3>
 

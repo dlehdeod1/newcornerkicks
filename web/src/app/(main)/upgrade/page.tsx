@@ -89,7 +89,7 @@ export default function UpgradePage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
       <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-4 py-1.5 rounded-full text-sm font-medium mb-4">
+        <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-medium mb-4">
           <Crown className="w-4 h-4" />
           PRO 플랜
         </div>
@@ -103,12 +103,12 @@ export default function UpgradePage() {
 
       {/* 현재 구독 정보 (PRO인 경우) */}
       {isPro && subInfo?.subscription && (
-        <div className="mb-8 p-6 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-2xl">
+        <div className="mb-8 p-6 bg-primary/5 border border-primary/20 rounded-2xl">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Crown className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                <span className="font-semibold text-emerald-700 dark:text-emerald-400">PRO 플랜 이용 중</span>
+                <Crown className="w-5 h-5 text-primary" />
+                <span className="font-semibold text-primary">PRO 플랜 이용 중</span>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400">
                 {subInfo.subscription.billingCycle === 'yearly' ? '연간' : '월간'} ·{' '}
@@ -155,7 +155,7 @@ export default function UpgradePage() {
                 }`}
               >
                 연간 결제
-                <span className="ml-1.5 text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded-full">33% 할인</span>
+                <span className="ml-1.5 text-xs bg-primary text-white px-1.5 py-0.5 rounded-full">33% 할인</span>
               </button>
             </div>
           </div>
@@ -185,7 +185,7 @@ export default function UpgradePage() {
             </div>
 
             {/* PRO */}
-            <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white relative overflow-hidden">
+            <div className="bg-gradient-to-br from-primary to-teal-600 rounded-2xl p-6 text-white relative overflow-hidden">
               <div className="absolute top-4 right-4">
                 <Zap className="w-5 h-5 opacity-30" />
               </div>
@@ -210,7 +210,7 @@ export default function UpgradePage() {
               <button
                 onClick={handleUpgrade}
                 disabled={loading}
-                className="w-full py-3 bg-white text-emerald-600 font-semibold rounded-xl hover:bg-emerald-50 transition-colors disabled:opacity-60"
+                className="w-full py-3 bg-white text-primary font-semibold rounded-xl hover:bg-primary/5 transition-colors disabled:opacity-60"
               >
                 {loading ? '처리 중...' : `PRO 시작하기`}
               </button>

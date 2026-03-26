@@ -107,9 +107,9 @@ export default function AdminUsersPage() {
           <p className="text-2xl font-bold text-slate-900 dark:text-white">{users.length}</p>
           <p className="text-sm text-slate-500">전체 계정</p>
         </div>
-        <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-4 border border-emerald-200 dark:border-emerald-500/30">
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{users.length - unlinkedCount}</p>
-          <p className="text-sm text-emerald-600 dark:text-emerald-400">선수 연동됨</p>
+        <div className="bg-primary/5 rounded-xl p-4 border border-primary/30">
+          <p className="text-2xl font-bold text-primary">{users.length - unlinkedCount}</p>
+          <p className="text-sm text-primary">선수 연동됨</p>
         </div>
         <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
           <p className="text-2xl font-bold text-slate-600 dark:text-slate-300">{unlinkedCount}</p>
@@ -229,7 +229,7 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       {user.player_name ? (
-                        <span className="inline-flex items-center gap-1 text-xs bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
                           <UserCheck className="w-3 h-3" />
                           {user.player_name}
                         </span>

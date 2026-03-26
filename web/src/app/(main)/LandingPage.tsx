@@ -8,9 +8,9 @@ export default function LandingPage() {
     <div className="min-h-screen">
       {/* 히어로 섹션 */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/50 via-slate-50 to-teal-100/50 dark:from-emerald-900/20 dark:via-slate-900 dark:to-teal-900/20" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-slate-50 to-teal-100/50 dark:from-primary/5 dark:via-slate-900 dark:to-teal-900/20" />
         <div className="absolute inset-0">
-          <div className="absolute top-20 left-1/4 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-3xl" />
+          <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/10 dark:bg-primary/20 rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-teal-500/10 dark:bg-teal-500/20 rounded-full blur-3xl" />
         </div>
 
@@ -19,12 +19,12 @@ export default function LandingPage() {
             {/* 왼쪽: 텍스트 */}
             <div className="flex-1 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-slate-800/50 backdrop-blur rounded-full text-sm text-slate-600 dark:text-slate-300 mb-8 border border-slate-200 dark:border-slate-700/50 shadow-sm">
-                <span className="w-2 h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full animate-pulse" />
+                <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                 풋살/축구 동호회 관리 앱
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-slate-900 dark:text-white">
                 동호회 운영,{' '}
-                <span className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 dark:from-emerald-400 dark:via-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-primary via-teal-500 to-cyan-500 dark:from-primary dark:via-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
                   코너킥스
                 </span>
                 로<br />
@@ -37,7 +37,7 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
                   href="/register"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-2xl font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 active:scale-[0.98]"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-primary to-teal-500 hover:from-primary-hover hover:to-teal-600 rounded-2xl font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:shadow-primary/40 active:scale-[0.98]"
                 >
                   무료로 시작하기
                   <ChevronRight className="w-5 h-5" />
@@ -54,7 +54,7 @@ export default function LandingPage() {
             {/* 오른쪽: 스크린샷 */}
             <div className="w-full max-w-md">
               <div className="relative">
-                <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-3xl blur-2xl" />
+                <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-teal-500/20 rounded-3xl blur-2xl" />
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700">
                   <img
                     src="/screenshot-home.png"
@@ -125,7 +125,7 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-3xl blur-2xl" />
+              <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 to-teal-500/10 rounded-3xl blur-2xl" />
               <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-700 max-w-sm mx-auto">
                 <img
                   src="/screenshot-login.png"
@@ -164,8 +164,8 @@ export default function LandingPage() {
           </div>
 
           {/* PRO */}
-          <div className="relative bg-white dark:bg-slate-900/50 rounded-2xl p-8 border-2 border-emerald-500 shadow-lg shadow-emerald-500/10">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full text-xs font-semibold text-white">
+          <div className="relative bg-white dark:bg-slate-900/50 rounded-2xl p-8 border-2 border-primary shadow-lg shadow-primary/10">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-primary to-teal-500 rounded-full text-xs font-semibold text-white">
               추천
             </div>
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">PRO</h3>
@@ -186,7 +186,7 @@ export default function LandingPage() {
 
       {/* 하단 CTA */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-500 p-12 md:p-16 text-center">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary to-teal-500 p-12 md:p-16 text-center">
           <div className="absolute inset-0">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
@@ -195,12 +195,12 @@ export default function LandingPage() {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               지금 바로 시작하세요
             </h2>
-            <p className="text-lg text-emerald-100 mb-8 max-w-xl mx-auto">
+            <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
               회원가입 후 클럽을 만들거나, 초대 코드로 기존 클럽에 합류하세요.
             </p>
             <Link
               href="/register"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-slate-50 rounded-2xl font-semibold text-emerald-600 shadow-lg transition-all active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-slate-50 rounded-2xl font-semibold text-primary shadow-lg transition-all active:scale-[0.98]"
             >
               무료 회원가입
               <ChevronRight className="w-5 h-5" />
@@ -259,7 +259,7 @@ function FeatureCard({
   color: 'emerald' | 'blue' | 'amber' | 'purple'
 }) {
   const colorClasses = {
-    emerald: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    emerald: 'bg-primary/10 text-primary',
     blue: 'bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400',
     amber: 'bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400',
     purple: 'bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400',
@@ -279,7 +279,7 @@ function FeatureCard({
 function PlanFeature({ text }: { text: string }) {
   return (
     <li className="flex items-center gap-2">
-      <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+      <Check className="w-4 h-4 text-primary flex-shrink-0" />
       {text}
     </li>
   )
@@ -288,7 +288,7 @@ function PlanFeature({ text }: { text: string }) {
 function HighlightItem({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
         {icon}
       </div>
       <span className="text-slate-700 dark:text-slate-300">{text}</span>

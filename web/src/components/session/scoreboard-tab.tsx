@@ -160,7 +160,7 @@ export function ScoreboardTab({ sessionId, teams, matches, onRefetch }: Props) {
             className={cn(
               'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               viewMode === 'table'
-                ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                ? 'bg-primary/10 text-primary'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
             )}
           >
@@ -173,7 +173,7 @@ export function ScoreboardTab({ sessionId, teams, matches, onRefetch }: Props) {
             className={cn(
               'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               viewMode === 'timeline'
-                ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                ? 'bg-primary/10 text-primary'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
             )}
           >

@@ -177,7 +177,7 @@ export default function AdminPlayersPage() {
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">접근 권한이 없습니다</h2>
-        <Link href="/" className="text-emerald-600 hover:underline">홈으로 돌아가기</Link>
+        <Link href="/" className="text-primary hover:underline">홈으로 돌아가기</Link>
       </div>
     )
   }
@@ -225,9 +225,9 @@ export default function AdminPlayersPage() {
           <p className="text-2xl font-bold text-slate-900 dark:text-white">{players.length}</p>
           <p className="text-sm text-slate-500">전체 선수</p>
         </div>
-        <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-4 border border-emerald-200 dark:border-emerald-500/30">
-          <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{linkedCount}</p>
-          <p className="text-sm text-emerald-600 dark:text-emerald-400">연동 완료</p>
+        <div className="bg-primary/5 rounded-xl p-4 border border-primary/30">
+          <p className="text-2xl font-bold text-primary">{linkedCount}</p>
+          <p className="text-sm text-primary">연동 완료</p>
         </div>
         <div className="bg-amber-50 dark:bg-amber-500/10 rounded-xl p-4 border border-amber-200 dark:border-amber-500/30">
           <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{pendingCount}</p>
@@ -351,7 +351,7 @@ export default function AdminPlayersPage() {
             {!isLoadingUsers && allUsers.length > 0 && (
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
                 전체 <span className="font-semibold text-slate-700 dark:text-slate-300">{allUsers.length}</span>개 계정 중{' '}
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">{unlinkedUserCount}개</span>가 미연동 상태입니다.
+                <span className="font-semibold text-primary">{unlinkedUserCount}개</span>가 미연동 상태입니다.
               </p>
             )}
 
@@ -393,7 +393,7 @@ export default function AdminPlayersPage() {
                         {user.player_name} 연동중
                       </span>
                     ) : (
-                      <span className="text-xs bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full shrink-0">
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full shrink-0">
                         미연동
                       </span>
                     )}
@@ -508,7 +508,7 @@ export default function AdminPlayersPage() {
                             "inline-flex items-center gap-1 px-2 py-1 rounded-lg",
                             isDummy
                               ? "bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400"
-                              : "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                              : "bg-primary/10 text-primary"
                           )}>
                             {isDummy ? <ShieldAlert className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
                             {isDummy ? '더미연동' : '연동됨'}
@@ -532,7 +532,7 @@ export default function AdminPlayersPage() {
                           <button
                             onClick={() => approveMutation.mutate(player.id)}
                             disabled={approveMutation.isPending}
-                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg transition-colors"
+                            className="px-3 py-1 bg-primary hover:bg-primary-hover text-white text-xs rounded-lg transition-colors"
                           >
                             승인
                           </button>
