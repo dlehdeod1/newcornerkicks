@@ -3,6 +3,7 @@ import { z } from 'zod'
 import type { Env } from '../index'
 import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth'
 import { isClubPro } from '../utils/planUtils'
+import { checkAndAwardBadges } from '../utils/badges'
 
 const sessionsRoutes = new Hono<{ Bindings: Env }>()
 
@@ -1953,6 +1954,19 @@ async function autoSettleSession(db: any, sessionId: number) {
       }
     }
   } catch {}
+
+  // 뱃지 체크: 세션 참가자 전원
+  try {
+    const attendees = await db.prepare(
+      'SELECT player_id FROM attendance WHERE session_id = ?'
+    ).bind(sessionId).all()
+    for (const att of attendees.results as any[]) {
+      if (!att.player_id) continue
+      await checkAndAwardBadges(db, att.player_id, session.club_id, sessionId)
+    }
+  } catch (e) {
+    console.error(`Badge check failed for session ${sessionId}:`, e)
+  }
 }
 
 // ── 관리자 알림 전송 (팀 편성 완료, 리마인더 등) ──────────────────────────
@@ -2204,6 +2218,143 @@ sessionsRoutes.delete('/:id', authMiddleware(), async (c) => {
   await c.env.DB.batch(stmts)
 
   return c.json({ ok: true })
+})
+
+// ─── 라이브 스코어 공유 토큰 생성 (관리자 전용) ───
+sessionsRoutes.post('/:id/share', authMiddleware('ADMIN'), async (c) => {
+  const id = Number(c.req.param('id'))
+  const clubId = (c as any).clubId
+
+  const session = await c.env.DB.prepare(
+    'SELECT id FROM sessions WHERE id = ? AND club_id = ?'
+  ).bind(id, clubId).first()
+
+  if (!session) {
+    return c.json({ error: '세션을 찾을 수 없습니다.' }, 404)
+  }
+
+  const shareToken = crypto.randomUUID().replace(/-/g, '').substring(0, 12)
+  const now = Math.floor(Date.now() / 1000)
+
+  await c.env.DB.prepare(
+    'UPDATE sessions SET share_token = ?, updated_at = ? WHERE id = ? AND club_id = ?'
+  ).bind(shareToken, now, id, clubId).run()
+
+  return c.json({ shareToken, url: '/sessions/live/' + shareToken })
+})
+
+// ─── 라이브 스코어 공개 조회 (인증 불필요) ───
+sessionsRoutes.get('/live/:token', async (c) => {
+  const token = c.req.param('token')
+
+  const session = await c.env.DB.prepare(
+    `SELECT s.id, s.title, s.session_date, s.start_time, s.end_time, s.status,
+            s.location, s.club_id, cl.name as club_name
+     FROM sessions s
+     JOIN clubs cl ON cl.id = s.club_id
+     WHERE s.share_token = ?`
+  ).bind(token).first<any>()
+
+  if (!session) {
+    return c.json({ error: '유효하지 않은 공유 링크입니다.' }, 404)
+  }
+
+  // 팀 + 멤버 조회
+  const teamsRaw = await c.env.DB.prepare(`
+    SELECT t.id, t.name, t.vest_color, t.emoji,
+           tm.player_id, tm.guest_name,
+           p.name as player_name, p.nickname
+    FROM teams t
+    LEFT JOIN team_members tm ON tm.team_id = t.id
+    LEFT JOIN players p ON p.id = tm.player_id
+    WHERE t.session_id = ?
+    ORDER BY t.id
+  `).bind(session.id).all()
+
+  const teamMap = new Map<number, { id: number; name: string; vestColor: string; emoji: string; players: string[]; score: number }>()
+  for (const row of teamsRaw.results as any[]) {
+    if (!teamMap.has(row.id)) {
+      teamMap.set(row.id, {
+        id: row.id,
+        name: row.name,
+        vestColor: row.vest_color,
+        emoji: row.emoji,
+        players: [],
+        score: 0,
+      })
+    }
+    const team = teamMap.get(row.id)!
+    const playerName = row.guest_name || row.nickname || row.player_name
+    if (playerName) team.players.push(playerName)
+  }
+
+  // 경기 조회
+  const matches = await c.env.DB.prepare(`
+    SELECT m.id, m.team1_id, m.team2_id, m.team1_score, m.team2_score, m.status,
+           t1.name as team1_name, t2.name as team2_name
+    FROM matches m
+    JOIN teams t1 ON t1.id = m.team1_id
+    JOIN teams t2 ON t2.id = m.team2_id
+    WHERE m.session_id = ?
+    ORDER BY m.id
+  `).bind(session.id).all()
+
+  // 팀별 총 득점 계산
+  for (const m of matches.results as any[]) {
+    const t1 = teamMap.get(m.team1_id)
+    const t2 = teamMap.get(m.team2_id)
+    if (t1) t1.score += (m.team1_score || 0)
+    if (t2) t2.score += (m.team2_score || 0)
+  }
+
+  // 최근 이벤트 (최근 20개)
+  const recentEvents = await c.env.DB.prepare(`
+    SELECT me.event_type as type, me.minute,
+           p.name as player_name, p.nickname,
+           me.guest_name,
+           t.name as team_name
+    FROM match_events me
+    JOIN matches m ON m.id = me.match_id
+    LEFT JOIN players p ON p.id = me.player_id
+    LEFT JOIN team_members tm ON tm.player_id = me.player_id AND tm.team_id IN (m.team1_id, m.team2_id)
+    LEFT JOIN teams t ON t.id = tm.team_id
+    WHERE m.session_id = ?
+    ORDER BY me.id DESC
+    LIMIT 20
+  `).bind(session.id).all()
+
+  return c.json({
+    session: {
+      id: session.id,
+      title: session.title,
+      date: session.session_date,
+      startTime: session.start_time,
+      endTime: session.end_time,
+      status: session.status,
+      location: session.location,
+      clubName: session.club_name,
+    },
+    teams: Array.from(teamMap.values()).map(t => ({
+      name: t.name,
+      vestColor: t.vestColor,
+      emoji: t.emoji,
+      players: t.players,
+      score: t.score,
+    })),
+    matches: (matches.results as any[]).map(m => ({
+      team1: m.team1_name,
+      team2: m.team2_name,
+      score1: m.team1_score || 0,
+      score2: m.team2_score || 0,
+      status: m.status,
+    })),
+    recentEvents: (recentEvents.results as any[]).map(e => ({
+      type: e.type,
+      playerName: e.guest_name || e.nickname || e.player_name || 'Unknown',
+      minute: e.minute,
+      teamName: e.team_name,
+    })),
+  })
 })
 
 export { sessionsRoutes, autoSettleSession }

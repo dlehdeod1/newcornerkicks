@@ -4,6 +4,7 @@ import * as jose from 'jose'
 import bcrypt from 'bcryptjs'
 import type { Env } from '../index'
 import { isClubPro } from '../utils/planUtils'
+import { rateLimit } from '../middleware/rateLimit'
 
 const authRoutes = new Hono<{ Bindings: Env }>()
 
@@ -72,7 +73,7 @@ async function getUserClubs(db: any, userId: string) {
 }
 
 // 로그인
-authRoutes.post('/login', async (c) => {
+authRoutes.post('/login', rateLimit(10, 60000), async (c) => {
   try {
     const body = await c.req.json()
     const parsed = { identifier: body.identifier ?? body.email, password: body.password }
@@ -115,7 +116,7 @@ authRoutes.post('/login', async (c) => {
       role: user.role,
     })
       .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('30d')
+      .setExpirationTime('7d')
       .sign(secret)
 
     // 전체 클럽 목록 조회
@@ -141,7 +142,7 @@ authRoutes.post('/login', async (c) => {
 })
 
 // 회원가입
-authRoutes.post('/register', async (c) => {
+authRoutes.post('/register', rateLimit(10, 60000), async (c) => {
   try {
     const body = await c.req.json()
     const { email, username, password, playerCode, inviteCode } = registerSchema.parse(body)
@@ -561,7 +562,7 @@ authRoutes.post('/google', async (c) => {
     const secret = new TextEncoder().encode(c.env.JWT_SECRET || 'fallback-secret-key')
     const token = await new jose.SignJWT(jwtPayload)
       .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('30d')
+      .setExpirationTime('7d')
       .sign(secret)
 
     return c.json({
@@ -654,6 +655,48 @@ authRoutes.delete('/account', async (c) => {
     return c.json({ message: '계정이 삭제되었습니다. 이용해 주셔서 감사합니다.' })
   } catch {
     return c.json({ error: '유효하지 않은 토큰입니다.' }, 401)
+  }
+})
+
+// JWT 토큰 갱신 (만료 후 30일 이내 grace period)
+authRoutes.post('/refresh', async (c) => {
+  const authHeader = c.req.header('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return c.json({ error: '인증이 필요합니다.' }, 401)
+  }
+
+  try {
+    const token = authHeader.slice(7)
+    const secret = new TextEncoder().encode(c.env.JWT_SECRET)
+
+    // 만료된 토큰도 30일 grace period 내에서 허용
+    const THIRTY_DAYS_IN_SECONDS = 30 * 24 * 60 * 60
+    const { payload } = await jose.jwtVerify(token, secret, {
+      clockTolerance: THIRTY_DAYS_IN_SECONDS,
+    })
+
+    // 유저 존재 확인
+    const user = await c.env.DB.prepare(
+      'SELECT id, email, role FROM users WHERE id = ?'
+    ).bind(payload.userId).first<{ id: string; email: string; role: string }>()
+
+    if (!user) {
+      return c.json({ error: '유저를 찾을 수 없습니다.' }, 404)
+    }
+
+    // 새 토큰 발급 (7일)
+    const newToken = await new jose.SignJWT({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setExpirationTime('7d')
+      .sign(secret)
+
+    return c.json({ token: newToken })
+  } catch {
+    return c.json({ error: '토큰 갱신에 실패했습니다. 다시 로그인해주세요.' }, 401)
   }
 })
 

@@ -45,6 +45,8 @@ export default function PostDetailPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [commentText, setCommentText] = useState('')
   const [deleteCommentId, setDeleteCommentId] = useState<number | null>(null)
+  const [editCommentId, setEditCommentId] = useState<number | null>(null)
+  const [editCommentText, setEditCommentText] = useState('')
 
   const id = Number(params.id)
 
@@ -86,6 +88,28 @@ export default function PostDetailPage() {
     },
     onError: (error: any) => {
       toast.error(error.message || '댓글 삭제에 실패했습니다.')
+    },
+  })
+
+  const reactionMutation = useMutation({
+    mutationFn: ({ emoji, remove }: { emoji: string; remove: boolean }) =>
+      remove
+        ? postsApi.removeReaction(id, emoji, token!)
+        : postsApi.addReaction(id, emoji, token!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['posts', id] }),
+  })
+
+  const editCommentMutation = useMutation({
+    mutationFn: ({ commentId, content }: { commentId: number; content: string }) =>
+      postsApi.editComment(id, commentId, content, token!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts', id] })
+      setEditCommentId(null)
+      setEditCommentText('')
+      toast.success('댓글이 수정되었습니다.')
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '댓글 수정에 실패했습니다.')
     },
   })
 
@@ -210,6 +234,13 @@ export default function PostDetailPage() {
             </button>
           </div>
         )}
+        {/* Reactions */}
+        <ReactionBar
+          reactions={post.reactions || []}
+          userId={user?.id}
+          onToggle={(emoji, isActive) => reactionMutation.mutate({ emoji, remove: isActive })}
+          disabled={reactionMutation.isPending}
+        />
       </article>
 
       {/* Comments section */}
@@ -234,19 +265,59 @@ export default function PostDetailPage() {
                     <span className="text-xs text-slate-400 dark:text-slate-500">
                       {formatShortDate(comment.created_at)}
                     </span>
+                    {comment.updated_at && comment.updated_at !== comment.created_at && (
+                      <span className="text-[10px] text-slate-400">(수정됨)</span>
+                    )}
                     {(user?.id === comment.author_id || isAdmin) && (
-                      <button
-                        onClick={() => setDeleteCommentId(comment.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto"
-                        title="삭제"
-                      >
-                        <X className="w-4 h-4 text-slate-400 hover:text-red-500 transition-colors" />
-                      </button>
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex items-center gap-1">
+                        {user?.id === comment.author_id && (
+                          <button
+                            onClick={() => { setEditCommentId(comment.id); setEditCommentText(comment.content) }}
+                            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                            title="수정"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-slate-400 hover:text-primary transition-colors" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setDeleteCommentId(comment.id)}
+                          className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                          title="삭제"
+                        >
+                          <X className="w-3.5 h-3.5 text-slate-400 hover:text-red-500 transition-colors" />
+                        </button>
+                      </div>
                     )}
                   </div>
-                  <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5 whitespace-pre-wrap">
-                    {comment.content}
-                  </p>
+                  {editCommentId === comment.id ? (
+                    <div className="mt-2 flex gap-2">
+                      <textarea
+                        value={editCommentText}
+                        onChange={(e) => setEditCommentText(e.target.value)}
+                        rows={2}
+                        className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                      />
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => editCommentMutation.mutate({ commentId: comment.id, content: editCommentText.trim() })}
+                          disabled={!editCommentText.trim() || editCommentMutation.isPending}
+                          className="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-medium disabled:opacity-50"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => { setEditCommentId(null); setEditCommentText('') }}
+                          className="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5 whitespace-pre-wrap">
+                      {comment.content}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}
@@ -394,6 +465,51 @@ function PollSection({ poll, onVote, onUnvote, isVoting }: {
         총 {poll.totalVotes}명 투표
         {hasVoted && ' · 다시 클릭하면 투표 취소'}
       </p>
+    </div>
+  )
+}
+
+// ===================== Reaction Bar =====================
+
+const REACTION_EMOJIS = ['\uD83D\uDC4D', '\u2764\uFE0F', '\uD83D\uDE02', '\uD83D\uDD25', '\uD83D\uDC4F', '\uD83D\uDE22']
+
+function ReactionBar({ reactions, userId, onToggle, disabled }: {
+  reactions: { emoji: string; user_id: number | string }[]
+  userId?: number | string
+  onToggle: (emoji: string, isActive: boolean) => void
+  disabled: boolean
+}) {
+  const counts: Record<string, number> = {}
+  const myReactions = new Set<string>()
+
+  for (const r of reactions) {
+    counts[r.emoji] = (counts[r.emoji] || 0) + 1
+    if (r.user_id === userId) myReactions.add(r.emoji)
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+      {REACTION_EMOJIS.map((emoji) => {
+        const count = counts[emoji] || 0
+        const isActive = myReactions.has(emoji)
+        return (
+          <button
+            key={emoji}
+            onClick={() => onToggle(emoji, isActive)}
+            disabled={disabled}
+            className={cn(
+              'inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm border transition-all',
+              isActive
+                ? 'bg-primary/10 border-primary/30 text-primary'
+                : 'bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300 dark:hover:border-slate-600',
+              disabled && 'opacity-50 cursor-not-allowed'
+            )}
+          >
+            <span className="text-base">{emoji}</span>
+            {count > 0 && <span className="text-xs font-semibold">{count}</span>}
+          </button>
+        )
+      })}
     </div>
   )
 }

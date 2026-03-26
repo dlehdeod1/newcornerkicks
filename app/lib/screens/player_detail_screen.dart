@@ -18,6 +18,8 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
   Map<String, dynamic>? _logs;
   Map<String, dynamic>? _chemistry;
   Map<String, dynamic>? _streaks;
+  List<dynamic> _badges = [];
+  bool _badgesLoading = false;
   bool _loading = true;
   bool _chemLoading = false;
   bool _streakLoading = false;
@@ -103,12 +105,27 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
         _loading = false;
       });
 
+      // 배지 로드 (토큰 필요)
+      if (token != null) {
+        _loadBadges(token);
+      }
+
       // PRO 기능 데이터 로드
       if (isPro && token != null) {
         _loadProData(token);
       }
     } catch (_) {
       setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadBadges(String token) async {
+    setState(() => _badgesLoading = true);
+    try {
+      final badges = await ApiService().getPlayerBadges(widget.playerId, token: token);
+      if (mounted) setState(() { _badges = badges; _badgesLoading = false; });
+    } catch (_) {
+      if (mounted) setState(() => _badgesLoading = false);
     }
   }
 
@@ -467,6 +484,10 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
 
           // 스트릭 섹션
           _buildStreaksSection(isPro),
+          const SizedBox(height: 16),
+
+          // 배지 섹션
+          _buildBadgesSection(),
           const SizedBox(height: 80), // FAB 여백
         ],
       ),
@@ -662,6 +683,105 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
         );
       }).toList(),
     );
+  }
+
+  static const _badgeEmoji = {
+    'FIRST_GOAL': '\u26BD', 'HAT_TRICK': '\uD83C\uDFA9', 'DEFENSE_KING': '\uD83D\uDEE1\uFE0F',
+    'ATTENDANCE_90': '\uD83D\uDCC5', 'MATCH_100': '\uD83D\uDCAF', 'MATCH_50': '\uD83C\uDFC5',
+    'MATCH_10': '\uD83C\uDFAE', 'WIN_STREAK_3': '\uD83D\uDD25', 'WIN_STREAK_5': '\uD83D\uDD25',
+    'ALL_ROUNDER': '\u2B50', 'MVP': '\uD83C\uDFC6', 'MVP_3': '\uD83C\uDFC6',
+    'FIRST_ASSIST': '\uD83D\uDC5F', 'SCORING_STREAK_3': '\u26A1',
+  };
+
+  Widget _buildBadgesSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.surfaceTint),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Text('\uD83C\uDFC5', style: TextStyle(fontSize: 16)),
+              SizedBox(width: 8),
+              Text('배지', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_badgesLoading)
+            const Center(child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
+            ))
+          else if (_badges.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text('아직 획득한 배지가 없습니다', style: TextStyle(color: Colors.white38, fontSize: 13)),
+              ),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _badges.map((badge) {
+                final code = badge['code'] ?? '';
+                final name = badge['name'] ?? code;
+                final earnedAt = badge['earned_at'];
+                final isEarned = earnedAt != null;
+                final emoji = _badgeEmoji[code] ?? '\uD83C\uDFC5';
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isEarned ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surfaceBorder,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isEarned ? AppColors.primary.withAlpha(60) : AppColors.surfaceTint,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(emoji, style: TextStyle(fontSize: 18, color: isEarned ? null : Colors.white24)),
+                      const SizedBox(width: 6),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            name,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isEarned ? Colors.white : Colors.white38,
+                            ),
+                          ),
+                          if (isEarned && earnedAt is int) ...[
+                            Text(
+                              _formatBadgeDate(earnedAt),
+                              style: TextStyle(fontSize: 10, color: AppColors.primary.withAlpha(180)),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _formatBadgeDate(int ts) {
+    final dt = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
+    return '${dt.year}.${dt.month}/${dt.day}';
   }
 
   Widget _buildLockedState(String message) {

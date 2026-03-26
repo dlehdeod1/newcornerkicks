@@ -4,8 +4,8 @@ import { useAuthStore } from '@/stores/auth'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
-import { Trophy, Target, Handshake, Shield, ChevronDown, Search, ChevronRight, ChevronUp, Crown, Award, List, TableProperties } from 'lucide-react'
-import { rankingsApi, exportApi } from '@/lib/api'
+import { Trophy, Target, Handshake, Shield, ChevronDown, Search, ChevronRight, ChevronUp, Crown, Award, List, TableProperties, Medal } from 'lucide-react'
+import { rankingsApi, exportApi, awardsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import { SortChips, type SortChip } from '@/components/ui/sort-chips'
 import { CompactPlayerList } from '@/components/ranking/compact-player-list'
@@ -47,6 +47,12 @@ export default function RankingPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['rankings', selectedYear, token],
     queryFn: () => rankingsApi.get(selectedYear, token ?? undefined),
+    enabled: !!token,
+  })
+
+  const { data: awardsData } = useQuery({
+    queryKey: ['awards', selectedYear, token],
+    queryFn: () => awardsApi.get(selectedYear, token ?? undefined),
     enabled: !!token,
   })
 
@@ -304,8 +310,74 @@ export default function RankingPage() {
             </div>
           )}
 
+          {/* Season Awards */}
+          <SeasonAwards data={awardsData} year={selectedYear} />
         </>
       )}
+    </div>
+  )
+}
+
+function SeasonAwards({ data, year }: { data: any; year: number }) {
+  const awards = data?.awards ?? data?.data?.awards
+  if (!awards) return null
+
+  const awardConfig = [
+    { key: 'topScorer', icon: '\uD83E\uDD47', label: '\uB4DD\uC810\uC655' },
+    { key: 'topAssister', icon: '\u26A1', label: '\uC5B4\uC2DC\uC655' },
+    { key: 'topDefender', icon: '\uD83D\uDEE1\uFE0F', label: '\uC218\uBE44\uC655' },
+    { key: 'topAttendance', icon: '\uD83D\uDCC5', label: '\uCD9C\uC11D\uC655' },
+    { key: 'mvp', icon: '\uD83C\uDFC6', label: 'MVP' },
+    { key: 'rookie', icon: '\uD83C\uDF1F', label: '\uC2E0\uC778\uC0C1' },
+  ]
+
+  const entries: { icon: string; label: string; name: string; value: string }[] = []
+
+  if (awards && typeof awards === 'object' && !Array.isArray(awards)) {
+    for (const cfg of awardConfig) {
+      const val = awards[cfg.key]
+      if (val) {
+        entries.push({
+          icon: cfg.icon,
+          label: cfg.label,
+          name: val.name ?? val.playerName ?? '?',
+          value: val.value ?? val.count ?? '',
+        })
+      }
+    }
+  } else if (Array.isArray(awards)) {
+    for (const a of awards) {
+      entries.push({
+        icon: a.icon ?? '\uD83C\uDFC6',
+        label: a.label ?? a.type ?? '',
+        name: a.name ?? a.playerName ?? '?',
+        value: a.value ?? a.count ?? '',
+      })
+    }
+  }
+
+  if (entries.length === 0) return null
+
+  return (
+    <div className="mt-8">
+      <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+        <Medal className="w-5 h-5 text-primary" />
+        {year}\uB144 \uC2DC\uC98C \uC5B4\uC6CC\uB4DC
+      </h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {entries.map((entry, i) => (
+          <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 flex items-center gap-3">
+            <span className="text-2xl">{entry.icon}</span>
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{entry.label}</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{entry.name}</p>
+              {entry.value && (
+                <p className="text-xs text-primary font-semibold">{entry.value}</p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

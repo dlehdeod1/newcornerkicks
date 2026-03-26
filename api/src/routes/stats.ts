@@ -3,6 +3,7 @@ import type { Env } from '../index'
 import { optionalAuthMiddleware } from '../middleware/auth'
 import { getSeasonDateRange, getClubSeasonStartMonth, getCurrentSeasonYear } from '../utils/season'
 import { getSeasonSummaryStats } from '../utils/seasonStats'
+import { computeStreaks } from '../utils/streaks'
 
 const statsRoutes = new Hono<{ Bindings: Env }>()
 
@@ -267,6 +268,29 @@ statsRoutes.get('/records', optionalAuthMiddleware, async (c) => {
       mostWins: mostWins,
     },
   })
+})
+
+// GET /stats/streaks/:playerId — 선수 스트릭 조회
+statsRoutes.get('/streaks/:playerId', optionalAuthMiddleware, async (c) => {
+  const clubId = (c as any).clubId
+  if (!clubId) {
+    return c.json({
+      streaks: {
+        current: { type: 'win', count: 0 },
+        best: { type: 'win', count: 0, period: '' },
+        attendance: { current: 0, best: 0 },
+        scoring: { current: 0, best: 0 },
+      },
+    })
+  }
+
+  const playerId = Number(c.req.param('playerId'))
+  const seasonStartMonth = await getClubSeasonStartMonth(c.env.DB, clubId)
+  const year = Number(c.req.query('year')) || getCurrentSeasonYear(seasonStartMonth)
+
+  const streaks = await computeStreaks(c.env.DB, playerId, clubId, year)
+
+  return c.json({ streaks })
 })
 
 export { statsRoutes }

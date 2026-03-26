@@ -29,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? _myStats;
   Map<String, dynamic>? _recentSession;
   Map<String, dynamic>? _seasonSummary;
+  Map<String, dynamic>? _streakData;
   List<dynamic> _announcements = [];
   int _unreadCount = 0;
   bool _loading = true;
@@ -55,6 +56,15 @@ class _HomeScreenState extends State<HomeScreen> {
         final summary = await _api.getSeasonSummary(token!);
         _seasonSummary = summary;
       } catch (_) {}
+
+      // Load streak data
+      if (auth.player != null) {
+        try {
+          final playerId = auth.player!['id'] as int;
+          final streaks = await _api.getPlayerStreaks(playerId, token: token!);
+          _streakData = streaks;
+        } catch (_) {}
+      }
 
       try {
         final closedRes = await _api.getSessions(status: 'closed', limit: 1, token: token);
@@ -200,7 +210,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+
+            // 스트릭 배너
+            if (_streakData != null) _buildStreakBanner(),
+
+            const SizedBox(height: 16),
 
             // 공지사항 섹션
             if (_announcements.isNotEmpty) ...[
@@ -455,6 +470,42 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 8),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildStreakBanner() {
+    final data = _streakData ?? {};
+    final attendance = data['attendanceStreak'] ?? data['attendance_streak'] ?? data['attendance'] ?? {};
+    final win = data['winStreak'] ?? data['win_streak'] ?? data['current'] ?? {};
+
+    final attCurrent = attendance is Map ? (attendance['current'] ?? 0) : (attendance is int ? attendance : 0);
+    final winCurrent = win is Map ? (win['current'] ?? win['count'] ?? 0) : (win is int ? win : 0);
+
+    if (attCurrent <= 0 && winCurrent <= 0) return const SizedBox.shrink();
+
+    final items = <Widget>[];
+    if (attCurrent > 0) {
+      items.add(_streakChip('\uD83D\uDD25 ${attCurrent}연속 출석 중!', AppColors.orange));
+    }
+    if (winCurrent > 0) {
+      items.add(_streakChip('\u26A1 ${winCurrent}연승!', AppColors.primary));
+    }
+
+    return Wrap(spacing: 8, runSpacing: 8, children: items);
+  }
+
+  Widget _streakChip(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withAlpha(20),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withAlpha(50)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color),
       ),
     );
   }

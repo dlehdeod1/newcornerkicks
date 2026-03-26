@@ -23,10 +23,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   bool _loading = true;
   bool _sending = false;
 
+  // Reactions
+  static const _reactionEmojis = ['\uD83D\uDC4D', '\u2764\uFE0F', '\uD83D\uDE02', '\uD83D\uDD25', '\uD83D\uDC4F', '\uD83D\uDE22'];
+  Map<String, int> _reactionCounts = {};
+  Set<String> _myReactions = {};
+
   static const _categoryLabels = {
-    'free': '자유',
-    'review': '경기 후기',
-    'schedule': '일정 논의',
+    'free': '\uC790\uC720',
+    'review': '\uACBD\uAE30 \uD6C4\uAE30',
+    'schedule': '\uC77C\uC815 \uB17C\uC758',
   };
   static const _categoryColors = {
     'free': AppColors.primary,
@@ -56,11 +61,46 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         setState(() {
           _post = data;
           _comments = (data['comments'] as List?) ?? [];
+          // Parse reactions
+          final reactions = (data['reactions'] as List?) ?? [];
+          _reactionCounts = {};
+          _myReactions = {};
+          final myUserId = context.read<AuthService>().user?['id'];
+          for (final r in reactions) {
+            final emoji = r['emoji'] as String? ?? '';
+            _reactionCounts[emoji] = (_reactionCounts[emoji] ?? 0) + 1;
+            if (r['user_id'] == myUserId) {
+              _myReactions.add(emoji);
+            }
+          }
           _loading = false;
         });
       }
     } catch (e) {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _toggleReaction(String emoji) async {
+    final token = context.read<AuthService>().token;
+    if (token == null) return;
+    try {
+      if (_myReactions.contains(emoji)) {
+        await _api.removeReaction(widget.postId, emoji, token);
+        setState(() {
+          _myReactions.remove(emoji);
+          _reactionCounts[emoji] = (_reactionCounts[emoji] ?? 1) - 1;
+          if ((_reactionCounts[emoji] ?? 0) <= 0) _reactionCounts.remove(emoji);
+        });
+      } else {
+        await _api.addReaction(widget.postId, emoji, token);
+        setState(() {
+          _myReactions.add(emoji);
+          _reactionCounts[emoji] = (_reactionCounts[emoji] ?? 0) + 1;
+        });
+      }
+    } catch (e) {
+      if (mounted) showError(context, '\uBC18\uC751 \uCC98\uB9AC \uC2E4\uD328');
     }
   }
 
@@ -77,7 +117,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       await _load();
     } catch (e) {
       if (mounted) {
-        showError(context, '댓글 작성 실패: $e');
+        showError(context, '\uB313\uAE00 \uC791\uC131 \uC2E4\uD328: $e');
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -89,13 +129,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.bgCard,
-        title: const Text('게시글 삭제', style: TextStyle(color: Colors.white)),
-        content: const Text('정말 삭제하시겠습니까?', style: TextStyle(color: Colors.white70)),
+        title: const Text('\uAC8C\uC2DC\uAE00 \uC0AD\uC81C', style: TextStyle(color: Colors.white)),
+        content: const Text('\uC815\uB9D0 \uC0AD\uC81C\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?', style: TextStyle(color: Colors.white70)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('\uCDE8\uC18C')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('삭제', style: TextStyle(color: AppColors.red)),
+            child: const Text('\uC0AD\uC81C', style: TextStyle(color: AppColors.red)),
           ),
         ],
       ),
@@ -109,7 +149,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        showError(context, '삭제 실패: $e');
+        showError(context, '\uC0AD\uC81C \uC2E4\uD328: $e');
       }
     }
   }
@@ -119,13 +159,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.bgCard,
-        title: const Text('댓글 삭제', style: TextStyle(color: Colors.white)),
-        content: const Text('댓글을 삭제하시겠습니까?', style: TextStyle(color: Colors.white70)),
+        title: const Text('\uB313\uAE00 \uC0AD\uC81C', style: TextStyle(color: Colors.white)),
+        content: const Text('\uB313\uAE00\uC744 \uC0AD\uC81C\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?', style: TextStyle(color: Colors.white70)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('\uCDE8\uC18C')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('삭제', style: TextStyle(color: AppColors.red)),
+            child: const Text('\uC0AD\uC81C', style: TextStyle(color: AppColors.red)),
           ),
         ],
       ),
@@ -139,15 +179,70 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       await _load();
     } catch (e) {
       if (mounted) {
-        showError(context, '삭제 실패: $e');
+        showError(context, '\uC0AD\uC81C \uC2E4\uD328: $e');
       }
+    }
+  }
+
+  Future<void> _editComment(Map<String, dynamic> comment) async {
+    final ctrl = TextEditingController(text: comment['content'] ?? '');
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        title: const Text('\uB313\uAE00 \uC218\uC815', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          maxLines: 4,
+          style: const TextStyle(color: Colors.white, fontSize: 14),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: AppColors.surfaceBorder,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.surfaceTint),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.surfaceTint),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('\uCDE8\uC18C')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            child: const Text('\uC218\uC815', style: TextStyle(color: AppColors.primary)),
+          ),
+        ],
+      ),
+    );
+
+    if (result == null || result.isEmpty) return;
+    final token = context.read<AuthService>().token;
+    if (token == null) return;
+    try {
+      await _api.editComment(widget.postId, comment['id'] as int, result, token);
+      await _load();
+      if (mounted) showSuccess(context, '\uB313\uAE00\uC774 \uC218\uC815\uB418\uC5C8\uC2B5\uB2C8\uB2E4');
+    } catch (e) {
+      if (mounted) showError(context, '\uC218\uC815 \uC2E4\uD328: $e');
     }
   }
 
   String _formatDate(dynamic ts) {
     if (ts == null) return '';
     final dt = DateTime.fromMillisecondsSinceEpoch((ts as int) * 1000);
-    return '${dt.month}/${dt.day} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    final month = dt.month;
+    final day = dt.day;
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '$month/$day $hour:$minute';
   }
 
   @override
@@ -159,7 +254,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgBase,
       appBar: AppBar(
-        title: const Text('게시글', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('\uAC8C\uC2DC\uAE00', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: AppColors.bgBase,
         surfaceTintColor: Colors.transparent,
         actions: _post != null && (_post!['user_id'] == myUserId || isAdmin)
@@ -182,8 +277,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     }
                   },
                   itemBuilder: (_) => [
-                    const PopupMenuItem(value: 'edit', child: Text('수정', style: TextStyle(color: Colors.white))),
-                    const PopupMenuItem(value: 'delete', child: Text('삭제', style: TextStyle(color: AppColors.red))),
+                    const PopupMenuItem(value: 'edit', child: Text('\uC218\uC815', style: TextStyle(color: Colors.white))),
+                    const PopupMenuItem(value: 'delete', child: Text('\uC0AD\uC81C', style: TextStyle(color: AppColors.red))),
                   ],
                 ),
               ]
@@ -192,7 +287,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _post == null
-              ? Center(child: Text('게시글을 찾을 수 없습니다', style: TextStyle(color: AppColors.textHint)))
+              ? Center(child: Text('\uAC8C\uC2DC\uAE00\uC744 \uCC3E\uC744 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4', style: TextStyle(color: AppColors.textHint)))
               : Column(
                   children: [
                     Expanded(
@@ -208,6 +303,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                               _buildPostHeader(),
                               const SizedBox(height: 16),
                               _buildPostContent(),
+                              const SizedBox(height: 16),
+                              _buildReactionBar(),
                               const SizedBox(height: 24),
                               _buildCommentsSection(myUserId),
                             ],
@@ -291,7 +388,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Image.network(
-              '${ApiConfig.baseUrl}$imageUrl',
+              ApiConfig.baseUrl + imageUrl,
               width: double.infinity,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => const SizedBox.shrink(),
@@ -316,6 +413,47 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
+  Widget _buildReactionBar() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _reactionEmojis.map((emoji) {
+        final count = _reactionCounts[emoji] ?? 0;
+        final isActive = _myReactions.contains(emoji);
+        return GestureDetector(
+          onTap: () => _toggleReaction(emoji),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: isActive ? AppColors.primary.withAlpha(25) : AppColors.surfaceBorder,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isActive ? AppColors.primary.withAlpha(80) : AppColors.surfaceTint,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 16)),
+                if (count > 0) ...[
+                  const SizedBox(width: 4),
+                  Text(
+                    '$count',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isActive ? AppColors.primary : AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget _buildCommentsSection(int? myUserId) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,7 +463,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             Icon(Icons.chat_bubble_outline, size: 16, color: AppColors.textHint),
             const SizedBox(width: 6),
             Text(
-              '댓글 ${_comments.length}',
+              '\uB313\uAE00 ${_comments.length}',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
             ),
           ],
@@ -335,7 +473,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Text('아직 댓글이 없습니다', style: TextStyle(color: AppColors.iconInactive, fontSize: 13)),
+              child: Text('\uC544\uC9C1 \uB313\uAE00\uC774 \uC5C6\uC2B5\uB2C8\uB2E4', style: TextStyle(color: AppColors.iconInactive, fontSize: 13)),
             ),
           )
         else
@@ -352,7 +490,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   Widget _buildCommentItem(Map<String, dynamic> comment, bool isMine) {
     return GestureDetector(
       onLongPress: isMine
-          ? () => _deleteComment(comment['id'] as int)
+          ? () => _showCommentActions(comment)
           : null,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
@@ -373,11 +511,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(_formatDate(comment['created_at']), style: TextStyle(fontSize: 11, color: AppColors.iconInactive)),
+                if (comment['updated_at'] != null && comment['updated_at'] != comment['created_at'])
+                  Text(' (\uC218\uC815\uB428)', style: TextStyle(fontSize: 10, color: AppColors.iconInactive)),
                 if (isMine) ...[
                   const Spacer(),
                   GestureDetector(
-                    onTap: () => _deleteComment(comment['id'] as int),
-                    child: Icon(Icons.close, size: 14, color: AppColors.iconInactive),
+                    onTap: () => _showCommentActions(comment),
+                    child: Icon(Icons.more_horiz, size: 16, color: AppColors.iconInactive),
                   ),
                 ],
               ],
@@ -386,6 +526,37 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             Text(
               comment['content'] ?? '',
               style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.4),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCommentActions(Map<String, dynamic> comment) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.bgCard,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit, color: Colors.white70),
+              title: const Text('\uC218\uC815', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _editComment(comment);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: AppColors.red),
+              title: const Text('\uC0AD\uC81C', style: TextStyle(color: AppColors.red)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _deleteComment(comment['id'] as int);
+              },
             ),
           ],
         ),
@@ -407,7 +578,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               controller: _commentCtrl,
               style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
-                hintText: '댓글을 입력하세요...',
+                hintText: '\uB313\uAE00\uC744 \uC785\uB825\uD558\uC138\uC694...',
                 hintStyle: TextStyle(color: AppColors.iconInactive),
                 filled: true,
                 fillColor: AppColors.surfaceBorder,

@@ -412,6 +412,42 @@ class ApiService {
   Future<dynamic> deleteCommunityComment(int postId, int commentId, String token) =>
       request('/community/$postId/comments/$commentId', method: 'DELETE', token: token);
 
+  // Badges
+  Future<List<dynamic>> getBadges({required String token}) =>
+      request('/badges', token: token).then((r) => (r['badges'] ?? []) as List<dynamic>);
+
+  Future<List<dynamic>> getPlayerBadges(int playerId, {required String token}) =>
+      request('/badges/player/$playerId', token: token).then((r) => (r['badges'] ?? []) as List<dynamic>);
+
+  // Streaks (home용)
+  Future<Map<String, dynamic>> getPlayerStreaks(int playerId, {required String token}) =>
+      request('/stats/streaks/$playerId', token: token).then((r) => (r['streaks'] ?? r) as Map<String, dynamic>);
+
+  // Season Awards
+  Future<dynamic> getSeasonAwards({int? year, required String token}) =>
+      request('/awards${year != null ? '?year=$year' : ''}', token: token);
+
+  // Reactions
+  Future<dynamic> addReaction(int postId, String emoji, String token) =>
+      request('/posts/$postId/reactions', method: 'POST', body: {'emoji': emoji}, token: token);
+
+  Future<dynamic> removeReaction(int postId, String emoji, String token) =>
+      request('/posts/$postId/reactions', method: 'DELETE', body: {'emoji': emoji}, token: token);
+
+  // Comment edit
+  Future<dynamic> editComment(int postId, int commentId, String content, String token) =>
+      request('/posts/$postId/comments/$commentId', method: 'PUT', body: {'content': content}, token: token);
+
+  // Community reactions & comment edit
+  Future<dynamic> addCommunityReaction(int postId, String emoji, String token) =>
+      request('/community/$postId/reactions', method: 'POST', body: {'emoji': emoji}, token: token);
+
+  Future<dynamic> removeCommunityReaction(int postId, String emoji, String token) =>
+      request('/community/$postId/reactions', method: 'DELETE', body: {'emoji': emoji}, token: token);
+
+  Future<dynamic> editCommunityComment(int postId, int commentId, String content, String token) =>
+      request('/community/$postId/comments/$commentId', method: 'PUT', body: {'content': content}, token: token);
+
   // 이미지 업로드 (범용 multipart)
   Future<dynamic> uploadImage(File file, String prefix, String token) async {
     final url = Uri.parse('${ApiConfig.baseUrl}/uploads');

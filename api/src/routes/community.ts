@@ -16,7 +16,10 @@ communityRoutes.get('/', authMiddleware(), async (c) => {
   const offset = Math.max(Number(c.req.query('offset')) || 0, 0)
 
   let sql = `
-    SELECT cp.*, u.username as author_name, cl.name as club_name
+    SELECT cp.*, u.username as author_name, cl.name as club_name,
+      (SELECT GROUP_CONCAT(emoji || ':' || cnt) FROM (
+        SELECT emoji, COUNT(*) as cnt FROM community_reactions WHERE post_id = cp.id GROUP BY emoji
+      )) as reaction_summary
     FROM community_posts cp
     LEFT JOIN users u ON u.id = cp.author_id
     LEFT JOIN clubs cl ON cl.id = cp.club_id
@@ -215,6 +218,89 @@ communityRoutes.delete('/:id/comments/:commentId', authMiddleware(), async (c) =
   ])
 
   return c.json({ data: { success: true } })
+})
+
+// PUT /community/:id/comments/:commentId — 댓글 수정
+communityRoutes.put('/:id/comments/:commentId', authMiddleware(), async (c) => {
+  const postId = Number(c.req.param('id'))
+  const commentId = Number(c.req.param('commentId'))
+  const userId = (c as any).userId
+
+  const comment = await c.env.DB.prepare(
+    'SELECT * FROM community_comments WHERE id = ? AND post_id = ?'
+  ).bind(commentId, postId).first()
+  if (!comment) return c.json({ error: '댓글을 찾을 수 없습니다.' }, 404)
+
+  if (comment.author_id !== userId) {
+    return c.json({ error: '수정 권한이 없습니다.' }, 403)
+  }
+
+  const { content } = await c.req.json()
+  if (!content) return c.json({ error: '내용은 필수입니다.' }, 400)
+
+  const now = Math.floor(Date.now() / 1000)
+  await c.env.DB.prepare(
+    'UPDATE community_comments SET content = ?, updated_at = ? WHERE id = ?'
+  ).bind(content, now, commentId).run()
+
+  const updated = await c.env.DB.prepare(
+    `SELECT c.*, u.username as author_name FROM community_comments c LEFT JOIN users u ON u.id = c.author_id WHERE c.id = ?`
+  ).bind(commentId).first()
+
+  return c.json({ data: updated })
+})
+
+// POST /community/:id/reactions — 리액션 토글
+communityRoutes.post('/:id/reactions', authMiddleware(), async (c) => {
+  const postId = Number(c.req.param('id'))
+  const userId = (c as any).userId
+
+  const post = await c.env.DB.prepare(
+    'SELECT id FROM community_posts WHERE id = ?'
+  ).bind(postId).first()
+  if (!post) return c.json({ error: '게시글을 찾을 수 없습니다.' }, 404)
+
+  const { emoji } = await c.req.json()
+  const validEmojis = ['\u{1F44D}', '\u{2764}\u{FE0F}', '\u{1F602}', '\u{1F525}', '\u{1F44F}', '\u{1F622}']
+  if (!emoji || !validEmojis.includes(emoji)) {
+    return c.json({ error: '유효하지 않은 이모지입니다.' }, 400)
+  }
+
+  const existing = await c.env.DB.prepare(
+    'SELECT id FROM community_reactions WHERE post_id = ? AND user_id = ? AND emoji = ?'
+  ).bind(postId, userId, emoji).first()
+
+  if (existing) {
+    await c.env.DB.prepare('DELETE FROM community_reactions WHERE id = ?').bind(existing.id).run()
+    return c.json({ data: { action: 'removed', emoji } })
+  } else {
+    const now = Math.floor(Date.now() / 1000)
+    await c.env.DB.prepare(
+      'INSERT INTO community_reactions (post_id, user_id, emoji, created_at) VALUES (?, ?, ?, ?)'
+    ).bind(postId, userId, emoji, now).run()
+    return c.json({ data: { action: 'added', emoji } })
+  }
+})
+
+// GET /community/:id/reactions — 리액션 목록
+communityRoutes.get('/:id/reactions', authMiddleware(), async (c) => {
+  const postId = Number(c.req.param('id'))
+  const userId = (c as any).userId
+
+  const { results } = await c.env.DB.prepare(
+    'SELECT emoji, user_id FROM community_reactions WHERE post_id = ?'
+  ).bind(postId).all()
+
+  const grouped: Record<string, { emoji: string; count: number; users: string[]; reacted: boolean }> = {}
+  for (const r of results) {
+    const e = r.emoji as string
+    if (!grouped[e]) grouped[e] = { emoji: e, count: 0, users: [], reacted: false }
+    grouped[e].count++
+    grouped[e].users.push(r.user_id as string)
+    if (r.user_id === userId) grouped[e].reacted = true
+  }
+
+  return c.json({ data: { reactions: Object.values(grouped) } })
 })
 
 export { communityRoutes }

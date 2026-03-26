@@ -245,6 +245,12 @@ export const rankingsApi = {
     api(`/rankings/my-stats?playerId=${playerId}${year ? `&year=${year}` : ''}`, token ? { token } : {}),
 }
 
+// Awards API
+export const awardsApi = {
+  get: (year?: number, token?: string) =>
+    api(`/awards${year ? `?year=${year}` : ''}`, token ? { token } : {}),
+}
+
 // Subscriptions API
 export const subscriptionsApi = {
   me: (token: string) =>
@@ -481,6 +487,15 @@ export const postsApi = {
 
   unvote: (postId: number, optionId: number | null, token: string) =>
     api(`/posts/${postId}/poll/vote`, { method: 'DELETE', body: { optionId }, token }),
+
+  addReaction: (postId: number, emoji: string, token: string) =>
+    api(`/posts/${postId}/reactions`, { method: 'POST', body: { emoji }, token }),
+
+  removeReaction: (postId: number, emoji: string, token: string) =>
+    api(`/posts/${postId}/reactions`, { method: 'DELETE', body: { emoji }, token }),
+
+  editComment: (postId: number, commentId: number, content: string, token: string) =>
+    api(`/posts/${postId}/comments/${commentId}`, { method: 'PUT', body: { content }, token }),
 }
 
 // Community API (전체 커뮤니티)

@@ -34,6 +34,10 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
   Map<String, dynamic>? _funStats;
   bool _funStatsLoading = false;
 
+  // 시즌 어워드
+  Map<String, dynamic>? _seasonAwards;
+  bool _awardsLoading = false;
+
   static int _currentSeasonYear(int startMonth) {
     final now = DateTime.now();
     if (startMonth <= 1) return now.year;
@@ -89,6 +93,9 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
       if (_tabController.index == 1 && _funStats == null && !_funStatsLoading) {
         _loadFunStats();
       }
+      if (_tabController.index == 1 && _seasonAwards == null && !_awardsLoading) {
+        _loadSeasonAwards();
+      }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = context.read<AuthService>();
@@ -139,6 +146,18 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
       if (mounted) setState(() => _funStats = res);
     } catch (_) {}
     if (mounted) setState(() => _funStatsLoading = false);
+  }
+
+  Future<void> _loadSeasonAwards() async {
+    setState(() => _awardsLoading = true);
+    try {
+      final token = context.read<AuthService>().token;
+      if (token != null) {
+        final res = await _api.getSeasonAwards(year: _selectedYear, token: token);
+        if (mounted) setState(() => _seasonAwards = res);
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _awardsLoading = false);
   }
 
   List<dynamic> get _sorted {
@@ -681,7 +700,10 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
           // 4) 시즌 요약
           _buildSeasonSummary(),
 
-          // 5) Fun Stats (듀오/파트너/라이벌)
+          // 5) 시즌 어워드
+          _buildSeasonAwardsSection(),
+
+          // 6) Fun Stats (듀오/파트너/라이벌)
           _buildFunStatsSection(),
 
           const SizedBox(height: 32),
@@ -1090,6 +1112,101 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
   }
 
   /// Fun Stats 섹션 (기존 듀오/파트너/라이벌)
+  Widget _buildSeasonAwardsSection() {
+    if (_awardsLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2)),
+      );
+    }
+
+    final awards = _seasonAwards?['awards'] ?? _seasonAwards?['data']?['awards'];
+    if (awards == null || (awards is List && awards.isEmpty) || (awards is Map && awards.isEmpty)) {
+      return const SizedBox.shrink();
+    }
+
+    final awardEntries = <Map<String, dynamic>>[];
+    if (awards is Map) {
+      const awardConfig = [
+        {'key': 'topScorer', 'icon': '\uD83E\uDD47', 'label': '득점왕'},
+        {'key': 'topAssister', 'icon': '\u26A1', 'label': '어시왕'},
+        {'key': 'topDefender', 'icon': '\uD83D\uDEE1\uFE0F', 'label': '수비왕'},
+        {'key': 'topAttendance', 'icon': '\uD83D\uDCC5', 'label': '출석왕'},
+        {'key': 'mvp', 'icon': '\uD83C\uDFC6', 'label': 'MVP'},
+        {'key': 'rookie', 'icon': '\uD83C\uDF1F', 'label': '신인상'},
+      ];
+      for (final cfg in awardConfig) {
+        final val = awards[cfg['key']];
+        if (val != null) {
+          awardEntries.add({
+            'icon': cfg['icon'],
+            'label': cfg['label'],
+            'name': val['name'] ?? val['playerName'] ?? '?',
+            'value': val['value'] ?? val['count'] ?? '',
+          });
+        }
+      }
+    } else if (awards is List) {
+      for (final a in awards) {
+        awardEntries.add({
+          'icon': a['icon'] ?? '\uD83C\uDFC6',
+          'label': a['label'] ?? a['type'] ?? '',
+          'name': a['name'] ?? a['playerName'] ?? '?',
+          'value': a['value'] ?? a['count'] ?? '',
+        });
+      }
+    }
+
+    if (awardEntries.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            const Text('\uD83C\uDFC6', style: TextStyle(fontSize: 18)),
+            const SizedBox(width: 8),
+            Text('$_selectedYear \uC2DC\uC98C \uC5B4\uC6CC\uB4DC', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: awardEntries.map((entry) {
+            return Container(
+              width: (MediaQuery.of(context).size.width - 48) / 2,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceBorder,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.surfaceTint),
+              ),
+              child: Row(
+                children: [
+                  Text(entry['icon'] as String, style: const TextStyle(fontSize: 24)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(entry['label'] as String, style: TextStyle(fontSize: 10, color: AppColors.textHint, fontWeight: FontWeight.w600)),
+                        Text(entry['name'] as String, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white), overflow: TextOverflow.ellipsis),
+                        if (entry['value'] != null && '${entry['value']}'.isNotEmpty)
+                          Text('${entry['value']}', style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
   Widget _buildFunStatsSection() {
     // 로딩 중
     if (_funStatsLoading) {

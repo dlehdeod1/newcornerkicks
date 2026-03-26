@@ -20,6 +20,9 @@ import { uploadsRoutes } from './routes/uploads'
 import { announcementsRoutes } from './routes/announcements'
 import { postsRoutes } from './routes/posts'
 import { communityRoutes } from './routes/community'
+import { badgesRoutes } from './routes/badges'
+import { checkAndAwardBadges } from './utils/badges'
+import { awardsRoutes } from './routes/awards'
 
 export type Env = {
   DB: D1Database
@@ -88,6 +91,8 @@ app.route('/uploads', uploadsRoutes)
 app.route('/announcements', announcementsRoutes)
 app.route('/posts', postsRoutes)
 app.route('/community', communityRoutes)
+app.route('/badges', badgesRoutes)
+app.route('/awards', awardsRoutes)
 
 // 404
 app.notFound((c) => {
@@ -221,6 +226,13 @@ async function finalizeMvpVotes(env: Env) {
         (session_id, player_id, vote_count, vote_bonus, decided_at)
       VALUES (?, ?, ?, ?, ?)
     `).bind(session.id, winner.voted_player_id, winner.vote_count, voteBonus, now).run()
+
+    // MVP 뱃지 체크
+    try {
+      await checkAndAwardBadges(env.DB, winner.voted_player_id, session.club_id, session.id)
+    } catch (e) {
+      console.error(`Badge check failed for MVP winner ${winner.voted_player_id}:`, e)
+    }
   }
 }
 

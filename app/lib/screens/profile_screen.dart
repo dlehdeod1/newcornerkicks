@@ -24,11 +24,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic>? _summary;
   bool _summaryLoading = true;
 
+  // 배지 데이터
+  List<dynamic> _badges = [];
+  bool _badgesLoading = false;
+
   @override
   void initState() {
     super.initState();
     _loadProfile();
     _loadSummary();
+    _loadBadges();
   }
 
   Future<void> _loadProfile() async {
@@ -60,6 +65,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _loadBadges() async {
+    final auth = context.read<AuthService>();
+    final token = auth.token;
+    final playerId = auth.player?['id'];
+    if (token == null || playerId == null) return;
+    setState(() => _badgesLoading = true);
+    try {
+      final badges = await _api.getPlayerBadges(playerId, token: token);
+      if (mounted) setState(() { _badges = badges; _badgesLoading = false; });
+    } catch (_) {
+      if (mounted) setState(() => _badgesLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
@@ -86,6 +105,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (player != null && !_summaryLoading) ...[
               const SizedBox(height: 16),
               _buildBodyInfo(),
+              const SizedBox(height: 16),
+              _buildBadgesGrid(),
               const SizedBox(height: 16),
               _buildSeasonStats(),
               const SizedBox(height: 16),
@@ -170,6 +191,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 2),
           Text(label, style: TextStyle(fontSize: 11, color: AppColors.textHint)),
+        ],
+      ),
+    );
+  }
+
+  static const _badgeEmoji = {
+    'FIRST_GOAL': '\u26BD', 'HAT_TRICK': '\uD83C\uDFA9', 'DEFENSE_KING': '\uD83D\uDEE1\uFE0F',
+    'ATTENDANCE_90': '\uD83D\uDCC5', 'MATCH_100': '\uD83D\uDCAF', 'MATCH_50': '\uD83C\uDFC5',
+    'MATCH_10': '\uD83C\uDFAE', 'WIN_STREAK_3': '\uD83D\uDD25', 'WIN_STREAK_5': '\uD83D\uDD25',
+    'ALL_ROUNDER': '\u2B50', 'MVP': '\uD83C\uDFC6', 'MVP_3': '\uD83C\uDFC6',
+    'FIRST_ASSIST': '\uD83D\uDC5F', 'SCORING_STREAK_3': '\u26A1',
+  };
+
+  Widget _buildBadgesGrid() {
+    if (_badgesLoading) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceBorder,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.surfaceTint),
+        ),
+        child: const Center(child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2)),
+      );
+    }
+
+    final earned = _badges.where((b) => b['earned_at'] != null).toList();
+    if (earned.isEmpty && _badges.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceBorder,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.surfaceTint),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('배지', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary, letterSpacing: 1)),
+          const SizedBox(height: 12),
+          if (earned.isEmpty)
+            Center(child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text('아직 획득한 배지가 없습니다', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
+            ))
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _badges.map((badge) {
+                final code = badge['code'] ?? '';
+                final name = badge['name'] ?? code;
+                final isEarned = badge['earned_at'] != null;
+                final emoji = _badgeEmoji[code] ?? '\uD83C\uDFC5';
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isEarned ? AppColors.primary.withAlpha(20) : AppColors.surfaceTint,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isEarned ? AppColors.primary.withAlpha(51) : AppColors.surfaceTint,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(emoji, style: TextStyle(fontSize: 14, color: isEarned ? null : Colors.white24)),
+                      const SizedBox(width: 4),
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isEarned ? Colors.white : Colors.white38,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
         ],
       ),
     );
