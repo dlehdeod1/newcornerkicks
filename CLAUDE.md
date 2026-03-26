@@ -201,4 +201,5 @@ Tailwind에서 시맨틱 컬러: `bg-background`, `text-foreground`, `bg-card`, 
 0021_defense_detail_events.sql ← TACKLE/INTERCEPTION/CLEARANCE 컬럼
 0022_attack_gk_events.sql    ← DRIBBLE/SHOT_ON/SHOT_OFF 컬럼
 0023_rankings_expansion.sql  ← clubs.mvp_weights
+0025_phase2_gamification.sql ← 배지/시즌어워드/반응/댓글수정/라이브공유/출석UNIQUE
 ```
