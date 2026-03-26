@@ -111,16 +111,15 @@ async function autoTransitionSessions(env: Env) {
   const timeKST = kstNow.toISOString().split('T')[1].substring(0, 5)
   const now = Math.floor(Date.now() / 1000)
 
-  // 1. end_time 지난 세션 → ended로 전환
+  // 1. end_time 지난 세션 → ended로 전환 (end_time null이면 session_date 다음날 자정 기준)
   const transitioning = await env.DB.prepare(`
     SELECT id FROM sessions
     WHERE status IN ('recruiting', 'open', 'closed')
-      AND end_time IS NOT NULL
       AND (
-        session_date < ?
-        OR (session_date = ? AND end_time <= ?)
+        (end_time IS NOT NULL AND (session_date < ? OR (session_date = ? AND end_time <= ?)))
+        OR (end_time IS NULL AND session_date < ?)
       )
-  `).bind(todayKST, todayKST, timeKST).all()
+  `).bind(todayKST, todayKST, timeKST, todayKST).all()
 
   for (const session of transitioning.results as any[]) {
     await env.DB.prepare(
@@ -132,6 +131,22 @@ async function autoTransitionSessions(env: Env) {
       await autoSettleSession(env.DB, session.id)
     } catch (e) {
       console.error(`autoSettleSession failed for session ${session.id}:`, e)
+    }
+  }
+
+  // 2. ended/completed인데 settlement 없는 세션 보강
+  const missingSettlement = await env.DB.prepare(`
+    SELECT s.id FROM sessions s
+    LEFT JOIN settlements st ON st.session_id = s.id
+    WHERE s.status IN ('ended', 'completed')
+      AND st.id IS NULL
+  `).all()
+
+  for (const session of missingSettlement.results as any[]) {
+    try {
+      await autoSettleSession(env.DB, session.id)
+    } catch (e) {
+      console.error(`autoSettleSession backfill failed for session ${session.id}:`, e)
     }
   }
 }

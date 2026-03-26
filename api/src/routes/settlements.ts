@@ -91,23 +91,18 @@ settlementsRoutes.get('/me', authMiddleware(), async (c) => {
     return c.json({ history: [] })
   }
 
-  // 팀 정산 이력 (내가 속한 팀의 정산)
+  // 팀 정산 이력 (session_payments 기반)
   const teamHistory = await c.env.DB.prepare(`
     SELECT
-      ts.id,
+      sp.id,
       'team' as type,
-      ts.rank,
-      ts.per_person as amount,
-      t.name as team_name,
+      sp.team_rank as rank,
+      sp.amount,
       s.session_date,
       s.id as session_id
-    FROM team_settlements ts
-    JOIN settlements st ON ts.settlement_id = st.id
-    JOIN sessions s ON st.session_id = s.id
-    JOIN teams t ON ts.team_id = t.id
-    JOIN team_members tm ON t.id = tm.team_id
-    WHERE tm.player_id = ?
-      AND st.status = 'completed'
+    FROM session_payments sp
+    JOIN sessions s ON sp.session_id = s.id
+    WHERE sp.player_id = ?
     ORDER BY s.session_date DESC
   `).bind(player.id).all()
 
@@ -157,24 +152,20 @@ settlementsRoutes.get('/leaderboard', optionalAuthMiddleware, async (c) => {
   const startDate = `${year}-01-01`
   const endDate = `${year}-12-31`
 
-  // 팀 정산에서 개인별 수익 집계
+  // 개인별 참가비 집계 (session_payments 기반)
   const teamEarnings = await c.env.DB.prepare(`
     SELECT
       p.id as player_id,
       p.name as player_name,
       p.nickname,
       p.photo_url,
-      SUM(ts.per_person) as team_earnings,
-      COUNT(DISTINCT s.id) as sessions_count
+      SUM(sp.amount) as team_earnings,
+      COUNT(DISTINCT sp.session_id) as sessions_count
     FROM players p
-    JOIN team_members tm ON p.id = tm.player_id
-    JOIN teams t ON tm.team_id = t.id
-    JOIN team_settlements ts ON t.id = ts.team_id
-    JOIN settlements st ON ts.settlement_id = st.id
-    JOIN sessions s ON st.session_id = s.id
+    JOIN session_payments sp ON p.id = sp.player_id
+    JOIN sessions s ON sp.session_id = s.id
     WHERE s.session_date BETWEEN ? AND ?
       AND s.club_id = ?
-      AND st.status = 'completed'
     GROUP BY p.id
   `).bind(startDate, endDate, clubId).all()
 

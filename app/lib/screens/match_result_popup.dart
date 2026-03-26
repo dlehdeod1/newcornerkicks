@@ -16,11 +16,12 @@ class MatchResultPopup {
     required List<dynamic> teams,
     required List<dynamic> matches,
     required int sessionId,
+    List<dynamic> teamSettlements = const [],
   }) {
     return showDialog(
       context: context,
       barrierColor: Colors.black.withAlpha(200),
-      builder: (_) => _MatchResultDialog(session: session, teams: teams, matches: matches, sessionId: sessionId),
+      builder: (_) => _MatchResultDialog(session: session, teams: teams, matches: matches, sessionId: sessionId, teamSettlements: teamSettlements),
     );
   }
 }
@@ -30,7 +31,8 @@ class _MatchResultDialog extends StatefulWidget {
   final List<dynamic> teams;
   final List<dynamic> matches;
   final int sessionId;
-  const _MatchResultDialog({required this.session, required this.teams, required this.matches, required this.sessionId});
+  final List<dynamic> teamSettlements;
+  const _MatchResultDialog({required this.session, required this.teams, required this.matches, required this.sessionId, required this.teamSettlements});
 
   @override
   State<_MatchResultDialog> createState() => _MatchResultDialogState();
@@ -329,6 +331,19 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
         buf.writeln('⚡ 도움왕: ${ap['name']} ${topAssister['count']}도움');
       }
     }
+    // 팀별 정산 금액
+    if (widget.teamSettlements.isNotEmpty) {
+      buf.writeln();
+      buf.writeln('💰 팀별 정산');
+      buf.writeln('─────────────────');
+      final sorted = List<dynamic>.from(widget.teamSettlements)
+        ..sort((a, b) => ((a['rank'] ?? 99) as int).compareTo((b['rank'] ?? 99) as int));
+      for (final ts in sorted) {
+        final name = ts['team_name'] ?? '팀';
+        final perPerson = ts['per_person'] as int? ?? 0;
+        buf.writeln('$name: 1인 ${perPerson}원');
+      }
+    }
     buf.writeln();
     buf.write('#코너킥스 #풋살 #경기결과');
     return buf.toString();
@@ -392,6 +407,7 @@ class _MatchResultDialogState extends State<_MatchResultDialog> {
                   typeIcon: _typeIcon,
                   typeLabel: _typeLabel,
                   typeUnit: _typeUnit,
+                  teamSettlements: widget.teamSettlements,
                 ),
               ),
             ),
@@ -478,10 +494,12 @@ class _MatchResultCard extends StatelessWidget {
   final String Function(String) typeIcon;
   final String Function(String) typeLabel;
   final String Function(String) typeUnit;
+  final List<dynamic> teamSettlements;
 
   const _MatchResultCard({
     required this.session, required this.standings, required this.awards,
     required this.typeIcon, required this.typeLabel, required this.typeUnit,
+    required this.teamSettlements,
   });
 
   @override
@@ -603,6 +621,9 @@ class _MatchResultCard extends StatelessWidget {
             ),
           ),
 
+          // ── 팀별 정산 금액 ──
+          if (teamSettlements.isNotEmpty) _buildSettlementSection(),
+
           // ── 오늘의 수훈선수 (동적) ──
           if (awards.isNotEmpty) _buildAwardsSection(),
 
@@ -627,6 +648,70 @@ class _MatchResultCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildSettlementSection() {
+    // teamSettlements: [{team_id, team_name, rank, prize_amount, per_person}, ...]
+    // standings 순서에 맞춰서 정렬
+    final sorted = List<dynamic>.from(teamSettlements)
+      ..sort((a, b) => ((a['rank'] ?? 99) as int).compareTo((b['rank'] ?? 99) as int));
+
+    return _Section(
+      title: '💰 팀별 정산',
+      child: Column(
+        children: sorted.map((ts) {
+          final teamName = ts['team_name'] ?? '팀';
+          final perPerson = ts['per_person'] as int? ?? 0;
+          final prizeAmount = ts['prize_amount'] as int? ?? 0;
+          final rank = ts['rank'] as int? ?? 0;
+          final isWinner = rank == 1 && prizeAmount > 0;
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: isWinner ? AppColors.primary.withAlpha(15) : AppColors.surfaceBorder,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: isWinner ? AppColors.primary.withAlpha(40) : AppColors.surfaceTint),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(teamName, style: TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w600,
+                    color: isWinner ? AppColors.primary : Colors.white,
+                  )),
+                ),
+                if (prizeAmount > 0)
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(20),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text('+${_formatAmount(prizeAmount)}', style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.bold)),
+                  ),
+                Text('1인 ${_formatAmount(perPerson)}원', style: TextStyle(
+                  fontSize: 13, fontWeight: FontWeight.bold,
+                  color: isWinner ? AppColors.primary : Colors.white70,
+                )),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  String _formatAmount(int amount) {
+    if (amount >= 10000) {
+      final man = amount ~/ 10000;
+      final remainder = amount % 10000;
+      if (remainder == 0) return '${man}만';
+      return '${man}만${remainder > 0 ? remainder : ''}';
+    }
+    return amount.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},');
   }
 
   Widget _buildAwardsSection() {

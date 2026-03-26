@@ -119,9 +119,8 @@ class _ClubScreenState extends State<ClubScreen> {
     final club = auth.club!;
     final clubName = club['name'] ?? '';
     final slug = club['slug'] ?? '';
-    final memberCount = _clubDetail?['memberCount'];
+    final memberCount = _players.length;
     final inviteCode = _clubDetail?['inviteCode'] ?? '';
-    final planType = _clubDetail?['planType'] ?? 'free';
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -167,10 +166,7 @@ class _ClubScreenState extends State<ClubScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (memberCount != null)
-                _badge('$memberCount명', AppColors.primary),
-              const SizedBox(width: 8),
-              _badge(planType == 'pro' ? 'PRO' : 'FREE', planType == 'pro' ? AppColors.amber : AppColors.slateLight),
+              _badge('$memberCount명', AppColors.primary),
               if (auth.isAdmin) ...[
                 const SizedBox(width: 8),
                 _badge('관리자', AppColors.purple),

@@ -34,6 +34,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
   List<dynamic> _matches = [];
   List<dynamic> _attendance = [];
   List<dynamic> _rsvp = [];
+  List<dynamic> _teamSettlements = [];
   bool _loading = true;
 
   Map<String, dynamic>? _recordingMatch;
@@ -64,6 +65,16 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
           _rsvp = (res['rsvp'] as List?) ?? [];
           _loading = false;
         });
+      }
+      // 정산 데이터 비동기 로드 (실패해도 무시)
+      if (token != null) {
+        _api.getSessionSettlement(widget.sessionId, token).then((sRes) {
+          if (mounted) {
+            setState(() {
+              _teamSettlements = (sRes['details']?['teams'] as List?) ?? [];
+            });
+          }
+        }).catchError((_) {});
       }
     } catch (e) {
       if (mounted) {
@@ -679,7 +690,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
           // 결과 공유 버튼 (완료된 경기 있을 때)
           if (completedMatches.isNotEmpty) ...[
             GestureDetector(
-              onTap: () => MatchResultPopup.show(context, session: _session!, teams: _teams, matches: _matches, sessionId: widget.sessionId),
+              onTap: () => MatchResultPopup.show(context, session: _session!, teams: _teams, matches: _matches, sessionId: widget.sessionId, teamSettlements: _teamSettlements),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -819,17 +830,38 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                 final playerName = e['player_name'] ?? e['guest_name'] ?? '?';
                 final assisterName = e['assister_name'] ?? e['assister_guest_name'];
                 final icon = _eventIcon(type);
+                final eventTeamId = e['team_id'];
+                final isTeam1 = eventTeamId != null && eventTeamId.toString() == team1Id.toString();
+                final nameWidget = Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(playerName, style: const TextStyle(fontSize: 13, color: Colors.white)),
+                    if (assisterName != null && assisterName.toString().isNotEmpty) ...[
+                      const SizedBox(width: 3),
+                      Text('($assisterName)', style: TextStyle(fontSize: 11, color: AppColors.textHint)),
+                    ],
+                  ],
+                );
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 3),
                   child: Row(
                     children: [
-                      Text(icon, style: const TextStyle(fontSize: 14)),
-                      const SizedBox(width: 8),
-                      Text(playerName, style: const TextStyle(fontSize: 13, color: Colors.white)),
-                      if (assisterName != null && assisterName.toString().isNotEmpty) ...[
-                        const SizedBox(width: 4),
-                        Text('($assisterName)', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
-                      ],
+                      // 팀1 선수 → 좌측
+                      Expanded(
+                        child: isTeam1
+                            ? Align(alignment: Alignment.centerRight, child: nameWidget)
+                            : const SizedBox(),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(icon, style: const TextStyle(fontSize: 14)),
+                      ),
+                      // 팀2 선수 → 우측
+                      Expanded(
+                        child: !isTeam1
+                            ? Align(alignment: Alignment.centerLeft, child: nameWidget)
+                            : const SizedBox(),
+                      ),
                     ],
                   ),
                 );
@@ -911,6 +943,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
       teamStandings[team['id']] = {
         'points': 0,
         'goalsFor': 0,
+        'eventCounts': <String, int>{},
         // 등록 선수 p_$id, 용병 g_$name 형식으로 통일
         'memberKeys': members.map((m) {
           final pid = m['player_id'];
@@ -935,6 +968,20 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
         } else {
           t1['points'] = (t1['points'] as int) + 1;
           t2['points'] = (t2['points'] as int) + 1;
+        }
+        // 이벤트 타입별 팀 카운트 집계
+        for (final e in events) {
+          final etype = e['event_type'] as String? ?? '';
+          final eteamId = e['team_id'];
+          final target = eteamId == match['team1_id'] ? t1 : eteamId == match['team2_id'] ? t2 : null;
+          if (target != null) {
+            final counts = target['eventCounts'] as Map<String, int>;
+            counts[etype] = (counts[etype] ?? 0) + 1;
+            // 어시스트 카운트
+            if (etype == 'GOAL' && (e['assister_id'] != null || e['assister_name'] != null || e['assister_guest_name'] != null)) {
+              counts['ASSIST'] = (counts['ASSIST'] ?? 0) + 1;
+            }
+          }
         }
       }
     }
@@ -1122,6 +1169,8 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
     final t2Goals = (t2['goalsFor'] ?? 0) as int;
     final t1Pts = (t1['points'] ?? 0) as int;
     final t2Pts = (t2['points'] ?? 0) as int;
+    final t1Counts = (t1['eventCounts'] as Map<String, int>?) ?? {};
+    final t2Counts = (t2['eventCounts'] as Map<String, int>?) ?? {};
 
     Widget barRow(String label, int left, int right, Color lColor, Color rColor) {
       final total = left + right;
@@ -1134,14 +1183,20 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
             SizedBox(width: 24, child: Text('$left', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: lColor), textAlign: TextAlign.center)),
             const SizedBox(width: 6),
             Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: Row(
-                  children: [
-                    Expanded(flex: leftFlex.clamp(1, 999), child: Container(height: 10, color: lColor.withAlpha(120))),
-                    Expanded(flex: rightFlex.clamp(1, 999), child: Container(height: 10, color: rColor.withAlpha(120))),
-                  ],
-                ),
+              child: Column(
+                children: [
+                  Text(label, style: TextStyle(fontSize: 9, color: AppColors.textHint)),
+                  const SizedBox(height: 2),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: Row(
+                      children: [
+                        Expanded(flex: leftFlex.clamp(1, 999), child: Container(height: 10, color: lColor.withAlpha(120))),
+                        Expanded(flex: rightFlex.clamp(1, 999), child: Container(height: 10, color: rColor.withAlpha(120))),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(width: 6),
@@ -1149,6 +1204,19 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
           ],
         ),
       );
+    }
+
+    // 이벤트 타입별 라벨
+    const eventLabels = {
+      'GOAL': '골', 'ASSIST': '도움', 'DEFENSE': '수비', 'TACKLE': '태클',
+      'INTERCEPTION': '인터셉트', 'CLEARANCE': '클리어런스', 'SAVE': '선방',
+      'KEY_PASS': '키패스', 'DRIBBLE': '드리블', 'SHOT_ON': '유효슈팅', 'SHOT_OFF': '슈팅',
+    };
+
+    // 표시할 이벤트 타입: 골 + 도움 + enabled_events (GOAL 제외 중복 방지)
+    final barTypes = <String>['GOAL', 'ASSIST'];
+    for (final e in enabledEvents) {
+      if (e != 'GOAL' && !barTypes.contains(e)) barTypes.add(e);
     }
 
     return Container(
@@ -1169,7 +1237,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
             ],
           ),
           const SizedBox(height: 8),
-          barRow('골', t1Goals, t2Goals, t1Color, t2Color),
+          ...barTypes.map((type) {
+            final l = type == 'GOAL' ? t1Goals : (t1Counts[type] ?? 0);
+            final r = type == 'GOAL' ? t2Goals : (t2Counts[type] ?? 0);
+            if (l == 0 && r == 0) return const SizedBox.shrink();
+            return barRow(eventLabels[type] ?? type, l, r, t1Color, t2Color);
+          }),
           barRow('승점', t1Pts, t2Pts, t1Color, t2Color),
         ],
       ),

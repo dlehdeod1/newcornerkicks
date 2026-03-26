@@ -1000,7 +1000,6 @@ function parseKakaoVote(lines: string[]): { date: string | null; names: string[]
 sessionsRoutes.get('/:id/settlement', async (c) => {
   const id = c.req.param('id')
 
-  // 세션 정보
   const session = await c.env.DB.prepare(
     'SELECT * FROM sessions WHERE id = ?'
   ).bind(id).first()
@@ -1009,32 +1008,43 @@ sessionsRoutes.get('/:id/settlement', async (c) => {
     return c.json({ error: '세션을 찾을 수 없습니다.' }, 404)
   }
 
-  // 정산 정보 조회
   const settlement = await c.env.DB.prepare(
     'SELECT * FROM settlements WHERE session_id = ?'
   ).bind(id).first()
 
-  // 정산 상세 조회 (팀별, 개인별)
+  // session_payments에서 팀별 그룹핑으로 정산 정보 생성
   let details: any = null
   if (settlement) {
-    const teamSettlements = await c.env.DB.prepare(`
-      SELECT ts.*, t.name as team_name
-      FROM team_settlements ts
-      JOIN teams t ON ts.team_id = t.id
-      WHERE ts.settlement_id = ?
-      ORDER BY ts.rank
-    `).bind(settlement.id).all()
+    // 팀별 금액: session_payments + teams JOIN
+    const teamPayments = await c.env.DB.prepare(`
+      SELECT
+        sp.team_rank as rank,
+        t.id as team_id,
+        t.name as team_name,
+        sp.amount as per_person,
+        COUNT(*) as member_count,
+        SUM(sp.amount) as prize_amount
+      FROM session_payments sp
+      JOIN team_members tm ON (
+        (sp.player_id IS NOT NULL AND tm.player_id = sp.player_id)
+        OR (sp.guest_name IS NOT NULL AND tm.guest_name = sp.guest_name)
+      )
+      JOIN teams t ON tm.team_id = t.id AND t.session_id = ?
+      WHERE sp.session_id = ?
+      GROUP BY t.id, sp.team_rank, sp.amount
+      ORDER BY sp.team_rank
+    `).bind(id, id).all()
 
-    const playerSettlements = await c.env.DB.prepare(`
-      SELECT ps.*, p.name as player_name
-      FROM player_settlements ps
-      JOIN players p ON ps.player_id = p.id
-      WHERE ps.settlement_id = ?
-    `).bind(settlement.id).all()
+    // 개인별 정산
+    const playerPayments = await c.env.DB.prepare(`
+      SELECT sp.*, sp.player_name
+      FROM session_payments sp
+      WHERE sp.session_id = ?
+    `).bind(id).all()
 
     details = {
-      teams: teamSettlements.results,
-      players: playerSettlements.results,
+      teams: teamPayments.results,
+      players: playerPayments.results,
     }
   }
 

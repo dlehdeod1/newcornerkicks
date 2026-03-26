@@ -286,6 +286,9 @@ class ApiService {
   Future<dynamic> getMySettlements(String token) =>
       request('/settlements/me', token: token);
 
+  Future<dynamic> getSessionSettlement(int sessionId, String token) =>
+      request('/sessions/$sessionId/settlement', token: token);
+
   // Payments
   Future<dynamic> getSessionPayments(String token) =>
       request('/payments/sessions', token: token);
