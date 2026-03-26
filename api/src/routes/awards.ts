@@ -57,16 +57,16 @@ awardsRoutes.post('/generate', authMiddleware('ADMIN'), async (c) => {
 
   // top_assist: 시즌 내 최다 어시스트
   const topAssist = await c.env.DB.prepare(`
-    SELECT me.assist_player_id as player_id, p.name, COUNT(*) as cnt
+    SELECT me.assister_id as player_id, p.name, COUNT(*) as cnt
     FROM match_events me
     JOIN matches m ON me.match_id = m.id
     JOIN sessions s ON m.session_id = s.id
-    JOIN players p ON me.assist_player_id = p.id
-    WHERE me.event_type = 'GOAL' AND me.assist_player_id IS NOT NULL
+    JOIN players p ON me.assister_id = p.id
+    WHERE me.event_type = 'GOAL' AND me.assister_id IS NOT NULL
       AND s.club_id = ?
       AND s.status IN ('completed', 'closed')
       AND s.session_date BETWEEN ? AND ?
-    GROUP BY me.assist_player_id
+    GROUP BY me.assister_id
     ORDER BY cnt DESC
     LIMIT 1
   `).bind(clubId, yearStart, yearEnd).first<any>()
@@ -117,17 +117,20 @@ awardsRoutes.post('/generate', authMiddleware('ADMIN'), async (c) => {
 
   // rookie: 시즌 내 가입한 선수 중 5경기 이상 참여한 가장 최근 선수
   const rookie = await c.env.DB.prepare(`
-    SELECT p.id as player_id, p.name,
-      (SELECT COUNT(DISTINCT a.session_id) FROM attendance a
-       JOIN sessions s2 ON a.session_id = s2.id
-       WHERE a.player_id = p.id AND s2.club_id = ?
-         AND s2.status IN ('completed', 'closed')
-         AND s2.session_date BETWEEN ? AND ?) as match_count
+    SELECT p.id as player_id, p.name, sub.match_count
     FROM players p
+    JOIN (
+      SELECT a.player_id, COUNT(DISTINCT a.session_id) as match_count
+      FROM attendance a
+      JOIN sessions s2 ON a.session_id = s2.id
+      WHERE s2.club_id = ? AND s2.status IN ('completed', 'closed')
+        AND s2.session_date BETWEEN ? AND ?
+      GROUP BY a.player_id
+      HAVING match_count >= 5
+    ) sub ON sub.player_id = p.id
     WHERE p.club_id = ? AND p.is_guest = 0
-      AND p.created_at >= (SELECT strftime('%s', ?) )
-      AND p.created_at <= (SELECT strftime('%s', ?) )
-    HAVING match_count >= 5
+      AND p.created_at >= (SELECT strftime('%s', ?))
+      AND p.created_at <= (SELECT strftime('%s', ?))
     ORDER BY p.created_at DESC
     LIMIT 1
   `).bind(clubId, yearStart, yearEnd, clubId, yearStart, yearEnd).first<any>()

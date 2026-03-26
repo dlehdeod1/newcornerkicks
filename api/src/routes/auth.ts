@@ -618,43 +618,84 @@ authRoutes.delete('/account', async (c) => {
       }
     }
 
-    // 연관 데이터 삭제 (순서 중요: FK 의존성)
-    // 1. player 관련
+    // 연관 데이터 일괄 삭제 — 모든 FK 참조 테이블 커버
+    // player 관련
     const players = await c.env.DB.prepare(
       'SELECT id FROM players WHERE user_id = ?'
     ).bind(userId).all()
-    const playerIds = (players.results as any[]).map(p => p.id)
+    const playerIds = (players.results as any[]).map((p: any) => p.id)
 
     for (const pid of playerIds) {
-      await c.env.DB.prepare('DELETE FROM player_preferences WHERE player_id = ? OR target_player_id = ?').bind(pid, pid).run()
-      await c.env.DB.prepare('DELETE FROM player_abilities WHERE player_id = ? OR rater_id = ?').bind(pid, pid).run()
-      await c.env.DB.prepare('DELETE FROM session_payments WHERE player_id = ?').bind(pid).run()
-      await c.env.DB.prepare('DELETE FROM team_members WHERE player_id = ?').bind(pid).run()
-      await c.env.DB.prepare('DELETE FROM attendance WHERE player_id = ?').bind(pid).run()
-      // match_events: player_id와 assister_id를 null로 (이벤트 기록은 보존)
-      await c.env.DB.prepare('UPDATE match_events SET player_id = NULL WHERE player_id = ?').bind(pid).run()
-      await c.env.DB.prepare('UPDATE match_events SET assister_id = NULL WHERE assister_id = ?').bind(pid).run()
+      const playerTables = [
+        'player_badges', 'player_preferences', 'player_abilities',
+        'player_tag_votes', 'player_settlements', 'session_payments',
+        'session_mvp_results', 'season_awards', 'team_members', 'attendance'
+      ]
+      for (const t of playerTables) {
+        await c.env.DB.prepare(`DELETE FROM ${t} WHERE player_id = ?`).bind(pid).run().catch(() => {})
+      }
+      // 양방향 FK
+      await c.env.DB.prepare('DELETE FROM player_preferences WHERE target_player_id = ?').bind(pid).run().catch(() => {})
+      await c.env.DB.prepare('DELETE FROM player_abilities WHERE rater_id = ?').bind(pid).run().catch(() => {})
+      await c.env.DB.prepare('DELETE FROM player_tag_votes WHERE voter_player_id = ?').bind(pid).run().catch(() => {})
+      await c.env.DB.prepare('DELETE FROM session_mvp_votes WHERE voted_player_id = ?').bind(pid).run().catch(() => {})
+      await c.env.DB.prepare('UPDATE match_events SET player_id = NULL WHERE player_id = ?').bind(pid).run().catch(() => {})
+      await c.env.DB.prepare('UPDATE match_events SET assister_id = NULL WHERE assister_id = ?').bind(pid).run().catch(() => {})
     }
 
-    // 2. notifications, subscriptions
-    await c.env.DB.prepare('DELETE FROM notifications WHERE user_id = ?').bind(userId).run()
+    // user_id 기반 테이블 (모든 FK 참조)
+    const userIdTables = [
+      'notifications', 'session_mvp_votes', 'post_reactions', 'community_reactions',
+      'post_comments', 'community_comments', 'club_members', 'session_rsvp',
+      'announcement_reads', 'post_poll_votes', 'club_reviews', 'subscriptions',
+      'membership_payments', 'chemistry_cache'
+    ]
+    for (const t of userIdTables) {
+      await c.env.DB.prepare(`DELETE FROM ${t} WHERE user_id = ?`).bind(userId).run().catch(() => {})
+    }
 
-    // 3. club_members (클럽 탈퇴)
-    await c.env.DB.prepare('DELETE FROM club_members WHERE user_id = ?').bind(userId).run()
+    // rater_user_id
+    await c.env.DB.prepare('DELETE FROM player_abilities WHERE rater_user_id = ?').bind(userId).run().catch(() => {})
+    await c.env.DB.prepare('DELETE FROM player_ratings WHERE rater_user_id = ?').bind(userId).run().catch(() => {})
+    await c.env.DB.prepare('DELETE FROM player_tag_votes WHERE voter_user_id = ?').bind(userId).run().catch(() => {})
+    await c.env.DB.prepare('DELETE FROM session_payments WHERE user_id = ?').bind(userId).run().catch(() => {})
 
-    // 4. players
-    await c.env.DB.prepare('DELETE FROM players WHERE user_id = ?').bind(userId).run()
+    // author_id / created_by 기반 — 게시글 삭제 전 자식 데이터 삭제
+    for (const parentTable of ['posts', 'community_posts']) {
+      const childPrefix = parentTable === 'posts' ? 'post' : 'community'
+      const rows = await c.env.DB.prepare(`SELECT id FROM ${parentTable} WHERE author_id = ?`).bind(userId).all()
+      for (const r of rows.results as any[]) {
+        await c.env.DB.prepare(`DELETE FROM ${childPrefix}_reactions WHERE post_id = ?`).bind(r.id).run().catch(() => {})
+        await c.env.DB.prepare(`DELETE FROM ${childPrefix}_comments WHERE post_id = ?`).bind(r.id).run().catch(() => {})
+        if (parentTable === 'posts') {
+          await c.env.DB.prepare('DELETE FROM post_poll_votes WHERE option_id IN (SELECT id FROM post_poll_options WHERE poll_id IN (SELECT id FROM post_polls WHERE post_id = ?))').bind(r.id).run().catch(() => {})
+          await c.env.DB.prepare('DELETE FROM post_poll_options WHERE poll_id IN (SELECT id FROM post_polls WHERE post_id = ?)').bind(r.id).run().catch(() => {})
+          await c.env.DB.prepare('DELETE FROM post_polls WHERE post_id = ?').bind(r.id).run().catch(() => {})
+        }
+      }
+      await c.env.DB.prepare(`DELETE FROM ${parentTable} WHERE author_id = ?`).bind(userId).run().catch(() => {})
+    }
+    await c.env.DB.prepare('DELETE FROM announcements WHERE created_by = ?').bind(userId).run().catch(() => {})
 
-    // 5. posts/comments
-    await c.env.DB.prepare('UPDATE posts SET author_id = NULL WHERE author_id = ?').bind(userId).run()
-    await c.env.DB.prepare('UPDATE post_comments SET author_id = NULL WHERE author_id = ?').bind(userId).run()
+    // created_by on settlements/sessions
+    await c.env.DB.prepare('UPDATE settlements SET created_by = NULL WHERE created_by = ?').bind(userId).run().catch(() => {})
+    await c.env.DB.prepare('UPDATE sessions SET created_by = NULL WHERE created_by = ?').bind(userId).run().catch(() => {})
 
-    // 6. user 삭제
+    // user_profiles, players, clubs owner
+    await c.env.DB.prepare('DELETE FROM profiles WHERE user_id = ?').bind(userId).run().catch(() => {})
+    await c.env.DB.prepare('DELETE FROM players WHERE user_id = ?').bind(userId).run().catch(() => {})
+    await c.env.DB.prepare('UPDATE clubs SET owner_user_id = NULL WHERE owner_user_id = ?').bind(userId).run().catch(() => {})
+
+    // 최종: users 삭제
     await c.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId).run()
 
     return c.json({ message: '계정이 삭제되었습니다. 이용해 주셔서 감사합니다.' })
-  } catch {
-    return c.json({ error: '유효하지 않은 토큰입니다.' }, 401)
+  } catch (err: any) {
+    console.error('Account deletion error:', err?.message, err?.stack)
+    if (err?.code === 'ERR_JWS_INVALID' || err?.code === 'ERR_JWT_EXPIRED') {
+      return c.json({ error: '유효하지 않은 토큰입니다.' }, 401)
+    }
+    return c.json({ error: '계정 삭제 중 오류가 발생했습니다.', detail: err?.message }, 500)
   }
 })
 

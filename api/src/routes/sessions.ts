@@ -2309,7 +2309,7 @@ sessionsRoutes.get('/live/:token', async (c) => {
 
   // 최근 이벤트 (최근 20개)
   const recentEvents = await c.env.DB.prepare(`
-    SELECT me.event_type as type, me.minute,
+    SELECT me.event_type as type, me.event_time as minute,
            p.name as player_name, p.nickname,
            me.guest_name,
            t.name as team_name
