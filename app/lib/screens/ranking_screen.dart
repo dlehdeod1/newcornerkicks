@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'player_detail_screen.dart';
 import 'hall_of_fame_screen.dart';
+import '../widgets/skeleton.dart';
+import '../widgets/empty_state.dart';
 import '../widgets/tip_banner.dart';
 
 class RankingScreen extends StatefulWidget {
@@ -282,9 +285,59 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
 
   // ─── 랭킹 탭 ───────────────────────────────────
 
+  Widget _buildRankingSkeleton() {
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.space16),
+      child: Column(
+        children: [
+          // 포디엄
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Column(children: [
+                SkeletonBox(width: 56, height: 56, borderRadius: 28),
+                const SizedBox(height: AppTheme.space8),
+                SkeletonBox(width: 48, height: 12),
+              ]),
+              const SizedBox(width: AppTheme.space16),
+              Column(children: [
+                SkeletonBox(width: 72, height: 72, borderRadius: 36),
+                const SizedBox(height: AppTheme.space8),
+                SkeletonBox(width: 56, height: 14),
+              ]),
+              const SizedBox(width: AppTheme.space16),
+              Column(children: [
+                SkeletonBox(width: 56, height: 56, borderRadius: 28),
+                const SizedBox(height: AppTheme.space8),
+                SkeletonBox(width: 48, height: 12),
+              ]),
+            ],
+          ),
+          const SizedBox(height: AppTheme.space24),
+          // 테이블 행
+          ...List.generate(8, (_) => Padding(
+            padding: const EdgeInsets.only(bottom: AppTheme.space8),
+            child: Row(
+              children: [
+                SkeletonBox(width: 24, height: 14),
+                const SizedBox(width: AppTheme.space12),
+                SkeletonBox(width: 32, height: 32, borderRadius: 16),
+                const SizedBox(width: AppTheme.space12),
+                Expanded(child: SkeletonBox(height: 14)),
+                const SizedBox(width: AppTheme.space12),
+                SkeletonBox(width: 40, height: 14),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRankingTab() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return _buildRankingSkeleton();
     }
 
     return RefreshIndicator(
@@ -485,13 +538,10 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
     return SizedBox(
       height: 300,
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.emoji_events_outlined, size: 48, color: AppColors.iconInactive),
-            const SizedBox(height: 16),
-            Text('이 카테고리의 기록이 없습니다', style: TextStyle(color: AppColors.textHint, fontSize: 14)),
-          ],
+        child: const EmptyState(
+          icon: Icons.emoji_events_outlined,
+          title: '랭킹 데이터가 없습니다',
+          subtitle: '완료된 세션이 있으면 랭킹이 표시됩니다',
         ),
       ),
     );
@@ -584,7 +634,7 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
 
   Widget _buildStatsTab() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return _buildRankingSkeleton();
     }
 
     return RefreshIndicator(

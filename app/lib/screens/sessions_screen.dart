@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'session_detail_screen.dart';
+import '../widgets/skeleton.dart';
+import '../widgets/empty_state.dart';
 import '../widgets/tip_banner.dart';
 
 class SessionsScreen extends StatefulWidget {
@@ -279,7 +282,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
         },
         color: AppColors.primary,
         child: _loading
-            ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+            ? _buildSkeleton()
             : _sessions.isEmpty
                 ? _buildEmpty()
                 : ListView.builder(
@@ -301,29 +304,61 @@ class _SessionsScreenState extends State<SessionsScreen> {
     );
   }
 
+  Widget _buildSkeleton() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+      children: List.generate(4, (_) => Padding(
+        padding: const EdgeInsets.only(bottom: AppTheme.space12),
+        child: Container(
+          padding: const EdgeInsets.all(AppTheme.space16),
+          decoration: BoxDecoration(
+            color: AppColors.bgCard,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            border: Border.all(color: AppColors.surfaceTint),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  SkeletonBox(width: 60, height: 14),
+                  const Spacer(),
+                  SkeletonBox(width: 50, height: 22, borderRadius: AppTheme.radiusSm),
+                ],
+              ),
+              const SizedBox(height: AppTheme.space12),
+              SkeletonBox(height: 16, width: 180),
+              const SizedBox(height: AppTheme.space8),
+              SkeletonBox(height: 13, width: 120),
+              const SizedBox(height: AppTheme.space12),
+              Row(
+                children: [
+                  SkeletonBox(width: 70, height: 13),
+                  const SizedBox(width: AppTheme.space16),
+                  SkeletonBox(width: 70, height: 13),
+                ],
+              ),
+            ],
+          ),
+        ),
+      )),
+    );
+  }
+
   Widget _buildEmpty() {
+    final isAdmin = context.read<AuthService>().isAdmin;
     return ListView(
       children: [
         SizedBox(
           height: MediaQuery.of(context).size.height * 0.6,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 72, height: 72,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceBorder,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: const Center(child: Text('📅', style: TextStyle(fontSize: 32))),
-                ),
-                const SizedBox(height: 16),
-                const Text('세션이 없습니다', style: TextStyle(color: Colors.white54, fontSize: 16)),
-                const SizedBox(height: 8),
-                Text('아직 등록된 세션이 없어요', style: TextStyle(color: AppColors.iconInactive, fontSize: 13)),
-              ],
-            ),
+          child: EmptyState(
+            icon: Icons.sports_soccer,
+            title: '등록된 세션이 없습니다',
+            subtitle: '아직 등록된 세션이 없어요',
+            actionLabel: isAdmin ? '세션 만들기' : null,
+            onAction: isAdmin ? () {
+              // TODO: navigate to create session
+            } : null,
           ),
         ),
       ],

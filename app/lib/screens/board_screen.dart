@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
+import '../widgets/skeleton.dart';
+import '../widgets/empty_state.dart';
 import 'announcement_detail_screen.dart';
 import 'post_detail_screen.dart';
 import 'post_form_screen.dart';
@@ -150,35 +153,45 @@ class _BoardScreenState extends State<BoardScreen> with TickerProviderStateMixin
       onRefresh: () => _loadTab(tab),
       color: AppColors.primary,
       child: loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? ListView(
+              padding: const EdgeInsets.all(16),
+              children: List.generate(6, (_) => Padding(
+                padding: const EdgeInsets.only(bottom: AppTheme.space12),
+                child: Container(
+                  padding: const EdgeInsets.all(AppTheme.space16),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgCard,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    border: Border.all(color: AppColors.surfaceTint),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonBox(height: 15, width: 200),
+                      const SizedBox(height: AppTheme.space8),
+                      SkeletonBox(height: 12, width: 140),
+                      const SizedBox(height: AppTheme.space8),
+                      SkeletonBox(height: 12),
+                    ],
+                  ),
+                ),
+              )),
+            )
           : items.isEmpty
               ? ListView(
                   children: [
                     SizedBox(
                       height: MediaQuery.of(context).size.height * 0.5,
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              tab == 'notice' ? Icons.campaign_outlined : Icons.article_outlined,
-                              size: 48,
-                              color: AppColors.iconInactive,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              tab == 'notice' ? '공지가 없습니다' : '게시글이 없습니다',
-                              style: TextStyle(color: AppColors.textHint, fontSize: 15),
-                            ),
-                            if (tab != 'notice') ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                '첫 번째 글을 작성해보세요!',
-                                style: TextStyle(color: AppColors.iconInactive, fontSize: 13),
-                              ),
-                            ],
-                          ],
-                        ),
+                      child: EmptyState(
+                        icon: tab == 'notice' ? Icons.campaign_outlined : Icons.article_outlined,
+                        title: tab == 'notice' ? '공지가 없습니다' : '게시글이 없습니다',
+                        subtitle: tab != 'notice' ? '첫 번째 글을 작성해보세요!' : null,
+                        actionLabel: tab != 'notice' ? '글쓰기' : null,
+                        onAction: tab != 'notice' ? () {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => PostFormScreen(category: tab),
+                          )).then((_) => _loadTab(tab));
+                        } : null,
                       ),
                     ),
                   ],

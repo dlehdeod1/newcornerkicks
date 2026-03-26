@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'player_detail_screen.dart';
+import '../widgets/skeleton.dart';
+import '../widgets/empty_state.dart';
 
 class PlayersScreen extends StatefulWidget {
   const PlayersScreen({super.key});
@@ -161,11 +164,56 @@ class _PlayersScreenState extends State<PlayersScreen> {
           ),
           Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                ? ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    children: List.generate(8, (_) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppTheme.space8),
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgCard,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.surfaceTint),
+                        ),
+                        child: Row(
+                          children: [
+                            SkeletonBox(width: 44, height: 44, borderRadius: 22),
+                            const SizedBox(width: AppTheme.space12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SkeletonBox(height: 14, width: 80),
+                                  const SizedBox(height: AppTheme.space4),
+                                  SkeletonBox(height: 12, width: 120),
+                                ],
+                              ),
+                            ),
+                            SkeletonBox(width: 40, height: 12),
+                          ],
+                        ),
+                      ),
+                    )),
+                  )
                 : RefreshIndicator(
                     onRefresh: _load,
                     color: AppColors.primary,
-                    child: ListView.builder(
+                    child: filtered.isEmpty
+                      ? ListView(
+                          children: [
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.5,
+                              child: EmptyState(
+                                icon: Icons.people_outline,
+                                title: '등록된 선수가 없습니다',
+                                subtitle: '선수를 추가해서 기록을 관리하세요',
+                                actionLabel: context.read<AuthService>().isAdmin ? '선수 추가' : null,
+                                onAction: context.read<AuthService>().isAdmin ? _showAddPlayerDialog : null,
+                              ),
+                            ),
+                          ],
+                        )
+                      : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: filtered.length,
                       itemBuilder: (ctx, i) {

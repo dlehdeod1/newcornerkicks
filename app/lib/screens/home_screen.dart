@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
+import '../widgets/skeleton.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
@@ -276,7 +278,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
                   if (_loading)
-                    const Center(child: SizedBox(height: 40, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2)))
+                    Row(
+                      children: [
+                        Expanded(child: SkeletonBox(height: 36)),
+                        const SizedBox(width: AppTheme.space8),
+                        Expanded(child: SkeletonBox(height: 36)),
+                        const SizedBox(width: AppTheme.space8),
+                        Expanded(child: SkeletonBox(height: 36)),
+                        const SizedBox(width: AppTheme.space8),
+                        Expanded(child: SkeletonBox(height: 36)),
+                      ],
+                    )
                   else if (_myStats != null)
                     Builder(builder: (context) {
                       final events = context.read<AuthService>().enabledEvents;
@@ -405,9 +417,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 border: Border.all(color: AppColors.surfaceTint),
               ),
               child: _loading
-                  ? const Padding(
-                      padding: EdgeInsets.all(32),
-                      child: Center(child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2)),
+                  ? Padding(
+                      padding: const EdgeInsets.all(AppTheme.space16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SkeletonBox(height: 16, width: 140),
+                          const SizedBox(height: AppTheme.space12),
+                          SkeletonBox(height: 13, width: 200),
+                          const SizedBox(height: AppTheme.space8),
+                          Row(
+                            children: [
+                              Expanded(child: SkeletonBox(height: 32)),
+                              const SizedBox(width: AppTheme.space8),
+                              Expanded(child: SkeletonBox(height: 32)),
+                            ],
+                          ),
+                        ],
+                      ),
                     )
                   : _recentSession != null
                       ? _buildRecentSession(_recentSession!)
