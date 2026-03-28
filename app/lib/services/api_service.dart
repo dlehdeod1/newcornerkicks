@@ -414,10 +414,10 @@ class ApiService {
 
   // Badges
   Future<List<dynamic>> getBadges({required String token}) =>
-      request('/badges', token: token).then((r) => (r['badges'] ?? []) as List<dynamic>);
+      request('/badges', token: token).then((r) => (r['data'] ?? r['badges'] ?? []) as List<dynamic>);
 
   Future<List<dynamic>> getPlayerBadges(int playerId, {required String token}) =>
-      request('/badges/player/$playerId', token: token).then((r) => (r['badges'] ?? []) as List<dynamic>);
+      request('/badges/player/$playerId', token: token).then((r) => (r['data'] ?? r['badges'] ?? []) as List<dynamic>);
 
   // Streaks (home용)
   Future<Map<String, dynamic>> getPlayerStreaks(int playerId, {required String token}) =>

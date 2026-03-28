@@ -386,7 +386,7 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
               ),
             ),
           ),
-          SliverToBoxAdapter(child: _buildRankingStats()),
+          // 랭킹 요약 통계 제거됨
           SliverToBoxAdapter(child: _buildCategoryChips()),
           if (_sorted.length >= 3)
             SliverToBoxAdapter(child: _buildPodium()),

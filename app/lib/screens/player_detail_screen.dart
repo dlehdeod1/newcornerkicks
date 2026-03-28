@@ -194,6 +194,18 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
     );
   }
 
+  Widget _statCell(String label, String value) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(color: Colors.white54, fontSize: 11)),
+        ],
+      ),
+    );
+  }
+
   void _showRatingDialog() {
     final auth = context.read<AuthService>();
     final token = auth.token;
@@ -205,18 +217,18 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
     final p = _player?['player'];
     if (p == null) return;
 
-    // 초기값 50으로 설정
+    // 현재 능력치를 초기값으로 설정
     final Map<String, double> tempStats = {
-      'shooting': 50,
-      'offball_run': 50,
-      'ball_keeping': 50,
-      'passing': 50,
-      'linkup': 50,
-      'intercept': 50,
-      'marking': 50,
-      'stamina': 50,
-      'speed': 50,
-      'physical': 50,
+      'shooting': (p['shooting'] ?? 50).toDouble(),
+      'offball_run': (p['offball_run'] ?? 50).toDouble(),
+      'ball_keeping': (p['ball_keeping'] ?? 50).toDouble(),
+      'passing': (p['passing'] ?? 50).toDouble(),
+      'linkup': (p['linkup'] ?? 50).toDouble(),
+      'intercept': (p['intercept'] ?? 50).toDouble(),
+      'marking': (p['marking'] ?? 50).toDouble(),
+      'stamina': (p['stamina'] ?? 50).toDouble(),
+      'speed': (p['speed'] ?? 50).toDouble(),
+      'physical': (p['physical'] ?? 50).toDouble(),
     };
 
     final labels = {'shooting':'슈팅', 'offball_run':'오프더볼', 'ball_keeping':'볼키핑', 'passing':'패스', 'linkup':'연계', 'intercept':'인터셉트', 'marking':'마킹', 'stamina':'체력', 'speed':'스피드', 'physical':'피지컬'};
@@ -342,48 +354,70 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: AppColors.surfaceTint),
             ),
-            child: Row(
+            child: Column(
               children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: AppColors.bgBorder,
-                  child: Text((p['name'] ?? '?')[0], style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(p['name'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-                      if (p['nickname'] != null)
-                        Text(p['nickname'], style: const TextStyle(color: Colors.white54, fontSize: 14)),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withAlpha(26),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text('OVR ${avgOverall.toStringAsFixed(0)}',
-                            style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 32,
+                      backgroundColor: AppColors.bgBorder,
+                      child: Text((p['name'] ?? '?')[0], style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(p['name'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withAlpha(26),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text('OVR ${avgOverall.toStringAsFixed(0)}',
+                                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14)),
+                              ),
+                            ],
+                          ),
+                          if (p['nickname'] != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(p['nickname'], style: const TextStyle(color: Colors.white54, fontSize: 14)),
+                            ),
+                          if (_player?['futsalDna'] != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '${_player!['futsalDna']['emoji']} ${_player!['futsalDna']['type']}',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                      // Futsal DNA 뱃지
-                      if (_player?['futsalDna'] != null) ...[
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${_player!['futsalDna']['emoji']} ${_player!['futsalDna']['type']}',
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // 통산 기록 요약
+                Row(
+                  children: [
+                    _statCell('경기', '${_player?['stats']?['total_matches'] ?? 0}'),
+                    _statCell('득점', '${_player?['stats']?['total_goals'] ?? 0}'),
+                    _statCell('도움', '${_player?['stats']?['total_assists'] ?? 0}'),
+                    _statCell('수비', '${_player?['stats']?['total_blocks'] ?? 0}'),
+                    _statCell('출석', '${p['total_attendance'] ?? 0}'),
+                  ],
                 ),
               ],
             ),
@@ -427,11 +461,16 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
               children: [
                 const Text('능력치', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
-                SizedBox(
-                  height: 280,
-                  child: CustomPaint(
-                    size: const Size(280, 280),
-                    painter: _RadarChartPainter(stats),
+                AspectRatio(
+                  aspectRatio: 1,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final size = constraints.maxWidth;
+                      return CustomPaint(
+                        size: Size(size, size),
+                        painter: _RadarChartPainter(stats),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -541,7 +580,7 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
   }
 
   Widget _buildChemistryContent() {
-    final partners = _chemistry?['partners'] as List? ?? _chemistry?['data'] as List? ?? [];
+    final partners = _chemistry?['bestPartners'] as List? ?? _chemistry?['partners'] as List? ?? _chemistry?['data'] as List? ?? [];
     if (partners.isEmpty) {
       return const Text('아직 케미 데이터가 없습니다', style: TextStyle(color: Colors.white38, fontSize: 13));
     }
@@ -635,9 +674,13 @@ class _PlayerDetailScreenState extends State<PlayerDetailScreen> with SingleTick
 
   Widget _buildStreaksContent() {
     final streakData = _streaks?['data'] ?? _streaks ?? {};
-    final winStreak = streakData['winStreak'] ?? streakData['win_streak'] ?? 0;
-    final scoringStreak = streakData['scoringStreak'] ?? streakData['scoring_streak'] ?? 0;
-    final attendanceStreak = streakData['attendanceStreak'] ?? streakData['attendance_streak'] ?? 0;
+    // API returns: { current: {count}, attendance: {current, best}, scoring: {current, best} }
+    final currentObj = streakData['current'];
+    final attendanceObj = streakData['attendance'];
+    final scoringObj = streakData['scoring'];
+    final winStreak = (currentObj is Map ? currentObj['count'] : streakData['winStreak'] ?? streakData['win_streak']) ?? 0;
+    final scoringStreak = (scoringObj is Map ? scoringObj['current'] : streakData['scoringStreak'] ?? streakData['scoring_streak']) ?? 0;
+    final attendanceStreak = (attendanceObj is Map ? attendanceObj['current'] : streakData['attendanceStreak'] ?? streakData['attendance_streak']) ?? 0;
 
     final items = [
       {'icon': '🏆', 'label': '연승 스트릭', 'value': winStreak},

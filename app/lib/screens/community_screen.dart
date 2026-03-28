@@ -43,6 +43,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       backgroundColor: AppColors.bgBase,
       appBar: AppBar(
         backgroundColor: AppColors.bgBase,
+        foregroundColor: Colors.white,
         title: const Text('커뮤니티', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         bottom: TabBar(
           controller: _tabController,
