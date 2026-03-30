@@ -642,6 +642,7 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
   List<dynamic> _payments = [];
   dynamic _summary;
   bool _loading = true;
+  bool _sending = false;
 
   @override
   void initState() {
@@ -661,6 +662,26 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
       });
     } catch (e) {
       setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _sendRemind() async {
+    setState(() => _sending = true);
+    try {
+      final token = context.read<AuthService>().token!;
+      final res = await ApiService().sendSettlementRemind(widget.sessionId, token);
+      final count = res['sentCount'] ?? 0;
+      if (mounted) {
+        if (count > 0) {
+          showSuccess(context, '$count명에게 독촉 알림을 보냈습니다');
+        } else {
+          showError(context, '알림 대상이 없습니다 (모두 납부 또는 계정 미연동)');
+        }
+      }
+    } catch (e) {
+      if (mounted) showError(context, e.toString());
+    } finally {
+      if (mounted) setState(() => _sending = false);
     }
   }
 
@@ -811,6 +832,34 @@ class _SessionDetailPageState extends State<_SessionDetailPage> {
                     ],
                   ),
                 ),
+                // ── 미입금 독촉 알림 버튼 ──
+                if (unpaidAmt > 0)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _sending ? null : _sendRemind,
+                        icon: _sending
+                            ? const SizedBox(
+                                width: 16, height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white))
+                            : const Icon(Icons.notifications_active_rounded, size: 18),
+                        label: Text(_sending ? '발송 중...' : '미입금자 알림 발송'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.amber,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                          textStyle: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (unpaidAmt > 0) const SizedBox(height: 12),
                 // ── 멤버별 납부 목록 ──
                 Expanded(
                   child: RefreshIndicator(

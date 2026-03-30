@@ -325,6 +325,9 @@ class ApiService {
   Future<dynamic> updatePaymentExempt(int paymentId, bool exempt, String token) =>
       request('/payments/$paymentId/exempt', method: 'PUT', body: {'exempt': exempt}, token: token);
 
+  Future<dynamic> sendSettlementRemind(int sessionId, String token) =>
+      request('/sessions/$sessionId/settlement-remind', method: 'POST', token: token);
+
   Future<dynamic> getMembershipPayments(String token) =>
       request('/payments/membership', token: token);
 

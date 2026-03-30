@@ -127,6 +127,8 @@ class _AdminFeesScreenState extends State<AdminFeesScreen> {
                     style: TextStyle(fontSize: 12, color: AppColors.textHint)),
                   const SizedBox(height: 16),
                   _buildFeeConfigSection(),
+                  const SizedBox(height: 24),
+                  _buildSimulationSection(),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -309,6 +311,167 @@ class _AdminFeesScreenState extends State<AdminFeesScreen> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  int _calcBaseFee(int headcount) {
+    if (_splitEnabled && _splitTotal > 0 && headcount > 0) {
+      final raw = _splitTotal / headcount;
+      return (raw / _splitRoundUp).ceil() * _splitRoundUp;
+    }
+    return _baseAmount;
+  }
+
+  int _calcRankFee(int baseFee, int rank, int totalRanks) {
+    if (!_rankDiffEnabled || _rankDiffAmount <= 0 || totalRanks <= 1) return baseFee;
+    // 중간 순위를 기준(0)으로, 높은 순위는 할인, 낮은 순위는 추가
+    final mid = (totalRanks + 1) / 2;
+    final diff = ((rank - mid) * _rankDiffAmount).round();
+    return baseFee + diff;
+  }
+
+  Widget _buildSimulationSection() {
+    final headcounts = [8, 10, 12, 15, 18, 20];
+    final hasRankDiff = _rankDiffEnabled && _rankDiffAmount > 0;
+    final hasSplit = _splitEnabled && _splitTotal > 0;
+
+    // 설정이 아무것도 없으면 표시 안 함
+    if (_baseAmount <= 0 && !hasSplit) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceBorder,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.surfaceTint),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Icon(Icons.calculate_outlined, size: 16, color: AppColors.primary),
+            const SizedBox(width: 6),
+            const Text('계산 시뮬레이션', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+          ]),
+          const SizedBox(height: 4),
+          Text(
+            hasSplit
+                ? '총액 ${_formatNumber(_splitTotal)}원 기준, 인원수별 1인당 참가비'
+                : '기본 참가비 ${_formatNumber(_baseAmount)}원 기준',
+            style: TextStyle(fontSize: 11, color: AppColors.iconInactive),
+          ),
+          const SizedBox(height: 14),
+
+          // 인원수별 기본 금액 테이블
+          _buildFeeTable(headcounts),
+
+          // 순위별 차등 예시
+          if (hasRankDiff) ...[
+            const SizedBox(height: 18),
+            _buildRankDiffExample(headcounts),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeeTable(List<int> headcounts) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.surfaceTint),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // 헤더
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            color: AppColors.bgDeep,
+            child: Row(
+              children: [
+                SizedBox(width: 60, child: Text('인원', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textHint))),
+                const Spacer(),
+                Text('1인당 참가비', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textHint)),
+              ],
+            ),
+          ),
+          ...headcounts.map((n) {
+            final fee = _calcBaseFee(n);
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: AppColors.surfaceTint, width: 0.5)),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(width: 60, child: Text('$n명', style: const TextStyle(fontSize: 13, color: Colors.white))),
+                  const Spacer(),
+                  Text('${_formatNumber(fee)}원',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary)),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRankDiffExample(List<int> headcounts) {
+    // 대표 인원수 하나 골라서 순위별 예시 (split이면 중간값, 아니면 고정)
+    final exampleCount = _splitEnabled ? headcounts[headcounts.length ~/ 2] : headcounts.first;
+    final baseFee = _calcBaseFee(exampleCount);
+    final totalRanks = 4; // 예시: 4팀
+    final ranks = List.generate(totalRanks, (i) => i + 1);
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.amber.withAlpha(10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.amber.withAlpha(30)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Icon(Icons.emoji_events_outlined, size: 14, color: Colors.amber),
+            const SizedBox(width: 6),
+            Text(
+              _splitEnabled
+                  ? '순위별 차등 예시 ($exampleCount명, ${_formatNumber(baseFee)}원 기준, $totalRanks팀)'
+                  : '순위별 차등 예시 (${_formatNumber(baseFee)}원 기준, $totalRanks팀)',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.amber),
+            ),
+          ]),
+          const SizedBox(height: 10),
+          ...ranks.map((rank) {
+            final fee = _calcRankFee(baseFee, rank, totalRanks);
+            final diff = fee - baseFee;
+            final diffStr = diff > 0 ? '+${_formatNumber(diff)}' : (diff < 0 ? '-${_formatNumber(diff.abs())}' : '±0');
+            final diffColor = diff > 0 ? AppColors.red : (diff < 0 ? AppColors.primary : AppColors.textHint);
+            final label = rank == 1 ? '🥇 1위' : rank == 2 ? '🥈 2위' : rank == 3 ? '🥉 3위' : '   $rank위';
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                children: [
+                  SizedBox(width: 50, child: Text(label, style: const TextStyle(fontSize: 13, color: Colors.white))),
+                  const Spacer(),
+                  Text('${_formatNumber(fee)}원', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    width: 60,
+                    child: Text(diffStr, style: TextStyle(fontSize: 11, color: diffColor), textAlign: TextAlign.right),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );

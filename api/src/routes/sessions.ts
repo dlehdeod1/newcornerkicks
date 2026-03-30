@@ -26,7 +26,10 @@ sessionsRoutes.get('/', optionalAuthMiddleware, async (c) => {
   }
 
   let query = `SELECT s.*,
-    (SELECT COUNT(*) FROM session_rsvp WHERE session_id = s.id AND status = 'going') as rsvp_count
+    (SELECT COUNT(*) FROM session_rsvp WHERE session_id = s.id AND status = 'going') as rsvp_count,
+    (SELECT COUNT(*) FROM attendance WHERE session_id = s.id AND status = 'attending') as attendance_count,
+    (SELECT COUNT(*) FROM match_events me JOIN matches m ON m.id = me.match_id WHERE m.session_id = s.id AND me.event_type = 'GOAL') as total_goals,
+    (SELECT p.name FROM match_events me JOIN matches m ON m.id = me.match_id JOIN players p ON p.id = me.player_id WHERE m.session_id = s.id AND me.event_type = 'GOAL' GROUP BY me.player_id ORDER BY COUNT(*) DESC LIMIT 1) as top_scorer
     FROM sessions s WHERE ${conditions.join(' AND ')} ORDER BY s.session_date DESC`
   if (limitParam) {
     query += ` LIMIT ?`
@@ -1949,6 +1952,32 @@ async function autoSettleSession(db: any, sessionId: number) {
           '참가비 정산',
           `참가비 ${mp.amount.toLocaleString()}원 (${mp.teamRank}위)${bankInfo}`,
           `/sessions/${sessionId}`,
+          now
+        ).run()
+      }
+    }
+  } catch {}
+
+  // 능력치 평가 알림: 참가자에게 "능력치 평가해보세요" 알림
+  try {
+    const ratingConfig = JSON.parse(
+      (await db.prepare('SELECT notification_config FROM clubs WHERE id = ?')
+        .bind(session.club_id).first<{ notification_config: string }>())?.notification_config ?? '{}'
+    )
+    if (ratingConfig.ratingRemind !== false) {
+      const participants = await db.prepare(
+        'SELECT a.player_id, p.user_id FROM attendance a JOIN players p ON p.id = a.player_id WHERE a.session_id = ? AND a.status = ?'
+      ).bind(sessionId, 'attending').all()
+      for (const pt of participants.results as any[]) {
+        if (!pt.user_id) continue
+        await db.prepare(
+          `INSERT INTO notifications (user_id, type, title, message, link_url, is_read, created_at)
+           VALUES (?, 'rating_remind', ?, ?, ?, 0, ?)`
+        ).bind(
+          pt.user_id,
+          '능력치 평가',
+          '오늘 함께한 선수들의 능력치를 평가해보세요!',
+          `/clubs/${session.club_id}/abilities`,
           now
         ).run()
       }

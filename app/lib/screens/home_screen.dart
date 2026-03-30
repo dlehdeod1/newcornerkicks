@@ -579,6 +579,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final dateStr = session['session_date'] as String? ?? '';
     final title = session['title'] as String? ?? '정기 풋살';
     final status = session['status'] as String?;
+    final attendanceCount = session['attendance_count'] as int? ?? 0;
+    final totalGoals = session['total_goals'] as int? ?? 0;
+    final topScorer = session['top_scorer'] as String?;
 
     Color statusColor;
     String statusLabel;
@@ -588,6 +591,8 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'closed': statusColor = AppColors.blue; statusLabel = '마감'; break;
       default: statusColor = AppColors.primary; statusLabel = '진행중'; break;
     }
+
+    final bool hasStats = status == 'completed' || status == 'ended' || status == 'closed';
 
     return Material(
       color: Colors.transparent,
@@ -600,54 +605,87 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Row(
+          child: Column(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: statusColor.withAlpha(20),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      dateStr.length >= 10 ? dateStr.substring(5, 7) : '-',
-                      style: TextStyle(fontSize: 10, color: statusColor.withAlpha(179)),
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: statusColor.withAlpha(20),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    Text(
-                      dateStr.length >= 10 ? dateStr.substring(8, 10) : '-',
-                      style: TextStyle(fontSize: 16, color: statusColor, fontWeight: FontWeight.bold, height: 1.1),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
-                    const SizedBox(height: 3),
-                    Row(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: statusColor.withAlpha(20),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(statusLabel, style: TextStyle(fontSize: 10, color: statusColor, fontWeight: FontWeight.w600)),
+                        Text(
+                          dateStr.length >= 10 ? dateStr.substring(5, 7) : '-',
+                          style: TextStyle(fontSize: 10, color: statusColor.withAlpha(179)),
                         ),
-                        const SizedBox(width: 8),
-                        Text(dateStr, style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
+                        Text(
+                          dateStr.length >= 10 ? dateStr.substring(8, 10) : '-',
+                          style: TextStyle(fontSize: 16, color: statusColor, fontWeight: FontWeight.bold, height: 1.1),
+                        ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: statusColor.withAlpha(20),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(statusLabel, style: TextStyle(fontSize: 10, color: statusColor, fontWeight: FontWeight.w600)),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(dateStr, style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: AppColors.iconInactive, size: 20),
+                ],
               ),
-              Icon(Icons.chevron_right, color: AppColors.iconInactive, size: 20),
+              if (hasStats && (attendanceCount > 0 || totalGoals > 0)) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgCard.withAlpha(120),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.people_outline, size: 14, color: AppColors.iconInactive),
+                      const SizedBox(width: 4),
+                      Text('$attendanceCount명', style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
+                      const SizedBox(width: 14),
+                      Icon(Icons.sports_soccer, size: 14, color: AppColors.iconInactive),
+                      const SizedBox(width: 4),
+                      Text('${totalGoals}골', style: TextStyle(fontSize: 12, color: AppColors.iconInactive)),
+                      if (topScorer != null) ...[
+                        const SizedBox(width: 14),
+                        Icon(Icons.star_outline, size: 14, color: AppColors.amber),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(topScorer, style: TextStyle(fontSize: 12, color: AppColors.amber), overflow: TextOverflow.ellipsis),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),

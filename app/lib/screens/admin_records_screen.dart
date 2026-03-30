@@ -39,6 +39,7 @@ class _AdminRecordsScreenState extends State<AdminRecordsScreen> {
     'SHOT_ON': 0.2, 'SHOT_OFF': 0.1, 'SESSION_WIN': 1.5,
   };
 
+  bool _mvpVoteEnabled = false;
   bool _loading = true;
   bool _saving = false;
 
@@ -60,6 +61,7 @@ class _AdminRecordsScreenState extends State<AdminRecordsScreen> {
           if (events is List) {
             _enabledEvents = Set<String>.from(events.map((e) => e.toString()));
           }
+          _mvpVoteEnabled = club['mvpVoteEnabled'] == true;
           final weights = club['mvpWeights'];
           if (weights is Map) {
             _mvpWeights = Map<String, double>.from(
@@ -89,6 +91,7 @@ class _AdminRecordsScreenState extends State<AdminRecordsScreen> {
       await _api.updateClub({
         'enabledEvents': _enabledEvents.toList(),
         'mvpWeights': _mvpWeights,
+        'mvpVoteEnabled': _mvpVoteEnabled,
       }, token);
       if (mounted) {
         showSuccess(context, '기록 설정이 저장되었습니다');
@@ -136,6 +139,10 @@ class _AdminRecordsScreenState extends State<AdminRecordsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // MVP 투표
+                  _buildMvpVoteToggle(),
+                  const SizedBox(height: 28),
+
                   // 미리보기
                   _buildSectionTitle(Icons.preview_rounded, '선택된 기록 미리보기'),
                   const SizedBox(height: 12),
@@ -162,6 +169,51 @@ class _AdminRecordsScreenState extends State<AdminRecordsScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildMvpVoteToggle() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _mvpVoteEnabled ? AppColors.primary.withAlpha(13) : AppColors.surfaceBorder,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _mvpVoteEnabled ? AppColors.primary.withAlpha(51) : AppColors.surfaceTint),
+      ),
+      child: Row(children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: _mvpVoteEnabled ? AppColors.primary.withAlpha(26) : AppColors.surfaceHighlight,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(Icons.how_to_vote_rounded, size: 20,
+            color: _mvpVoteEnabled ? AppColors.primary : AppColors.iconInactive),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('MVP 투표', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+              const SizedBox(height: 3),
+              Text(
+                _mvpVoteEnabled ? '세션 종료 후 MVP 투표가 진행됩니다' : 'MVP 투표 기능이 비활성화 상태입니다',
+                style: TextStyle(fontSize: 12, color: AppColors.textHint),
+              ),
+            ],
+          ),
+        ),
+        Switch(
+          value: _mvpVoteEnabled,
+          onChanged: (val) => setState(() => _mvpVoteEnabled = val),
+          activeThumbColor: AppColors.primary,
+          activeTrackColor: AppColors.primary.withAlpha(77),
+          inactiveThumbColor: AppColors.iconInactive,
+          inactiveTrackColor: AppColors.surfaceHighlight,
+        ),
+      ]),
     );
   }
 
