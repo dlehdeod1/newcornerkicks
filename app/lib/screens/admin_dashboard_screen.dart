@@ -224,36 +224,48 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ── 운영 ──
+        _groupLabel('운영'),
+        const SizedBox(height: 8),
         Row(
           children: [
-            Icon(Icons.flash_on, size: 16, color: AppColors.textHint),
-            const SizedBox(width: 6),
-            Text('빠른 실행', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+            _actionCard(Icons.person_add, '선수 등록', AppColors.primary, _showAddPlayerDialog),
+            const SizedBox(width: 10),
+            _actionCard(Icons.people_outline, '선수 관리', AppColors.blue, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPlayersScreen()));
+            }),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
+        // ── 소통 ──
+        _groupLabel('소통'),
+        const SizedBox(height: 8),
         Row(
           children: [
             _actionCard(Icons.campaign, '공지 관리', AppColors.amber, () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const AnnouncementsScreen(isAdmin: true)));
             }),
             const SizedBox(width: 10),
-            _actionCard(Icons.person_add, '선수 등록', AppColors.primary, _showAddPlayerDialog),
+            const Expanded(child: SizedBox()),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 16),
+        // ── 재정 ──
+        _groupLabel('재정'),
+        const SizedBox(height: 8),
         Row(
           children: [
-            _actionCard(Icons.settings, '클럽 설정', AppColors.blue, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminClubSettingsScreen()));
-            }),
-            const SizedBox(width: 10),
             _actionCard(Icons.shield_outlined, '회비 면제', AppColors.violet, () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminExemptionsScreen()));
             }),
+            const SizedBox(width: 10),
+            const Expanded(child: SizedBox()),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 16),
+        // ── 기록/통계 ──
+        _groupLabel('기록/통계'),
+        const SizedBox(height: 8),
         Row(
           children: [
             _actionCard(
@@ -278,10 +290,46 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               },
             ),
             const SizedBox(width: 10),
-            _actionCard(Icons.people_outline, '선수 관리', AppColors.blue, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPlayersScreen()));
-            }),
+            const Expanded(child: SizedBox()),
           ],
+        ),
+        const SizedBox(height: 16),
+        // ── 설정 ──
+        _groupLabel('설정'),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            _actionCard(Icons.settings, '클럽 설정', AppColors.blue, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminClubSettingsScreen()));
+            }),
+            const SizedBox(width: 10),
+            const Expanded(child: SizedBox()),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _groupLabel(String label) {
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 14,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textSecondary,
+            letterSpacing: 0.5,
+          ),
         ),
       ],
     );
