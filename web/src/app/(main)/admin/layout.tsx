@@ -4,44 +4,90 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Calendar, Users, CircleUser, Trophy,
-  Bell, BellRing, ShieldOff, Settings, Home, Menu, X
+  Bell, BellRing, ShieldOff, Settings, Home, Menu, X,
+  Banknote, BarChart3,
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
-const menuItems = [
-  { href: '/admin', label: '대시보드', icon: LayoutDashboard, exact: true },
-  { href: '/admin/sessions', label: '세션 관리', icon: Calendar },
-  { href: '/admin/players', label: '선수 관리', icon: Users },
-  { href: '/admin/users', label: '유저 관리', icon: CircleUser },
-  { href: '/admin/rankings', label: '랭킹 관리', icon: Trophy },
-  { href: '/admin/announcements', label: '공지 관리', icon: Bell },
-  { href: '/admin/notifications', label: '알림 관리', icon: BellRing },
-  { href: '/admin/exemptions', label: '회비 면제', icon: ShieldOff },
-  { href: '/admin/settings', label: '클럽 설정', icon: Settings },
+type MenuItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean }
+type MenuGroup = { label?: string; items: MenuItem[] }
+
+const menuGroups: MenuGroup[] = [
+  {
+    items: [
+      { href: '/admin', label: '대시보드', icon: LayoutDashboard, exact: true },
+    ],
+  },
+  {
+    label: '운영',
+    items: [
+      { href: '/admin/sessions', label: '세션 관리', icon: Calendar },
+      { href: '/admin/players', label: '선수 관리', icon: Users },
+      { href: '/admin/users', label: '유저 관리', icon: CircleUser },
+    ],
+  },
+  {
+    label: '소통',
+    items: [
+      { href: '/admin/announcements', label: '공지 관리', icon: Bell },
+      { href: '/admin/notifications', label: '알림 관리', icon: BellRing },
+    ],
+  },
+  {
+    label: '재정',
+    items: [
+      { href: '/admin/fees', label: '참가비 설정', icon: Banknote },
+      { href: '/admin/exemptions', label: '회비 면제', icon: ShieldOff },
+    ],
+  },
+  {
+    label: '기록/통계',
+    items: [
+      { href: '/admin/rankings', label: '랭킹 관리', icon: Trophy },
+      { href: '/admin/records', label: '기록 설정', icon: BarChart3 },
+    ],
+  },
+  {
+    label: '설정',
+    items: [
+      { href: '/admin/settings', label: '클럽 정보', icon: Settings },
+    ],
+  },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const isActive = (item: typeof menuItems[0]) =>
+  const isActive = (item: MenuItem) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href + '/') || pathname === item.href
 
   const sidebar = (
     <nav className="flex flex-col h-full py-4">
-      <div className="flex-1 space-y-1 px-3">
-        {menuItems.map(item => (
-          <Link key={item.href} href={item.href}
-            onClick={() => setMobileOpen(false)}
-            className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
-              isActive(item)
-                ? 'bg-primary/5 text-primary font-semibold border-l-2 border-primary -ml-[2px]'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-            )}>
-            <item.icon className="w-5 h-5 shrink-0" />
-            {item.label}
-          </Link>
+      <div className="flex-1 space-y-4 px-3">
+        {menuGroups.map((group, gi) => (
+          <div key={gi}>
+            {group.label && (
+              <p className="px-3 mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                {group.label}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {group.items.map(item => (
+                <Link key={item.href} href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
+                    isActive(item)
+                      ? 'bg-primary/5 text-primary font-semibold border-l-2 border-primary -ml-[2px]'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                  )}>
+                  <item.icon className="w-5 h-5 shrink-0" />
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
       <div className="px-3 pt-4 border-t border-slate-200 dark:border-slate-800">
