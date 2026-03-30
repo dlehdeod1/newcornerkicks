@@ -115,6 +115,7 @@ class _BoardScreenState extends State<BoardScreen> with TickerProviderStateMixin
       appBar: AppBar(
         title: const Text('게시판', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: AppColors.bgBase,
+        foregroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         bottom: TabBar(
           controller: _tabController,

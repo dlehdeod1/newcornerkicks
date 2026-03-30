@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import 'community_post_detail_screen.dart';
 import 'community_post_form_screen.dart';
+import 'post_detail_screen.dart';
 
 const categoryLabels = {'free': '자유', 'recruit': '팀 모집', 'mercenary': '용병 모집', 'match': '매칭', 'review': '경기 후기', 'patchnote': '패치노트'};
 const categoryColors = {'free': AppColors.primary, 'recruit': AppColors.amber, 'mercenary': Color(0xFFF43F5E), 'match': AppColors.blue, 'review': AppColors.purple, 'patchnote': Color(0xFF64748B)};
@@ -22,57 +23,123 @@ class CommunityScreen extends StatefulWidget {
 }
 
 class _CommunityScreenState extends State<CommunityScreen> with TickerProviderStateMixin {
-  late TabController _tabController;
-  final _categoryKeys = ['free', 'recruit', 'mercenary', 'match', 'review', 'patchnote'];
+  late TabController _globalTabController;
+  late TabController _clubTabController;
+  final _globalCategoryKeys = ['free', 'recruit', 'mercenary', 'match', 'review', 'patchnote'];
+  final _clubCategoryKeys = ['free', 'review', 'schedule'];
+  final _clubCategoryLabels = {'free': '자유', 'review': '경기 후기', 'schedule': '일정 논의'};
+  bool _isGlobal = true; // true=전체 커뮤니티, false=클럽 게시판
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _globalTabController = TabController(length: 6, vsync: this);
+    _clubTabController = TabController(length: 3, vsync: this);
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _globalTabController.dispose();
+    _clubTabController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthService>();
+    final hasClub = auth.hasClub;
+    final clubName = auth.activeClub?['name'] ?? '클럽';
+
     return Scaffold(
       backgroundColor: AppColors.bgBase,
       appBar: AppBar(
         backgroundColor: AppColors.bgBase,
         foregroundColor: Colors.white,
         title: const Text('커뮤니티', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          indicatorColor: AppColors.primary,
-          indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: AppColors.textHint,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-          tabs: _categoryKeys.map((k) => Tab(text: categoryLabels[k])).toList(),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(80),
+          child: Column(
+            children: [
+              // 전역/클럽 토글
+              if (hasClub)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Row(
+                    children: [
+                      _modeChip('전체', _isGlobal, () => setState(() => _isGlobal = true)),
+                      const SizedBox(width: 8),
+                      _modeChip(clubName, !_isGlobal, () => setState(() => _isGlobal = false)),
+                    ],
+                  ),
+                ),
+              // 카테고리 탭
+              TabBar(
+                controller: _isGlobal ? _globalTabController : _clubTabController,
+                isScrollable: true,
+                indicatorColor: AppColors.primary,
+                indicatorWeight: 3,
+                labelColor: Colors.white,
+                unselectedLabelColor: AppColors.textHint,
+                labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                tabs: _isGlobal
+                    ? _globalCategoryKeys.map((k) => Tab(text: categoryLabels[k])).toList()
+                    : _clubCategoryKeys.map((k) => Tab(text: _clubCategoryLabels[k])).toList(),
+              ),
+            ],
+          ),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: _categoryKeys.map((k) => _CommunityTab(categoryKey: k)).toList(),
-      ),
+      body: _isGlobal
+          ? TabBarView(
+              controller: _globalTabController,
+              children: _globalCategoryKeys.map((k) => _CommunityTab(categoryKey: k)).toList(),
+            )
+          : TabBarView(
+              controller: _clubTabController,
+              children: _clubCategoryKeys.map((k) => _ClubBoardTab(categoryKey: k)).toList(),
+            ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         onPressed: () async {
-          final cat = _categoryKeys[_tabController.index];
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => CommunityPostFormScreen(category: cat)),
-          );
-          if (result == true && mounted) {
-            setState(() {}); // triggers rebuild → tabs reload
+          if (_isGlobal) {
+            final cat = _globalCategoryKeys[_globalTabController.index];
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => CommunityPostFormScreen(category: cat)),
+            );
+            if (result == true && mounted) setState(() {});
+          } else {
+            final cat = _clubCategoryKeys[_clubTabController.index];
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => _ClubPostFormScreen(category: cat)),
+            );
+            if (result == true && mounted) setState(() {});
           }
         },
         child: const Icon(Icons.edit, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _modeChip(String label, bool active, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: active ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: active ? AppColors.primary : AppColors.surfaceTint),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: active ? Colors.white : AppColors.textHint,
+            fontSize: 13,
+            fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
       ),
     );
   }
@@ -412,6 +479,190 @@ class _CommunityTabState extends State<_CommunityTab> with AutomaticKeepAliveCli
         border: Border.all(color: color.withAlpha(40)),
       ),
       child: Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w500)),
+    );
+  }
+}
+
+// ── 클럽 게시판 탭 ──────────────────────────────────────────────
+
+class _ClubBoardTab extends StatefulWidget {
+  final String categoryKey;
+  const _ClubBoardTab({required this.categoryKey});
+  @override
+  State<_ClubBoardTab> createState() => _ClubBoardTabState();
+}
+
+class _ClubBoardTabState extends State<_ClubBoardTab> {
+  List<dynamic> _posts = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    try {
+      final token = context.read<AuthService>().token;
+      if (token == null) return;
+      final res = await ApiService().getPosts(token, category: widget.categoryKey, limit: 30);
+      final posts = (res['posts'] ?? res['data'] ?? []) as List;
+      if (mounted) setState(() { _posts = posts; _loading = false; });
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2));
+    }
+    if (_posts.isEmpty) {
+      return Center(child: Text('게시글이 없습니다', style: TextStyle(color: AppColors.textHint)));
+    }
+    return RefreshIndicator(
+      onRefresh: _load,
+      color: AppColors.primary,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: _posts.length,
+        separatorBuilder: (_, __) => Divider(color: AppColors.surfaceTint, height: 1),
+        itemBuilder: (ctx, i) {
+          final p = _posts[i];
+          final title = p['title'] ?? '';
+          final author = p['author_name'] ?? '익명';
+          final date = p['created_at'] != null
+              ? DateTime.fromMillisecondsSinceEpoch((p['created_at'] as num).toInt() * 1000)
+              : null;
+          final commentCount = (p['comment_count'] as num?)?.toInt() ?? 0;
+
+          return ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle: Row(
+              children: [
+                Text(author, style: TextStyle(color: AppColors.textHint, fontSize: 12)),
+                if (date != null) ...[
+                  const SizedBox(width: 8),
+                  Text('${date.month}/${date.day}', style: TextStyle(color: AppColors.textHint, fontSize: 12)),
+                ],
+              ],
+            ),
+            trailing: commentCount > 0
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.chat_bubble_outline, size: 13, color: AppColors.textHint),
+                      const SizedBox(width: 3),
+                      Text('$commentCount', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
+                    ],
+                  )
+                : null,
+            onTap: () async {
+              final postId = p['id'] as int?;
+              if (postId == null) return;
+              await Navigator.push(context, MaterialPageRoute(builder: (_) => PostDetailScreen(postId: postId)));
+              _load();
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ── 클럽 게시글 작성 (간단 폼) ──────────────────────────────────
+
+class _ClubPostFormScreen extends StatefulWidget {
+  final String category;
+  const _ClubPostFormScreen({required this.category});
+  @override
+  State<_ClubPostFormScreen> createState() => _ClubPostFormScreenState();
+}
+
+class _ClubPostFormScreenState extends State<_ClubPostFormScreen> {
+  final _titleCtrl = TextEditingController();
+  final _contentCtrl = TextEditingController();
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _contentCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_titleCtrl.text.trim().isEmpty || _contentCtrl.text.trim().isEmpty) return;
+    setState(() => _submitting = true);
+    try {
+      final token = context.read<AuthService>().token;
+      if (token == null) return;
+      await ApiService().createPost({
+        'title': _titleCtrl.text.trim(),
+        'content': _contentCtrl.text.trim(),
+        'category': widget.category,
+      }, token);
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.bgBase,
+      appBar: AppBar(
+        backgroundColor: AppColors.bgBase,
+        foregroundColor: Colors.white,
+        title: const Text('글 작성', style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          TextButton(
+            onPressed: _submitting ? null : _submit,
+            child: _submitting
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))
+                : const Text('등록', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: _titleCtrl,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+              decoration: InputDecoration(
+                hintText: '제목',
+                hintStyle: TextStyle(color: AppColors.textHint),
+                border: InputBorder.none,
+              ),
+            ),
+            Divider(color: AppColors.surfaceTint),
+            Expanded(
+              child: TextField(
+                controller: _contentCtrl,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                maxLines: null,
+                expands: true,
+                decoration: InputDecoration(
+                  hintText: '내용을 입력하세요',
+                  hintStyle: TextStyle(color: AppColors.textHint),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

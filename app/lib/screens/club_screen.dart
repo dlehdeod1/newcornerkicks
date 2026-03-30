@@ -8,7 +8,7 @@ import '../config/api_config.dart';
 import 'player_detail_screen.dart';
 import 'settlements_screen.dart';
 import 'announcements_screen.dart';
-import 'board_screen.dart';
+import 'community_screen.dart';
 import 'admin_exemptions_screen.dart';
 import 'admin_dashboard_screen.dart';
 import 'abilities_screen.dart';
@@ -359,7 +359,7 @@ class _ClubScreenState extends State<ClubScreen> {
             })),
             const SizedBox(width: 10),
             Expanded(child: _quickLink(Icons.forum_rounded, '게시판', AppColors.blue, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const BoardScreen()));
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityScreen()));
             })),
             const SizedBox(width: 10),
             Expanded(child: _quickLink(Icons.people_outline, '멤버', AppColors.teal, () {
