@@ -12,6 +12,7 @@ import 'board_screen.dart';
 import 'admin_exemptions_screen.dart';
 import 'admin_dashboard_screen.dart';
 import 'abilities_screen.dart';
+import 'players_screen.dart';
 import '../widgets/tip_banner.dart';
 import '../utils/snackbar_helper.dart';
 
@@ -107,8 +108,6 @@ class _ClubScreenState extends State<ClubScreen> {
             _buildQuickLinks(),
             const SizedBox(height: 20),
             _buildSubscriptionCard(),
-            const SizedBox(height: 20),
-            _buildMemberList(),
           ],
         ),
       ),
@@ -364,7 +363,7 @@ class _ClubScreenState extends State<ClubScreen> {
             })),
             const SizedBox(width: 10),
             Expanded(child: _quickLink(Icons.people_outline, '멤버', AppColors.teal, () {
-              // 이미 아래에 멤버 목록이 있으므로 스크롤
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const PlayersScreen()));
             })),
           ],
         ),
@@ -483,71 +482,4 @@ class _ClubScreenState extends State<ClubScreen> {
     );
   }
 
-  Widget _buildMemberList() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceBorder,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.surfaceTint),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-            child: Row(
-              children: [
-                const Icon(Icons.people, size: 18, color: AppColors.blue),
-                const SizedBox(width: 8),
-                Text('멤버 (${_players.length})', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
-              ],
-            ),
-          ),
-          if (_loading)
-            const Padding(
-              padding: EdgeInsets.all(20),
-              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
-            )
-          else if (_players.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Center(child: Text('멤버가 없습니다', style: TextStyle(color: AppColors.textHint))),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _players.length,
-              separatorBuilder: (_, __) => Divider(height: 1, color: AppColors.surfaceBorder),
-              itemBuilder: (context, index) {
-                final p = _players[index];
-                final name = p['name'] ?? '?';
-                final initial = name.isNotEmpty ? name[0] : '?';
-                final nick = p['nickname'];
-
-                return ListTile(
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [AppColors.primary.withAlpha(80), AppColors.teal.withAlpha(60)],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(child: Text(initial, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white))),
-                  ),
-                  title: Text(name, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
-                  subtitle: nick != null ? Text(nick, style: TextStyle(color: AppColors.textHint, fontSize: 12)) : null,
-                  trailing: Icon(Icons.chevron_right, size: 18, color: AppColors.iconInactive),
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => PlayerDetailScreen(playerId: p['id'])));
-                  },
-                );
-              },
-            ),
-        ],
-      ),
-    );
-  }
 }

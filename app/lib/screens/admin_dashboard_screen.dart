@@ -5,7 +5,9 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../utils/snackbar_helper.dart';
 import 'session_detail_screen.dart';
+import 'sessions_screen.dart';
 import 'announcements_screen.dart';
+import 'notifications_screen.dart';
 import 'admin_club_settings_screen.dart';
 import 'admin_exemptions_screen.dart';
 import 'player_detail_screen.dart';
@@ -224,20 +226,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── 운영 ──
+        // ── 운영 (3개) ──
         _groupLabel('운영'),
         const SizedBox(height: 8),
         Row(
           children: [
-            _actionCard(Icons.person_add, '선수 등록', AppColors.primary, _showAddPlayerDialog),
+            _actionCard(Icons.calendar_month, '세션 관리', AppColors.primary, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const SessionsScreen()));
+            }),
             const SizedBox(width: 10),
             _actionCard(Icons.people_outline, '선수 관리', AppColors.blue, () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPlayersScreen()));
             }),
           ],
         ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            _actionCard(Icons.person_add, '선수 등록', AppColors.primary, _showAddPlayerDialog),
+            const SizedBox(width: 10),
+            const Expanded(child: SizedBox()),
+          ],
+        ),
         const SizedBox(height: 16),
-        // ── 소통 ──
+        // ── 소통 (2개) ──
         _groupLabel('소통'),
         const SizedBox(height: 8),
         Row(
@@ -246,24 +258,28 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const AnnouncementsScreen(isAdmin: true)));
             }),
             const SizedBox(width: 10),
-            const Expanded(child: SizedBox()),
+            _actionCard(Icons.notifications_outlined, '알림 관리', AppColors.blue, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+            }),
           ],
         ),
         const SizedBox(height: 16),
-        // ── 재정 ──
+        // ── 재정 (2개) ──
         _groupLabel('재정'),
         const SizedBox(height: 8),
         Row(
           children: [
+            _actionCard(Icons.payments, '참가비 설정', AppColors.primary, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminClubSettingsScreen()));
+            }),
+            const SizedBox(width: 10),
             _actionCard(Icons.shield_outlined, '회비 면제', AppColors.violet, () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminExemptionsScreen()));
             }),
-            const SizedBox(width: 10),
-            const Expanded(child: SizedBox()),
           ],
         ),
         const SizedBox(height: 16),
-        // ── 기록/통계 ──
+        // ── 기록/통계 (2개) ──
         _groupLabel('기록/통계'),
         const SizedBox(height: 8),
         Row(
@@ -290,16 +306,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               },
             ),
             const SizedBox(width: 10),
-            const Expanded(child: SizedBox()),
+            _actionCard(Icons.tune, '기록 설정', AppColors.blue, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminClubSettingsScreen()));
+            }),
           ],
         ),
         const SizedBox(height: 16),
-        // ── 설정 ──
+        // ── 설정 (1개) ──
         _groupLabel('설정'),
         const SizedBox(height: 8),
         Row(
           children: [
-            _actionCard(Icons.settings, '클럽 설정', AppColors.blue, () {
+            _actionCard(Icons.settings, '클럽 정보', AppColors.blue, () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminClubSettingsScreen()));
             }),
             const SizedBox(width: 10),
