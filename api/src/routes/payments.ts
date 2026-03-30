@@ -31,7 +31,6 @@ paymentsRoutes.get('/sessions', authMiddleware(), async (c) => {
       LEFT JOIN session_payments sp ON sp.session_id = s.id
       WHERE s.club_id = ?
       GROUP BY s.id
-      HAVING total_members > 0
       ORDER BY s.session_date DESC
       LIMIT 30
     `).bind(clubId).all()

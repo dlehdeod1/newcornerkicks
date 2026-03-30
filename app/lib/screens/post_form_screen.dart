@@ -157,6 +157,7 @@ class _PostFormScreenState extends State<PostFormScreen> {
       appBar: AppBar(
         title: Text(_isEdit ? '글 수정' : '글 작성', style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: AppColors.bgBase,
+        foregroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         actions: [
           TextButton(

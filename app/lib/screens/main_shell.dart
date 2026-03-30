@@ -148,6 +148,7 @@ class _MainShellState extends State<MainShell> {
       backgroundColor: AppColors.bgBase,
       appBar: AppBar(
         backgroundColor: AppColors.bgBase,
+        foregroundColor: Colors.white,
         elevation: 0,
         title: GestureDetector(
           onTap: hasMultiClubs ? _showClubSwitcher : null,

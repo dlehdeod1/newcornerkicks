@@ -119,6 +119,7 @@ class _AnnouncementFormScreenState extends State<AnnouncementFormScreen> {
       appBar: AppBar(
         title: Text(_isEdit ? '공지 수정' : '공지 작성', style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: AppColors.bgBase,
+        foregroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         actions: [
           TextButton(

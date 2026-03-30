@@ -60,6 +60,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
       appBar: AppBar(
         title: const Text('공지사항', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: AppColors.bgBase,
+        foregroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
       ),
       floatingActionButton: showAdmin

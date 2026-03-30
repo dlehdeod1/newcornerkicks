@@ -149,6 +149,7 @@ class _CommunityPostFormScreenState extends State<CommunityPostFormScreen> {
       backgroundColor: AppColors.bgBase,
       appBar: AppBar(
         backgroundColor: AppColors.bgBase,
+        foregroundColor: Colors.white,
         title: Text(_isEdit ? '게시글 수정' : '새 게시글', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
         actions: [
           TextButton(

@@ -152,6 +152,7 @@ class _CommunityPostDetailScreenState extends State<CommunityPostDetailScreen> {
       backgroundColor: AppColors.bgBase,
       appBar: AppBar(
         backgroundColor: AppColors.bgBase,
+        foregroundColor: Colors.white,
         title: const Text('게시글', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
         actions: [
           if (_post != null && _post!['author_id'] == myUserId)

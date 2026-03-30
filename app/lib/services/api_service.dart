@@ -277,6 +277,20 @@ class ApiService {
   Future<dynamic> markAllNotificationsRead(String token) =>
       request('/notifications/read-all', method: 'PUT', token: token);
 
+  Future<dynamic> broadcastNotification({
+    required String type,
+    required String title,
+    required String message,
+    String? linkUrl,
+    required String token,
+  }) =>
+      request('/notifications/broadcast', method: 'POST', body: {
+        'type': type,
+        'title': title,
+        'message': message,
+        if (linkUrl != null && linkUrl.isNotEmpty) 'linkUrl': linkUrl,
+      }, token: token);
+
   // RSVP
   Future<dynamic> rsvpSession(int sessionId, String status, String token) =>
       request('/sessions/$sessionId/rsvp', method: 'POST', body: {'status': status}, token: token);

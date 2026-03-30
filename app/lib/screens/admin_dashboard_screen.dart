@@ -5,10 +5,11 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../utils/snackbar_helper.dart';
 import 'session_detail_screen.dart';
-import 'sessions_screen.dart';
 import 'announcements_screen.dart';
-import 'notifications_screen.dart';
+import 'admin_notifications_screen.dart';
 import 'admin_club_settings_screen.dart';
+import 'admin_fees_screen.dart';
+import 'admin_records_screen.dart';
 import 'admin_exemptions_screen.dart';
 import 'player_detail_screen.dart';
 import 'admin_players_screen.dart';
@@ -79,14 +80,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               decoration: InputDecoration(
                 labelText: '이름 *',
                 labelStyle: TextStyle(color: AppColors.textHint),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: AppColors.surfaceHighlight),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: AppColors.primary),
-                ),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.surfaceHighlight)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary)),
               ),
             ),
             const SizedBox(height: 12),
@@ -96,23 +91,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               decoration: InputDecoration(
                 labelText: '닉네임 (선택)',
                 labelStyle: TextStyle(color: AppColors.textHint),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: AppColors.surfaceHighlight),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: AppColors.primary),
-                ),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: AppColors.surfaceHighlight)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary)),
               ),
             ),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('취소', style: TextStyle(color: AppColors.textHint)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('취소', style: TextStyle(color: AppColors.textHint))),
           TextButton(
             onPressed: () {
               if (nameCtrl.text.trim().length >= 2) {
@@ -130,19 +116,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     if (result == true && mounted) {
       final token = context.read<AuthService>().token;
       if (token == null) return;
-
       try {
         final nickname = nicknameCtrl.text.trim().isEmpty ? null : nicknameCtrl.text.trim();
-        final res = await _api.createPlayer(nameCtrl.text.trim(), nickname: nickname, token: token);
+        await _api.createPlayer(nameCtrl.text.trim(), nickname: nickname, token: token);
         if (mounted) {
           showSuccess(context, '${nameCtrl.text.trim()} 선수가 등록되었습니다');
           setState(() => _loading = true);
           await _load();
         }
       } catch (e) {
-        if (mounted) {
-          showError(context, '선수 등록 실패: $e');
-        }
+        if (mounted) showError(context, '선수 등록 실패: $e');
       }
     }
   }
@@ -153,6 +136,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       backgroundColor: AppColors.bgBase,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
         title: const Text('관리자 대시보드', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       ),
       floatingActionButton: FloatingActionButton(
@@ -207,15 +191,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: color.withAlpha(30)),
             ),
-            child: Column(
-              children: [
-                Icon(item['icon'] as IconData, size: 22, color: color),
-                const SizedBox(height: 8),
-                Text(item['value'] as String, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
-                const SizedBox(height: 2),
-                Text(item['label'] as String, style: TextStyle(fontSize: 11, color: AppColors.textHint)),
-              ],
-            ),
+            child: Column(children: [
+              Icon(item['icon'] as IconData, size: 22, color: color),
+              const SizedBox(height: 8),
+              Text(item['value'] as String, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+              const SizedBox(height: 2),
+              Text(item['label'] as String, style: TextStyle(fontSize: 11, color: AppColors.textHint)),
+            ]),
           ),
         );
       }).toList(),
@@ -226,131 +208,95 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── 운영 (3개) ──
+        // ── 운영 (2개) ──
         _groupLabel('운영'),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            _actionCard(Icons.calendar_month, '세션 관리', AppColors.primary, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const SessionsScreen()));
-            }),
-            const SizedBox(width: 10),
-            _actionCard(Icons.people_outline, '선수 관리', AppColors.blue, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPlayersScreen()));
-            }),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            _actionCard(Icons.person_add, '선수 등록', AppColors.primary, _showAddPlayerDialog),
-            const SizedBox(width: 10),
-            const Expanded(child: SizedBox()),
-          ],
-        ),
+        Row(children: [
+          _actionCard(Icons.people_outline, '선수 관리', AppColors.blue, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminPlayersScreen()));
+          }),
+          const SizedBox(width: 10),
+          _actionCard(Icons.person_add, '선수 등록', AppColors.primary, _showAddPlayerDialog),
+        ]),
         const SizedBox(height: 16),
+
         // ── 소통 (2개) ──
         _groupLabel('소통'),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            _actionCard(Icons.campaign, '공지 관리', AppColors.amber, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const AnnouncementsScreen(isAdmin: true)));
-            }),
-            const SizedBox(width: 10),
-            _actionCard(Icons.notifications_outlined, '알림 관리', AppColors.blue, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
-            }),
-          ],
-        ),
+        Row(children: [
+          _actionCard(Icons.campaign, '공지 관리', AppColors.amber, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AnnouncementsScreen(isAdmin: true)));
+          }),
+          const SizedBox(width: 10),
+          _actionCard(Icons.send_rounded, '알림 발송', AppColors.blue, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminNotificationsScreen()));
+          }),
+        ]),
         const SizedBox(height: 16),
+
         // ── 재정 (2개) ──
         _groupLabel('재정'),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            _actionCard(Icons.payments, '참가비 설정', AppColors.primary, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminClubSettingsScreen()));
-            }),
-            const SizedBox(width: 10),
-            _actionCard(Icons.shield_outlined, '회비 면제', AppColors.violet, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminExemptionsScreen()));
-            }),
-          ],
-        ),
+        Row(children: [
+          _actionCard(Icons.payments, '참가비 설정', AppColors.primary, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminFeesScreen()));
+          }),
+          const SizedBox(width: 10),
+          _actionCard(Icons.shield_outlined, '회비 면제', AppColors.violet, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminExemptionsScreen()));
+          }),
+        ]),
         const SizedBox(height: 16),
+
         // ── 기록/통계 (2개) ──
         _groupLabel('기록/통계'),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            _actionCard(
-              Icons.refresh,
-              '랭킹 갱신',
-              AppColors.primary,
-              _refreshingRankings ? null : () async {
-                setState(() => _refreshingRankings = true);
-                try {
-                  final token = context.read<AuthService>().token!;
-                  await _api.refreshRankings(DateTime.now().year, token);
-                  if (mounted) {
-                    showSuccess(context, '랭킹이 갱신되었습니다');
-                  }
-                } catch (_) {
-                  if (mounted) {
-                    showError(context, '랭킹 갱신 실패');
-                  }
-                } finally {
-                  if (mounted) setState(() => _refreshingRankings = false);
-                }
-              },
-            ),
-            const SizedBox(width: 10),
-            _actionCard(Icons.tune, '기록 설정', AppColors.blue, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminClubSettingsScreen()));
-            }),
-          ],
-        ),
+        Row(children: [
+          _actionCard(
+            Icons.refresh, '랭킹 갱신', AppColors.primary,
+            _refreshingRankings ? null : () async {
+              setState(() => _refreshingRankings = true);
+              try {
+                final token = context.read<AuthService>().token!;
+                await _api.refreshRankings(DateTime.now().year, token);
+                if (mounted) showSuccess(context, '랭킹이 갱신되었습니다');
+              } catch (_) {
+                if (mounted) showError(context, '랭킹 갱신 실패');
+              } finally {
+                if (mounted) setState(() => _refreshingRankings = false);
+              }
+            },
+          ),
+          const SizedBox(width: 10),
+          _actionCard(Icons.tune, '기록 설정', AppColors.blue, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminRecordsScreen()));
+          }),
+        ]),
         const SizedBox(height: 16),
+
         // ── 설정 (1개) ──
         _groupLabel('설정'),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            _actionCard(Icons.settings, '클럽 정보', AppColors.blue, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminClubSettingsScreen()));
-            }),
-            const SizedBox(width: 10),
-            const Expanded(child: SizedBox()),
-          ],
-        ),
+        Row(children: [
+          _actionCard(Icons.settings, '클럽 정보', AppColors.blue, () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminClubSettingsScreen()));
+          }),
+          const SizedBox(width: 10),
+          const Expanded(child: SizedBox()),
+        ]),
       ],
     );
   }
 
   Widget _groupLabel(String label) {
-    return Row(
-      children: [
-        Container(
-          width: 3,
-          height: 14,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textSecondary,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ],
-    );
+    return Row(children: [
+      Container(
+        width: 3, height: 14,
+        decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(2)),
+      ),
+      const SizedBox(width: 8),
+      Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 0.5)),
+    ]);
   }
 
   Widget _actionCard(IconData icon, String label, Color color, VoidCallback? onTap) {
@@ -390,18 +336,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.warning_amber, size: 18, color: AppColors.amber),
-              const SizedBox(width: 8),
-              Text('미연동 선수 $_unlinkedPlayers명', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.amber)),
-            ],
-          ),
+          Row(children: [
+            const Icon(Icons.warning_amber, size: 18, color: AppColors.amber),
+            const SizedBox(width: 8),
+            Text('미연동 선수 $_unlinkedPlayers명', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.amber)),
+          ]),
           const SizedBox(height: 8),
-          Text(
-            '아직 계정과 연동되지 않은 선수입니다. 선수에게 초대 코드를 공유하세요.',
-            style: TextStyle(fontSize: 12, color: AppColors.textHint),
-          ),
+          Text('아직 계정과 연동되지 않은 선수입니다. 선수에게 초대 코드를 공유하세요.', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
           const SizedBox(height: 10),
           ...unlinked.take(5).map((p) {
             final name = (p['name'] ?? '?').toString();
@@ -409,22 +350,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               padding: const EdgeInsets.only(bottom: 6),
               child: GestureDetector(
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PlayerDetailScreen(playerId: p['id']))),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 28, height: 28,
-                      decoration: BoxDecoration(
-                        color: AppColors.amber.withAlpha(20),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(child: Text(name.isNotEmpty ? name[0] : '?', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.amber))),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(name, style: const TextStyle(fontSize: 13, color: Colors.white)),
-                    const Spacer(),
-                    Icon(Icons.chevron_right, size: 16, color: AppColors.iconInactive),
-                  ],
-                ),
+                child: Row(children: [
+                  Container(
+                    width: 28, height: 28,
+                    decoration: BoxDecoration(color: AppColors.amber.withAlpha(20), borderRadius: BorderRadius.circular(8)),
+                    child: Center(child: Text(name.isNotEmpty ? name[0] : '?', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.amber))),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(name, style: const TextStyle(fontSize: 13, color: Colors.white)),
+                  const Spacer(),
+                  Icon(Icons.chevron_right, size: 16, color: AppColors.iconInactive),
+                ]),
               ),
             );
           }),
@@ -444,13 +380,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.history, size: 16, color: AppColors.textHint),
-            const SizedBox(width: 6),
-            Text('최근 세션', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-          ],
-        ),
+        Row(children: [
+          Icon(Icons.history, size: 16, color: AppColors.textHint),
+          const SizedBox(width: 6),
+          Text('최근 세션', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+        ]),
         const SizedBox(height: 12),
         if (recent.isEmpty)
           Container(
@@ -472,25 +406,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Color statusColor;
             String statusLabel;
             switch (status) {
-              case 'recruiting':
-                statusColor = AppColors.primary;
-                statusLabel = '모집중';
-                break;
-              case 'ended':
-                statusColor = AppColors.amber;
-                statusLabel = '종료';
-                break;
-              case 'completed':
-                statusColor = AppColors.blue;
-                statusLabel = '정산완료';
-                break;
-              case 'closed':
-                statusColor = AppColors.slate;
-                statusLabel = '마감';
-                break;
-              default:
-                statusColor = AppColors.slate;
-                statusLabel = status;
+              case 'recruiting': statusColor = AppColors.primary; statusLabel = '모집중'; break;
+              case 'ended': statusColor = AppColors.amber; statusLabel = '종료'; break;
+              case 'completed': statusColor = AppColors.blue; statusLabel = '정산완료'; break;
+              case 'closed': statusColor = AppColors.slate; statusLabel = '마감'; break;
+              default: statusColor = AppColors.slate; statusLabel = status;
             }
 
             return GestureDetector(
@@ -503,31 +423,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: AppColors.surfaceTint),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(title.toString(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
-                          const SizedBox(height: 2),
-                          Text(
-                            '$date / ${attendeeCount}명',
-                            style: TextStyle(fontSize: 11, color: AppColors.iconInactive),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusColor.withAlpha(20),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(statusLabel, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor)),
-                    ),
-                  ],
-                ),
+                child: Row(children: [
+                  Expanded(child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title.toString(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
+                      const SizedBox(height: 2),
+                      Text('$date / ${attendeeCount}명', style: TextStyle(fontSize: 11, color: AppColors.iconInactive)),
+                    ],
+                  )),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: statusColor.withAlpha(20), borderRadius: BorderRadius.circular(8)),
+                    child: Text(statusLabel, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor)),
+                  ),
+                ]),
               ),
             );
           }),

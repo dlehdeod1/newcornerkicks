@@ -36,13 +36,21 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
   List<dynamic> _rsvp = [];
   List<dynamic> _teamSettlements = [];
   bool _loading = true;
+  List<dynamic> _payments = [];
+  List<dynamic> _expenses = [];
+  bool _settlementLoading = false;
 
   Map<String, dynamic>? _recordingMatch;
+
+  bool get _isEndedOrCompleted {
+    final s = _session?['status'] as String?;
+    return s == 'ended' || s == 'completed' || s == 'closed';
+  }
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _loadSession();
   }
 
@@ -410,6 +418,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
                           _buildTeamsTab(),
                           _buildScoreboardTab(),
                           _buildStatsTab(),
+                          _buildSettlementTab(),
                         ],
                       ),
                     ),
@@ -642,17 +651,19 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
       decoration: BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.surfaceHighlight))),
       child: TabBar(
         controller: _tabController,
-        isScrollable: false,
+        isScrollable: true,
+        tabAlignment: TabAlignment.start,
         indicatorColor: AppColors.primary,
         labelColor: AppColors.primary,
         unselectedLabelColor: Colors.white38,
         labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         labelPadding: EdgeInsets.zero,
         tabs: [
-          const Tab(text: '개요/참석'),
-          Tab(child: Text('팀 구성', style: TextStyle(color: hasTeams ? null : AppColors.iconInactive))),
+          const Tab(text: '개요'),
+          Tab(child: Text('팀', style: TextStyle(color: hasTeams ? null : AppColors.iconInactive))),
           Tab(child: Text('점수판', style: TextStyle(color: hasTeams ? null : AppColors.iconInactive))),
-          Tab(child: Text('선수 스탯', style: TextStyle(color: hasTeams ? null : AppColors.iconInactive))),
+          Tab(child: Text('스탯', style: TextStyle(color: hasTeams ? null : AppColors.iconInactive))),
+          Tab(child: Text('정산', style: TextStyle(color: _isEndedOrCompleted ? null : AppColors.iconInactive))),
         ],
       ),
     );
@@ -1425,6 +1436,297 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> with SingleTi
         ),
       ),
     );
+  }
+  // ─── 정산 탭 ───
+
+  Future<void> _loadPayments() async {
+    final token = context.read<AuthService>().token;
+    if (token == null) return;
+    setState(() => _settlementLoading = true);
+    try {
+      final res = await _api.getSessionPaymentDetail(widget.sessionId, token);
+      final expRes = await _api.getSessionExpenses(widget.sessionId, token);
+      if (mounted) {
+        setState(() {
+          _payments = (res['payments'] as List?) ?? [];
+          _expenses = (expRes['expenses'] as List?) ?? [];
+          _settlementLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _settlementLoading = false);
+    }
+  }
+
+  Widget _buildSettlementTab() {
+    if (!_isEndedOrCompleted) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.receipt_long, size: 48, color: AppColors.iconInactive),
+            const SizedBox(height: 12),
+            Text('세션이 종료된 후 정산을 할 수 있습니다', style: TextStyle(color: AppColors.textHint, fontSize: 14)),
+          ]),
+        ),
+      );
+    }
+
+    if (_payments.isEmpty && !_settlementLoading) {
+      // 첫 로드
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_payments.isEmpty && !_settlementLoading) _loadPayments();
+      });
+    }
+
+    if (_settlementLoading) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+    }
+
+    final auth = context.read<AuthService>();
+    final isAdmin = auth.isAdmin;
+    final status = _session?['status'] as String?;
+
+    final totalAmount = _payments.fold<int>(0, (sum, p) => sum + ((p['amount'] as num?)?.toInt() ?? 0));
+    final paidAmount = _payments.where((p) => p['paid'] == 1 || p['paid'] == true).fold<int>(0, (sum, p) => sum + ((p['amount'] as num?)?.toInt() ?? 0));
+    final exemptCount = _payments.where((p) => p['exempt'] == 1 || p['exempt'] == true).length;
+    final unpaidAmount = totalAmount - paidAmount;
+
+    final expenseTotal = _expenses.fold<int>(0, (sum, e) => sum + ((e['amount'] as num?)?.toInt() ?? 0));
+
+    return RefreshIndicator(
+      onRefresh: _loadPayments,
+      color: AppColors.primary,
+      child: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          // 요약 카드
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceBorder,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.surfaceTint),
+            ),
+            child: Column(children: [
+              Row(children: [
+                _summaryItem('총 참가비', _formatWon(totalAmount), AppColors.textSecondary),
+                _summaryItem('입금 완료', _formatWon(paidAmount), AppColors.primary),
+                _summaryItem('미입금', _formatWon(unpaidAmount), unpaidAmount > 0 ? AppColors.red : AppColors.slate),
+              ]),
+              if (exemptCount > 0) ...[
+                const SizedBox(height: 8),
+                Text('면제 ${exemptCount}명', style: TextStyle(fontSize: 11, color: AppColors.iconInactive)),
+              ],
+            ]),
+          ),
+          const SizedBox(height: 16),
+
+          // 팀 순위 (정산 데이터)
+          if (_teamSettlements.isNotEmpty) ...[
+            _sectionLabel('팀 순위'),
+            const SizedBox(height: 8),
+            ...List.generate(_teamSettlements.length, (i) {
+              final t = _teamSettlements[i];
+              final medal = i == 0 ? '🥇' : i == 1 ? '🥈' : i == 2 ? '🥉' : '${i + 1}';
+              return Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceBorder,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.surfaceTint),
+                ),
+                child: Row(children: [
+                  Text(medal, style: const TextStyle(fontSize: 18)),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(t['teamName'] ?? '팀 ${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500))),
+                  Text('${t['wins'] ?? 0}승 ${t['draws'] ?? 0}무 ${t['losses'] ?? 0}패',
+                    style: TextStyle(color: AppColors.textHint, fontSize: 12)),
+                ]),
+              );
+            }),
+            const SizedBox(height: 16),
+          ],
+
+          // 개인 납부 현황
+          _sectionLabel('납부 현황 (${_payments.length}명)'),
+          const SizedBox(height: 8),
+          ..._payments.map((p) {
+            final paid = p['paid'] == 1 || p['paid'] == true;
+            final exempt = p['exempt'] == 1 || p['exempt'] == true;
+            final name = p['player_name'] ?? p['playerName'] ?? '?';
+            final amount = (p['amount'] as num?)?.toInt() ?? 0;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceBorder,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: exempt ? AppColors.amber.withAlpha(40) : paid ? AppColors.primary.withAlpha(40) : AppColors.surfaceTint),
+              ),
+              child: Row(children: [
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name.toString(), style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 2),
+                    Text(_formatWon(amount), style: TextStyle(color: AppColors.textHint, fontSize: 12)),
+                  ],
+                )),
+                if (isAdmin && !exempt)
+                  GestureDetector(
+                    onTap: () async {
+                      final token = auth.token;
+                      if (token == null) return;
+                      try {
+                        await _api.updatePaymentPaid(p['id'], !paid, token);
+                        _loadPayments();
+                      } catch (e) {
+                        if (mounted) showError(context, e.toString());
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: paid ? AppColors.primary.withAlpha(20) : AppColors.red.withAlpha(20),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(paid ? '입금됨' : '미입금', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: paid ? AppColors.primary : AppColors.red)),
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: exempt ? AppColors.amber.withAlpha(20) : paid ? AppColors.primary.withAlpha(20) : AppColors.red.withAlpha(20),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      exempt ? '면제' : paid ? '입금됨' : '미입금',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: exempt ? AppColors.amber : paid ? AppColors.primary : AppColors.red),
+                    ),
+                  ),
+              ]),
+            );
+          }),
+
+          // 경비
+          if (_expenses.isNotEmpty || isAdmin) ...[
+            const SizedBox(height: 16),
+            _sectionLabel('경비'),
+            const SizedBox(height: 8),
+            ..._expenses.map((e) => Container(
+              margin: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceBorder,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.surfaceTint),
+              ),
+              child: Row(children: [
+                Expanded(child: Text(e['description'] ?? '', style: const TextStyle(color: Colors.white, fontSize: 13))),
+                Text(_formatWon((e['amount'] as num?)?.toInt() ?? 0), style: TextStyle(color: AppColors.textHint, fontSize: 12)),
+                if (isAdmin) ...[
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () async {
+                      final token = auth.token;
+                      if (token == null) return;
+                      try {
+                        await _api.deleteSessionExpense(widget.sessionId, e['id'], token);
+                        _loadPayments();
+                      } catch (err) {
+                        if (mounted) showError(context, err.toString());
+                      }
+                    },
+                    child: const Icon(Icons.close, size: 16, color: Colors.white38),
+                  ),
+                ],
+              ]),
+            )),
+            if (expenseTotal > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                  Text('경비 합계: ${_formatWon(expenseTotal)}', style: TextStyle(color: AppColors.textHint, fontSize: 12, fontWeight: FontWeight.w600)),
+                ]),
+              ),
+          ],
+
+          // 정산 완료 버튼
+          if (isAdmin && status == 'ended') ...[
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final token = auth.token;
+                  if (token == null) return;
+                  try {
+                    await _api.request('/sessions/${widget.sessionId}', method: 'PUT', body: {'status': 'completed'}, token: token);
+                    await _loadSession();
+                    _loadPayments();
+                    if (mounted) showSuccess(context, '정산이 완료되었습니다');
+                  } catch (e) {
+                    if (mounted) showError(context, e.toString());
+                  }
+                },
+                icon: const Icon(Icons.check_circle_outline, size: 18),
+                label: const Text('정산 완료', style: TextStyle(fontWeight: FontWeight.w700)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ),
+          ],
+
+          if (status == 'completed') ...[
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withAlpha(13),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.primary.withAlpha(40)),
+              ),
+              child: Row(children: [
+                const Icon(Icons.check_circle, size: 18, color: AppColors.primary),
+                const SizedBox(width: 10),
+                const Expanded(child: Text('정산 완료됨 — 이 세션의 기록이 랭킹에 반영됩니다', style: TextStyle(color: AppColors.primary, fontSize: 12))),
+              ]),
+            ),
+          ],
+
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryItem(String label, String value, Color color) {
+    return Expanded(child: Column(children: [
+      Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+      const SizedBox(height: 2),
+      Text(label, style: TextStyle(fontSize: 11, color: AppColors.textHint)),
+    ]));
+  }
+
+  Widget _sectionLabel(String text) {
+    return Row(children: [
+      Container(width: 3, height: 14, decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(2))),
+      const SizedBox(width: 8),
+      Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+    ]);
+  }
+
+  String _formatWon(int amount) {
+    final formatted = amount.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
+    return '${formatted}원';
   }
 }
 

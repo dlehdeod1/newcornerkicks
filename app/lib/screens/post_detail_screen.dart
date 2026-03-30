@@ -256,6 +256,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       appBar: AppBar(
         title: const Text('\uAC8C\uC2DC\uAE00', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: AppColors.bgBase,
+        foregroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         actions: _post != null && (_post!['user_id'] == myUserId || isAdmin)
             ? [
