@@ -142,7 +142,8 @@ matchesRoutes.delete('/:id', authMiddleware('ADMIN'), async (c) => {
       return c.json({ error: '해당 클럽 소속 경기가 아닙니다.' }, 403)
     }
 
-    // 관련 이벤트 먼저 삭제
+    // 관련 데이터 먼저 삭제
+    await c.env.DB.prepare('DELETE FROM player_substitutions WHERE match_id = ?').bind(id).run()
     await c.env.DB.prepare('DELETE FROM match_events WHERE match_id = ?').bind(id).run()
     await c.env.DB.prepare('DELETE FROM player_match_stats WHERE match_id = ?').bind(id).run()
 
@@ -221,11 +222,24 @@ matchesRoutes.get('/:id', async (c) => {
     ORDER BY me.event_time ASC
   `).bind(id).all()
 
+  // 교체 기록
+  const substitutions = await c.env.DB.prepare(`
+    SELECT ps.*, p.name as player_name, p.nickname as player_nickname,
+           ft.name as from_team_name, tt.name as to_team_name
+    FROM player_substitutions ps
+    LEFT JOIN players p ON ps.player_id = p.id
+    LEFT JOIN teams ft ON ps.from_team_id = ft.id
+    LEFT JOIN teams tt ON ps.to_team_id = tt.id
+    WHERE ps.match_id = ?
+    ORDER BY ps.minute ASC, ps.created_at ASC
+  `).bind(id).all()
+
   return c.json({
     match,
     team1Members: team1Members.results,
     team2Members: team2Members.results,
     events: events.results,
+    substitutions: substitutions.results,
   })
 })
 
@@ -591,5 +605,112 @@ async function recalculateSettlement(db: any, matchId: number) {
     console.error(`recalculateSettlement failed for match ${matchId}:`, e)
   }
 }
+
+// 선수 교체 등록
+matchesRoutes.post('/:id/substitutions', authMiddleware(), async (c) => {
+  try {
+    const matchId = c.req.param('id')
+    const body = await c.req.json()
+    const clubId = (c as any).clubId
+
+    // 경기 검증
+    const match = await c.env.DB.prepare(`
+      SELECT m.*, s.club_id FROM matches m
+      JOIN sessions s ON m.session_id = s.id
+      WHERE m.id = ?
+    `).bind(matchId).first() as any
+    if (!match || match.club_id !== clubId) {
+      return c.json({ error: '해당 클럽 소속 경기가 아닙니다.' }, 403)
+    }
+    if (match.status !== 'playing') {
+      return c.json({ error: '진행 중인 경기에서만 교체할 수 있습니다.' }, 400)
+    }
+
+    const schema = z.object({
+      playerId: z.number().nullable(),
+      guestName: z.string().nullable().optional(),
+      fromTeamId: z.number(),
+      toTeamId: z.number(),
+      minute: z.number().nullable().optional(),
+    })
+
+    const data = schema.parse(body)
+
+    // playerId 또는 guestName 중 하나는 필수
+    if (!data.playerId && !data.guestName) {
+      return c.json({ error: 'playerId 또는 guestName 중 하나는 필수입니다.' }, 400)
+    }
+
+    // 같은 팀 교체 거부
+    if (data.fromTeamId === data.toTeamId) {
+      return c.json({ error: '같은 팀으로는 교체할 수 없습니다.' }, 400)
+    }
+
+    // 두 팀 모두 해당 경기 소속인지 확인
+    const teamIds = [match.team1_id, match.team2_id]
+    if (!teamIds.includes(data.fromTeamId) || !teamIds.includes(data.toTeamId)) {
+      return c.json({ error: '해당 경기의 팀이 아닙니다.' }, 400)
+    }
+
+    // 선수가 from_team에 소속인지 확인
+    let memberCheck: any
+    if (data.playerId) {
+      memberCheck = await c.env.DB.prepare(
+        'SELECT id FROM team_members WHERE team_id = ? AND player_id = ?'
+      ).bind(data.fromTeamId, data.playerId).first()
+    } else {
+      memberCheck = await c.env.DB.prepare(
+        'SELECT id FROM team_members WHERE team_id = ? AND guest_name = ? LIMIT 1'
+      ).bind(data.fromTeamId, data.guestName).first()
+    }
+    if (!memberCheck) {
+      return c.json({ error: '해당 선수가 출발 팀에 소속되어 있지 않습니다.' }, 400)
+    }
+
+    // team_members 소속 변경: 정확한 row ID로 업데이트
+    await c.env.DB.prepare(
+      'UPDATE team_members SET team_id = ? WHERE id = ?'
+    ).bind(data.toTeamId, memberCheck.id).run()
+
+    // 교체 기록 저장
+    const result = await c.env.DB.prepare(`
+      INSERT INTO player_substitutions (match_id, player_id, guest_name, from_team_id, to_team_id, minute)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(
+      matchId,
+      data.playerId || null,
+      data.guestName || null,
+      data.fromTeamId,
+      data.toTeamId,
+      data.minute ?? null
+    ).run()
+
+    return c.json({
+      id: result.meta.last_row_id,
+      message: '선수 교체가 완료되었습니다.',
+    }, 201)
+  } catch (err: any) {
+    console.error('Substitution error:', err)
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// 교체 기록 조회
+matchesRoutes.get('/:id/substitutions', async (c) => {
+  const matchId = c.req.param('id')
+
+  const substitutions = await c.env.DB.prepare(`
+    SELECT ps.*, p.name as player_name, p.nickname as player_nickname,
+           ft.name as from_team_name, tt.name as to_team_name
+    FROM player_substitutions ps
+    LEFT JOIN players p ON ps.player_id = p.id
+    LEFT JOIN teams ft ON ps.from_team_id = ft.id
+    LEFT JOIN teams tt ON ps.to_team_id = tt.id
+    WHERE ps.match_id = ?
+    ORDER BY ps.minute ASC, ps.created_at ASC
+  `).bind(matchId).all()
+
+  return c.json({ substitutions: substitutions.results })
+})
 
 export { matchesRoutes }

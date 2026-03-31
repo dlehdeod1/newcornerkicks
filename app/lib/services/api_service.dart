@@ -262,6 +262,12 @@ class ApiService {
   Future<dynamic> updateMatch(int matchId, Map<String, dynamic> data, String token) =>
       request('/matches/$matchId', method: 'PUT', body: data, token: token);
 
+  Future<dynamic> addSubstitution(int matchId, Map<String, dynamic> data, String token) =>
+      request('/matches/$matchId/substitutions', method: 'POST', body: data, token: token);
+
+  Future<dynamic> getSubstitutions(int matchId, String token) =>
+      request('/matches/$matchId/substitutions', method: 'GET', token: token);
+
   // Notifications
   Future<dynamic> getNotifications(String token, {int? limit, bool? unread}) {
     final params = <String>[];

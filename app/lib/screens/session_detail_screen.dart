@@ -2017,8 +2017,9 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
       await _load();
     } catch (e) {
       if (mounted) {
+        final msg = e is ApiException ? e.message : '교체 실패';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('교체 실패'), backgroundColor: AppColors.red),
+          SnackBar(content: Text(msg), backgroundColor: AppColors.red),
         );
       }
     }
@@ -2029,6 +2030,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
     int? selectedTeamId;
     Map<String, dynamic>? selectedPlayer;
     int minuteVal = _elapsedSeconds ~/ 60;
+    final minuteController = TextEditingController(text: minuteVal.toString());
 
     await showDialog(
       context: context,
@@ -2102,9 +2104,9 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                             decoration: BoxDecoration(
-                              color: isSelected ? color : color.withAlpha(15),
+                              color: isSelected ? color : color.withAlpha(30),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: isSelected ? color : color.withAlpha(40)),
+                              border: Border.all(color: isSelected ? color : color.withAlpha(60)),
                             ),
                             child: Text(name.toString(), style: TextStyle(
                               fontSize: 12,
@@ -2120,9 +2122,9 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                     const SizedBox(height: 16),
                     Row(children: [
                       Text('이동: ', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                      Text('$fromTeamName', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+                      Text(fromTeamName, style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
                       Text(' → ', style: TextStyle(color: AppColors.textHint, fontSize: 13)),
-                      Text('$toTeamName', style: TextStyle(color: AppColors.blue, fontSize: 13, fontWeight: FontWeight.bold)),
+                      Text(toTeamName, style: TextStyle(color: AppColors.blue, fontSize: 13, fontWeight: FontWeight.bold)),
                     ]),
                     const SizedBox(height: 12),
                     Row(children: [
@@ -2130,7 +2132,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                       SizedBox(
                         width: 50,
                         child: TextField(
-                          controller: TextEditingController(text: minuteVal.toString()),
+                          controller: minuteController,
                           keyboardType: TextInputType.number,
                           style: const TextStyle(color: Colors.white, fontSize: 14),
                           decoration: InputDecoration(
@@ -2155,13 +2157,13 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                 child: Text('취소', style: TextStyle(color: AppColors.textHint)),
               ),
               ElevatedButton(
-                onPressed: selectedPlayer == null || selectedTeamId == null ? null : () {
+                onPressed: selectedPlayer == null || selectedTeamId == null || toTeamId == null ? null : () {
                   Navigator.pop(ctx);
                   _addSubstitution(
                     selectedPlayer!['player_id'],
                     selectedPlayer!['guest_name'],
                     selectedTeamId!,
-                    toTeamId!,
+                    toTeamId,
                     minuteVal,
                   );
                 },
@@ -2178,6 +2180,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
         },
       ),
     );
+    minuteController.dispose();
   }
 
   String _shortName(String name) {
