@@ -1747,6 +1747,7 @@ class _MatchRecorderPage extends StatefulWidget {
 class _MatchRecorderPageState extends State<_MatchRecorderPage> {
   final ApiService _api = ApiService();
   List<dynamic> _events = [];
+  List<dynamic> _substitutions = [];
   List<dynamic> _team1Members = [];
   List<dynamic> _team2Members = [];
   Map<String, dynamic>? _matchData;
@@ -1784,6 +1785,7 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
         setState(() {
           _matchData = res['match'];
           _events = (res['events'] as List?) ?? [];
+          _substitutions = (res['substitutions'] as List?) ?? [];
           _team1Members = (res['team1Members'] as List?) ?? [];
           _team2Members = (res['team2Members'] as List?) ?? [];
           _loading = false;
@@ -2000,6 +2002,184 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
     if (mounted) setState(() => _busy = false);
   }
 
+  Future<void> _addSubstitution(int? playerId, String? guestName, int fromTeamId, int toTeamId, int? minute) async {
+    final auth = context.read<AuthService>();
+    if (auth.token == null || _busy) return;
+    setState(() => _busy = true);
+    try {
+      await _api.addSubstitution(widget.match['id'], {
+        'playerId': playerId,
+        if (guestName != null) 'guestName': guestName,
+        'fromTeamId': fromTeamId,
+        'toTeamId': toTeamId,
+        if (minute != null) 'minute': minute,
+      }, auth.token!);
+      await _load();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('교체 실패'), backgroundColor: AppColors.red),
+        );
+      }
+    }
+    if (mounted) setState(() => _busy = false);
+  }
+
+  Future<void> _showSubstitutionDialog(dynamic team1, dynamic team2, int team1Id, int team2Id) async {
+    int? selectedTeamId;
+    Map<String, dynamic>? selectedPlayer;
+    int minuteVal = _elapsedSeconds ~/ 60;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) {
+          final fromMembers = selectedTeamId == team1Id ? _team1Members : selectedTeamId == team2Id ? _team2Members : <dynamic>[];
+          final fromTeamName = selectedTeamId == team1Id ? (team1['name'] ?? 'A') : selectedTeamId == team2Id ? (team2['name'] ?? 'B') : '';
+          final toTeamId = selectedTeamId == team1Id ? team2Id : selectedTeamId == team2Id ? team1Id : null;
+          final toTeamName = toTeamId == team1Id ? (team1['name'] ?? 'A') : toTeamId == team2Id ? (team2['name'] ?? 'B') : '';
+
+          return AlertDialog(
+            backgroundColor: AppColors.bgCard,
+            title: const Text('선수 교체', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('나가는 팀', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    Expanded(child: GestureDetector(
+                      onTap: () => setS(() { selectedTeamId = team1Id; selectedPlayer = null; }),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: selectedTeamId == team1Id ? AppColors.primary : AppColors.surfaceTint,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(team1['name'] ?? 'A', style: TextStyle(
+                          fontSize: 13,
+                          color: selectedTeamId == team1Id ? AppColors.bgBase : Colors.white,
+                          fontWeight: selectedTeamId == team1Id ? FontWeight.bold : FontWeight.normal,
+                        )),
+                      ),
+                    )),
+                    const SizedBox(width: 8),
+                    Expanded(child: GestureDetector(
+                      onTap: () => setS(() { selectedTeamId = team2Id; selectedPlayer = null; }),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: selectedTeamId == team2Id ? AppColors.orange : AppColors.surfaceTint,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(team2['name'] ?? 'B', style: TextStyle(
+                          fontSize: 13,
+                          color: selectedTeamId == team2Id ? AppColors.bgBase : Colors.white,
+                          fontWeight: selectedTeamId == team2Id ? FontWeight.bold : FontWeight.normal,
+                        )),
+                      ),
+                    )),
+                  ]),
+                  if (selectedTeamId != null) ...[
+                    const SizedBox(height: 16),
+                    Text('교체할 선수', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6, runSpacing: 6,
+                      children: fromMembers.map<Widget>((m) {
+                        final name = m['name'] ?? m['guest_name'] ?? '?';
+                        final isSelected = selectedPlayer != null &&
+                            ((m['player_id'] != null && m['player_id'] == selectedPlayer!['player_id']) ||
+                             (m['guest_name'] != null && m['guest_name'] == selectedPlayer!['guest_name']));
+                        final color = selectedTeamId == team1Id ? AppColors.primary : AppColors.orange;
+                        return GestureDetector(
+                          onTap: () => setS(() => selectedPlayer = Map<String, dynamic>.from(m)),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: isSelected ? color : color.withAlpha(15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: isSelected ? color : color.withAlpha(40)),
+                            ),
+                            child: Text(name.toString(), style: TextStyle(
+                              fontSize: 12,
+                              color: isSelected ? Colors.white : color,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            )),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                  if (selectedPlayer != null) ...[
+                    const SizedBox(height: 16),
+                    Row(children: [
+                      Text('이동: ', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      Text('$fromTeamName', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+                      Text(' → ', style: TextStyle(color: AppColors.textHint, fontSize: 13)),
+                      Text('$toTeamName', style: TextStyle(color: AppColors.blue, fontSize: 13, fontWeight: FontWeight.bold)),
+                    ]),
+                    const SizedBox(height: 12),
+                    Row(children: [
+                      Text('교체 시점: ', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      SizedBox(
+                        width: 50,
+                        child: TextField(
+                          controller: TextEditingController(text: minuteVal.toString()),
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: AppColors.surfaceTint)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: AppColors.surfaceTint)),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: AppColors.primary)),
+                          ),
+                          onChanged: (v) => minuteVal = int.tryParse(v) ?? minuteVal,
+                        ),
+                      ),
+                      Text(' 분', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                    ]),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text('취소', style: TextStyle(color: AppColors.textHint)),
+              ),
+              ElevatedButton(
+                onPressed: selectedPlayer == null || selectedTeamId == null ? null : () {
+                  Navigator.pop(ctx);
+                  _addSubstitution(
+                    selectedPlayer!['player_id'],
+                    selectedPlayer!['guest_name'],
+                    selectedTeamId!,
+                    toTeamId!,
+                    minuteVal,
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.bgBase,
+                  disabledBackgroundColor: AppColors.surfaceTint,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('교체', style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   String _shortName(String name) {
     if (name.length <= 2) return name;
     return '${name[0]}${name[2]}';
@@ -2029,6 +2209,24 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
           : Column(
               children: [
                 _buildScoreboard(team1, team2, team1Id, team2Id),
+                if ((_matchData?['status'] ?? 'pending') == 'playing')
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    child: GestureDetector(
+                      onTap: _busy ? null : () => _showSubstitutionDialog(team1, team2, team1Id, team2Id),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.blue.withAlpha(20),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.blue.withAlpha(50)),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text('🔄 선수 교체', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.blue)),
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 Expanded(
                   child: _assistScorerPlayerId != null || _assistScorerGuestName != null
@@ -2057,6 +2255,10 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
                                 ],
                                 for (final dt in activeExtra) ...[
                                   _buildDefenseSectionTyped(team1, team2, team1Id, team2Id, dt, extraTypes[dt]!),
+                                  const SizedBox(height: 12),
+                                ],
+                                if (_substitutions.isNotEmpty) ...[
+                                  _buildSubstitutionLog(team1Id, team2Id),
                                   const SizedBox(height: 12),
                                 ],
                                 _buildEventLog(team1Id, team2Id),
@@ -2392,6 +2594,64 @@ class _MatchRecorderPageState extends State<_MatchRecorderPage> {
               );
             }).toList(),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubstitutionLog(int team1Id, int team2Id) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceBorder,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.surfaceTint),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                const Text('🔄 교체', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(width: 6),
+                Text('(${_substitutions.length})', style: TextStyle(fontSize: 12, color: AppColors.textHint)),
+              ],
+            ),
+          ),
+          ..._substitutions.reversed.map((s) {
+            final name = s['player_nickname'] ?? s['player_name'] ?? s['guest_name'] ?? '?';
+            final fromTeam = s['from_team_name'] ?? '';
+            final toTeam = s['to_team_name'] ?? '';
+            final minute = s['minute'];
+            final fromIsTeam1 = s['from_team_id']?.toString() == team1Id.toString();
+
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(border: Border(top: BorderSide(color: AppColors.surfaceBorder))),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: fromIsTeam1
+                        ? Text(name.toString(), style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w500))
+                        : const SizedBox(),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('🔄', style: const TextStyle(fontSize: 14)),
+                      Text('$fromTeam → $toTeam', style: TextStyle(fontSize: 9, color: AppColors.textHint)),
+                      if (minute != null) Text("$minute'", style: TextStyle(fontSize: 9, color: AppColors.iconInactive)),
+                    ],
+                  ),
+                  Expanded(
+                    child: !fromIsTeam1
+                        ? Text(name.toString(), style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w500), textAlign: TextAlign.right)
+                        : const SizedBox(),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
