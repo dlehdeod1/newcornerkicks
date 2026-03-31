@@ -449,30 +449,22 @@ function StatCard({
   label,
   value,
   suffix,
-  color,
   isAmount = false,
 }: {
   icon: React.ReactNode
   label: string
   value: number
   suffix: string
-  color: 'blue' | 'emerald' | 'red' | 'amber'
+  color?: string
   isAmount?: boolean
 }) {
-  const colorClasses = {
-    blue: 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/30',
-    emerald: 'bg-primary/5 text-primary border-primary/20',
-    red: 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30',
-    amber: 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30',
-  }
-
   return (
-    <div className={cn('rounded-2xl p-5 border', colorClasses[color])}>
-      <div className="flex items-center gap-2 mb-2 opacity-80">
-        {icon}
+    <div className="rounded-2xl p-5 border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/50">
+      <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400">
+        <span className="text-primary">{icon}</span>
         <span className="text-sm">{label}</span>
       </div>
-      <p className="text-2xl font-bold">
+      <p className="text-2xl font-bold text-slate-900 dark:text-white">
         {isAmount ? value.toLocaleString() : value}{suffix}
       </p>
     </div>
@@ -593,14 +585,9 @@ function MyStatCard({
   description?: string
   items: { label: string; value: string }[]
   emptyMessage: string
-  accentColor: 'emerald' | 'red' | 'blue' | 'amber'
+  accentColor?: string
 }) {
-  const accentClasses = {
-    emerald: 'text-primary bg-primary/5',
-    red: 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-500/15',
-    blue: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/15',
-    amber: 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/15',
-  }
+  const accentClass = 'text-primary bg-primary/5'
 
   const medalClasses = [
     'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
@@ -626,7 +613,7 @@ function MyStatCard({
                 key={index}
                 className={cn(
                   'flex items-center justify-between px-3 py-2.5 rounded-xl',
-                  index === 0 ? accentClasses[accentColor] : 'bg-slate-50 dark:bg-slate-800/50'
+                  index === 0 ? accentClass : 'bg-slate-50 dark:bg-slate-800/50'
                 )}
               >
                 <div className="flex items-center gap-2.5">
@@ -676,15 +663,10 @@ function FunStatCard({
   icon: React.ReactNode
   items: { label: string; value: string; highlight: boolean }[]
   emptyMessage: string
-  accentColor: 'amber' | 'rose' | 'blue' | 'purple'
+  accentColor?: string
   myName?: string | null
 }) {
-  const accentClasses = {
-    amber: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10',
-    rose: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10',
-    blue: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10',
-    purple: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10',
-  }
+  const accentClass = 'text-primary bg-primary/5'
 
   return (
     <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
@@ -710,7 +692,7 @@ function FunStatCard({
                   isMe
                     ? 'ring-primary bg-primary/5'
                     : index === 0
-                      ? accentClasses[accentColor]
+                      ? accentClass
                       : 'bg-slate-50 dark:bg-slate-800/50'
                 )}>
                   <div className="flex items-center gap-2">
