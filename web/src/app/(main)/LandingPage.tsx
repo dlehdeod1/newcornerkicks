@@ -7,14 +7,8 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen">
       {/* 히어로 섹션 */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-slate-50 to-teal-100/50 dark:from-primary/5 dark:via-slate-900 dark:to-teal-900/20" />
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/10 dark:bg-primary/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-teal-500/10 dark:bg-teal-500/20 rounded-full blur-3xl" />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+      <section className="relative overflow-hidden bg-slate-50 dark:bg-slate-900/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-16">
             {/* 왼쪽: 텍스트 */}
             <div className="flex-1 text-center lg:text-left">
@@ -24,9 +18,7 @@ export default function LandingPage() {
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-slate-900 dark:text-white">
                 동호회 운영,{' '}
-                <span className="bg-gradient-to-r from-primary via-teal-500 to-cyan-500 dark:from-primary dark:via-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
-                  코너킥스
-                </span>
+                <span className="text-primary">코너킥스</span>
                 로<br />
                 한번에 해결하세요
               </h1>
@@ -37,7 +29,7 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
                   href="/register"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-primary to-teal-500 hover:from-primary-hover hover:to-teal-600 rounded-2xl font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:shadow-primary/40 active:scale-[0.98]"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary hover:bg-primary-hover rounded-2xl font-semibold text-white shadow-sm transition-all active:scale-[0.98]"
                 >
                   무료로 시작하기
                   <ChevronRight className="w-5 h-5" />
@@ -54,8 +46,7 @@ export default function LandingPage() {
             {/* 오른쪽: 스크린샷 */}
             <div className="w-full max-w-md">
               <div className="relative">
-                <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-teal-500/20 rounded-3xl blur-2xl" />
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700">
+                <div className="rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-700">
                   <img
                     src="/screenshot-home.png"
                     alt="코너킥스 대시보드"
@@ -125,8 +116,7 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 to-teal-500/10 rounded-3xl blur-2xl" />
-              <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-700 max-w-sm mx-auto">
+              <div className="rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-700 max-w-sm mx-auto">
                 <img
                   src="/screenshot-login.png"
                   alt="코너킥스 로그인"
@@ -165,7 +155,7 @@ export default function LandingPage() {
 
           {/* PRO */}
           <div className="relative bg-white dark:bg-slate-900/50 rounded-2xl p-8 border-2 border-primary shadow-lg shadow-primary/10">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-primary to-teal-500 rounded-full text-xs font-semibold text-white">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary rounded-full text-xs font-semibold text-white">
               추천
             </div>
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">PRO</h3>
@@ -186,12 +176,8 @@ export default function LandingPage() {
 
       {/* 하단 CTA */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary to-teal-500 p-12 md:p-16 text-center">
-          <div className="absolute inset-0">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-          </div>
-          <div className="relative">
+        <div className="rounded-3xl bg-primary p-12 md:p-16 text-center">
+          <div>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               지금 바로 시작하세요
             </h2>
@@ -251,23 +237,15 @@ function FeatureCard({
   icon,
   title,
   description,
-  color,
 }: {
   icon: React.ReactNode
   title: string
   description: string
-  color: 'emerald' | 'blue' | 'amber' | 'purple'
+  color?: string
 }) {
-  const colorClasses = {
-    emerald: 'bg-primary/10 text-primary',
-    blue: 'bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400',
-    amber: 'bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400',
-    purple: 'bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400',
-  }
-
   return (
     <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm hover:shadow-md transition-shadow">
-      <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 ${colorClasses[color]}`}>
+      <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 bg-primary/10 text-primary">
         {icon}
       </div>
       <h3 className="font-semibold text-slate-900 dark:text-white mb-2">{title}</h3>

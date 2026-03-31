@@ -98,15 +98,8 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* 히어로 섹션 */}
-      <section className="relative overflow-hidden">
-        {/* 배경 그라데이션 */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-slate-50 to-teal-100/50 dark:via-slate-900 dark:to-teal-900/20" />
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-1/4 w-72 h-72 bg-teal-500/10 dark:bg-teal-500/20 rounded-full blur-3xl" />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+      <section className="relative overflow-hidden bg-slate-50 dark:bg-slate-900/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
             {/* 왼쪽: 텍스트 */}
             <div className="flex-1 text-center lg:text-left">
@@ -116,10 +109,7 @@ export default function HomePage() {
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-slate-900 dark:text-white">
                 수요일의{' '}
-                <span className="bg-gradient-to-r from-primary via-teal-500 to-cyan-500 bg-clip-text text-transparent">
-                  열정
-                </span>
-                을<br />
+                <span className="text-primary">열정</span>을<br />
                 기록하고 공유하세요
               </h1>
               <p className="text-lg text-slate-600 dark:text-slate-400 mb-10 max-w-xl mx-auto lg:mx-0">
@@ -128,7 +118,7 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
                   href="/sessions"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-primary to-teal-500 hover:from-primary-hover hover:to-teal-600 rounded-2xl font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:shadow-primary/40 active:scale-[0.98]"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary hover:bg-primary-hover rounded-2xl font-semibold text-white shadow-sm transition-all active:scale-[0.98]"
                 >
                   일정 확인하기
                   <ChevronRight className="w-5 h-5" />
@@ -242,7 +232,7 @@ export default function HomePage() {
       {/* 빠른 메뉴 */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white mb-6">
-          <Zap className="w-5 h-5 text-yellow-500" />
+          <Zap className="w-5 h-5 text-primary" />
           빠른 메뉴
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -334,7 +324,7 @@ export default function HomePage() {
             </h2>
             {nextSession ? (
               <Link href={`/sessions/${nextSession.id}`} className="block group">
-                <div className="p-5 rounded-xl bg-gradient-to-br from-primary/10 to-teal-50 dark:to-teal-500/10 border border-primary/20 group-hover:border-primary/30 transition-colors">
+                <div className="p-5 rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/20 group-hover:border-primary/30 transition-colors">
                   <div className="flex items-center gap-2 text-primary mb-3">
                     <Clock className="w-4 h-4" />
                     <span className="text-sm font-medium">
@@ -505,16 +495,16 @@ function RecentSessionHighlight({ session }: { session: any }) {
             </p>
             <p className="text-xs text-slate-400">{topScorer ? `${topScorer.goals}골` : '-'}</p>
           </div>
-          <div className="text-center p-4 bg-blue-50 dark:bg-blue-500/10 rounded-xl">
+          <div className="text-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
             <p className="text-sm text-slate-500 mb-1">도움왕</p>
-            <p className="font-bold text-blue-600 dark:text-blue-400">
+            <p className="font-bold text-slate-900 dark:text-white">
               {topAssister?.name || '-'}
             </p>
             <p className="text-xs text-slate-400">{topAssister ? `${topAssister.assists}도움` : '-'}</p>
           </div>
-          <div className="text-center p-4 bg-purple-50 dark:bg-purple-500/10 rounded-xl">
+          <div className="text-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
             <p className="text-sm text-slate-500 mb-1">수비왕</p>
-            <p className="font-bold text-purple-600 dark:text-purple-400">
+            <p className="font-bold text-slate-900 dark:text-white">
               {topDefender?.name || '-'}
             </p>
             <p className="text-xs text-slate-400">{topDefender ? `${topDefender.defenses}수비` : '-'}</p>
@@ -529,34 +519,19 @@ function StatCard({
   label,
   value,
   icon,
-  color,
 }: {
   label: string
   value: string
   icon: React.ReactNode
-  color: 'emerald' | 'blue' | 'purple' | 'amber'
+  color?: string
 }) {
-  const colorClasses = {
-    emerald: 'from-primary/10 to-primary/5 border-primary/20',
-    blue: 'from-blue-100 to-blue-50 dark:from-blue-500/20 dark:to-blue-600/10 border-blue-200 dark:border-blue-500/20',
-    purple: 'from-purple-100 to-purple-50 dark:from-purple-500/20 dark:to-purple-600/10 border-purple-200 dark:border-purple-500/20',
-    amber: 'from-amber-100 to-amber-50 dark:from-amber-500/20 dark:to-amber-600/10 border-amber-200 dark:border-amber-500/20',
-  }
-
-  const textColors = {
-    emerald: 'text-primary',
-    blue: 'text-blue-600 dark:text-blue-400',
-    purple: 'text-purple-600 dark:text-purple-400',
-    amber: 'text-amber-600 dark:text-amber-400',
-  }
-
   return (
-    <div className={`bg-gradient-to-br ${colorClasses[color]} rounded-2xl p-4 border`}>
+    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700/50">
       <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-        <span>{icon}</span>
+        <span className="text-primary">{icon}</span>
         {label}
       </div>
-      <p className={`text-2xl font-bold ${textColors[color]}`}>
+      <p className="text-2xl font-bold text-slate-900 dark:text-white">
         {value}
       </p>
     </div>
@@ -568,28 +543,19 @@ function QuickMenuCard({
   icon,
   title,
   description,
-  color,
 }: {
   href: string
   icon: React.ReactNode
   title: string
   description: string
-  color: 'emerald' | 'amber' | 'blue' | 'purple' | 'teal'
+  color?: string
 }) {
-  const colorClasses = {
-    emerald: 'bg-primary/10 text-primary group-hover:bg-primary/20',
-    amber: 'bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-200 dark:group-hover:bg-amber-500/20',
-    blue: 'bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-200 dark:group-hover:bg-blue-500/20',
-    purple: 'bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:bg-purple-200 dark:group-hover:bg-purple-500/20',
-    teal: 'bg-teal-100 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 group-hover:bg-teal-200 dark:group-hover:bg-teal-500/20',
-  }
-
   return (
     <Link
       href={href}
       className="group bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-900/80 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 shadow-sm"
     >
-      <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 transition-colors ${colorClasses[color]}`}>
+      <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 transition-colors bg-primary/10 text-primary group-hover:bg-primary/20">
         {icon}
       </div>
       <h3 className="font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">{title}</h3>
