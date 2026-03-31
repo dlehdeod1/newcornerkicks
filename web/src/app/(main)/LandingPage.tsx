@@ -75,25 +75,21 @@ export default function LandingPage() {
             icon={<Calendar className="w-6 h-6" />}
             title="세션 & 출석 관리"
             description="일정 생성, RSVP 선착순 마감, 출석 체크를 한곳에서 관리하세요."
-            color="emerald"
           />
           <FeatureCard
             icon={<Users className="w-6 h-6" />}
             title="자동 팀 편성"
             description="실력 기반 밸런스 팀 편성. 매번 공평한 경기를 만들어줍니다."
-            color="blue"
           />
           <FeatureCard
             icon={<Trophy className="w-6 h-6" />}
             title="랭킹 & 통계"
             description="득점, 도움, 수비 기록을 자동 집계. 시즌별 랭킹과 명예의 전당."
-            color="amber"
           />
           <FeatureCard
             icon={<CreditCard className="w-6 h-6" />}
             title="참가비 정산"
             description="순위별 차등 참가비 자동 계산. 미납자 리마인드까지."
-            color="purple"
           />
         </div>
       </section>
@@ -241,7 +237,6 @@ function FeatureCard({
   icon: React.ReactNode
   title: string
   description: string
-  color?: string
 }) {
   return (
     <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm hover:shadow-md transition-shadow">

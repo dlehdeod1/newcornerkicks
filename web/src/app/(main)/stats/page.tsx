@@ -226,7 +226,6 @@ export default function StatsPage() {
                     highlight: d.combo_count >= 3,
                   }))}
                   emptyMessage="어시스트 데이터가 부족합니다"
-                  accentColor="amber"
                   myName={myName}
                 />
 
@@ -241,7 +240,6 @@ export default function StatsPage() {
                     highlight: d.win_rate >= 70,
                   }))}
                   emptyMessage="데이터가 부족합니다"
-                  accentColor="rose"
                   myName={myName}
                 />
 
@@ -256,7 +254,6 @@ export default function StatsPage() {
                     highlight: false,
                   }))}
                   emptyMessage="데이터가 부족합니다"
-                  accentColor="blue"
                   myName={myName}
                 />
 
@@ -271,7 +268,6 @@ export default function StatsPage() {
                     highlight: d.goals_against >= 5,
                   }))}
                   emptyMessage="데이터가 부족합니다"
-                  accentColor="purple"
                   myName={myName}
                 />
               </div>
@@ -315,7 +311,6 @@ export default function StatsPage() {
                       value: `승률 ${d.win_rate}% (${d.games_together}경기)`,
                     }))}
                     emptyMessage="아직 데이터가 부족합니다 (최소 3경기 필요)"
-                    accentColor="emerald"
                   />
 
                   {/* 함께하면 망하는 팀원 */}
@@ -327,7 +322,6 @@ export default function StatsPage() {
                       value: `승률 ${d.win_rate}% (${d.games_together}경기)`,
                     }))}
                     emptyMessage="아직 데이터가 부족합니다"
-                    accentColor="red"
                   />
 
                   {/* 나한테 어시스트 많이 해준 선수 */}
@@ -339,7 +333,6 @@ export default function StatsPage() {
                       value: `${d.assist_count}회`,
                     }))}
                     emptyMessage="아직 어시스트 데이터가 없습니다"
-                    accentColor="blue"
                   />
 
                   {/* 내가 어시스트 많이 해준 선수 */}
@@ -351,7 +344,6 @@ export default function StatsPage() {
                       value: `${d.assist_count}회`,
                     }))}
                     emptyMessage="아직 어시스트 데이터가 없습니다"
-                    accentColor="amber"
                   />
                 </div>
               )}
@@ -579,13 +571,11 @@ function MyStatCard({
   description,
   items,
   emptyMessage,
-  accentColor,
 }: {
   title: React.ReactNode
   description?: string
   items: { label: string; value: string }[]
   emptyMessage: string
-  accentColor?: string
 }) {
   const accentClass = 'text-primary bg-primary/5'
 
@@ -655,7 +645,6 @@ function FunStatCard({
   icon,
   items,
   emptyMessage,
-  accentColor,
   myName,
 }: {
   title: React.ReactNode
@@ -663,7 +652,6 @@ function FunStatCard({
   icon: React.ReactNode
   items: { label: string; value: string; highlight: boolean }[]
   emptyMessage: string
-  accentColor?: string
   myName?: string | null
 }) {
   const accentClass = 'text-primary bg-primary/5'

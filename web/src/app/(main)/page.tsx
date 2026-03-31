@@ -151,25 +151,21 @@ export default function HomePage() {
                     label="득점"
                     value={myStats?.goals?.toString() || '-'}
                     icon={<Circle className="w-4 h-4" />}
-                    color="emerald"
                   />
                   <StatCard
                     label="도움"
                     value={myStats?.assists?.toString() || '-'}
                     icon={<Zap className="w-4 h-4" />}
-                    color="blue"
                   />
                   <StatCard
                     label="수비"
                     value={myStats?.defenses?.toString() || '-'}
                     icon={<Shield className="w-4 h-4" />}
-                    color="purple"
                   />
                   <StatCard
                     label="MVP점수"
                     value={myStats?.mvpScore ? myStats.mvpScore.toFixed(1) : '-'}
                     icon={<Star className="w-4 h-4" />}
-                    color="amber"
                   />
                 </div>
               </div>
@@ -241,35 +237,30 @@ export default function HomePage() {
             icon={<Calendar className="w-6 h-6" />}
             title="경기 결과"
             description="지난 매치 기록 확인"
-            color="emerald"
           />
           <QuickMenuCard
             href="/ranking"
             icon={<Trophy className="w-6 h-6" />}
             title="랭킹"
             description="시즌 순위 확인"
-            color="amber"
           />
           <QuickMenuCard
             href="/abilities"
             icon={<Star className="w-6 h-6" />}
             title="능력치 평가"
             description="팀원 능력치 평가"
-            color="blue"
           />
           <QuickMenuCard
             href="/hall-of-fame"
             icon={<Trophy className="w-6 h-6" />}
             title="명예의 전당"
             description="시즌 챔피언 보기"
-            color="purple"
           />
           <QuickMenuCard
             href="/board"
             icon={<Globe className="w-6 h-6" />}
             title="커뮤니티"
             description="팀 모집 & 매칭"
-            color="teal"
           />
         </div>
       </section>
@@ -523,7 +514,6 @@ function StatCard({
   label: string
   value: string
   icon: React.ReactNode
-  color?: string
 }) {
   return (
     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700/50">
@@ -548,7 +538,6 @@ function QuickMenuCard({
   icon: React.ReactNode
   title: string
   description: string
-  color?: string
 }) {
   return (
     <Link

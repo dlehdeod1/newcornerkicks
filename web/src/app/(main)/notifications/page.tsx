@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bell, Check, CheckCheck, Trash2, ExternalLink, ArrowLeft, Calendar, User, Circle, DollarSign, Trophy, Megaphone } from 'lucide-react'
+import { Bell, Check, CheckCheck, Trash2, ExternalLink, ArrowLeft, Calendar, Shirt, Circle, DollarSign, Trophy, Megaphone } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth'
@@ -10,7 +10,7 @@ import { cn } from '@/lib/cn'
 
 const notificationTypeConfig: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
   session_created: { icon: <Calendar className="w-5 h-5" />, color: 'bg-blue-500', label: '새 세션' },
-  team_assigned: { icon: <User className="w-5 h-5" />, color: 'bg-primary', label: '팀 배정' },
+  team_assigned: { icon: <Shirt className="w-5 h-5" />, color: 'bg-primary', label: '팀 배정' },
   match_result: { icon: <Circle className="w-5 h-5" />, color: 'bg-amber-500', label: '경기 결과' },
   settlement: { icon: <DollarSign className="w-5 h-5" />, color: 'bg-green-500', label: '정산' },
   badge_earned: { icon: <Trophy className="w-5 h-5" />, color: 'bg-purple-500', label: '배지 획득' },
@@ -159,7 +159,7 @@ export default function NotificationsPage() {
                 >
                   {/* 아이콘 */}
                   <div className={cn(
-                    'w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0',
+                    'w-12 h-12 rounded-xl flex items-center justify-center shrink-0',
                     config.color + '/20'
                   )}>
                     {config.icon}
