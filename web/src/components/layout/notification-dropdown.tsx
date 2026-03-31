@@ -1,20 +1,20 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, ReactNode } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bell, Check, CheckCheck, Trash2, ExternalLink } from 'lucide-react'
+import { Bell, Check, CheckCheck, Trash2, ExternalLink, Calendar, Shirt, Circle, DollarSign, Trophy, Megaphone, Pin } from 'lucide-react'
 import Link from 'next/link'
 import { useAuthStore } from '@/stores/auth'
 import { notificationsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
-const notificationTypeConfig: Record<string, { icon: string; color: string }> = {
-  session_created: { icon: '📅', color: 'bg-blue-500' },
-  team_assigned: { icon: '👕', color: 'bg-primary' },
-  match_result: { icon: '⚽', color: 'bg-amber-500' },
-  settlement: { icon: '💰', color: 'bg-green-500' },
-  badge_earned: { icon: '🏆', color: 'bg-purple-500' },
-  announcement: { icon: '📢', color: 'bg-red-500' },
+const notificationTypeConfig: Record<string, { icon: ReactNode; color: string }> = {
+  session_created: { icon: <Calendar className="w-5 h-5" />, color: 'bg-blue-500' },
+  team_assigned: { icon: <Shirt className="w-5 h-5" />, color: 'bg-primary' },
+  match_result: { icon: <Circle className="w-5 h-5" />, color: 'bg-amber-500' },
+  settlement: { icon: <DollarSign className="w-5 h-5" />, color: 'bg-green-500' },
+  badge_earned: { icon: <Trophy className="w-5 h-5" />, color: 'bg-purple-500' },
+  announcement: { icon: <Megaphone className="w-5 h-5" />, color: 'bg-red-500' },
 }
 
 export function NotificationDropdown() {
@@ -139,7 +139,7 @@ export function NotificationDropdown() {
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
                 {notifications.map((notification: any) => {
                   const config = notificationTypeConfig[notification.type] || {
-                    icon: '📌',
+                    icon: <Pin className="w-5 h-5" />,
                     color: 'bg-slate-500',
                   }
 
@@ -153,7 +153,7 @@ export function NotificationDropdown() {
                     >
                       {/* 아이콘 */}
                       <div className={cn(
-                        'w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0',
+                        'w-10 h-10 rounded-lg flex items-center justify-center shrink-0',
                         config.color + '/20'
                       )}>
                         {config.icon}

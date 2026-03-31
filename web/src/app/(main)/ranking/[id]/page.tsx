@@ -7,7 +7,7 @@ export const runtime = 'edge'
 import { use, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { ArrowLeft, Trophy, Target, Handshake, Shield, Calendar, TrendingUp, User, Gamepad2, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowLeft, Trophy, Target, Handshake, Shield, Calendar, TrendingUp, User, Gamepad2, ChevronDown, ChevronUp, Circle, Zap, Medal } from 'lucide-react'
 import { playersApi, rankingsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
@@ -81,12 +81,12 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
   const mvpRecords = logsData?.mvpRecords || []
   const placements = logsData?.placements || []
 
-  const logTabs: { key: LogTab; label: string; icon: string; count: number; color: string }[] = [
-    { key: 'goals', label: '득점', icon: '⚽', count: goals.length, color: 'amber' },
-    { key: 'assists', label: '도움', icon: '⚡', count: assists.length, color: 'blue' },
-    { key: 'defenses', label: '수비', icon: '🛡️', count: defenses.length, color: 'purple' },
-    { key: 'mvp', label: 'MVP', icon: '🏆', count: mvpRecords.length, color: 'emerald' },
-    { key: 'placements', label: '순위', icon: '🏅', count: placements.length, color: 'orange' },
+  const logTabs: { key: LogTab; label: string; icon: React.ReactNode; count: number; color: string }[] = [
+    { key: 'goals', label: '득점', icon: <Circle className="w-4 h-4" />, count: goals.length, color: 'amber' },
+    { key: 'assists', label: '도움', icon: <Zap className="w-4 h-4" />, count: assists.length, color: 'blue' },
+    { key: 'defenses', label: '수비', icon: <Shield className="w-4 h-4" />, count: defenses.length, color: 'purple' },
+    { key: 'mvp', label: 'MVP', icon: <Trophy className="w-4 h-4" />, count: mvpRecords.length, color: 'emerald' },
+    { key: 'placements', label: '순위', icon: <Medal className="w-4 h-4" />, count: placements.length, color: 'orange' },
   ]
 
   return (
@@ -222,7 +222,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
               goals.length === 0 ? <EmptyLog message="득점 기록이 없습니다" /> :
                 goals.map((g: any, i: number) => (
                   <EventRow key={i}
-                    icon="⚽" date={g.session_date}
+                    icon={<Circle className="w-4 h-4" />} date={g.session_date}
                     main={`${g.match_no}경기 골`}
                     sub={g.assister_name ? `어시스트: ${g.assister_name}` : '단독 득점'}
                     match={`${g.team1_name} ${g.team1_score}-${g.team2_score} ${g.team2_name}`}
@@ -234,7 +234,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
               assists.length === 0 ? <EmptyLog message="도움 기록이 없습니다" /> :
                 assists.map((a: any, i: number) => (
                   <EventRow key={i}
-                    icon="⚡" date={a.session_date}
+                    icon={<Zap className="w-4 h-4" />} date={a.session_date}
                     main={`${a.match_no}경기 어시스트`}
                     sub={`득점자: ${a.scorer_name}`}
                     match={`${a.team1_name} ${a.team1_score}-${a.team2_score} ${a.team2_name}`}
@@ -246,7 +246,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
               defenses.length === 0 ? <EmptyLog message="수비 기록이 없습니다" /> :
                 defenses.map((d: any, i: number) => (
                   <EventRow key={i}
-                    icon="🛡️" date={d.session_date}
+                    icon={<Shield className="w-4 h-4" />} date={d.session_date}
                     main={`${d.match_no}경기 수비`}
                     sub=""
                     match={`${d.team1_name} ${d.team1_score}-${d.team2_score} ${d.team2_name}`}
@@ -258,7 +258,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
               mvpRecords.length === 0 ? <EmptyLog message="MVP 기록이 없습니다" /> :
                 mvpRecords.map((m: any, i: number) => (
                   <EventRow key={i}
-                    icon="🏆" date={m.session_date}
+                    icon={<Trophy className="w-4 h-4" />} date={m.session_date}
                     main="세션 MVP"
                     sub={m.title || '코너킥스 정기 풋살'}
                     match=""
@@ -272,7 +272,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
                   const medal = p.team_rank === 1 ? '🥇' : p.team_rank === 2 ? '🥈' : '🥉'
                   return (
                     <EventRow key={i}
-                      icon={medal} date={p.session_date}
+                      icon={<span className="text-lg">{medal}</span>} date={p.session_date}
                       main={`${p.team_rank}등 (${p.team_name})`}
                       sub={`승점 ${p.points}`}
                       match={p.title || '코너킥스 정기 풋살'}
@@ -300,7 +300,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
 }
 
 function EventRow({ icon, date, main, sub, match, sessionId }: {
-  icon: string; date: string; main: string; sub: string; match: string; sessionId: number
+  icon: React.ReactNode; date: string; main: string; sub: string; match: string; sessionId: number
 }) {
   const d = new Date(date)
   const dateStr = `${d.getMonth() + 1}/${d.getDate()}`
@@ -310,7 +310,7 @@ function EventRow({ icon, date, main, sub, match, sessionId }: {
       href={`/sessions/${sessionId}`}
       className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
     >
-      <span className="text-lg shrink-0">{icon}</span>
+      <span className="shrink-0">{icon}</span>
       <span className="text-xs text-slate-400 dark:text-slate-500 w-12 shrink-0 font-mono">{dateStr}</span>
       <div className="flex-1 min-w-0">
         <span className="text-sm font-medium text-slate-900 dark:text-white">{main}</span>

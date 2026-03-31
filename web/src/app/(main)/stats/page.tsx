@@ -17,6 +17,7 @@ import {
   Handshake,
   Zap,
   User,
+  Skull,
 } from 'lucide-react'
 import { rankingsApi, settlementsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
@@ -216,7 +217,7 @@ export default function StatsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* 최고의 듀오 */}
                 <FunStatCard
-                  title="⚡ 최고의 골+어시 듀오"
+                  title={<><Zap className="w-4 h-4 inline" /> 최고의 골+어시 듀오</>}
                   description="서로 골·어시스트 주고받은 횟수 합산"
                   icon={<Handshake className="w-5 h-5 text-amber-500" />}
                   items={(funStats.goalDuos || []).map((d: any) => ({
@@ -231,7 +232,7 @@ export default function StatsPage() {
 
                 {/* 베스트 파트너 */}
                 <FunStatCard
-                  title="🤝 베스트 파트너"
+                  title={<><Handshake className="w-4 h-4 inline" /> 베스트 파트너</>}
                   description="같은 팀에서 승률이 높은 조합 (최소 6경기)"
                   icon={<Heart className="w-5 h-5 text-rose-500" />}
                   items={(funStats.bestPartners || []).map((d: any) => ({
@@ -246,7 +247,7 @@ export default function StatsPage() {
 
                 {/* 최악의 궁합 */}
                 <FunStatCard
-                  title="💀 최악의 궁합"
+                  title={<><Skull className="w-4 h-4 inline" /> 최악의 궁합</>}
                   description="같은 팀에서 승률이 낮은 조합 (최소 6경기)"
                   icon={<Users className="w-5 h-5 text-slate-500" />}
                   items={(funStats.worstPartners || []).map((d: any) => ({
@@ -261,7 +262,7 @@ export default function StatsPage() {
 
                 {/* 천적 관계 */}
                 <FunStatCard
-                  title="⚔️ 천적 관계"
+                  title={<><Swords className="w-4 h-4 inline" /> 천적 관계</>}
                   description="상대팀에서 만났을 때 골을 많이 넣은 선수"
                   icon={<Swords className="w-5 h-5 text-purple-500" />}
                   items={(funStats.rivals || []).map((d: any) => ({
@@ -307,7 +308,7 @@ export default function StatsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* 함께할 때 잘 이기는 팀원 */}
                   <MyStatCard
-                    title="🏆 함께하면 최강 팀원"
+                    title={<><Trophy className="w-4 h-4 inline" /> 함께하면 최강 팀원</>}
                     description="같은 팀일 때 승률이 높은 팀원 (최소 3경기)"
                     items={(myStats?.teammates || []).map((d: any) => ({
                       label: d.teammate,
@@ -319,7 +320,7 @@ export default function StatsPage() {
 
                   {/* 함께하면 망하는 팀원 */}
                   <MyStatCard
-                    title="💀 함께하면 망하는 팀원"
+                    title={<><Skull className="w-4 h-4 inline" /> 함께하면 망하는 팀원</>}
                     description="같은 팀일 때 승률이 낮은 팀원 (최소 3경기)"
                     items={(myStats?.worstTeammates || []).map((d: any) => ({
                       label: d.teammate,
@@ -331,7 +332,7 @@ export default function StatsPage() {
 
                   {/* 나한테 어시스트 많이 해준 선수 */}
                   <MyStatCard
-                    title="🅰️ 나한테 어시스트 많이 해준 선수"
+                    title={<><Zap className="w-4 h-4 inline" /> 나한테 어시스트 많이 해준 선수</>}
                     description="내 골을 도와준 고마운 팀원"
                     items={(myStats?.assistedToMe || []).map((d: any) => ({
                       label: d.assister,
@@ -343,7 +344,7 @@ export default function StatsPage() {
 
                   {/* 내가 어시스트 많이 해준 선수 */}
                   <MyStatCard
-                    title="⚡ 내가 어시스트 많이 해준 선수"
+                    title={<><Zap className="w-4 h-4 inline" /> 내가 어시스트 많이 해준 선수</>}
                     description="내 패스로 골을 넣은 선수"
                     items={(myStats?.myAssists || []).map((d: any) => ({
                       label: d.scorer,
@@ -588,7 +589,7 @@ function MyStatCard({
   emptyMessage,
   accentColor,
 }: {
-  title: string
+  title: React.ReactNode
   description?: string
   items: { label: string; value: string }[]
   emptyMessage: string
@@ -670,7 +671,7 @@ function FunStatCard({
   accentColor,
   myName,
 }: {
-  title: string
+  title: React.ReactNode
   description?: string
   icon: React.ReactNode
   items: { label: string; value: string; highlight: boolean }[]

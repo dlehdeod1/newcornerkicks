@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { X } from 'lucide-react'
+import { X, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuthStore } from '@/stores/auth'
@@ -212,7 +212,7 @@ export function CreateSessionModal({ onClose, onCreated }: Props) {
 
               {parseResult.unknownCount > 0 && (
                 <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                  ⚠️ {parseResult.unknownCount}명의 미등록 선수가 있습니다.
+                  <AlertTriangle className="w-4 h-4 inline" /> {parseResult.unknownCount}명의 미등록 선수가 있습니다.
                   저장 시 자동으로 등록됩니다.
                 </p>
               )}

@@ -5,7 +5,7 @@ export const runtime = 'edge'
 import { use, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { ArrowLeft, Star, Target, Shield, Zap, Activity, User, Lock, Heart } from 'lucide-react'
+import { ArrowLeft, Star, Target, Shield, Zap, Activity, User, Lock, Heart, Handshake, Flame, Trophy, Circle, Calendar } from 'lucide-react'
 import { playersApi, meApi, preferencesApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import { PlayerRadarChart } from '@/components/ui/radar-chart'
@@ -279,7 +279,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       {/* 케미스트리 (PRO) */}
       <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-          🤝 케미스트리
+          <Handshake className="w-5 h-5" /> 케미스트리
           {!isPro && (
             <span className="ml-2 px-2 py-0.5 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs rounded-full font-medium">
               PRO
@@ -331,7 +331,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       {/* 스트릭 (PRO) */}
       <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-          🔥 스트릭
+          <Flame className="w-5 h-5" /> 스트릭
           {!isPro && (
             <span className="ml-2 px-2 py-0.5 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs rounded-full font-medium">
               PRO
@@ -345,19 +345,19 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                 <StreakCard
                   label="연승 스트릭"
                   value={streaks.win_streak ?? 0}
-                  emoji="🏆"
+                  icon={<Trophy className="w-8 h-8" />}
                   color="amber"
                 />
                 <StreakCard
                   label="득점 스트릭"
                   value={streaks.scoring_streak ?? 0}
-                  emoji="⚽"
+                  icon={<Circle className="w-8 h-8" />}
                   color="red"
                 />
                 <StreakCard
                   label="출석 스트릭"
                   value={streaks.attendance_streak ?? 0}
-                  emoji="📅"
+                  icon={<Calendar className="w-8 h-8" />}
                   color="blue"
                 />
               </div>
@@ -392,10 +392,10 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
             통산 기록
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-            <StatCard label="경기 수" value={data.stats.total_matches || 0} icon="⚽" />
-            <StatCard label="득점" value={data.stats.total_goals || 0} icon="🥅" color="red" />
-            <StatCard label="도움" value={data.stats.total_assists || 0} icon="🅰️" color="blue" />
-            <StatCard label="수비" value={data.stats.total_blocks || 0} icon="🛡️" color="green" />
+            <PlayerStatCard label="경기 수" value={data.stats.total_matches || 0} icon={<Circle className="w-6 h-6" />} />
+            <PlayerStatCard label="득점" value={data.stats.total_goals || 0} icon={<Target className="w-6 h-6" />} color="red" />
+            <PlayerStatCard label="도움" value={data.stats.total_assists || 0} icon={<Zap className="w-6 h-6" />} color="blue" />
+            <PlayerStatCard label="수비" value={data.stats.total_blocks || 0} icon={<Shield className="w-6 h-6" />} color="green" />
           </div>
         </div>
       )}
@@ -435,18 +435,18 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                 </div>
                 <div className="flex items-center gap-3">
                   {(match.goals > 0) && (
-                    <span className="px-2 py-1 bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium">
-                      ⚽ {match.goals}
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium">
+                      <Circle className="w-3.5 h-3.5" /> {match.goals}
                     </span>
                   )}
                   {(match.assists > 0) && (
-                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium">
-                      🅰️ {match.assists}
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium">
+                      <Zap className="w-3.5 h-3.5" /> {match.assists}
                     </span>
                   )}
                   {(match.blocks > 0) && (
-                    <span className="px-2 py-1 bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 rounded-lg text-sm font-medium">
-                      🛡️ {match.blocks}
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 rounded-lg text-sm font-medium">
+                      <Shield className="w-3.5 h-3.5" /> {match.blocks}
                     </span>
                   )}
                   {match.goals === 0 && match.assists === 0 && match.blocks === 0 && (
@@ -501,7 +501,7 @@ function calculateOverall(player: any): number {
   return stats.reduce((a, b) => a + b, 0) / stats.length
 }
 
-function StatCard({ label, value, icon, color }: { label: string; value: number | string; icon: string; color?: string }) {
+function PlayerStatCard({ label, value, icon, color }: { label: string; value: number | string; icon: React.ReactNode; color?: string }) {
   const colorClasses: Record<string, string> = {
     red: 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400',
     blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
@@ -512,14 +512,14 @@ function StatCard({ label, value, icon, color }: { label: string; value: number 
 
   return (
     <div className={cn('rounded-2xl p-4 text-center', bgClass)}>
-      <div className="text-2xl mb-1">{icon}</div>
+      <div className="flex justify-center mb-1">{icon}</div>
       <p className="text-2xl font-bold text-slate-900 dark:text-white">{value}</p>
       <p className="text-sm opacity-80">{label}</p>
     </div>
   )
 }
 
-function StreakCard({ label, value, emoji, color }: { label: string; value: number; emoji: string; color: string }) {
+function StreakCard({ label, value, icon, color }: { label: string; value: number; icon: React.ReactNode; color: string }) {
   const colorClasses: Record<string, string> = {
     amber: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
     red: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400',
@@ -529,7 +529,7 @@ function StreakCard({ label, value, emoji, color }: { label: string; value: numb
 
   return (
     <div className={cn('rounded-2xl p-5 text-center', bgClass)}>
-      <div className="text-3xl mb-2">{emoji}</div>
+      <div className="flex justify-center mb-2">{icon}</div>
       <p className="text-3xl font-bold text-slate-900 dark:text-white">{value}<span className="text-base font-normal ml-1">연속</span></p>
       <p className="text-sm mt-1 opacity-80">{label}</p>
     </div>

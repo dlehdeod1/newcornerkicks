@@ -23,6 +23,7 @@ import {
   TrendingUp,
   MessageSquare,
   Bell,
+  Circle,
 } from 'lucide-react'
 import { useAuthStore, useAuthHydrated } from '@/stores/auth'
 import { clubsApi, rankingsApi, subscriptionsApi } from '@/lib/api'
@@ -163,7 +164,7 @@ export default function ClubPage() {
                 {club.logoUrl ? (
                   <Image src={`${process.env.NEXT_PUBLIC_API_URL}${club.logoUrl}`} alt="클럽 로고" width={56} height={56} className="object-cover w-full h-full" />
                 ) : (
-                  '⚽'
+                  <Circle className="w-7 h-7 text-white" />
                 )}
               </div>
             </div>
@@ -333,7 +334,7 @@ export default function ClubPage() {
                     )}
                     {member.role === 'admin' && (
                       <span className="flex-shrink-0 text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-medium">
-                        🛡️ 관리자
+                        <Shield className="w-3 h-3 inline" /> 관리자
                       </span>
                     )}
                   </div>

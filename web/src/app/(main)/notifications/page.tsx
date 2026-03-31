@@ -1,20 +1,20 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bell, Check, CheckCheck, Trash2, ExternalLink, ArrowLeft } from 'lucide-react'
+import { Bell, Check, CheckCheck, Trash2, ExternalLink, ArrowLeft, Calendar, User, Circle, DollarSign, Trophy, Megaphone } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth'
 import { notificationsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
-const notificationTypeConfig: Record<string, { icon: string; color: string; label: string }> = {
-  session_created: { icon: '📅', color: 'bg-blue-500', label: '새 세션' },
-  team_assigned: { icon: '👕', color: 'bg-primary', label: '팀 배정' },
-  match_result: { icon: '⚽', color: 'bg-amber-500', label: '경기 결과' },
-  settlement: { icon: '💰', color: 'bg-green-500', label: '정산' },
-  badge_earned: { icon: '🏆', color: 'bg-purple-500', label: '배지 획득' },
-  announcement: { icon: '📢', color: 'bg-red-500', label: '공지' },
+const notificationTypeConfig: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
+  session_created: { icon: <Calendar className="w-5 h-5" />, color: 'bg-blue-500', label: '새 세션' },
+  team_assigned: { icon: <User className="w-5 h-5" />, color: 'bg-primary', label: '팀 배정' },
+  match_result: { icon: <Circle className="w-5 h-5" />, color: 'bg-amber-500', label: '경기 결과' },
+  settlement: { icon: <DollarSign className="w-5 h-5" />, color: 'bg-green-500', label: '정산' },
+  badge_earned: { icon: <Trophy className="w-5 h-5" />, color: 'bg-purple-500', label: '배지 획득' },
+  announcement: { icon: <Megaphone className="w-5 h-5" />, color: 'bg-red-500', label: '공지' },
 }
 
 export default function NotificationsPage() {
@@ -140,7 +140,7 @@ export default function NotificationsPage() {
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {notifications.map((notification: any) => {
               const config = notificationTypeConfig[notification.type] || {
-                icon: '📌',
+                icon: <Bell className="w-5 h-5" />,
                 color: 'bg-slate-500',
                 label: '알림',
               }

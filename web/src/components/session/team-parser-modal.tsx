@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { X, Wand2, Users, Check, AlertCircle } from 'lucide-react'
+import { X, Wand2, Users, Check, AlertCircle, Lightbulb } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/stores/auth'
 import { playersApi } from '@/lib/api'
@@ -263,7 +263,7 @@ export function TeamParserModal({ sessionId, isOpen, onClose, onSave }: Props) {
               )}
 
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 text-sm text-slate-600 dark:text-slate-400">
-                <p className="font-medium mb-2">💡 파싱 팁</p>
+                <p className="font-medium mb-2 flex items-center gap-1"><Lightbulb className="w-4 h-4" /> 파싱 팁</p>
                 <ul className="list-disc list-inside space-y-1 text-xs">
                   <li>팀 이름은 "OO팀" 형식으로 작성</li>
                   <li>조끼색: 노란/주황/빨간/흰색 등 자동 인식</li>

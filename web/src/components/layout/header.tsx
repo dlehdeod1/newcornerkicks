@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, X, User, LogOut, Crown, Sun, Moon, LayoutDashboard, ChevronDown, Check, Plus, Users } from 'lucide-react'
+import { Menu, X, User, LogOut, Crown, Sun, Moon, LayoutDashboard, ChevronDown, Check, Plus, Users, Circle } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useTheme } from 'next-themes'
 import { useAuthStore } from '@/stores/auth'
@@ -160,7 +160,7 @@ export function Header() {
           ) : (
             <Link href="/" className="flex items-center gap-3 group">
               <div className="w-9 h-9 bg-brand-green rounded-xl flex items-center justify-center shadow-lg shadow-brand-green/20 group-hover:shadow-brand-green/40 transition-shadow">
-                <span className="text-lg">⚽</span>
+                <Circle className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
                 코너킥스

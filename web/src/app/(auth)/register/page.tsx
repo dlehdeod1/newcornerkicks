@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Circle } from 'lucide-react'
 import { authApi } from '@/lib/api'
 
 export default function RegisterPage() {
@@ -56,7 +57,7 @@ export default function RegisterPage() {
         {/* 로고 */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-teal-600 rounded-2xl mb-4 shadow-lg shadow-primary/20">
-            <span className="text-3xl">⚽</span>
+            <Circle className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
             코너킥스 FC

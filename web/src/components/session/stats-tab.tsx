@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { useQueries } from '@tanstack/react-query'
-import { Trophy, Target, Shield, Award, Crown, Sparkles, Copy, Check, Download } from 'lucide-react'
+import { Trophy, Target, Shield, Award, Crown, Sparkles, Copy, Check, Download, Circle } from 'lucide-react'
 import { matchesApi } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import html2canvas from 'html2canvas'
@@ -268,7 +268,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, #10b981, #14b8a6)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '18px', lineHeight: '1' }}>⚽</span>
+                <Circle style={{ width: '18px', height: '18px' }} />
               </div>
               <div>
                 <p style={{ color: '#ffffff', fontWeight: '700', fontSize: '15px', lineHeight: '1.2', margin: '0' }}>{clubName}</p>

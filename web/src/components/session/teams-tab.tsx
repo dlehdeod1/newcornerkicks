@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Users, ArrowLeftRight, Check, X, Sparkles, ChevronDown, ChevronUp, Palette, Wand2, Pencil, Trash2 } from 'lucide-react'
+import { Users, ArrowLeftRight, Check, X, Sparkles, ChevronDown, ChevronUp, Palette, Wand2, Pencil, Trash2, Star, Lightbulb, AlertTriangle } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import { cn } from '@/lib/cn'
 import { useAuthStore } from '@/stores/auth'
@@ -695,7 +695,7 @@ function TeamCard({
                     )}
                   >
                     {member.name || member.guest_name}
-                    {(member.name || member.guest_name) === team.key_player && ' ⭐'}
+                    {(member.name || member.guest_name) === team.key_player && <><span> </span><Star className="w-4 h-4 inline" /></>}
                   </button>
                 </div>
               )
@@ -717,7 +717,7 @@ function TeamCard({
                   )}
                 >
                   {member.name || member.guest_name}
-                  {(member.name || member.guest_name) === team.key_player && ' ⭐'}
+                  {(member.name || member.guest_name) === team.key_player && <><span> </span><Star className="w-4 h-4 inline" /></>}
                 </span>
               )
             })}
@@ -804,7 +804,7 @@ function TeamCard({
               {/* AI 분석 내용 */}
               {analysis.keyPlayer && (
                 <p className="text-xs">
-                  <span className="text-amber-600 dark:text-amber-400">⭐</span>{' '}
+                  <Star className="w-4 h-4 inline text-amber-600 dark:text-amber-400" />{' '}
                   <span className="font-medium">{analysis.keyPlayer}</span>
                   {analysis.keyPlayerReason && (
                     <span className="opacity-60"> - {analysis.keyPlayerReason}</span>
@@ -813,12 +813,12 @@ function TeamCard({
               )}
               {analysis.aiStrategy && (
                 <p className="text-xs opacity-75">
-                  <span className="text-purple-600 dark:text-purple-400">💡</span> {analysis.aiStrategy}
+                  <Lightbulb className="w-4 h-4 inline text-purple-600 dark:text-purple-400" /> {analysis.aiStrategy}
                 </p>
               )}
               {analysis.watchOut && (
                 <p className="text-xs opacity-75">
-                  <span className="text-orange-600 dark:text-orange-400">⚠️</span> {analysis.watchOut}
+                  <AlertTriangle className="w-4 h-4 inline text-orange-600 dark:text-orange-400" /> {analysis.watchOut}
                 </p>
               )}
             </div>

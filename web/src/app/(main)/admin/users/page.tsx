@@ -257,7 +257,7 @@ export default function AdminUsersPage() {
                         <button
                           onClick={() => {
                             const msg = user.player_name
-                              ? `"@${user.username}" 계정을 삭제하시겠습니까?\n\n⚠️ "${user.player_name}" 선수와의 연동이 해제되고, 이 계정이 작성한 능력치 평가가 삭제됩니다.\n\n이 작업은 되돌릴 수 없습니다.`
+                              ? `"@${user.username}" 계정을 삭제하시겠습니까?\n\n[!] "${user.player_name}" 선수와의 연동이 해제되고, 이 계정이 작성한 능력치 평가가 삭제됩니다.\n\n이 작업은 되돌릴 수 없습니다.`
                               : `"@${user.username}" 계정을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`
                             if (confirm(msg)) {
                               deleteUserMutation.mutate(user.id)

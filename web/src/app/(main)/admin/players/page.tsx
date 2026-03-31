@@ -380,7 +380,7 @@ export default function AdminPlayersPage() {
                   <button
                     key={user.id}
                     onClick={() => {
-                      if (confirm(`"${relinkModal.playerName}" 선수를 @${user.username}(${user.email}) 계정으로 연동하시겠습니까?${user.player_name ? `\n\n⚠️ 이 계정은 현재 "${user.player_name}" 선수에 연동되어 있습니다.` : ''}`)) {
+                      if (confirm(`"${relinkModal.playerName}" 선수를 @${user.username}(${user.email}) 계정으로 연동하시겠습니까?${user.player_name ? `\n\n[!] 이 계정은 현재 "${user.player_name}" 선수에 연동되어 있습니다.` : ''}`)) {
                         relinkMutation.mutate({ playerId: relinkModal.playerId, userId: user.id })
                       }
                     }}

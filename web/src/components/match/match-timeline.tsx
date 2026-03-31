@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Goal, Shield, Users, Clock, ChevronDown, ChevronUp, Zap } from 'lucide-react'
+import { Goal, Shield, Users, Clock, ChevronDown, ChevronUp, Zap, Circle, Target, Wind } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
 interface MatchEvent {
@@ -239,12 +239,12 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
                               {eventLabels[event.event_type]}
                             </span>
                           </div>
-                          <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">
-                            ⚽ {event.player_name}
+                          <p className="font-semibold text-slate-900 dark:text-white text-sm truncate flex items-center gap-1">
+                            <Circle className="w-3 h-3 shrink-0" /> {event.player_name}
                           </p>
                           {event.assist_player_name && (
-                            <p className="text-xs text-blue-500 dark:text-blue-400 mt-1 truncate">
-                              🅰️ {event.assist_player_name}
+                            <p className="text-xs text-blue-500 dark:text-blue-400 mt-1 truncate flex items-center gap-1">
+                              <Zap className="w-3 h-3 shrink-0" /> {event.assist_player_name}
                             </p>
                           )}
                         </div>
@@ -320,23 +320,23 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
                 )}
                 {team1Events.some(e => e.event_type === 'SAVE') && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-600 dark:text-slate-400">🧤 선방: {team1Events.filter(e => e.event_type === 'SAVE').length}</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400 inline-flex items-center gap-1"><Shield className="w-3 h-3" /> 선방: {team1Events.filter(e => e.event_type === 'SAVE').length}</span>
                   </div>
                 )}
                 {team1Events.some(e => e.event_type === 'KEY_PASS') && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-600 dark:text-slate-400">⚡ 키패스: {team1Events.filter(e => e.event_type === 'KEY_PASS').length}</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400 inline-flex items-center gap-1"><Zap className="w-3 h-3" /> 키패스: {team1Events.filter(e => e.event_type === 'KEY_PASS').length}</span>
                   </div>
                 )}
                 {team1Events.some(e => e.event_type === 'DRIBBLE') && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-600 dark:text-slate-400">💨 돌파: {team1Events.filter(e => e.event_type === 'DRIBBLE').length}</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400 inline-flex items-center gap-1"><Wind className="w-3 h-3" /> 돌파: {team1Events.filter(e => e.event_type === 'DRIBBLE').length}</span>
                   </div>
                 )}
                 {team1Events.some(e => ['SHOT_ON', 'SHOT_OFF'].includes(e.event_type)) && (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-slate-600 dark:text-slate-400">
-                      🎯 슈팅: {team1Events.filter(e => e.event_type === 'SHOT_ON').length}유효 / {team1Events.filter(e => e.event_type === 'SHOT_OFF').length}무효
+                      <Target className="w-3 h-3 inline" /> 슈팅: {team1Events.filter(e => e.event_type === 'SHOT_ON').length}유효 / {team1Events.filter(e => e.event_type === 'SHOT_OFF').length}무효
                     </span>
                   </div>
                 )}
@@ -388,23 +388,23 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
                 )}
                 {team2Events.some(e => e.event_type === 'SAVE') && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-600 dark:text-slate-400">🧤 선방: {team2Events.filter(e => e.event_type === 'SAVE').length}</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400 inline-flex items-center gap-1"><Shield className="w-3 h-3" /> 선방: {team2Events.filter(e => e.event_type === 'SAVE').length}</span>
                   </div>
                 )}
                 {team2Events.some(e => e.event_type === 'KEY_PASS') && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-600 dark:text-slate-400">⚡ 키패스: {team2Events.filter(e => e.event_type === 'KEY_PASS').length}</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400 inline-flex items-center gap-1"><Zap className="w-3 h-3" /> 키패스: {team2Events.filter(e => e.event_type === 'KEY_PASS').length}</span>
                   </div>
                 )}
                 {team2Events.some(e => e.event_type === 'DRIBBLE') && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-600 dark:text-slate-400">💨 돌파: {team2Events.filter(e => e.event_type === 'DRIBBLE').length}</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400 inline-flex items-center gap-1"><Wind className="w-3 h-3" /> 돌파: {team2Events.filter(e => e.event_type === 'DRIBBLE').length}</span>
                   </div>
                 )}
                 {team2Events.some(e => ['SHOT_ON', 'SHOT_OFF'].includes(e.event_type)) && (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-slate-600 dark:text-slate-400">
-                      🎯 슈팅: {team2Events.filter(e => e.event_type === 'SHOT_ON').length}유효 / {team2Events.filter(e => e.event_type === 'SHOT_OFF').length}무효
+                      <Target className="w-3 h-3 inline" /> 슈팅: {team2Events.filter(e => e.event_type === 'SHOT_ON').length}유효 / {team2Events.filter(e => e.event_type === 'SHOT_OFF').length}무효
                     </span>
                   </div>
                 )}

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Trophy, Calendar, Users, Star, ChevronRight, Clock, MapPin, Bell, Pin, Globe } from 'lucide-react'
+import { Trophy, Calendar, Users, Star, ChevronRight, Clock, MapPin, Bell, Pin, Globe, Circle, Zap, Shield } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import { useQuery } from '@tanstack/react-query'
 import { sessionsApi, meApi, rankingsApi, announcementsApi } from '@/lib/api'
@@ -160,25 +160,25 @@ export default function HomePage() {
                   <StatCard
                     label="득점"
                     value={myStats?.goals?.toString() || '-'}
-                    icon="⚽"
+                    icon={<Circle className="w-4 h-4" />}
                     color="emerald"
                   />
                   <StatCard
                     label="도움"
                     value={myStats?.assists?.toString() || '-'}
-                    icon="⚡"
+                    icon={<Zap className="w-4 h-4" />}
                     color="blue"
                   />
                   <StatCard
                     label="수비"
                     value={myStats?.defenses?.toString() || '-'}
-                    icon="🛡️"
+                    icon={<Shield className="w-4 h-4" />}
                     color="purple"
                   />
                   <StatCard
                     label="MVP점수"
                     value={myStats?.mvpScore ? myStats.mvpScore.toFixed(1) : '-'}
-                    icon="⭐"
+                    icon={<Star className="w-4 h-4" />}
                     color="amber"
                   />
                 </div>
@@ -242,7 +242,7 @@ export default function HomePage() {
       {/* 빠른 메뉴 */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white mb-6">
-          <span className="text-yellow-500">⚡</span>
+          <Zap className="w-5 h-5 text-yellow-500" />
           빠른 메뉴
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -381,7 +381,7 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <div className="flex items-center justify-between mb-6">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-            <span>🕐</span>
+            <Clock className="w-5 h-5" />
             지난 세션 하이라이트
           </h2>
           <Link
@@ -533,7 +533,7 @@ function StatCard({
 }: {
   label: string
   value: string
-  icon: string
+  icon: React.ReactNode
   color: 'emerald' | 'blue' | 'purple' | 'amber'
 }) {
   const colorClasses = {

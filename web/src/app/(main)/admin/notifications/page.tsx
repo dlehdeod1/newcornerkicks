@@ -267,7 +267,7 @@ export default function AdminNotificationsPage() {
             <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-amber-100 dark:bg-amber-500/20 rounded-lg flex items-center justify-center text-lg">
-                  📢
+                  <Megaphone className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
                   <p className="font-medium text-slate-900 dark:text-white">{title}</p>

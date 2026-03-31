@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, ReactNode } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { ArrowLeft, Play, Pause, Check, Trash2 } from 'lucide-react'
+import { ArrowLeft, Play, Pause, Check, Trash2, Shield, Footprints, Hand, Eraser, Zap, Wind, Target, CircleDot, Circle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { matchesApi } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
@@ -20,16 +20,16 @@ interface Props {
 const EXTRA_EVENTS = ['DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE', 'SAVE', 'KEY_PASS', 'DRIBBLE', 'SHOT_ON', 'SHOT_OFF'] as const
 type ExtraEventType = typeof EXTRA_EVENTS[number]
 
-const extraEventMeta: Record<ExtraEventType, { label: string; icon: string; category: 'defense' | 'attack' | 'gk'; color: string; badgeColor: string; bgColor: string; borderColor: string; btnColor: string }> = {
-  DEFENSE:      { label: '수비',       icon: '🛡️', category: 'defense', color: 'text-indigo-700 dark:text-indigo-400', badgeColor: 'bg-indigo-500', bgColor: 'bg-indigo-50 dark:bg-indigo-900/20', borderColor: 'border-indigo-200 dark:border-indigo-800', btnColor: 'blue' },
-  TACKLE:       { label: '태클',       icon: '🦶', category: 'defense', color: 'text-violet-700 dark:text-violet-400', badgeColor: 'bg-violet-500', bgColor: 'bg-violet-50 dark:bg-violet-900/20', borderColor: 'border-violet-200 dark:border-violet-800', btnColor: 'violet' },
-  INTERCEPTION: { label: '인터셉트',   icon: '✋', category: 'defense', color: 'text-cyan-700 dark:text-cyan-400', badgeColor: 'bg-cyan-500', bgColor: 'bg-cyan-50 dark:bg-cyan-900/20', borderColor: 'border-cyan-200 dark:border-cyan-800', btnColor: 'cyan' },
-  CLEARANCE:    { label: '클리어런스', icon: '🧹', category: 'defense', color: 'text-amber-700 dark:text-amber-400', badgeColor: 'bg-amber-500', bgColor: 'bg-amber-50 dark:bg-amber-900/20', borderColor: 'border-amber-200 dark:border-amber-800', btnColor: 'amber' },
-  SAVE:         { label: '선방',       icon: '🧤', category: 'gk', color: 'text-yellow-700 dark:text-yellow-400', badgeColor: 'bg-yellow-500', bgColor: 'bg-yellow-50 dark:bg-yellow-900/20', borderColor: 'border-yellow-200 dark:border-yellow-800', btnColor: 'yellow' },
-  KEY_PASS:     { label: '키패스',     icon: '⚡', category: 'attack', color: 'text-pink-700 dark:text-pink-400', badgeColor: 'bg-pink-500', bgColor: 'bg-pink-50 dark:bg-pink-900/20', borderColor: 'border-pink-200 dark:border-pink-800', btnColor: 'pink' },
-  DRIBBLE:      { label: '돌파',       icon: '💨', category: 'attack', color: 'text-teal-700 dark:text-teal-400', badgeColor: 'bg-teal-500', bgColor: 'bg-teal-50 dark:bg-teal-900/20', borderColor: 'border-teal-200 dark:border-teal-800', btnColor: 'teal' },
-  SHOT_ON:      { label: '유효슈팅',   icon: '🎯', category: 'attack', color: 'text-rose-700 dark:text-rose-400', badgeColor: 'bg-rose-500', bgColor: 'bg-rose-50 dark:bg-rose-900/20', borderColor: 'border-rose-200 dark:border-rose-800', btnColor: 'rose' },
-  SHOT_OFF:     { label: '무효슈팅',   icon: '💫', category: 'attack', color: 'text-slate-600 dark:text-slate-400', badgeColor: 'bg-slate-500', bgColor: 'bg-slate-100 dark:bg-slate-800/50', borderColor: 'border-slate-300 dark:border-slate-700', btnColor: 'slate' },
+const extraEventMeta: Record<ExtraEventType, { label: string; icon: ReactNode; category: 'defense' | 'attack' | 'gk'; color: string; badgeColor: string; bgColor: string; borderColor: string; btnColor: string }> = {
+  DEFENSE:      { label: '수비',       icon: <Shield className="w-4 h-4" />, category: 'defense', color: 'text-indigo-700 dark:text-indigo-400', badgeColor: 'bg-indigo-500', bgColor: 'bg-indigo-50 dark:bg-indigo-900/20', borderColor: 'border-indigo-200 dark:border-indigo-800', btnColor: 'blue' },
+  TACKLE:       { label: '태클',       icon: <Footprints className="w-4 h-4" />, category: 'defense', color: 'text-violet-700 dark:text-violet-400', badgeColor: 'bg-violet-500', bgColor: 'bg-violet-50 dark:bg-violet-900/20', borderColor: 'border-violet-200 dark:border-violet-800', btnColor: 'violet' },
+  INTERCEPTION: { label: '인터셉트',   icon: <Hand className="w-4 h-4" />, category: 'defense', color: 'text-cyan-700 dark:text-cyan-400', badgeColor: 'bg-cyan-500', bgColor: 'bg-cyan-50 dark:bg-cyan-900/20', borderColor: 'border-cyan-200 dark:border-cyan-800', btnColor: 'cyan' },
+  CLEARANCE:    { label: '클리어런스', icon: <Eraser className="w-4 h-4" />, category: 'defense', color: 'text-amber-700 dark:text-amber-400', badgeColor: 'bg-amber-500', bgColor: 'bg-amber-50 dark:bg-amber-900/20', borderColor: 'border-amber-200 dark:border-amber-800', btnColor: 'amber' },
+  SAVE:         { label: '선방',       icon: <Shield className="w-4 h-4" />, category: 'gk', color: 'text-yellow-700 dark:text-yellow-400', badgeColor: 'bg-yellow-500', bgColor: 'bg-yellow-50 dark:bg-yellow-900/20', borderColor: 'border-yellow-200 dark:border-yellow-800', btnColor: 'yellow' },
+  KEY_PASS:     { label: '키패스',     icon: <Zap className="w-4 h-4" />, category: 'attack', color: 'text-pink-700 dark:text-pink-400', badgeColor: 'bg-pink-500', bgColor: 'bg-pink-50 dark:bg-pink-900/20', borderColor: 'border-pink-200 dark:border-pink-800', btnColor: 'pink' },
+  DRIBBLE:      { label: '돌파',       icon: <Wind className="w-4 h-4" />, category: 'attack', color: 'text-teal-700 dark:text-teal-400', badgeColor: 'bg-teal-500', bgColor: 'bg-teal-50 dark:bg-teal-900/20', borderColor: 'border-teal-200 dark:border-teal-800', btnColor: 'teal' },
+  SHOT_ON:      { label: '유효슈팅',   icon: <Target className="w-4 h-4" />, category: 'attack', color: 'text-rose-700 dark:text-rose-400', badgeColor: 'bg-rose-500', bgColor: 'bg-rose-50 dark:bg-rose-900/20', borderColor: 'border-rose-200 dark:border-rose-800', btnColor: 'rose' },
+  SHOT_OFF:     { label: '무효슈팅',   icon: <CircleDot className="w-4 h-4" />, category: 'attack', color: 'text-slate-600 dark:text-slate-400', badgeColor: 'bg-slate-500', bgColor: 'bg-slate-100 dark:bg-slate-800/50', borderColor: 'border-slate-300 dark:border-slate-700', btnColor: 'slate' },
 }
 
 // 하위호환
@@ -353,7 +353,7 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
                 'text-xs font-bold',
                 assistMode ? 'text-amber-700 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'
               )}>
-                {assistMode ? '⚽ 어시스트 선택' : '⚽ 골 기록'}
+                {assistMode ? <><Circle className="w-3 h-3 inline" /> 어시스트 선택</> : <><Circle className="w-3 h-3 inline" /> 골 기록</>}
               </span>
               {assistMode && (
                 <button onClick={() => setAssistMode(null)} className="text-xs text-amber-600 hover:underline">
@@ -495,8 +495,8 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
                             ? extraEventMeta[event.event_type as ExtraEventType].bgColor
                             : 'bg-blue-100 dark:bg-blue-900/50'
                       )}>
-                        {event.event_type === 'GOAL' ? '⚽'
-                          : extraEventMeta[event.event_type as ExtraEventType]?.icon || '🛡️'}
+                        {event.event_type === 'GOAL' ? <Circle className="w-3 h-3" />
+                          : extraEventMeta[event.event_type as ExtraEventType]?.icon || <Shield className="w-3 h-3" />}
                       </div>
                       <span className="text-[9px] text-slate-400 font-mono mt-0.5">
                         {formatTime(event.event_time || 0)}
