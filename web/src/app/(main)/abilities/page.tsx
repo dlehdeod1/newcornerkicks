@@ -313,11 +313,7 @@ export default function AbilitiesPage() {
                         title={`${stat.label} 정렬`}
                       >
                         <span className={cn(
-                          'text-xs font-medium flex items-center justify-center gap-0.5',
-                          stat.color === 'red' && 'text-red-500',
-                          stat.color === 'amber' && 'text-amber-500',
-                          stat.color === 'blue' && 'text-blue-500',
-                          stat.color === 'emerald' && 'text-primary'
+                          'text-xs font-medium flex items-center justify-center gap-0.5 text-muted-foreground'
                         )}>
                           {stat.label.slice(0, 2)}
                           {isCurrentSort && <span className="text-xs">{sortDesc ? '↓' : '↑'}</span>}
@@ -543,7 +539,7 @@ function PlayerAbilityCard({ player, rank, isLoggedIn, showMyRatings }: { player
 
           {/* 종합 점수 */}
           <div className="flex items-center gap-2 mb-3">
-            <Star className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+            <Star className="w-4 h-4 text-muted-foreground" />
             <span className="text-lg font-bold text-amber-600 dark:text-amber-400">{overall.toFixed(0)}</span>
             <span className="text-xs text-slate-500">종합</span>
             {showMyRatings && player.my_rating && (

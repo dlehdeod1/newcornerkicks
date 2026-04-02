@@ -58,7 +58,7 @@ export default function HallOfFamePage() {
           {/* 데모 데이터 */}
           <section className="mt-12">
             <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-              <Crown className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+              <Crown className="w-5 h-5 text-muted-foreground" />
               예시 챔피언 (데모)
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -161,7 +161,7 @@ function DemoChampionCard({ year, name, mvpScore }: { year: number; name: string
             <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center">
               <span className="text-2xl text-primary font-bold">{name.charAt(0)}</span>
             </div>
-            <Crown className="absolute -top-2 -right-2 w-6 h-6 text-amber-500 dark:text-amber-400" />
+            <Crown className="absolute -top-2 -right-2 w-6 h-6 text-muted-foreground" />
           </div>
           <div>
             <p className="text-sm text-slate-500 font-medium">{year}년 챔피언</p>

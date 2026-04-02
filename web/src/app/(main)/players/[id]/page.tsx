@@ -250,7 +250,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
             {/* 공격 */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                <Target className="w-4 h-4 text-red-500 dark:text-red-400" />
+                <Target className="w-4 h-4 text-muted-foreground" />
                 공격
               </h3>
               <StatRow label="슈팅" value={player.shooting || 5} />
@@ -263,7 +263,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
             {/* 수비 & 피지컬 */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                <Shield className="w-4 h-4 text-muted-foreground" />
                 수비 & 피지컬
               </h3>
               <StatRow label="인터셉트" value={player.intercept || 5} />
@@ -388,7 +388,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       {data?.stats && (
         <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
           <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-            <Star className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+            <Star className="w-5 h-5 text-muted-foreground" />
             통산 기록
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
@@ -403,7 +403,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       {/* 최근 경기 기록 */}
       <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-          <Zap className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+          <Zap className="w-5 h-5 text-muted-foreground" />
           최근 경기 기록
         </h2>
         {data?.recentMatches && data.recentMatches.length > 0 ? (
@@ -435,17 +435,17 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
                 </div>
                 <div className="flex items-center gap-3">
                   {(match.goals > 0) && (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-500/20 text-muted-foreground rounded-lg text-sm font-medium">
                       <Circle className="w-3.5 h-3.5" /> {match.goals}
                     </span>
                   )}
                   {(match.assists > 0) && (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-500/20 text-muted-foreground rounded-lg text-sm font-medium">
                       <Zap className="w-3.5 h-3.5" /> {match.assists}
                     </span>
                   )}
                   {(match.blocks > 0) && (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 rounded-lg text-sm font-medium">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-500/20 text-muted-foreground rounded-lg text-sm font-medium">
                       <Shield className="w-3.5 h-3.5" /> {match.blocks}
                     </span>
                   )}
@@ -503,10 +503,10 @@ function calculateOverall(player: any): number {
 
 function PlayerStatCard({ label, value, icon, color }: { label: string; value: number | string; icon: React.ReactNode; color?: string }) {
   const colorClasses: Record<string, string> = {
-    red: 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400',
-    blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
-    green: 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400',
-    default: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
+    red: 'bg-slate-100 dark:bg-slate-500/20 text-muted-foreground',
+    blue: 'bg-slate-100 dark:bg-slate-500/20 text-muted-foreground',
+    green: 'bg-slate-100 dark:bg-slate-500/20 text-muted-foreground',
+    default: 'bg-slate-100 dark:bg-slate-800 text-muted-foreground',
   }
   const bgClass = colorClasses[color || 'default']
 

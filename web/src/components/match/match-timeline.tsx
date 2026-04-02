@@ -54,18 +54,18 @@ const eventIcons: Record<string, any> = {
 }
 
 const eventColors: Record<string, string> = {
-  GOAL: 'text-red-500 bg-red-100 dark:bg-red-500/20',
-  ASSIST: 'text-blue-500 bg-blue-100 dark:bg-blue-500/20',
-  BLOCK: 'text-green-500 bg-green-100 dark:bg-green-500/20',
-  DEFENSE: 'text-green-500 bg-green-100 dark:bg-green-500/20',
-  TACKLE: 'text-violet-500 bg-violet-100 dark:bg-violet-500/20',
-  INTERCEPTION: 'text-cyan-500 bg-cyan-100 dark:bg-cyan-500/20',
-  CLEARANCE: 'text-amber-500 bg-amber-100 dark:bg-amber-500/20',
-  SAVE: 'text-yellow-500 bg-yellow-100 dark:bg-yellow-500/20',
-  KEY_PASS: 'text-pink-500 bg-pink-100 dark:bg-pink-500/20',
-  DRIBBLE: 'text-teal-500 bg-teal-100 dark:bg-teal-500/20',
-  SHOT_ON: 'text-rose-500 bg-rose-100 dark:bg-rose-500/20',
-  SHOT_OFF: 'text-slate-500 bg-slate-100 dark:bg-slate-500/20',
+  GOAL: 'text-muted-foreground bg-slate-100 dark:bg-slate-500/20',
+  ASSIST: 'text-muted-foreground bg-slate-100 dark:bg-slate-500/20',
+  BLOCK: 'text-muted-foreground bg-slate-100 dark:bg-slate-500/20',
+  DEFENSE: 'text-muted-foreground bg-slate-100 dark:bg-slate-500/20',
+  TACKLE: 'text-muted-foreground bg-slate-100 dark:bg-slate-500/20',
+  INTERCEPTION: 'text-muted-foreground bg-slate-100 dark:bg-slate-500/20',
+  CLEARANCE: 'text-muted-foreground bg-slate-100 dark:bg-slate-500/20',
+  SAVE: 'text-muted-foreground bg-slate-100 dark:bg-slate-500/20',
+  KEY_PASS: 'text-muted-foreground bg-slate-100 dark:bg-slate-500/20',
+  DRIBBLE: 'text-muted-foreground bg-slate-100 dark:bg-slate-500/20',
+  SHOT_ON: 'text-muted-foreground bg-slate-100 dark:bg-slate-500/20',
+  SHOT_OFF: 'text-muted-foreground bg-slate-100 dark:bg-slate-500/20',
 }
 
 const eventLabels: Record<string, string> = {
@@ -243,7 +243,7 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
                             <Circle className="w-3 h-3 shrink-0" /> {event.player_name}
                           </p>
                           {event.assist_player_name && (
-                            <p className="text-xs text-blue-500 dark:text-blue-400 mt-1 truncate flex items-center gap-1">
+                            <p className="text-xs text-muted-foreground mt-1 truncate flex items-center gap-1">
                               <Zap className="w-3 h-3 shrink-0" /> {event.assist_player_name}
                             </p>
                           )}
@@ -280,24 +280,24 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
                   {team1?.team_name} 통계
                 </p>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center">
-                    <Goal className="w-3 h-3 text-red-500" />
+                  <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500/20 flex items-center justify-center">
+                    <Goal className="w-3 h-3 text-muted-foreground" />
                   </div>
                   <span className="text-sm text-slate-600 dark:text-slate-400">
                     골: {team1Events.filter(e => e.event_type === 'GOAL').length}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
-                    <Users className="w-3 h-3 text-blue-500" />
+                  <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500/20 flex items-center justify-center">
+                    <Users className="w-3 h-3 text-muted-foreground" />
                   </div>
                   <span className="text-sm text-slate-600 dark:text-slate-400">
                     어시스트: {team1Events.filter(e => e.event_type === 'GOAL' && e.assist_player_id).length}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center">
-                    <Shield className="w-3 h-3 text-green-500" />
+                  <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500/20 flex items-center justify-center">
+                    <Shield className="w-3 h-3 text-muted-foreground" />
                   </div>
                   <span className="text-sm text-slate-600 dark:text-slate-400">
                     수비: {team1Events.filter(e => ['DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE'].includes(e.event_type)).length}
@@ -348,24 +348,24 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
                   {team2?.team_name} 통계
                 </p>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center">
-                    <Goal className="w-3 h-3 text-red-500" />
+                  <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500/20 flex items-center justify-center">
+                    <Goal className="w-3 h-3 text-muted-foreground" />
                   </div>
                   <span className="text-sm text-slate-600 dark:text-slate-400">
                     골: {team2Events.filter(e => e.event_type === 'GOAL').length}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
-                    <Users className="w-3 h-3 text-blue-500" />
+                  <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500/20 flex items-center justify-center">
+                    <Users className="w-3 h-3 text-muted-foreground" />
                   </div>
                   <span className="text-sm text-slate-600 dark:text-slate-400">
                     어시스트: {team2Events.filter(e => e.event_type === 'GOAL' && e.assist_player_id).length}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center">
-                    <Shield className="w-3 h-3 text-green-500" />
+                  <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-500/20 flex items-center justify-center">
+                    <Shield className="w-3 h-3 text-muted-foreground" />
                   </div>
                   <span className="text-sm text-slate-600 dark:text-slate-400">
                     수비: {team2Events.filter(e => ['DEFENSE', 'TACKLE', 'INTERCEPTION', 'CLEARANCE'].includes(e.event_type)).length}

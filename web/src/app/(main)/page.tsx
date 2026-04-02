@@ -202,7 +202,7 @@ export default function HomePage() {
                 className="group bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 shadow-sm hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  {a.is_pinned === 1 && <Pin className="w-3.5 h-3.5 text-amber-500" />}
+                  {a.is_pinned === 1 && <Pin className="w-3.5 h-3.5 text-muted-foreground" />}
                   {a.club_id === null ? (
                     <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-full">
                       시스템
@@ -272,7 +272,7 @@ export default function HomePage() {
           <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-                <Trophy className="w-5 h-5 text-amber-500" />
+                <Trophy className="w-5 h-5 text-muted-foreground" />
                 시즌 랭킹
               </h2>
               <Link href="/ranking" className="text-sm text-primary hover:text-primary-hover flex items-center gap-1">

@@ -9,12 +9,12 @@ import { notificationsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
 const notificationTypeConfig: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
-  session_created: { icon: <Calendar className="w-5 h-5" />, color: 'bg-blue-500', label: '새 세션' },
-  team_assigned: { icon: <Shirt className="w-5 h-5" />, color: 'bg-primary', label: '팀 배정' },
-  match_result: { icon: <Circle className="w-5 h-5" />, color: 'bg-amber-500', label: '경기 결과' },
-  settlement: { icon: <DollarSign className="w-5 h-5" />, color: 'bg-green-500', label: '정산' },
-  badge_earned: { icon: <Trophy className="w-5 h-5" />, color: 'bg-purple-500', label: '배지 획득' },
-  announcement: { icon: <Megaphone className="w-5 h-5" />, color: 'bg-red-500', label: '공지' },
+  session_created: { icon: <Calendar className="w-5 h-5" />, color: 'bg-slate-500', label: '새 세션' },
+  team_assigned: { icon: <Shirt className="w-5 h-5" />, color: 'bg-slate-500', label: '팀 배정' },
+  match_result: { icon: <Circle className="w-5 h-5" />, color: 'bg-slate-500', label: '경기 결과' },
+  settlement: { icon: <DollarSign className="w-5 h-5" />, color: 'bg-slate-500', label: '정산' },
+  badge_earned: { icon: <Trophy className="w-5 h-5" />, color: 'bg-slate-500', label: '배지 획득' },
+  announcement: { icon: <Megaphone className="w-5 h-5" />, color: 'bg-slate-500', label: '공지' },
 }
 
 export default function NotificationsPage() {
@@ -171,12 +171,7 @@ export default function NotificationsPage() {
                       <span className={cn(
                         'text-xs px-2 py-0.5 rounded-full',
                         config.color + '/20',
-                        notification.type === 'session_created' && 'text-blue-600 dark:text-blue-400',
-                        notification.type === 'team_assigned' && 'text-primary',
-                        notification.type === 'match_result' && 'text-amber-600 dark:text-amber-400',
-                        notification.type === 'settlement' && 'text-green-600 dark:text-green-400',
-                        notification.type === 'badge_earned' && 'text-purple-600 dark:text-purple-400',
-                        notification.type === 'announcement' && 'text-red-600 dark:text-red-400',
+                        'text-muted-foreground',
                       )}>
                         {config.label}
                       </span>

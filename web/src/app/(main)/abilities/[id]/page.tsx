@@ -272,7 +272,7 @@ export default function AbilityDetailPage({ params }: { params: Promise<{ id: st
       {existingRatings.length > 0 && (
         <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
           <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <Users className="w-5 h-5 text-blue-500" />
+            <Users className="w-5 h-5 text-muted-foreground" />
             평가 통계
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -305,7 +305,7 @@ export default function AbilityDetailPage({ params }: { params: Promise<{ id: st
       {/* 레이더 차트 */}
       <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-          <Star className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+          <Star className="w-5 h-5 text-muted-foreground" />
           능력치 분포
         </h2>
         <RadarChart player={player} />

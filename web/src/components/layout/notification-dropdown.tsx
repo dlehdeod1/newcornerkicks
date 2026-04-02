@@ -9,12 +9,12 @@ import { notificationsApi } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
 const notificationTypeConfig: Record<string, { icon: ReactNode; color: string }> = {
-  session_created: { icon: <Calendar className="w-5 h-5" />, color: 'bg-blue-500' },
-  team_assigned: { icon: <Shirt className="w-5 h-5" />, color: 'bg-primary' },
-  match_result: { icon: <Circle className="w-5 h-5" />, color: 'bg-amber-500' },
-  settlement: { icon: <DollarSign className="w-5 h-5" />, color: 'bg-green-500' },
-  badge_earned: { icon: <Trophy className="w-5 h-5" />, color: 'bg-purple-500' },
-  announcement: { icon: <Megaphone className="w-5 h-5" />, color: 'bg-red-500' },
+  session_created: { icon: <Calendar className="w-5 h-5" />, color: 'bg-slate-500' },
+  team_assigned: { icon: <Shirt className="w-5 h-5" />, color: 'bg-slate-500' },
+  match_result: { icon: <Circle className="w-5 h-5" />, color: 'bg-slate-500' },
+  settlement: { icon: <DollarSign className="w-5 h-5" />, color: 'bg-slate-500' },
+  badge_earned: { icon: <Trophy className="w-5 h-5" />, color: 'bg-slate-500' },
+  announcement: { icon: <Megaphone className="w-5 h-5" />, color: 'bg-slate-500' },
 }
 
 export function NotificationDropdown() {

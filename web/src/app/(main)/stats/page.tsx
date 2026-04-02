@@ -143,7 +143,7 @@ export default function StatsPage() {
             {/* MVP 랭킹 (횟수 기반) */}
             <RankingCard
               title="MVP 랭킹"
-              icon={<Star className="w-5 h-5 text-amber-500" />}
+              icon={<Star className="w-5 h-5 text-muted-foreground" />}
               items={(rankings.mvpRanking || []).slice(0, 5)}
               valueKey="mvpCount"
               valueLabel="회"
@@ -154,7 +154,7 @@ export default function StatsPage() {
             {/* 득점 랭킹 */}
             <RankingCard
               title="득점 랭킹"
-              icon={<Target className="w-5 h-5 text-red-500" />}
+              icon={<Target className="w-5 h-5 text-muted-foreground" />}
               items={(rankings.goalRanking || []).slice(0, 5)}
               valueKey="goals"
               valueLabel="골"
@@ -165,7 +165,7 @@ export default function StatsPage() {
             {/* 어시스트 랭킹 */}
             <RankingCard
               title="어시스트 랭킹"
-              icon={<TrendingUp className="w-5 h-5 text-blue-500" />}
+              icon={<TrendingUp className="w-5 h-5 text-muted-foreground" />}
               items={(rankings.assistRanking || []).slice(0, 5)}
               valueKey="assists"
               valueLabel="도움"
@@ -176,7 +176,7 @@ export default function StatsPage() {
             {/* 수비 랭킹 */}
             <RankingCard
               title="수비 랭킹"
-              icon={<Shield className="w-5 h-5 text-primary" />}
+              icon={<Shield className="w-5 h-5 text-muted-foreground" />}
               items={(rankings.defenseRanking || []).slice(0, 5)}
               valueKey="defenses"
               valueLabel="수비"
@@ -187,7 +187,7 @@ export default function StatsPage() {
             {/* 출석 랭킹 */}
             <RankingCard
               title="출석 랭킹"
-              icon={<Flame className="w-5 h-5 text-orange-500" />}
+              icon={<Flame className="w-5 h-5 text-muted-foreground" />}
               items={(rankings.attendanceRanking || []).slice(0, 5)}
               valueKey="attendance"
               valueLabel="회"
@@ -198,7 +198,7 @@ export default function StatsPage() {
             {/* 우승률 랭킹 */}
             <RankingCard
               title="우승률 랭킹"
-              icon={<Award className="w-5 h-5 text-purple-500" />}
+              icon={<Award className="w-5 h-5 text-muted-foreground" />}
               items={(rankings.winRateRanking || []).slice(0, 5)}
               valueKey="winRate"
               valueLabel="%"
@@ -211,7 +211,7 @@ export default function StatsPage() {
           {!funStatsLoading && (
             <div className="mt-8 space-y-4">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Zap className="w-5 h-5 text-amber-500" />
+                <Zap className="w-5 h-5 text-muted-foreground" />
                 재미 통계
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -219,7 +219,7 @@ export default function StatsPage() {
                 <FunStatCard
                   title={<><Zap className="w-4 h-4 inline" /> 최고의 골+어시 듀오</>}
                   description="서로 골·어시스트 주고받은 횟수 합산"
-                  icon={<Handshake className="w-5 h-5 text-amber-500" />}
+                  icon={<Handshake className="w-5 h-5 text-muted-foreground" />}
                   items={(funStats.goalDuos || []).map((d: any) => ({
                     label: `${d.player1} & ${d.player2}`,
                     value: `${d.combo_count}회 콤비`,
@@ -233,7 +233,7 @@ export default function StatsPage() {
                 <FunStatCard
                   title={<><Handshake className="w-4 h-4 inline" /> 베스트 파트너</>}
                   description="같은 팀에서 승률이 높은 조합 (최소 6경기)"
-                  icon={<Heart className="w-5 h-5 text-rose-500" />}
+                  icon={<Heart className="w-5 h-5 text-muted-foreground" />}
                   items={(funStats.bestPartners || []).map((d: any) => ({
                     label: `${d.player1} & ${d.player2}`,
                     value: `승률 ${d.win_rate}% (${d.games_together}경기)`,
@@ -247,7 +247,7 @@ export default function StatsPage() {
                 <FunStatCard
                   title={<><Skull className="w-4 h-4 inline" /> 최악의 궁합</>}
                   description="같은 팀에서 승률이 낮은 조합 (최소 6경기)"
-                  icon={<Users className="w-5 h-5 text-slate-500" />}
+                  icon={<Users className="w-5 h-5 text-muted-foreground" />}
                   items={(funStats.worstPartners || []).map((d: any) => ({
                     label: `${d.player1} & ${d.player2}`,
                     value: `승률 ${d.win_rate}% (${d.games_together}경기)`,
@@ -261,7 +261,7 @@ export default function StatsPage() {
                 <FunStatCard
                   title={<><Swords className="w-4 h-4 inline" /> 천적 관계</>}
                   description="상대팀에서 만났을 때 골을 많이 넣은 선수"
-                  icon={<Swords className="w-5 h-5 text-purple-500" />}
+                  icon={<Swords className="w-5 h-5 text-muted-foreground" />}
                   items={(funStats.rivals || []).map((d: any) => ({
                     label: `${subjectParticle(d.scorer)} ${d.opponent} 상대로`,
                     value: `${d.goals_against}골 (${d.matches_faced}경기)`,
@@ -355,7 +355,7 @@ export default function StatsPage() {
             {/* 경기 통계 */}
             <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
               <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                <Target className="w-5 h-5 text-red-500" />
+                <Target className="w-5 h-5 text-muted-foreground" />
                 경기 통계
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -381,7 +381,7 @@ export default function StatsPage() {
             {/* 평균 통계 */}
             <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
               <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
+                <TrendingUp className="w-5 h-5 text-muted-foreground" />
                 평균 통계
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -407,7 +407,7 @@ export default function StatsPage() {
             {/* 참여 통계 */}
             <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
               <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5 text-blue-500" />
+                <Users className="w-5 h-5 text-muted-foreground" />
                 참여 통계
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
