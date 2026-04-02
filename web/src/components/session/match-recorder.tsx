@@ -270,7 +270,7 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
       >
         {shortName(member.name || member.guest_name)}
         {count > 0 && (
-          <span className={cn('shrink-0 text-[10px] text-white px-1 rounded', badgeColors[color])}>
+          <span className={cn('shrink-0 text-xs text-white px-1 rounded', badgeColors[color])}>
             {count}
           </span>
         )}
@@ -393,7 +393,7 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
               <div className="flex gap-2">
                 {/* 팀1 (왼쪽) - 에메랄드 */}
                 <div className="flex-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2 border border-emerald-200 dark:border-emerald-800">
-                  <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 mb-2 truncate text-center">{team1?.name}</p>
+                  <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-2 truncate text-center">{team1?.name}</p>
                   <div className="grid grid-cols-2 gap-1.5">
                     {team1Members.map((member: any) => (
                       <PlayerButton key={member.id} member={member} type="goal" teamId={match.team1_id} color="green" />
@@ -402,7 +402,7 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
                 </div>
                 {/* 팀2 (오른쪽) - 오렌지 */}
                 <div className="flex-1 bg-orange-50 dark:bg-orange-900/20 rounded-lg p-2 border border-orange-200 dark:border-orange-800">
-                  <p className="text-[10px] font-bold text-orange-700 dark:text-orange-400 mb-2 truncate text-center">{team2?.name}</p>
+                  <p className="text-xs font-bold text-orange-700 dark:text-orange-400 mb-2 truncate text-center">{team2?.name}</p>
                   <div className="grid grid-cols-2 gap-1.5">
                     {team2Members.map((member: any) => (
                       <PlayerButton key={member.id} member={member} type="goal" teamId={match.team2_id} color="orange" />
@@ -422,7 +422,7 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 block">{meta.icon} {meta.label} 기록</span>
                 <div className="flex gap-2">
                   <div className={cn('flex-1 rounded-lg p-2 border', meta.bgColor, meta.borderColor)}>
-                    <p className={cn('text-[10px] font-bold mb-2 truncate text-center', meta.color)}>{team1?.name}</p>
+                    <p className={cn('text-xs font-bold mb-2 truncate text-center', meta.color)}>{team1?.name}</p>
                     <div className="grid grid-cols-2 gap-1.5">
                       {team1Members.map((member: any) => (
                         <PlayerButton key={member.id} member={member} type="extra" teamId={match.team1_id} color={btnColor} extraType={evType} />
@@ -430,7 +430,7 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
                     </div>
                   </div>
                   <div className={cn('flex-1 rounded-lg p-2 border', meta.bgColor, meta.borderColor)}>
-                    <p className={cn('text-[10px] font-bold mb-2 truncate text-center', meta.color)}>{team2?.name}</p>
+                    <p className={cn('text-xs font-bold mb-2 truncate text-center', meta.color)}>{team2?.name}</p>
                     <div className="grid grid-cols-2 gap-1.5">
                       {team2Members.map((member: any) => (
                         <PlayerButton key={member.id} member={member} type="extra" teamId={match.team2_id} color={btnColor} extraType={evType} />
@@ -475,7 +475,7 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
                             </button>
                           )}
                           {(event.assister_name || event.assister_guest_name) && (
-                            <span className="text-[10px] text-slate-400">({shortName(event.assister_name || event.assister_guest_name)})</span>
+                            <span className="text-xs text-slate-400">({shortName(event.assister_name || event.assister_guest_name)})</span>
                           )}
                           <span className="text-xs font-medium text-slate-900 dark:text-white">
                             {shortName(event.player_name || event.guest_name)}
@@ -489,7 +489,7 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
                     {/* 중앙 아이콘 + 시간 (항상 고정) */}
                     <div className="shrink-0 flex flex-col items-center z-10 w-14">
                       <div className={cn(
-                        'w-5 h-5 rounded-full flex items-center justify-center text-[10px]',
+                        'w-5 h-5 rounded-full flex items-center justify-center text-xs',
                         event.event_type === 'GOAL' ? 'bg-green-100 dark:bg-green-900/50'
                           : extraEventMeta[event.event_type as ExtraEventType]
                             ? extraEventMeta[event.event_type as ExtraEventType].bgColor
@@ -511,7 +511,7 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
                             {shortName(event.player_name || event.guest_name)}
                           </span>
                           {(event.assister_name || event.assister_guest_name) && (
-                            <span className="text-[10px] text-slate-400">({shortName(event.assister_name || event.assister_guest_name)})</span>
+                            <span className="text-xs text-slate-400">({shortName(event.assister_name || event.assister_guest_name)})</span>
                           )}
                           {isEditable && (
                             <button

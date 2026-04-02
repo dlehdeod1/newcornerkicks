@@ -129,7 +129,7 @@ export function RadarChart({
           y={p.labelY}
           textAnchor="middle"
           dominantBaseline="middle"
-          className="fill-slate-600 dark:fill-slate-400 text-[10px] font-medium"
+          className="fill-slate-600 dark:fill-slate-400 text-xs font-medium"
         >
           {p.label}
           {showValues && ` (${p.value})`}

@@ -150,7 +150,7 @@ function CompactRow({
 function MiniStat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg px-3 py-2 text-center">
-      <div className="text-[10px] text-slate-400">{label}</div>
+      <div className="text-xs text-slate-400">{label}</div>
       <div className="text-sm font-bold text-slate-700 dark:text-slate-200">{value}</div>
     </div>
   )

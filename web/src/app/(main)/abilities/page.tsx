@@ -320,7 +320,7 @@ export default function AbilitiesPage() {
                           stat.color === 'emerald' && 'text-primary'
                         )}>
                           {stat.label.slice(0, 2)}
-                          {isCurrentSort && <span className="text-[10px]">{sortDesc ? '↓' : '↑'}</span>}
+                          {isCurrentSort && <span className="text-xs">{sortDesc ? '↓' : '↑'}</span>}
                         </span>
                       </th>
                     )
@@ -332,7 +332,7 @@ export default function AbilitiesPage() {
                   >
                     <span className="text-xs text-slate-400 flex items-center justify-center gap-0.5">
                       N
-                      {sortField === 'ratingCount' && <span className="text-[10px]">{sortDesc ? '↓' : '↑'}</span>}
+                      {sortField === 'ratingCount' && <span className="text-xs">{sortDesc ? '↓' : '↑'}</span>}
                     </span>
                   </th>
                   {isLoggedIn && (
@@ -368,7 +368,7 @@ export default function AbilitiesPage() {
                             {player.photo_url ? (
                               <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover rounded" />
                             ) : (
-                              <span className="text-[10px] text-slate-600 dark:text-slate-300">{player.name.charAt(0)}</span>
+                              <span className="text-xs text-slate-600 dark:text-slate-300">{player.name.charAt(0)}</span>
                             )}
                           </div>
                           <Link
@@ -522,7 +522,7 @@ function PlayerAbilityCard({ player, rank, isLoggedIn, showMyRatings }: { player
                 </div>
               ) : (
                 <div className="w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">
-                  <span className="text-[10px] font-bold text-amber-900">!</span>
+                  <span className="text-xs font-bold text-amber-900">!</span>
                 </div>
               )}
             </div>
@@ -595,8 +595,8 @@ function AbilityMiniBar({
         />
       </div>
       <div className="flex items-center justify-center gap-1">
-        <span className="text-[10px] text-slate-500">{label}</span>
-        <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{value.toFixed(0)}</span>
+        <span className="text-xs text-slate-500">{label}</span>
+        <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{value.toFixed(0)}</span>
       </div>
     </div>
   )

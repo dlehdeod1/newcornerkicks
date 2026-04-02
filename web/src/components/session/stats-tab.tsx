@@ -514,7 +514,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
                       className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400">
+                        <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400">
                           {index + 2}
                         </span>
                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">

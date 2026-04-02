@@ -68,7 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {menuGroups.map((group, gi) => (
           <div key={gi}>
             {group.label && (
-              <p className="px-3 mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <p className="px-3 mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 {group.label}
               </p>
             )}

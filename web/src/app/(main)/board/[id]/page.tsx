@@ -266,7 +266,7 @@ export default function PostDetailPage() {
                       {formatShortDate(comment.created_at)}
                     </span>
                     {comment.updated_at && comment.updated_at !== comment.created_at && (
-                      <span className="text-[10px] text-slate-400">(수정됨)</span>
+                      <span className="text-xs text-slate-400">(수정됨)</span>
                     )}
                     {(user?.id === comment.author_id || isAdmin) && (
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex items-center gap-1">

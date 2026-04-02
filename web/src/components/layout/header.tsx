@@ -89,7 +89,7 @@ export function Header() {
                   <span className="text-sm font-semibold text-slate-900 dark:text-white leading-none max-w-[140px] truncate">
                     {club.name}
                   </span>
-                  <span className="text-[10px] text-slate-400 leading-none mt-0.5">코너킥스</span>
+                  <span className="text-xs text-slate-400 leading-none mt-0.5">코너킥스</span>
                 </div>
               </Link>
               <button

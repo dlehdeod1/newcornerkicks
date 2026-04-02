@@ -213,7 +213,7 @@ function StatBar({ label, value }: { label: string; value: number }) {
       <div className="h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden mb-1">
         <div className={cn('h-full rounded-full transition-all', color)} style={{ width: `${percentage}%` }} />
       </div>
-      <span className="text-[10px] text-slate-500 dark:text-slate-600">{label}</span>
+      <span className="text-xs text-slate-500 dark:text-slate-600">{label}</span>
     </div>
   )
 }

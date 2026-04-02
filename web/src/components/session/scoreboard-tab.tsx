@@ -357,7 +357,7 @@ function MatchRow({ match, onClick }: { match: any; onClick: () => void }) {
       <div className="flex items-center gap-2 shrink-0">
         <span
           className={cn(
-            'px-2 py-1 text-[10px] sm:text-xs font-medium rounded',
+            'px-2 py-1 text-xs sm:text-xs font-medium rounded',
             statusColors[match.status as keyof typeof statusColors] || statusColors.pending
           )}
         >
@@ -491,7 +491,7 @@ function MatchManager({
                     {match.team1_name} vs {match.team2_name}
                   </span>
                   <span className={cn(
-                    'px-1.5 py-0.5 text-[10px] rounded shrink-0',
+                    'px-1.5 py-0.5 text-xs rounded shrink-0',
                     match.status === 'completed'
                       ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'
                       : match.status === 'playing'

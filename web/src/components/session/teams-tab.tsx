@@ -589,7 +589,7 @@ function TeamCard({
               <Pencil className="w-3.5 h-3.5" />
             </button>
           )}
-          <span className={cn('px-2 py-0.5 text-[10px] font-bold rounded shrink-0', colors.badge)}>
+          <span className={cn('px-2 py-0.5 text-xs font-bold rounded shrink-0', colors.badge)}>
             {colors.name}
           </span>
         </div>

@@ -333,7 +333,7 @@ function StatBadge({
   return (
     <div className={cn('px-3 py-2 rounded-xl border text-center', colorClasses[color])}>
       <p className="text-lg font-bold">{value.toFixed(1)}</p>
-      <p className="text-[10px] opacity-70">{label}</p>
+      <p className="text-xs opacity-70">{label}</p>
     </div>
   )
 }

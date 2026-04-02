@@ -228,11 +228,11 @@ export default function RankingPage() {
                     {showAllColumns && showColumnToggle && (
                       <tr className="bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
                         <th className="sticky left-0 z-30 bg-slate-100 dark:bg-slate-800" colSpan={2}></th>
-                        <th className="text-[10px] font-bold text-amber-600 dark:text-amber-400 text-center border-b-2 border-amber-400/30" colSpan={getAttackColspan(enabledEvents)}>공격</th>
+                        <th className="text-xs font-bold text-amber-600 dark:text-amber-400 text-center border-b-2 border-amber-400/30" colSpan={getAttackColspan(enabledEvents)}>공격</th>
                         {getDefenseColspan(enabledEvents) > 0 && (
-                          <th className="text-[10px] font-bold text-purple-600 dark:text-purple-400 text-center border-b-2 border-purple-400/30" colSpan={getDefenseColspan(enabledEvents)}>수비</th>
+                          <th className="text-xs font-bold text-purple-600 dark:text-purple-400 text-center border-b-2 border-purple-400/30" colSpan={getDefenseColspan(enabledEvents)}>수비</th>
                         )}
-                        <th className="text-[10px] font-bold text-slate-600 dark:text-slate-400 text-center border-b-2 border-slate-400/30" colSpan={6}>기록</th>
+                        <th className="text-xs font-bold text-slate-600 dark:text-slate-400 text-center border-b-2 border-slate-400/30" colSpan={6}>기록</th>
                         <th className="w-8"></th>
                       </tr>
                     )}
