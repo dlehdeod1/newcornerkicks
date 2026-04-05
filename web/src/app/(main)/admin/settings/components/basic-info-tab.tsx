@@ -182,7 +182,7 @@ export default function BasicInfoTab({ club, token, onUpdate, onDirtyChange }: S
   return (
     <div className="space-y-4">
       {/* 클럽 로고 */}
-      <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
         <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
           클럽 로고
         </h3>
@@ -215,7 +215,7 @@ export default function BasicInfoTab({ club, token, onUpdate, onDirtyChange }: S
       </div>
 
       {/* 초대 코드 재발급 */}
-      <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
         <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
           초대 코드
         </h3>
@@ -239,7 +239,7 @@ export default function BasicInfoTab({ club, token, onUpdate, onDirtyChange }: S
       </div>
 
       {/* 계좌 정보 */}
-      <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
         <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
           <Banknote className="w-4 h-4" />
           정산 계좌
@@ -285,7 +285,7 @@ export default function BasicInfoTab({ club, token, onUpdate, onDirtyChange }: S
       </div>
 
       {/* 클럽 정보 수정 */}
-      <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
         <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
           클럽 정보
         </h3>
@@ -329,7 +329,7 @@ export default function BasicInfoTab({ club, token, onUpdate, onDirtyChange }: S
       </div>
 
       {/* 위험 구역 */}
-      <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-red-200 dark:border-red-500/20 shadow-sm">
+      <div className="bg-white dark:bg-card rounded-2xl p-6 border border-red-200 dark:border-red-500/20 shadow-sm">
         <h3 className="text-sm font-semibold text-red-500 uppercase tracking-wider mb-4 flex items-center gap-2">
           <AlertCircle className="w-4 h-4" />
           위험 구역

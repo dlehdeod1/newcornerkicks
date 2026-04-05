@@ -182,7 +182,7 @@ export default function ClubPage() {
           </div>
 
           {/* 초대 코드 카드 */}
-          <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
             <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
               초대 코드
             </h3>
@@ -212,7 +212,7 @@ export default function ClubPage() {
 
           {/* 내 시즌 스탯 */}
           {player && (
-            <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-primary" />
@@ -231,14 +231,14 @@ export default function ClubPage() {
                 <MiniStatCard icon={<Shield className="w-4 h-4" />} label="수비" value={playerStats?.defenses || 0} color="purple" />
               </div>
               <div className="grid grid-cols-2 gap-3 mt-3">
-                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
+                <div className="bg-slate-50 dark:bg-card-elevated rounded-xl p-3">
                   <div className="flex items-center gap-1.5 text-slate-500 mb-0.5">
                     <Gamepad2 className="w-3.5 h-3.5" />
                     <span className="text-xs">경기</span>
                   </div>
                   <p className="text-xl font-bold text-slate-900 dark:text-white">{playerStats?.games || 0}</p>
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
+                <div className="bg-slate-50 dark:bg-card-elevated rounded-xl p-3">
                   <div className="flex items-center gap-1.5 text-slate-500 mb-0.5">
                     <Trophy className="w-3.5 h-3.5" />
                     <span className="text-xs">우승</span>
@@ -258,7 +258,7 @@ export default function ClubPage() {
           )}
 
           {/* 구독 플랜 */}
-          <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
             <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
               <Crown className="w-4 h-4 text-primary" />
               플랜
@@ -294,7 +294,7 @@ export default function ClubPage() {
           </div>
 
           {/* 멤버 목록 */}
-          <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <Users className="w-4 h-4 text-primary" />
               <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -354,7 +354,7 @@ export default function ClubPage() {
           </div>
 
           {/* 바로가기 메뉴 */}
-          <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+          <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
             <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
               <h3 className="font-semibold text-slate-900 dark:text-white">바로가기</h3>
             </div>

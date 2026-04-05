@@ -93,7 +93,7 @@ export default function EventsTab({ club, token, onUpdate, onDirtyChange }: Sett
   return (
     <div className="space-y-4">
       {/* 기능 토글 */}
-      <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
         <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">
           기능 설정
         </h3>
@@ -128,7 +128,7 @@ export default function EventsTab({ club, token, onUpdate, onDirtyChange }: Sett
       </div>
 
       {/* 기록 이벤트 설정 */}
-      <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
         <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
           <BarChart3 className="w-4 h-4" />
           기록 이벤트

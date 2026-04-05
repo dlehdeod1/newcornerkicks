@@ -103,7 +103,7 @@ export default function AdminUsersPage() {
 
       {/* 통계 카드 */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-slate-900/50 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
+        <div className="bg-white dark:bg-card rounded-xl p-4 border border-slate-200 dark:border-slate-800">
           <p className="text-2xl font-bold text-slate-900 dark:text-white">{users.length}</p>
           <p className="text-sm text-slate-500">전체 계정</p>
         </div>
@@ -111,7 +111,7 @@ export default function AdminUsersPage() {
           <p className="text-2xl font-bold text-primary">{users.length - unlinkedCount}</p>
           <p className="text-sm text-primary">선수 연동됨</p>
         </div>
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+        <div className="bg-slate-50 dark:bg-card-elevated rounded-xl p-4 border border-slate-200 dark:border-slate-700">
           <p className="text-2xl font-bold text-slate-600 dark:text-slate-300">{unlinkedCount}</p>
           <p className="text-sm text-slate-500">미연동 계정</p>
         </div>
@@ -180,10 +180,10 @@ export default function AdminUsersPage() {
           <p className="text-slate-500">계정이 없습니다.</p>
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div className="bg-white dark:bg-card rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-card-elevated">
                 <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">계정</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-slate-500 hidden sm:table-cell">이메일</th>
                 <th className="px-4 py-3 text-center text-sm font-medium text-slate-500">연동 선수</th>

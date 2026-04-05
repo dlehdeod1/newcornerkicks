@@ -160,7 +160,7 @@ export default function AdminNotificationsPage() {
       {/* 폼 */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 알림 유형 */}
-        <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
+        <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-border">
           <label className="block mb-4">
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               알림 유형
@@ -203,7 +203,7 @@ export default function AdminNotificationsPage() {
         </div>
 
         {/* 제목 */}
-        <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
+        <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-border">
           <label className="block mb-4">
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               알림 제목 *
@@ -215,13 +215,13 @@ export default function AdminNotificationsPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="알림 제목을 입력하세요"
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+            className="w-full px-4 py-3 bg-slate-50 dark:bg-card-elevated border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
             required
           />
         </div>
 
         {/* 내용 */}
-        <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
+        <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-border">
           <label className="block mb-4">
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               알림 내용 *
@@ -233,13 +233,13 @@ export default function AdminNotificationsPage() {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="알림 내용을 입력하세요"
             rows={4}
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none"
+            className="w-full px-4 py-3 bg-slate-50 dark:bg-card-elevated border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none"
             required
           />
         </div>
 
         {/* 링크 URL */}
-        <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
+        <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-border">
           <label className="block mb-4">
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               링크 URL (선택)
@@ -251,7 +251,7 @@ export default function AdminNotificationsPage() {
             value={linkUrl}
             onChange={(e) => setLinkUrl(e.target.value)}
             placeholder="/sessions/123"
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+            className="w-full px-4 py-3 bg-slate-50 dark:bg-card-elevated border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
           />
           <p className="text-xs text-slate-500 mt-2">
             알림 클릭 시 이동할 페이지 경로 (예: /sessions/123)
@@ -260,7 +260,7 @@ export default function AdminNotificationsPage() {
 
         {/* 미리보기 */}
         {title && message && (
-          <div className="bg-slate-100 dark:bg-slate-800/50 rounded-2xl p-6">
+          <div className="bg-slate-100 dark:bg-card-elevated rounded-2xl p-6">
             <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
               미리보기
             </h3>

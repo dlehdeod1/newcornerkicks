@@ -23,7 +23,7 @@ export function StatCard({ label, value, icon, color, variant = 'boxed' }: StatC
 
   if (variant === 'flat') {
     return (
-      <div className={cn('rounded-xl p-4', c.bg)}>
+      <div className={cn('rounded-lg p-4', c.bg)}>
         <div className={cn('flex items-center gap-2 mb-2 opacity-80', c.text)}>
           {icon}
           <span className="text-sm">{label}</span>
@@ -34,7 +34,7 @@ export function StatCard({ label, value, icon, color, variant = 'boxed' }: StatC
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900/50 rounded-xl p-4 border border-slate-200 dark:border-slate-800/50">
+    <div className="bg-white dark:bg-card rounded-lg p-4 border border-slate-200 dark:border-border">
       {icon && (
         <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center mb-3', c.bg, c.text)}>
           {icon}

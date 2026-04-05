@@ -77,7 +77,7 @@ export default function AnnouncementDetailPage() {
       </Link>
 
       {/* Article */}
-      <article className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+      <article className="bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-border shadow-sm">
         {/* Badges */}
         <div className="flex items-center gap-2 mb-3">
           {announcement.is_pinned === 1 && (

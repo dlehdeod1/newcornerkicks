@@ -219,7 +219,7 @@ export function AttendanceEditorModal({
         {mode === 'manual' && (
           <>
             {/* 현재 선택된 참석자 + 용병 추가 인라인 */}
-            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+            <div className="px-6 py-4 bg-slate-50 dark:bg-card-elevated border-b border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   참석자

@@ -98,12 +98,12 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* 히어로 섹션 */}
-      <section className="relative overflow-hidden bg-slate-50 dark:bg-slate-900/50">
+      <section className="relative overflow-hidden bg-slate-50 dark:bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
             {/* 왼쪽: 텍스트 */}
             <div className="flex-1 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-slate-800/50 backdrop-blur rounded-full text-sm text-slate-600 dark:text-slate-300 mb-8 border border-slate-200 dark:border-slate-700/50 shadow-sm">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-card-elevated backdrop-blur rounded-full text-sm text-slate-600 dark:text-slate-300 mb-8 border border-slate-200 dark:border-border">
                 <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                 매주 수요일 21:00
               </div>
@@ -118,14 +118,14 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
                   href="/sessions"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary hover:bg-primary-hover rounded-2xl font-semibold text-white shadow-sm transition-all active:scale-[0.98]"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary hover:bg-primary-hover rounded-2xl font-semibold text-white  transition-all active:scale-[0.98]"
                 >
                   일정 확인하기
                   <ChevronRight className="w-5 h-5" />
                 </Link>
                 <Link
                   href="/profile"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-2xl font-semibold text-slate-700 dark:text-white border border-slate-200 dark:border-slate-700 transition-all shadow-sm"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white dark:bg-card-elevated hover:bg-slate-50 dark:hover:bg-slate-600/50 rounded-2xl font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-500/50 transition-all"
                 >
                   내 기록 보기
                 </Link>
@@ -134,9 +134,9 @@ export default function HomePage() {
 
             {/* 오른쪽: 최근 기록 카드 */}
             <div className="w-full max-w-sm">
-              <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl dark:shadow-2xl">
+              <div className="bg-white/90 dark:bg-card-elevated rounded-3xl p-6 border border-slate-200 dark:border-border">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-slate-700">
+                  <div className="w-14 h-14 bg-slate-100 dark:bg-card rounded-2xl flex items-center justify-center border border-slate-200 dark:border-border">
                     <Users className="w-7 h-7 text-slate-500 dark:text-slate-400" />
                   </div>
                   <div>
@@ -189,7 +189,7 @@ export default function HomePage() {
             </h2>
             <Link
               href="/announcements"
-              className="text-sm text-primary hover:text-primary-hover flex items-center gap-1"
+              className="text-sm text-green-400 hover:underline flex items-center gap-1"
             >
               전체 보기 <ChevronRight className="w-4 h-4" />
             </Link>
@@ -199,7 +199,7 @@ export default function HomePage() {
               <Link
                 key={a.id}
                 href={`/announcements/${a.id}`}
-                className="group bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 shadow-sm hover:shadow-md transition-all"
+                className="group bg-white dark:bg-card rounded-lg p-5 border border-slate-200 dark:border-border  hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-2 mb-2">
                   {a.is_pinned === 1 && <Pin className="w-3.5 h-3.5 text-muted-foreground" />}
@@ -269,13 +269,13 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 랭킹 Top 5 */}
-          <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+          <div className="bg-white dark:bg-card rounded-lg p-6 border border-slate-200 dark:border-border ">
             <div className="flex items-center justify-between mb-4">
               <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
                 <Trophy className="w-5 h-5 text-muted-foreground" />
                 시즌 랭킹
               </h2>
-              <Link href="/ranking" className="text-sm text-primary hover:text-primary-hover flex items-center gap-1">
+              <Link href="/ranking" className="text-sm text-green-400 hover:underline flex items-center gap-1">
                 전체 보기 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
@@ -308,7 +308,7 @@ export default function HomePage() {
           </div>
 
           {/* 다음 세션 */}
-          <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+          <div className="bg-white dark:bg-card rounded-lg p-6 border border-slate-200 dark:border-border ">
             <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white mb-4">
               <Calendar className="w-5 h-5 text-primary" />
               다음 일정
@@ -367,13 +367,13 @@ export default function HomePage() {
           </h2>
           <Link
             href="/sessions"
-            className="inline-flex items-center gap-1 text-sm text-primary hover:text-primary-hover font-medium transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-green-400 hover:underline font-medium transition-colors"
           >
             상세 보기
             <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
-        <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+        <div className="bg-white dark:bg-card rounded-lg p-8 border border-slate-200 dark:border-border ">
           {sessionsLoading ? (
             <p className="text-slate-500 text-center py-8">
               세션 데이터를 불러오는 중...
@@ -486,14 +486,14 @@ function RecentSessionHighlight({ session }: { session: any }) {
             </p>
             <p className="text-xs text-slate-400">{topScorer ? `${topScorer.goals}골` : '-'}</p>
           </div>
-          <div className="text-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+          <div className="text-center p-4 bg-slate-50 dark:bg-card-elevated rounded-xl">
             <p className="text-sm text-slate-500 mb-1">도움왕</p>
             <p className="font-bold text-slate-900 dark:text-white">
               {topAssister?.name || '-'}
             </p>
             <p className="text-xs text-slate-400">{topAssister ? `${topAssister.assists}도움` : '-'}</p>
           </div>
-          <div className="text-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+          <div className="text-center p-4 bg-slate-50 dark:bg-card-elevated rounded-xl">
             <p className="text-sm text-slate-500 mb-1">수비왕</p>
             <p className="font-bold text-slate-900 dark:text-white">
               {topDefender?.name || '-'}
@@ -516,7 +516,7 @@ function StatCard({
   icon: React.ReactNode
 }) {
   return (
-    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700/50">
+    <div className="bg-slate-50 dark:bg-card rounded-lg p-4 border border-slate-200 dark:border-border">
       <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
         <span className="text-primary">{icon}</span>
         {label}
@@ -542,9 +542,9 @@ function QuickMenuCard({
   return (
     <Link
       href={href}
-      className="group bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-900/80 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 shadow-sm"
+      className="group bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-card-elevated rounded-lg p-6 border border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-slate-500/50 transition-all duration-200"
     >
-      <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 transition-colors bg-primary/10 text-primary group-hover:bg-primary/20">
+      <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 transition-colors bg-green-50 dark:bg-green-900/30 text-primary group-hover:bg-green-100 dark:group-hover:bg-green-800/40">
         {icon}
       </div>
       <h3 className="font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">{title}</h3>

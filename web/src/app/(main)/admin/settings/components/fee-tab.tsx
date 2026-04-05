@@ -85,7 +85,7 @@ export default function FeeTab({ club, token, onUpdate, onDirtyChange }: Setting
 
   return (
     <div className="space-y-4">
-      <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
         <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
           <Banknote className="w-4 h-4" />
           참가비 설정

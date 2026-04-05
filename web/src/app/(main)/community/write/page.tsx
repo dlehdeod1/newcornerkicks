@@ -155,7 +155,7 @@ function WriteContent() {
         {isEdit ? '글 수정' : '글 작성'}
       </h1>
 
-      <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm space-y-5">
+      <div className="bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-border shadow-sm space-y-5">
         {/* Category */}
         <div>
           <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">카테고리</label>

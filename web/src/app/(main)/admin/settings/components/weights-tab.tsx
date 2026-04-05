@@ -62,7 +62,7 @@ export default function WeightsTab({ club, token, onUpdate, onDirtyChange }: Set
 
   return (
     <div className="space-y-4">
-      <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
         <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
           <BarChart3 className="w-4 h-4" />
           평점 가중치
@@ -83,7 +83,7 @@ export default function WeightsTab({ club, token, onUpdate, onDirtyChange }: Set
             { key: 'SHOT_OFF', label: '\uD83D\uDCAB 무효슈팅' },
             { key: 'SESSION_WIN', label: '\uD83C\uDFC6 세션 승리', always: true },
           ].filter(w => w.always || enabledEvents.includes(w.key)).map(w => (
-            <div key={w.key} className="flex flex-col gap-1 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+            <div key={w.key} className="flex flex-col gap-1 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-card-elevated">
               <label className="text-xs text-slate-500 dark:text-slate-400 font-medium">{w.label}</label>
               <input
                 type="number"

@@ -97,7 +97,7 @@ export default function StatsPage() {
       {isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 animate-pulse">
+            <div key={i} className="bg-white dark:bg-card rounded-lg p-6 animate-pulse">
               <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-20 mb-2" />
               <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-16" />
             </div>
@@ -290,7 +290,7 @@ export default function StatsPage() {
               {!player || myStatsLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 animate-pulse border border-slate-200 dark:border-slate-800/50">
+                    <div key={i} className="bg-white dark:bg-card rounded-lg p-6 animate-pulse border border-slate-200 dark:border-border">
                       <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-40 mb-4" />
                       <div className="space-y-2">
                         {[1, 2, 3].map((j) => (
@@ -350,15 +350,15 @@ export default function StatsPage() {
             </div>
           )}
 
-          {/* 시즌 요약 - 카테고리별 */}
-          <div className="mt-8 space-y-6">
+          {/* 시즌 요약 - 3컬럼 그리드 (데스크탑) */}
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* 경기 통계 */}
-            <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
+            <div className="bg-white dark:bg-card rounded-lg p-6 border border-slate-200 dark:border-border">
               <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                 <Target className="w-5 h-5 text-muted-foreground" />
                 경기 통계
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <SummaryItem
                   label="총 경기 수"
                   value={`${rankings.totalMatches || 0}경기`}
@@ -379,12 +379,12 @@ export default function StatsPage() {
             </div>
 
             {/* 평균 통계 */}
-            <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
+            <div className="bg-white dark:bg-card rounded-lg p-6 border border-slate-200 dark:border-border">
               <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-muted-foreground" />
                 평균 통계
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <SummaryItem
                   label="경기당 평균 골"
                   value={(rankings.avgGoalsPerMatch || 0).toFixed(1)}
@@ -405,12 +405,12 @@ export default function StatsPage() {
             </div>
 
             {/* 참여 통계 */}
-            <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
+            <div className="bg-white dark:bg-card rounded-lg p-6 border border-slate-200 dark:border-border">
               <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5 text-muted-foreground" />
                 참여 통계
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <SummaryItem
                   label="총 세션"
                   value={`${summary.totalSessions || rankings.totalSessions || 0}회`}
@@ -436,11 +436,19 @@ export default function StatsPage() {
   )
 }
 
+const statCardBorders: Record<string, string> = {
+  blue: 'border-l-blue-500',
+  emerald: 'border-l-emerald-500',
+  red: 'border-l-red-500',
+  amber: 'border-l-amber-500',
+}
+
 function StatCard({
   icon,
   label,
   value,
   suffix,
+  color = 'emerald',
   isAmount = false,
 }: {
   icon: React.ReactNode
@@ -451,13 +459,17 @@ function StatCard({
   isAmount?: boolean
 }) {
   return (
-    <div className="rounded-2xl p-5 border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/50">
+    <div className={cn(
+      'rounded-lg p-5 border border-slate-200 dark:border-border bg-white dark:bg-card border-l-[3px]',
+      statCardBorders[color] || 'border-l-emerald-500'
+    )}>
       <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400">
         <span className="text-primary">{icon}</span>
         <span className="text-sm">{label}</span>
       </div>
-      <p className="text-2xl font-bold text-slate-900 dark:text-white">
-        {isAmount ? value.toLocaleString() : value}{suffix}
+      <p className="text-3xl font-bold text-slate-900 dark:text-white">
+        {isAmount ? value.toLocaleString() : value}
+        <span className="text-base font-medium text-slate-400 ml-1">{suffix}</span>
       </p>
     </div>
   )
@@ -481,7 +493,7 @@ function RankingCard({
   myName?: string | null
 }) {
   return (
-    <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
+    <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border overflow-hidden">
       <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
         {icon}
         <h3 className="font-semibold text-slate-900 dark:text-white">{title}</h3>
@@ -540,9 +552,9 @@ function RankingCard({
 
 function SummaryItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 text-center">
+    <div className="bg-slate-50 dark:bg-card-elevated rounded-lg p-4 text-center">
       <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{label}</p>
-      <p className="text-lg font-bold text-slate-900 dark:text-white">{value}</p>
+      <p className="text-base font-bold text-slate-900 dark:text-white">{value}</p>
     </div>
   )
 }
@@ -586,7 +598,7 @@ function MyStatCard({
   ]
 
   return (
-    <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
+    <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border overflow-hidden">
       <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
         <h3 className="font-semibold text-slate-900 dark:text-white">{title}</h3>
         {description && (
@@ -603,7 +615,7 @@ function MyStatCard({
                 key={index}
                 className={cn(
                   'flex items-center justify-between px-3 py-2.5 rounded-xl',
-                  index === 0 ? accentClass : 'bg-slate-50 dark:bg-slate-800/50'
+                  index === 0 ? accentClass : 'bg-slate-50 dark:bg-card-elevated'
                 )}
               >
                 <div className="flex items-center gap-2.5">
@@ -657,7 +669,7 @@ function FunStatCard({
   const accentClass = 'text-primary bg-primary/5'
 
   return (
-    <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
+    <div className="bg-white dark:bg-card rounded-lg border border-slate-200 dark:border-border overflow-hidden">
       <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-2">
           {icon}
@@ -681,7 +693,7 @@ function FunStatCard({
                     ? 'ring-primary bg-primary/5'
                     : index === 0
                       ? accentClass
-                      : 'bg-slate-50 dark:bg-slate-800/50'
+                      : 'bg-slate-50 dark:bg-card-elevated'
                 )}>
                   <div className="flex items-center gap-2">
                     <span className={cn(

@@ -151,7 +151,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
       </Link>
 
       {/* Post */}
-      <article className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm mb-6">
+      <article className="bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-border shadow-sm mb-6">
         {/* Category + status */}
         <div className="flex items-center gap-2 mb-3">
           <span className={cn('px-2.5 py-0.5 text-xs font-medium rounded-full', colors.badge, colors.text)}>
@@ -267,7 +267,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
       </article>
 
       {/* Comments */}
-      <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+      <div className="bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-border shadow-sm">
         <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white mb-4">
           <MessageCircle className="w-4 h-4" />
           댓글 {comments.length > 0 && `(${comments.length})`}

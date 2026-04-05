@@ -241,7 +241,7 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
 
       {/* 계좌 정보 */}
       {bankAccount && bankAccount.accountNumber && (
-        <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="bg-white dark:bg-card rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Banknote className="w-5 h-5 text-blue-500" />
@@ -265,7 +265,7 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
 
       {/* 순위 */}
       {rankedTeams.length > 0 && (
-        <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
           <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
               <Trophy className="w-5 h-5 text-amber-500" />
@@ -278,7 +278,7 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
                 key={team.id}
                 className={cn(
                   'flex items-center justify-between p-3 rounded-xl',
-                  idx === 0 ? 'bg-amber-50 dark:bg-amber-500/10' : 'bg-slate-50 dark:bg-slate-800/50'
+                  idx === 0 ? 'bg-amber-50 dark:bg-amber-500/10' : 'bg-slate-50 dark:bg-card-elevated'
                 )}
               >
                 <div className="flex items-center gap-3">
@@ -296,7 +296,7 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
 
       {/* 개인별 납부 내역 */}
       {payments.length > 0 && (
-        <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
           <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
               <UserCheck className="w-5 h-5 text-blue-500" />
@@ -411,7 +411,7 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
       )}
 
       {/* 비용 기록 */}
-      <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
           <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
             <Calculator className="w-5 h-5 text-purple-500" />
@@ -431,7 +431,7 @@ export function SettlementTab({ sessionId, session, teams, matches, attendance, 
         <div className="p-4 space-y-3">
           {/* 비용 추가 폼 */}
           {addingExpense && (
-            <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+            <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-card-elevated rounded-xl">
               <input
                 type="text"
                 value={newExpDesc}

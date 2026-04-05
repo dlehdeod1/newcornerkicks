@@ -178,7 +178,7 @@ export function MvpVoting({ sessionId, attendance, sessionStatus, matches = [], 
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 animate-pulse">
+      <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-slate-800 p-6 animate-pulse">
         <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/3 mb-4" />
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
@@ -190,7 +190,7 @@ export function MvpVoting({ sessionId, attendance, sessionStatus, matches = [], 
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+    <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
       {/* 헤더 */}
       <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-500/10 dark:to-yellow-500/10">
         <div className="flex items-center gap-3">
@@ -253,7 +253,7 @@ export function MvpVoting({ sessionId, attendance, sessionStatus, matches = [], 
                       'relative rounded-lg p-2.5 overflow-hidden',
                       index === 0
                         ? 'bg-gradient-to-r from-amber-100 to-yellow-50 dark:from-amber-500/20 dark:to-yellow-500/10 border border-amber-200 dark:border-amber-500/30'
-                        : 'bg-slate-50 dark:bg-slate-800/50'
+                        : 'bg-slate-50 dark:bg-card-elevated'
                     )}
                   >
                     {/* 배경 프로그레스 */}

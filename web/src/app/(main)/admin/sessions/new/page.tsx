@@ -101,7 +101,7 @@ export default function NewSessionPage() {
       {/* 폼 */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 날짜 선택 */}
-        <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
+        <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-border">
           <label className="block mb-4">
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
               <Calendar className="w-4 h-4" />
@@ -132,13 +132,13 @@ export default function NewSessionPage() {
             type="date"
             value={sessionDate}
             onChange={(e) => setSessionDate(e.target.value)}
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="w-full px-4 py-3 bg-slate-50 dark:bg-card-elevated border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
             required
           />
         </div>
 
         {/* 제목 */}
-        <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
+        <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-border">
           <label className="block mb-4">
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
               <FileText className="w-4 h-4" />
@@ -151,7 +151,7 @@ export default function NewSessionPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="코너킥스 정기 풋살"
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="w-full px-4 py-3 bg-slate-50 dark:bg-card-elevated border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
           <p className="text-xs text-slate-500 mt-2">
             비워두면 "코너킥스 정기 풋살"로 자동 설정됩니다
@@ -165,7 +165,7 @@ export default function NewSessionPage() {
               <Sparkles className="w-5 h-5" />
               미리보기
             </h3>
-            <div className="bg-white dark:bg-slate-900/50 rounded-xl p-4">
+            <div className="bg-white dark:bg-card rounded-xl p-4">
               <p className="font-medium text-slate-900 dark:text-white">
                 {title || '코너킥스 정기 풋살'}
               </p>

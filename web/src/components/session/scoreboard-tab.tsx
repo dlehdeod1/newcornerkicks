@@ -227,7 +227,7 @@ export function ScoreboardTab({ sessionId, teams, matches, onRefetch }: Props) {
       ) : (
         <>
       {/* 리그 테이블 */}
-      <div className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-card-elevated rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-yellow-500 dark:text-yellow-400" />
@@ -290,7 +290,7 @@ export function ScoreboardTab({ sessionId, teams, matches, onRefetch }: Props) {
       </div>
 
       {/* 경기 목록 */}
-      <div className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div className="bg-white dark:bg-card-elevated rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <h3 className="font-semibold text-slate-900 dark:text-white">경기 일정</h3>
         </div>
@@ -471,7 +471,7 @@ function MatchManager({
       </div>
 
       {/* 현재 경기 목록 */}
-      <div className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+      <div className="bg-white dark:bg-card-elevated rounded-xl border border-slate-200 dark:border-slate-700">
         <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
           <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
             현재 경기 ({matches.length})

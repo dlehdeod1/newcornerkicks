@@ -109,7 +109,7 @@ export default function BoardPage() {
       </div>
 
       {/* Scope Tabs: 클럽 / 커뮤니티 */}
-      <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl mb-6 w-fit">
+      <div className="flex gap-1 p-1 bg-slate-100 dark:bg-card-elevated rounded-xl mb-6 w-fit">
         <button
           onClick={() => handleScopeChange('club')}
           className={cn(
@@ -261,7 +261,7 @@ function CommunitySection({ token }: { token: string | null }) {
                   'px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all',
                   activeTab === cat.key
                     ? color
-                    : 'bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/50'
+                    : 'bg-slate-100 dark:bg-card-elevated text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/50'
                 )}
               >
                 {cat.label}
@@ -282,7 +282,7 @@ function CommunitySection({ token }: { token: string | null }) {
 
       {/* Filters */}
       {showFilters && (
-        <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 shadow-sm mb-6">
+        <div className="bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-border shadow-sm mb-6">
           <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">
             <Filter className="w-4 h-4" />
             필터
@@ -356,7 +356,7 @@ function CommunitySection({ token }: { token: string | null }) {
               <Link
                 key={post.id}
                 href={`/community/${post.id}`}
-                className="block bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 transition-all group"
+                className="block bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-border shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 transition-all group"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <span className={cn('px-2 py-0.5 text-xs font-medium rounded-full', colors)}>
@@ -458,7 +458,7 @@ function NoticeList({ announcements }: { announcements: any[] }) {
         <Link
           key={a.id}
           href={`/announcements/${a.id}`}
-          className="block bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 shadow-sm hover:shadow-md transition-all group"
+          className="block bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-border shadow-sm hover:shadow-md transition-all group"
         >
           <div className="flex items-start gap-4">
             {a.image_url && (
@@ -511,7 +511,7 @@ function ClubPostList({ posts }: { posts: any[] }) {
         <Link
           key={post.id}
           href={`/board/${post.id}`}
-          className="block bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 shadow-sm hover:shadow-md transition-all group"
+          className="block bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-border shadow-sm hover:shadow-md transition-all group"
         >
           <div className="flex items-start gap-4">
             {post.image_url && (

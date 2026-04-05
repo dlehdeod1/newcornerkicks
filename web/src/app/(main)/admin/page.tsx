@@ -128,7 +128,7 @@ export default function AdminDashboardPage() {
             {pendingLinkPlayers.slice(0, 3).map((player: any) => (
               <div
                 key={player.id}
-                className="flex items-center justify-between bg-white dark:bg-slate-900/50 p-3 rounded-xl flex-1 min-w-[200px]"
+                className="flex items-center justify-between bg-white dark:bg-card p-3 rounded-xl flex-1 min-w-[200px]"
               >
                 <span className="font-medium text-slate-900 dark:text-white">
                   {player.name}
@@ -184,7 +184,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* 최근 세션 */}
-        <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
+        <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-border overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <h2 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
               <Calendar className="w-5 h-5 text-primary" />

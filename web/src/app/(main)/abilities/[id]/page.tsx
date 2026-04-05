@@ -75,7 +75,7 @@ export default function AbilityDetailPage({ params }: { params: Promise<{ id: st
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="animate-pulse">
           <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-32 mb-8" />
-          <div className="bg-white dark:bg-slate-900/50 rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50">
+          <div className="bg-white dark:bg-card rounded-3xl p-8 border border-slate-200 dark:border-border">
             <div className="flex items-center gap-6 mb-8">
               <div className="w-24 h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
               <div>
@@ -93,7 +93,7 @@ export default function AbilityDetailPage({ params }: { params: Promise<{ id: st
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="text-center py-20">
-          <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-slate-100 dark:bg-card-elevated rounded-2xl flex items-center justify-center mx-auto mb-4">
             <User className="w-8 h-8 text-slate-400 dark:text-slate-600" />
           </div>
           <p className="text-slate-500 mb-4">선수를 찾을 수 없습니다.</p>
@@ -123,7 +123,7 @@ export default function AbilityDetailPage({ params }: { params: Promise<{ id: st
       </Link>
 
       {/* 프로필 카드 */}
-      <div className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm mb-6">
+      <div className="bg-white dark:bg-card backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-border shadow-sm mb-6">
         <div className="flex flex-col md:flex-row items-start gap-6">
           {/* 프로필 이미지 */}
           <div className="w-28 h-28 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 rounded-2xl flex items-center justify-center border border-slate-300 dark:border-slate-700 shadow-xl">
@@ -270,29 +270,29 @@ export default function AbilityDetailPage({ params }: { params: Promise<{ id: st
 
       {/* 평가 통계 */}
       {existingRatings.length > 0 && (
-        <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+        <div className="mt-6 bg-white dark:bg-card backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-border shadow-sm">
           <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <Users className="w-5 h-5 text-muted-foreground" />
             평가 통계
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 text-center">
+            <div className="bg-slate-50 dark:bg-card-elevated rounded-xl p-4 text-center">
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">평가자 수</p>
               <p className="text-xl font-bold text-slate-900 dark:text-white">{existingRatings.length}명</p>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 text-center">
+            <div className="bg-slate-50 dark:bg-card-elevated rounded-xl p-4 text-center">
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">평균 종합</p>
               <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
                 {(existingRatings.reduce((sum: number, r: any) => sum + getRatingOverall(r), 0) / existingRatings.length).toFixed(1)}점
               </p>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 text-center">
+            <div className="bg-slate-50 dark:bg-card-elevated rounded-xl p-4 text-center">
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">최고 평가</p>
               <p className="text-xl font-bold text-primary">
                 {Math.max(...existingRatings.map((r: any) => getRatingOverall(r))).toFixed(1)}점
               </p>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 text-center">
+            <div className="bg-slate-50 dark:bg-card-elevated rounded-xl p-4 text-center">
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">최저 평가</p>
               <p className="text-xl font-bold text-slate-600 dark:text-slate-400">
                 {Math.min(...existingRatings.map((r: any) => getRatingOverall(r))).toFixed(1)}점
@@ -303,7 +303,7 @@ export default function AbilityDetailPage({ params }: { params: Promise<{ id: st
       )}
 
       {/* 레이더 차트 */}
-      <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+      <div className="mt-6 bg-white dark:bg-card backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-border shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
           <Star className="w-5 h-5 text-muted-foreground" />
           능력치 분포
@@ -375,7 +375,7 @@ function StatSection({
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+    <div className="bg-white dark:bg-card backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-border shadow-sm">
       <h3 className={cn('text-sm font-medium flex items-center gap-2 mb-4', titleColors[color])}>
         {icon}
         {title}

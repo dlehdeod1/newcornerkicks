@@ -389,7 +389,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
             />
           </div>
 
-          <div className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+          <div className="bg-white dark:bg-card-elevated rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
               <h3 className="font-semibold text-slate-900 dark:text-white">세션 기록</h3>
             </div>
@@ -434,7 +434,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
 
         {/* MVP 점수 사이드바 */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+          <div className="bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
             <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-500/10 dark:to-yellow-500/10">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-lg flex items-center justify-center shadow-lg shadow-amber-500/20">
@@ -511,7 +511,7 @@ export function StatsTab({ sessionId, matches, attendance = [], sessionStatus = 
                   {sortedStats.slice(1, 5).map((player, index) => (
                     <div
                       key={player.id}
-                      className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg"
+                      className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-card-elevated rounded-lg"
                     >
                       <div className="flex items-center gap-2">
                         <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400">

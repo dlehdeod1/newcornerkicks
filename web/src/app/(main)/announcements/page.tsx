@@ -82,7 +82,7 @@ export default function AnnouncementsPage() {
                 key={a.id}
                 href={`/announcements/${a.id}`}
                 className={cn(
-                  'block bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 shadow-sm hover:shadow-md transition-all group',
+                  'block bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-border shadow-sm hover:shadow-md transition-all group',
                   isUnread && 'border-l-4 border-l-primary'
                 )}
               >

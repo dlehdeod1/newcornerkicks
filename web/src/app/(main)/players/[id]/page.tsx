@@ -85,7 +85,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="animate-pulse">
           <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-32 mb-8" />
-          <div className="bg-white dark:bg-slate-900/50 rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50">
+          <div className="bg-white dark:bg-card rounded-3xl p-8 border border-slate-200 dark:border-border">
             <div className="flex items-center gap-6 mb-8">
               <div className="w-24 h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
               <div>
@@ -103,7 +103,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="text-center py-20">
-          <div className="w-16 h-16 bg-slate-200 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-slate-200 dark:bg-card-elevated rounded-2xl flex items-center justify-center mx-auto mb-4">
             <User className="w-8 h-8 text-slate-400 dark:text-slate-600" />
           </div>
           <p className="text-slate-600 dark:text-slate-500 mb-4">선수를 찾을 수 없습니다.</p>
@@ -129,7 +129,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       </Link>
 
       {/* 프로필 카드 */}
-      <div className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 mb-6 shadow-sm">
+      <div className="bg-white dark:bg-card backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-border mb-6 shadow-sm">
         <div className="flex flex-col md:flex-row items-start gap-6">
           {/* 프로필 이미지 */}
           <div className="relative">
@@ -226,7 +226,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* 능력치 상세 */}
-      <div className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+      <div className="bg-white dark:bg-card backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-border shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
           <Activity className="w-5 h-5 text-primary" />
           능력치 상세
@@ -277,7 +277,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* 케미스트리 (PRO) */}
-      <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+      <div className="mt-6 bg-white dark:bg-card backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-border shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
           <Handshake className="w-5 h-5" /> 케미스트리
           {!isPro && (
@@ -291,7 +291,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
             {chemistry?.partners && chemistry.partners.length > 0 ? (
               <div className="space-y-3">
                 {chemistry.partners.slice(0, 3).map((p: any, i: number) => (
-                  <div key={p.partner_id ?? i} className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                  <div key={p.partner_id ?? i} className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-card-elevated rounded-xl">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                       {i + 1}
                     </div>
@@ -329,7 +329,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* 스트릭 (PRO) */}
-      <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+      <div className="mt-6 bg-white dark:bg-card backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-border shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
           <Flame className="w-5 h-5" /> 스트릭
           {!isPro && (
@@ -386,7 +386,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
 
       {/* 통산 기록 */}
       {data?.stats && (
-        <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+        <div className="mt-6 bg-white dark:bg-card backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-border shadow-sm">
           <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
             <Star className="w-5 h-5 text-muted-foreground" />
             통산 기록
@@ -401,7 +401,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
       )}
 
       {/* 최근 경기 기록 */}
-      <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+      <div className="mt-6 bg-white dark:bg-card backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-border shadow-sm">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
           <Zap className="w-5 h-5 text-muted-foreground" />
           최근 경기 기록
@@ -411,7 +411,7 @@ export default function PlayerDetailPage({ params }: { params: Promise<{ id: str
             {data.recentMatches.map((match: any, index: number) => (
               <div
                 key={match.id || index}
-                className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="flex items-center justify-between p-4 bg-slate-50 dark:bg-card-elevated rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   <div className="text-center">

@@ -94,7 +94,7 @@ export default function ClubProfilePage() {
       </Link>
 
       {/* Club Header Card */}
-      <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl border border-slate-200 dark:border-slate-800/50 shadow-sm overflow-hidden mb-6">
+      <div className="bg-white/80 dark:bg-card backdrop-blur rounded-2xl border border-slate-200 dark:border-border shadow-sm overflow-hidden mb-6">
         {/* Hero gradient */}
         <div className="h-24 bg-gradient-to-r from-primary to-teal-500 relative">
           {club.isPro && (
@@ -158,7 +158,7 @@ export default function ClubProfilePage() {
       </div>
 
       {/* Reviews Section */}
-      <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+      <div className="bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-border shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <MessageSquare className="w-5 h-5" />
@@ -208,7 +208,7 @@ export default function ClubProfilePage() {
         )}
 
         {showReviewForm && (
-          <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+          <div className="mb-6 p-4 bg-slate-50 dark:bg-card-elevated rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
             <div>
               <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">평점</label>
               <div className="flex gap-1">
@@ -293,7 +293,7 @@ export default function ClubProfilePage() {
 
 function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
   return (
-    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 text-center">
+    <div className="bg-slate-50 dark:bg-card-elevated rounded-xl p-3 text-center">
       <div className="flex items-center justify-center text-slate-400 mb-1">{icon}</div>
       <div className="text-lg font-bold text-slate-900 dark:text-white">
         {value}

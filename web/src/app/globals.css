@@ -36,16 +36,18 @@
   --primary-hover: 145 63% 43%;     /* hover: 조금 더 어둡게 */
   --primary-foreground: 222 47% 7%; /* 거의 검정 (#0f172a) */
 
-  --background: 222 47% 7%;         /* #0f172a */
+  --background: 222 47% 7%;         /* Level 0: #0f172a — 페이지 배경 */
   --foreground: 210 40% 98%;
 
-  --card: 217 33% 17%;              /* #1e293b */
+  --card: 215 28% 14%;              /* Level 1: #1a2332 — 카드/섹션 */
   --card-foreground: 210 40% 98%;
 
-  --muted: 217 33% 17%;
+  --card-elevated: 215 25% 18%;     /* Level 2: 카드 안의 강조 영역 */
+
+  --muted: 215 28% 14%;
   --muted-foreground: 215 20% 65%;
 
-  --border: 217 33% 27%;            /* #334155 */
+  --border: 215 20% 22%;            /* 카드 경계용 — 은은한 구분 */
   --ring: 145 63% 49%;
 
   --destructive: 0 91% 71%;

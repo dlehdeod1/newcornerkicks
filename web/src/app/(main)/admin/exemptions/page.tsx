@@ -74,7 +74,7 @@ export default function AdminExemptionsPage() {
 
       {/* 통계 */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-white dark:bg-slate-900/50 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
+        <div className="bg-white dark:bg-card rounded-xl p-4 border border-slate-200 dark:border-slate-800">
           <p className="text-2xl font-bold text-slate-900 dark:text-white">{members.length}</p>
           <p className="text-sm text-slate-500">전체 멤버</p>
         </div>
@@ -138,7 +138,7 @@ function MemberExemptCard({
 
   return (
     <div className={cn(
-      'bg-white dark:bg-slate-900/50 rounded-xl p-4 border transition-colors',
+      'bg-white dark:bg-card rounded-xl p-4 border transition-colors',
       hasAnyExempt
         ? 'border-purple-200 dark:border-purple-500/30'
         : 'border-slate-200 dark:border-slate-800'

@@ -162,7 +162,7 @@ function BoardWriteContent() {
         {editId ? '게시글 수정' : '새 게시글'}
       </h1>
 
-      <form onSubmit={handleSubmit} className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm space-y-5">
+      <form onSubmit={handleSubmit} className="bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-border shadow-sm space-y-5">
         {/* Category select */}
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
@@ -171,7 +171,7 @@ function BoardWriteContent() {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="w-full px-4 py-2.5 bg-slate-50 dark:bg-card-elevated border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
             {categoryOptions.map((opt) => (
               <option key={opt.key} value={opt.key}>
@@ -191,7 +191,7 @@ function BoardWriteContent() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="제목을 입력하세요"
-            className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="w-full px-4 py-2.5 bg-slate-50 dark:bg-card-elevated border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
         </div>
 
@@ -205,7 +205,7 @@ function BoardWriteContent() {
             onChange={(e) => setContent(e.target.value)}
             placeholder="내용을 입력하세요"
             rows={10}
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y"
+            className="w-full px-4 py-3 bg-slate-50 dark:bg-card-elevated border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y"
           />
         </div>
 
@@ -262,7 +262,7 @@ function BoardWriteContent() {
                 투표 추가
               </button>
             ) : (
-              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700 space-y-3">
+              <div className="bg-slate-50 dark:bg-card-elevated rounded-xl p-4 border border-slate-200 dark:border-slate-700 space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
                     <BarChart3 className="w-4 h-4 text-primary" />

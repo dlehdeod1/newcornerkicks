@@ -44,7 +44,7 @@ export default function SessionsPage() {
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 animate-pulse shadow-sm">
+            <div key={i} className="bg-white dark:bg-card backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-border animate-pulse shadow-sm">
               <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded-lg w-1/3 mb-4" />
               <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-lg w-1/2" />
             </div>
@@ -52,7 +52,7 @@ export default function SessionsPage() {
         </div>
       ) : sessions.length === 0 ? (
         <div className="text-center py-20">
-          <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-slate-100 dark:bg-card-elevated rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Calendar className="w-8 h-8 text-slate-400 dark:text-slate-600" />
           </div>
           <p className="text-slate-500 mb-6">아직 등록된 일정이 없습니다.</p>
@@ -111,7 +111,7 @@ function SessionCard({ session }: { session: any }) {
   return (
     <Link
       href={`/sessions/${session.id}`}
-      className="group block bg-white dark:bg-slate-900/50 backdrop-blur hover:bg-slate-50 dark:hover:bg-slate-900/80 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 hover:border-primary/30 transition-all duration-300 shadow-sm"
+      className="group block bg-white dark:bg-card backdrop-blur hover:bg-slate-50 dark:hover:bg-slate-900/80 rounded-2xl p-6 border border-slate-200 dark:border-border hover:border-primary/30 transition-all duration-300 shadow-sm"
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
@@ -162,7 +162,7 @@ function SessionCard({ session }: { session: any }) {
           </div>
         </div>
 
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800/50 group-hover:bg-primary/10 transition-colors">
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 dark:bg-card-elevated group-hover:bg-primary/10 transition-colors">
           <ChevronRight className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors" />
         </div>
       </div>

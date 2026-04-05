@@ -209,7 +209,7 @@ export default function RankingPage() {
             /* 테이블 뷰 */
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
               {showColumnToggle && (
-                <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+                <div className="px-4 py-2 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-card-elevated">
                   <span className="text-xs text-slate-500 dark:text-slate-400">
                     {showAllColumns ? '전체 컬럼 표시 중' : '주요 컬럼만 표시 중'}
                   </span>
@@ -236,7 +236,7 @@ export default function RankingPage() {
                         <th className="w-8"></th>
                       </tr>
                     )}
-                    <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20">
+                    <tr className="bg-slate-50 dark:bg-card-elevated border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20">
                       <th className="px-2 py-2.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 w-10 sticky left-0 z-30 bg-slate-50 dark:bg-slate-800">
                         #
                       </th>

@@ -166,7 +166,7 @@ export default function PostDetailPage() {
       </Link>
 
       {/* Article */}
-      <article className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+      <article className="bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-border shadow-sm">
         {/* Badges */}
         <div className="flex items-center gap-2 mb-3">
           {post.is_pinned === 1 && (
@@ -244,7 +244,7 @@ export default function PostDetailPage() {
       </article>
 
       {/* Comments section */}
-      <div className="mt-6 bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+      <div className="mt-6 bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-border shadow-sm">
         <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
           <MessageSquare className="w-5 h-5" />
           댓글 {post.comments?.length > 0 && `(${post.comments.length})`}
@@ -295,7 +295,7 @@ export default function PostDetailPage() {
                         value={editCommentText}
                         onChange={(e) => setEditCommentText(e.target.value)}
                         rows={2}
-                        className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                        className="flex-1 px-3 py-2 bg-slate-50 dark:bg-card-elevated border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                       />
                       <div className="flex flex-col gap-1">
                         <button
@@ -332,7 +332,7 @@ export default function PostDetailPage() {
             onChange={(e) => setCommentText(e.target.value)}
             placeholder="댓글을 입력하세요..."
             rows={2}
-            className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+            className="flex-1 px-4 py-3 bg-slate-50 dark:bg-card-elevated border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
           />
           <button
             type="submit"
@@ -424,7 +424,7 @@ function PollSection({ poll, onVote, onUnvote, isVoting }: {
                 'relative w-full text-left px-4 py-3 rounded-xl border transition-all overflow-hidden',
                 isSelected
                   ? 'border-primary bg-primary/5'
-                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800/50'
+                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-card-elevated'
               )}
             >
               {/* Progress bar background */}
@@ -501,7 +501,7 @@ function ReactionBar({ reactions, userId, onToggle, disabled }: {
               'inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm border transition-all',
               isActive
                 ? 'bg-primary/10 border-primary/30 text-primary'
-                : 'bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300 dark:hover:border-slate-600',
+                : 'bg-white dark:bg-card-elevated border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-300 dark:hover:border-slate-600',
               disabled && 'opacity-50 cursor-not-allowed'
             )}
           >

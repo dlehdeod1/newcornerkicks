@@ -104,7 +104,7 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
 
   return (
     <div className={cn(
-      'bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden',
+      'bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden',
       className
     )}>
       {/* 헤더 - 스코어보드 */}
@@ -225,7 +225,7 @@ export function MatchTimeline({ match, teams, events, className }: MatchTimeline
                         isTeam1 ? 'justify-end' : 'justify-start'
                       )}>
                         <div className={cn(
-                          'bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4 py-3 max-w-[200px]',
+                          'bg-slate-50 dark:bg-card-elevated rounded-xl px-4 py-3 max-w-[200px]',
                           'border border-slate-100 dark:border-slate-700'
                         )}>
                           <div className="flex items-center gap-2 mb-1">

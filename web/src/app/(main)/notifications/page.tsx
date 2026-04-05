@@ -55,7 +55,7 @@ export default function NotificationsPage() {
   if (!isLoggedIn) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <div className="w-16 h-16 bg-slate-100 dark:bg-card-elevated rounded-2xl flex items-center justify-center mx-auto mb-4">
           <Bell className="w-8 h-8 text-slate-400" />
         </div>
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
@@ -110,7 +110,7 @@ export default function NotificationsPage() {
       </div>
 
       {/* 알림 목록 */}
-      <div className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-2xl border border-slate-200 dark:border-slate-800/50 overflow-hidden">
+      <div className="bg-white dark:bg-card backdrop-blur rounded-2xl border border-slate-200 dark:border-border overflow-hidden">
         {isLoading ? (
           <div className="p-6 space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -126,7 +126,7 @@ export default function NotificationsPage() {
           </div>
         ) : notifications.length === 0 ? (
           <div className="p-16 text-center">
-            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-slate-100 dark:bg-card-elevated rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Bell className="w-8 h-8 text-slate-400" />
             </div>
             <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">

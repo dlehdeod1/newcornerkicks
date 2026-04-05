@@ -48,7 +48,7 @@ export default function SettlementsPage() {
       </div>
 
       {/* 시즌 요약 */}
-      <div className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm mb-6">
+      <div className="bg-white dark:bg-card backdrop-blur rounded-3xl p-6 border border-slate-200 dark:border-border shadow-sm mb-6">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary" />
           {currentYear}년 시즌 요약
@@ -97,7 +97,7 @@ export default function SettlementsPage() {
 
       {/* 개인 정산 이력 */}
       {isLoggedIn ? (
-        <div className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+        <div className="bg-white dark:bg-card backdrop-blur rounded-3xl p-6 border border-slate-200 dark:border-border shadow-sm">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <Coins className="w-5 h-5 text-amber-500 dark:text-amber-400" />
             내 정산 이력
@@ -113,7 +113,7 @@ export default function SettlementsPage() {
             </div>
           ) : history.length === 0 ? (
             <div className="text-center py-12">
-              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-slate-100 dark:bg-card-elevated rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Coins className="w-8 h-8 text-slate-400 dark:text-slate-600" />
               </div>
               <p className="text-slate-500 dark:text-slate-400">
@@ -141,8 +141,8 @@ export default function SettlementsPage() {
           )}
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm text-center">
-          <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white dark:bg-card backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-border shadow-sm text-center">
+          <div className="w-16 h-16 bg-slate-100 dark:bg-card-elevated rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Coins className="w-8 h-8 text-slate-400 dark:text-slate-600" />
           </div>
           <p className="text-slate-500 dark:text-slate-400 mb-4">
@@ -158,7 +158,7 @@ export default function SettlementsPage() {
       )}
 
       {/* 최근 세션 정산 */}
-      <div className="mt-6 bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+      <div className="mt-6 bg-white dark:bg-card backdrop-blur rounded-3xl p-6 border border-slate-200 dark:border-border shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
           <Calendar className="w-5 h-5 text-blue-500 dark:text-blue-400" />
           최근 세션 정산
@@ -185,7 +185,7 @@ function StatCard({
   isAmount?: boolean
 }) {
   const colorClasses = {
-    slate: 'bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400',
+    slate: 'bg-slate-100 dark:bg-card-elevated text-slate-600 dark:text-slate-400',
     emerald: 'bg-primary/10 text-primary',
     amber: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
     blue: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
@@ -207,7 +207,7 @@ function SettlementHistoryItem({ item }: { item: any }) {
   return (
     <Link
       href={`/sessions/${item.sessionId}`}
-      className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors group"
+      className="flex items-center justify-between p-4 bg-slate-50 dark:bg-card-elevated hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors group"
     >
       <div className="flex items-center gap-4">
         <div className={cn(

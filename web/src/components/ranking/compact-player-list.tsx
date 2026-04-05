@@ -82,7 +82,7 @@ function CompactRow({
 
   return (
     <div className={cn(
-      'bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800/50 border-l-[3px] overflow-hidden',
+      'bg-white dark:bg-card rounded-xl border border-slate-200 dark:border-border border-l-[3px] overflow-hidden',
       borderColor
     )}>
       <div
@@ -149,7 +149,7 @@ function CompactRow({
 
 function MiniStat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg px-3 py-2 text-center">
+    <div className="bg-slate-50 dark:bg-card-elevated rounded-lg px-3 py-2 text-center">
       <div className="text-xs text-slate-400">{label}</div>
       <div className="text-sm font-bold text-slate-700 dark:text-slate-200">{value}</div>
     </div>

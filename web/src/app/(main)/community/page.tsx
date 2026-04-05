@@ -94,7 +94,7 @@ function CommunityContent() {
               'px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all',
               activeTab === cat.key
                 ? `${categoryColorMap[cat.color].badge} ${categoryColorMap[cat.color].text}`
-                : 'bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/50'
+                : 'bg-slate-100 dark:bg-card-elevated text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/50'
             )}
           >
             {cat.label}
@@ -104,7 +104,7 @@ function CommunityContent() {
 
       {/* Filters for recruit/match */}
       {showFilters && (
-        <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 shadow-sm mb-6">
+        <div className="bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-border shadow-sm mb-6">
           <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">
             <Filter className="w-4 h-4" />
             필터
@@ -168,7 +168,7 @@ function CommunityContent() {
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white/80 dark:bg-slate-900/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 animate-pulse">
+            <div key={i} className="bg-white/80 dark:bg-card rounded-2xl p-5 border border-slate-200 dark:border-border animate-pulse">
               <div className="h-4 w-16 bg-slate-200 dark:bg-slate-700 rounded mb-3" />
               <div className="h-5 w-3/4 bg-slate-200 dark:bg-slate-700 rounded mb-2" />
               <div className="h-3 w-1/2 bg-slate-200 dark:bg-slate-700 rounded" />
@@ -194,7 +194,7 @@ function CommunityContent() {
               <Link
                 key={post.id}
                 href={`/community/${post.id}`}
-                className="block bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 transition-all group"
+                className="block bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-5 border border-slate-200 dark:border-border shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 transition-all group"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <span className={cn('px-2 py-0.5 text-xs font-medium rounded-full', colors.badge, colors.text)}>

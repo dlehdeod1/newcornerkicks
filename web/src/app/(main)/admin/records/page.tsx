@@ -68,7 +68,7 @@ export default function AdminRecordsPage() {
       </div>
 
       {/* 탭 바 */}
-      <div className="flex gap-1 mb-6 bg-slate-100 dark:bg-slate-800/50 rounded-xl p-1">
+      <div className="flex gap-1 mb-6 bg-slate-100 dark:bg-card-elevated rounded-xl p-1">
         {TABS.map(({ key, label }) => (
           <button
             key={key}

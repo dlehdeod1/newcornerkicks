@@ -727,7 +727,7 @@ export default function ProfilePage() {
                 .map((p: any) => {
                   const isFav = prefIds.has(p.id)
                   return (
-                    <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
+                    <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-card-elevated hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors">
                       <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-slate-300 to-slate-400 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center text-white font-bold text-sm">
                         {(p.name || '?')[0]}
                       </div>

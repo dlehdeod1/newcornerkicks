@@ -159,7 +159,7 @@ function SessionCard({ session }: { session: any }) {
   return (
     <Link
       href={`/sessions/${session.id}`}
-      className="flex items-center justify-between p-4 bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-primary/50 transition-colors group"
+      className="flex items-center justify-between p-4 bg-white dark:bg-card rounded-xl border border-slate-200 dark:border-slate-800 hover:border-primary/50 transition-colors group"
     >
       <div className="flex items-center gap-4">
         <div className={cn(

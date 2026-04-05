@@ -88,7 +88,7 @@ export default function NewPlayerPage() {
           </p>
 
           {/* 선수 코드 */}
-          <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 mb-6">
+          <div className="bg-white dark:bg-card rounded-2xl p-6 mb-6">
             <p className="text-sm text-slate-500 mb-2">선수 연동 코드</p>
             <div className="flex items-center justify-center gap-3">
               <code className="text-3xl font-mono font-bold text-slate-900 dark:text-white tracking-wider">
@@ -161,7 +161,7 @@ export default function NewPlayerPage() {
       {/* 폼 */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 이름 */}
-        <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
+        <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-border">
           <label className="block mb-4">
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
               <User className="w-4 h-4" />
@@ -174,13 +174,13 @@ export default function NewPlayerPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="홍길동"
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="w-full px-4 py-3 bg-slate-50 dark:bg-card-elevated border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             required
           />
         </div>
 
         {/* 닉네임 */}
-        <div className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50">
+        <div className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-border">
           <label className="block mb-4">
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
               <AtSign className="w-4 h-4" />
@@ -193,7 +193,7 @@ export default function NewPlayerPage() {
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
             placeholder="별명이나 줄임말"
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="w-full px-4 py-3 bg-slate-50 dark:bg-card-elevated border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           />
           <p className="text-xs text-slate-500 mt-2">
             카카오톡 투표에서 사용하는 이름과 다를 경우 입력하세요

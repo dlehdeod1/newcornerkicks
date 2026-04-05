@@ -262,7 +262,7 @@ export function TeamParserModal({ sessionId, isOpen, onClose, onSave }: Props) {
                 </div>
               )}
 
-              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 text-sm text-slate-600 dark:text-slate-400">
+              <div className="bg-slate-50 dark:bg-card-elevated rounded-lg p-4 text-sm text-slate-600 dark:text-slate-400">
                 <p className="font-medium mb-2 flex items-center gap-1"><Lightbulb className="w-4 h-4" /> 파싱 팁</p>
                 <ul className="list-disc list-inside space-y-1 text-xs">
                   <li>팀 이름은 "OO팀" 형식으로 작성</li>

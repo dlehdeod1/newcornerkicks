@@ -137,7 +137,7 @@ export function OverviewTab({ session, attendance, teams, onRefetch }: Props) {
       )}
 
       {/* 참석자 명단 */}
-      <div className="bg-white dark:bg-slate-800/50 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div className="bg-white dark:bg-card-elevated rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-blue-500 dark:text-blue-400" />
@@ -202,7 +202,7 @@ export function OverviewTab({ session, attendance, teams, onRefetch }: Props) {
       />
 
       {/* 세션 정보 */}
-      <div className="bg-white dark:bg-slate-800/50 rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div className="bg-white dark:bg-card-elevated rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
         <h3 className="font-semibold text-slate-900 dark:text-white mb-4">세션 정보</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>

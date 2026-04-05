@@ -63,7 +63,7 @@ export function Header() {
   const clubGradient = (index: number) => CLUB_GRADIENTS[index % CLUB_GRADIENTS.length]
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800/50">
+    <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200 dark:border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* 좌상단: 클럽 전환 or 앱 로고 */}
@@ -169,7 +169,7 @@ export function Header() {
           )}
 
           {/* 데스크탑 네비게이션 */}
-          <nav aria-label="주 메뉴" className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200 dark:border-slate-800/50">
+          <nav aria-label="주 메뉴" className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-card p-1 rounded-xl border border-slate-200 dark:border-border">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -273,11 +273,11 @@ export function Header() {
 
       {/* 모바일 메뉴 */}
       {mobileMenuOpen && (
-        <nav aria-label="모바일 메뉴" className="md:hidden border-t border-slate-200 dark:border-slate-800/50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl">
+        <nav aria-label="모바일 메뉴" className="md:hidden border-t border-slate-200 dark:border-border bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl">
           <div className="px-4 py-4 space-y-1">
             {/* 모바일: 클럽 전환 */}
             {mounted && isLoggedIn && clubs.length > 1 && (
-              <div className="pb-3 mb-3 border-b border-slate-200 dark:border-slate-800/50">
+              <div className="pb-3 mb-3 border-b border-slate-200 dark:border-border">
                 <p className="text-xs font-medium text-slate-400 uppercase tracking-wider px-4 mb-2">클럽 전환</p>
                 {clubs.map((c, i) => {
                   const isActive = club?.id === c.id
@@ -328,7 +328,7 @@ export function Header() {
               </Link>
             ))}
 
-            <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800/50">
+            <div className="pt-4 mt-4 border-t border-slate-200 dark:border-border">
               {mounted && isLoggedIn ? (
                 <div className="space-y-1">
                   {!isPro && club && (

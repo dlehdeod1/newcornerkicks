@@ -205,7 +205,7 @@ export default function AbilitiesPage() {
               placeholder="선수 검색..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-56 pl-12 pr-4 py-2.5 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/50 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all shadow-sm text-sm"
+              className="w-full sm:w-56 pl-12 pr-4 py-2.5 bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all shadow-sm text-sm"
             />
           </div>
 
@@ -266,7 +266,7 @@ export default function AbilitiesPage() {
         </div>
       ) : sortedPlayers.length === 0 ? (
         <div className="text-center py-20">
-          <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-slate-100 dark:bg-card-elevated rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8 text-slate-400 dark:text-slate-600" />
           </div>
           <p className="text-slate-500">
@@ -275,7 +275,7 @@ export default function AbilitiesPage() {
         </div>
       ) : viewMode === 'table' ? (
         /* 테이블 뷰 - 전체 능력치 표시 (헤더 & 첫 열 고정) */
-        <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800/50 overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-card rounded-xl border border-slate-200 dark:border-border overflow-hidden shadow-sm">
           <div className="overflow-auto max-h-[70vh]">
             <table className="w-full border-collapse">
               <thead className="sticky top-0 z-20">
@@ -344,7 +344,7 @@ export default function AbilitiesPage() {
                     ? 'bg-primary/5'
                     : !player.has_my_rating && isLoggedIn
                     ? 'bg-amber-50/50 dark:bg-amber-900/10'
-                    : 'bg-white dark:bg-slate-900/50'
+                    : 'bg-white dark:bg-card'
 
                   return (
                     <tr
@@ -490,10 +490,10 @@ function PlayerAbilityCard({ player, rank, isLoggedIn, showMyRatings }: { player
     <Link
       href={`/abilities/${player.id}`}
       className={cn(
-        'group block bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-900/80 rounded-2xl p-5 border hover:border-primary/30 transition-all duration-300 shadow-sm',
+        'group block bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-slate-900/80 rounded-2xl p-5 border hover:border-primary/30 transition-all duration-300 shadow-sm',
         !player.has_my_rating && isLoggedIn
           ? 'border-amber-300 dark:border-amber-500/30 bg-amber-50/50 dark:bg-amber-900/10'
-          : 'border-slate-200 dark:border-slate-800/50'
+          : 'border-slate-200 dark:border-border'
       )}
     >
       <div className="flex items-start gap-4">
@@ -557,7 +557,7 @@ function PlayerAbilityCard({ player, rank, isLoggedIn, showMyRatings }: { player
         </div>
 
         {/* 화살표 */}
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800/50 group-hover:bg-primary/10 transition-colors self-center">
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-card-elevated group-hover:bg-primary/10 transition-colors self-center">
           <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors" />
         </div>
       </div>

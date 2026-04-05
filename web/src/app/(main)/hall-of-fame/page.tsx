@@ -99,7 +99,7 @@ export default function HallOfFamePage() {
                     <Link
                       key={`${season.year}-${honor.category}`}
                       href={`/players/${honor.player.id}`}
-                      className="group bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+                      className="group bg-white dark:bg-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
                     >
                       <div className="p-6">
                         {/* 아이콘 + 메달 */}
@@ -151,7 +151,7 @@ export default function HallOfFamePage() {
 
 function DemoChampionCard({ year, name, mvpScore }: { year: number; name: string; mvpScore: number }) {
   return (
-    <div className="relative bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 opacity-60 shadow-sm">
+    <div className="relative bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 opacity-60 shadow-sm">
       <div className="absolute top-4 right-4">
         <span className="text-4xl font-bold text-slate-200 dark:text-slate-800">{year}</span>
       </div>
@@ -192,7 +192,7 @@ function LoadingSkeleton() {
     <div className="space-y-12">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white dark:bg-slate-900/50 rounded-3xl p-6 border border-slate-200 dark:border-slate-800/50 animate-pulse shadow-sm">
+          <div key={i} className="bg-white dark:bg-card rounded-3xl p-6 border border-slate-200 dark:border-border animate-pulse shadow-sm">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-16 h-16 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
               <div>
@@ -205,7 +205,7 @@ function LoadingSkeleton() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 h-32 animate-pulse shadow-sm" />
+          <div key={i} className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-border h-32 animate-pulse shadow-sm" />
         ))}
       </div>
     </div>

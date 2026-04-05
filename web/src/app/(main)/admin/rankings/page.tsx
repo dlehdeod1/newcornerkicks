@@ -153,7 +153,7 @@ export default function AdminRankingsPage() {
       </div>
 
       {/* 마지막 갱신 시간 */}
-      <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 mb-6 flex items-center justify-between">
+      <div className="bg-slate-50 dark:bg-card-elevated rounded-xl p-4 mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
           <Clock className="w-4 h-4" />
           <span className="text-sm">
@@ -227,7 +227,7 @@ export default function AdminRankingsPage() {
       {isLoading ? (
         <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse" />
       ) : rankings.length === 0 ? (
-        <div className="text-center py-16 bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800">
+        <div className="text-center py-16 bg-white dark:bg-card rounded-xl border border-slate-200 dark:border-slate-800">
           <Trophy className="w-12 h-12 text-slate-400 mx-auto mb-4" />
           <p className="text-slate-500 mb-4">랭킹 데이터가 없습니다.</p>
           <button
@@ -315,7 +315,7 @@ function RankingTable({ rankings, sortBy, sortOrder, onSort, enabledEvents }: {
               <tr
                 key={player.id}
                 className={cn(
-                  'border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors',
+                  'border-b border-slate-100 dark:border-border hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors',
                   rank <= 3 && 'bg-amber-50/30 dark:bg-amber-500/5'
                 )}
               >

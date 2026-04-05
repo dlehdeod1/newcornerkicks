@@ -25,6 +25,7 @@ const config: Config = {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
+          elevated: 'hsl(var(--card-elevated, var(--muted)))',
         },
         muted: {
           DEFAULT: 'hsl(var(--muted))',

@@ -44,7 +44,7 @@ export default function PlayersPage() {
             placeholder="선수 검색..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:w-72 pl-12 pr-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/50 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
+            className="w-full sm:w-72 pl-12 pr-4 py-3 bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
           />
         </div>
       </div>
@@ -81,7 +81,7 @@ export default function PlayersPage() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="bg-white dark:bg-slate-900/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 animate-pulse">
+            <div key={i} className="bg-white dark:bg-card rounded-2xl p-6 border border-slate-200 dark:border-border animate-pulse">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-slate-200 dark:bg-slate-800 rounded-xl" />
                 <div className="flex-1">
@@ -94,7 +94,7 @@ export default function PlayersPage() {
         </div>
       ) : filteredPlayers.length === 0 ? (
         <div className="text-center py-20">
-          <div className="w-16 h-16 bg-slate-200 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-slate-200 dark:bg-card-elevated rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8 text-slate-400 dark:text-slate-600" />
           </div>
           <p className="text-slate-600 dark:text-slate-500">
@@ -148,7 +148,7 @@ function PlayerCard({ player }: { player: any }) {
   return (
     <Link
       href={`/players/${player.id}`}
-      className="group block bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-900/80 rounded-2xl p-5 border border-slate-200 dark:border-slate-800/50 hover:border-primary/30 transition-all duration-300 shadow-sm"
+      className="group block bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-slate-900/80 rounded-2xl p-5 border border-slate-200 dark:border-border hover:border-primary/30 transition-all duration-300 shadow-sm"
     >
       <div className="flex items-center gap-4">
         {/* 프로필 */}
@@ -187,7 +187,7 @@ function PlayerCard({ player }: { player: any }) {
         </div>
 
         {/* 화살표 */}
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800/50 group-hover:bg-primary/10 transition-colors">
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-card-elevated group-hover:bg-primary/10 transition-colors">
           <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors" />
         </div>
       </div>

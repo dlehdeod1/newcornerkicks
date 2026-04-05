@@ -193,7 +193,7 @@ function AdminAnnouncementsContent() {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm mb-8">
+      <form onSubmit={handleSubmit} className="bg-white/80 dark:bg-card backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-border shadow-sm mb-8">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
           {editId ? '공지 수정' : '새 공지 작성'}
         </h2>
@@ -313,7 +313,7 @@ function AdminAnnouncementsContent() {
       </form>
 
       {/* Existing announcements list */}
-      <div className="bg-white/80 dark:bg-slate-900/50 backdrop-blur rounded-2xl border border-slate-200 dark:border-slate-800/50 shadow-sm overflow-hidden">
+      <div className="bg-white/80 dark:bg-card backdrop-blur rounded-2xl border border-slate-200 dark:border-border shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <h2 className="font-semibold text-slate-900 dark:text-white">
             공지 목록 ({announcements.length})

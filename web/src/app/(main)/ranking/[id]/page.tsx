@@ -45,7 +45,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="animate-pulse">
           <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-32 mb-8" />
-          <div className="bg-white dark:bg-slate-900/50 rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50">
+          <div className="bg-white dark:bg-card rounded-3xl p-8 border border-slate-200 dark:border-border">
             <div className="flex items-center gap-6 mb-8">
               <div className="w-24 h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
               <div className="flex-1">
@@ -63,7 +63,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="text-center py-20">
-          <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-slate-100 dark:bg-card-elevated rounded-2xl flex items-center justify-center mx-auto mb-4">
             <User className="w-8 h-8 text-slate-400 dark:text-slate-600" />
           </div>
           <p className="text-slate-500 mb-4">선수를 찾을 수 없습니다.</p>
@@ -101,7 +101,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
       </Link>
 
       {/* 프로필 카드 */}
-      <div className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-slate-800/50 shadow-sm mb-6">
+      <div className="bg-white dark:bg-card backdrop-blur rounded-3xl p-8 border border-slate-200 dark:border-border shadow-sm mb-6">
         <div className="flex flex-col md:flex-row items-start gap-6">
           <div className="relative">
             <div className="w-28 h-28 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 rounded-2xl flex items-center justify-center border border-slate-300 dark:border-slate-700 shadow-xl">
@@ -148,7 +148,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
 
       {/* 시즌 스탯 상세 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+        <div className="bg-white dark:bg-card backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-border shadow-sm">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <Target className="w-5 h-5 text-amber-500 dark:text-amber-400" />
             공격 스탯
@@ -160,7 +160,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm">
+        <div className="bg-white dark:bg-card backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-border shadow-sm">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <Shield className="w-5 h-5 text-purple-500 dark:text-purple-400" />
             수비 & 경기 기록
@@ -174,7 +174,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
       </div>
 
       {/* 기록 근거 로그 */}
-      <div className="bg-white dark:bg-slate-900/50 backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-slate-800/50 shadow-sm mb-6">
+      <div className="bg-white dark:bg-card backdrop-blur rounded-2xl p-6 border border-slate-200 dark:border-border shadow-sm mb-6">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
           <Calendar className="w-5 h-5 text-blue-500 dark:text-blue-400" />
           기록 상세 로그
@@ -199,7 +199,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
                   'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all',
                   isActive
                     ? colorMap[tab.color]
-                    : 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/50'
+                    : 'bg-slate-50 dark:bg-card-elevated text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/50'
                 )}
               >
                 <span>{tab.icon}</span>

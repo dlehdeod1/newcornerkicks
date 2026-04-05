@@ -238,7 +238,7 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
       pink: 'bg-pink-50 dark:bg-pink-900/30 border-pink-300 dark:border-pink-700 text-pink-900 dark:text-pink-100 hover:bg-pink-100 dark:hover:bg-pink-800',
       teal: 'bg-teal-50 dark:bg-teal-900/30 border-teal-300 dark:border-teal-700 text-teal-900 dark:text-teal-100 hover:bg-teal-100 dark:hover:bg-teal-800',
       rose: 'bg-rose-50 dark:bg-rose-900/30 border-rose-300 dark:border-rose-700 text-rose-900 dark:text-rose-100 hover:bg-rose-100 dark:hover:bg-rose-800',
-      slate: 'bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700',
+      slate: 'bg-slate-100 dark:bg-card-elevated border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700',
     }
 
     const badgeColors: Record<string, string> = {
@@ -445,7 +445,7 @@ export function MatchRecorder({ match, teams, onClose, onRefetch }: Props) {
       )}
 
       {/* 이벤트 로그 - 타임라인 스타일 */}
-      <div className="shrink-0 mt-auto bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+      <div className="shrink-0 mt-auto bg-white dark:bg-card-elevated rounded-xl border border-slate-200 dark:border-slate-700">
         <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-700">
           <h3 className="text-xs font-semibold text-slate-900 dark:text-white">기록 ({events.length})</h3>
         </div>
