@@ -436,11 +436,11 @@ export default function StatsPage() {
   )
 }
 
-const statCardBorders: Record<string, string> = {
-  blue: 'border-l-blue-500',
-  emerald: 'border-l-emerald-500',
-  red: 'border-l-red-500',
-  amber: 'border-l-amber-500',
+const statCardStyles: Record<string, { border: string; icon: string; bg: string }> = {
+  blue: { border: 'border-l-blue-500', icon: 'text-blue-500 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+  emerald: { border: 'border-l-emerald-500', icon: 'text-emerald-500 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+  red: { border: 'border-l-red-500', icon: 'text-red-500 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
+  amber: { border: 'border-l-amber-500', icon: 'text-amber-500 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20' },
 }
 
 function StatCard({
@@ -458,13 +458,14 @@ function StatCard({
   color?: string
   isAmount?: boolean
 }) {
+  const s = statCardStyles[color] || statCardStyles.emerald
   return (
     <div className={cn(
       'rounded-lg p-5 border border-slate-200 dark:border-border bg-white dark:bg-card border-l-[3px]',
-      statCardBorders[color] || 'border-l-emerald-500'
+      s.border
     )}>
       <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400">
-        <span className="text-primary">{icon}</span>
+        <span className={cn('p-1.5 rounded-lg', s.bg, s.icon)}>{icon}</span>
         <span className="text-sm">{label}</span>
       </div>
       <p className="text-3xl font-bold text-slate-900 dark:text-white">

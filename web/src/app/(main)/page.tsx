@@ -237,30 +237,35 @@ export default function HomePage() {
             icon={<Calendar className="w-6 h-6" />}
             title="경기 결과"
             description="지난 매치 기록 확인"
+            color="blue"
           />
           <QuickMenuCard
             href="/ranking"
             icon={<Trophy className="w-6 h-6" />}
             title="랭킹"
             description="시즌 순위 확인"
+            color="amber"
           />
           <QuickMenuCard
             href="/abilities"
             icon={<Star className="w-6 h-6" />}
             title="능력치 평가"
             description="팀원 능력치 평가"
+            color="purple"
           />
           <QuickMenuCard
             href="/hall-of-fame"
             icon={<Trophy className="w-6 h-6" />}
             title="명예의 전당"
             description="시즌 챔피언 보기"
+            color="rose"
           />
           <QuickMenuCard
             href="/board"
             icon={<Globe className="w-6 h-6" />}
             title="커뮤니티"
             description="팀 모집 & 매칭"
+            color="teal"
           />
         </div>
       </section>
@@ -528,23 +533,34 @@ function StatCard({
   )
 }
 
+const quickMenuColors: Record<string, { bg: string; text: string; hoverBg: string }> = {
+  blue: { bg: 'bg-blue-50 dark:bg-blue-900/30', text: 'text-blue-500 dark:text-blue-400', hoverBg: 'group-hover:bg-blue-100 dark:group-hover:bg-blue-800/40' },
+  amber: { bg: 'bg-amber-50 dark:bg-amber-900/30', text: 'text-amber-500 dark:text-amber-400', hoverBg: 'group-hover:bg-amber-100 dark:group-hover:bg-amber-800/40' },
+  purple: { bg: 'bg-purple-50 dark:bg-purple-900/30', text: 'text-purple-500 dark:text-purple-400', hoverBg: 'group-hover:bg-purple-100 dark:group-hover:bg-purple-800/40' },
+  rose: { bg: 'bg-rose-50 dark:bg-rose-900/30', text: 'text-rose-500 dark:text-rose-400', hoverBg: 'group-hover:bg-rose-100 dark:group-hover:bg-rose-800/40' },
+  teal: { bg: 'bg-teal-50 dark:bg-teal-900/30', text: 'text-teal-500 dark:text-teal-400', hoverBg: 'group-hover:bg-teal-100 dark:group-hover:bg-teal-800/40' },
+}
+
 function QuickMenuCard({
   href,
   icon,
   title,
   description,
+  color = 'blue',
 }: {
   href: string
   icon: React.ReactNode
   title: string
   description: string
+  color?: string
 }) {
+  const c = quickMenuColors[color] || quickMenuColors.blue
   return (
     <Link
       href={href}
       className="group bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-card-elevated rounded-lg p-6 border border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-slate-500/50 transition-all duration-200"
     >
-      <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 transition-colors bg-green-50 dark:bg-green-900/30 text-primary group-hover:bg-green-100 dark:group-hover:bg-green-800/40">
+      <div className={cn('inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 transition-colors', c.bg, c.text, c.hoverBg)}>
         {icon}
       </div>
       <h3 className="font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">{title}</h3>

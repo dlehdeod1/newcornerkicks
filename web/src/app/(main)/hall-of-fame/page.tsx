@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { Trophy, Crown, Star, Target, Handshake, Shield, Award, TrendingUp, Calendar, Medal, Zap } from 'lucide-react'
 import { rankingsApi } from '@/lib/api'
+import { cn } from '@/lib/cn'
 
 const categoryIcons: Record<string, any> = {
   '득점왕': Target,
@@ -17,7 +18,17 @@ const categoryIcons: Record<string, any> = {
   '출석왕': Calendar,
 }
 
-// 색상은 브랜드 그린 단일로 통일 (메달만 gold/silver/bronze 예외)
+const categoryColors: Record<string, { bg: string; text: string; medal: string }> = {
+  '득점왕': { bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-500 dark:text-red-400', medal: 'bg-red-100 dark:bg-red-900/30 text-red-500' },
+  '도움왕': { bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-500 dark:text-blue-400', medal: 'bg-blue-100 dark:bg-blue-900/30 text-blue-500' },
+  '공격포인트왕': { bg: 'bg-rose-50 dark:bg-rose-900/20', text: 'text-rose-500 dark:text-rose-400', medal: 'bg-rose-100 dark:bg-rose-900/30 text-rose-500' },
+  '수비왕': { bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-500 dark:text-emerald-400', medal: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500' },
+  'MVP': { bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-500 dark:text-amber-400', medal: 'bg-amber-100 dark:bg-amber-900/30 text-amber-500' },
+  '승률왕': { bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'text-purple-500 dark:text-purple-400', medal: 'bg-purple-100 dark:bg-purple-900/30 text-purple-500' },
+  '출석왕': { bg: 'bg-teal-50 dark:bg-teal-900/20', text: 'text-teal-500 dark:text-teal-400', medal: 'bg-teal-100 dark:bg-teal-900/30 text-teal-500' },
+}
+
+const defaultColor = { bg: 'bg-primary/10', text: 'text-primary', medal: 'bg-primary/10 text-primary' }
 
 export default function HallOfFamePage() {
   const { token } = useAuthStore()
@@ -94,6 +105,7 @@ export default function HallOfFamePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {season.honors.map((honor: any) => {
                   const Icon = categoryIcons[honor.category] || Trophy
+                  const color = categoryColors[honor.category] || defaultColor
 
                   return (
                     <Link
@@ -104,16 +116,16 @@ export default function HallOfFamePage() {
                       <div className="p-6">
                         {/* 아이콘 + 메달 */}
                         <div className="flex items-start justify-between mb-4">
-                          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                            <Icon className="w-7 h-7 text-primary" />
+                          <div className={cn('w-14 h-14 rounded-2xl flex items-center justify-center', color.bg)}>
+                            <Icon className={cn('w-7 h-7', color.text)} />
                           </div>
-                          <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                            <Medal className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                          <div className={cn('w-10 h-10 rounded-full flex items-center justify-center', color.medal)}>
+                            <Medal className="w-5 h-5" />
                           </div>
                         </div>
 
                         {/* 부문 */}
-                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                        <p className={cn('text-sm font-medium mb-1', color.text)}>
                           {honor.category}
                         </p>
 
@@ -124,7 +136,7 @@ export default function HallOfFamePage() {
 
                         {/* 기록 */}
                         <div className="flex items-baseline gap-1">
-                          <span className="text-3xl font-black text-primary">
+                          <span className={cn('text-3xl font-black', color.text)}>
                             {typeof honor.value === 'number' && honor.value % 1 !== 0
                               ? honor.value.toFixed(1)
                               : honor.value}
