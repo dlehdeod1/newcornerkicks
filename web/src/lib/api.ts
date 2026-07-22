@@ -311,9 +311,17 @@ export const adminApi = {
   recalculateAllStats: (token: string) =>
     api('/players/recalculate-all', { method: 'POST', token }),
 
-  // 유저 검색 (연동 변경용)
+  // 유저 검색 (연동 변경용) — 클럽 소속 유저만 조회됨
   searchUsers: (q: string, token: string) =>
     api(`/players/admin/search-users?q=${encodeURIComponent(q)}`, { token }),
+
+  // 이메일 정확 일치로 유저 조회 — 클럽 미소속 유저까지 포함
+  lookupUserByEmail: (email: string, token: string) =>
+    api(`/players/admin/lookup-user?email=${encodeURIComponent(email)}`, { token }),
+
+  // 유저를 내 클럽 멤버로 추가
+  addClubMember: (userId: string, token: string) =>
+    api('/players/admin/club-members', { method: 'POST', body: { userId }, token }),
 
   // 선수 연동 변경 (userId: null이면 해제)
   relinkPlayer: (playerId: number, userId: string | null, token: string) =>

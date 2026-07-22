@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import type { Env } from '../index'
 import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth'
+import { rateLimit } from '../middleware/rateLimit'
 import { getFutsalDNA } from '../utils/futsalDna'
 import { isClubPro, proLockedResponse } from '../utils/planUtils'
 import { computeStreaks } from '../utils/streaks'
@@ -227,6 +228,8 @@ playersRoutes.put('/:id', authMiddleware('ADMIN'), async (c) => {
 
 // 유저 목록/검색 (관리자) - 연동 변경용
 // q 없으면 전체 목록(미연동 우선), q 있으면 필터링
+// 주의: club_members INNER JOIN이라 클럽 미소속 유저는 나오지 않음.
+//       미소속 유저를 찾으려면 아래 /admin/lookup-user (이메일 정확 일치) 사용
 playersRoutes.get('/admin/search-users', authMiddleware('ADMIN'), async (c) => {
   const q = c.req.query('q') || ''
   const clubId = (c as any).clubId
@@ -248,6 +251,79 @@ playersRoutes.get('/admin/search-users', authMiddleware('ADMIN'), async (c) => {
   const users = await c.env.DB.prepare(baseQuery).bind(...bindings).all()
 
   return c.json({ users: users.results })
+})
+
+// 이메일로 유저 조회 (관리자) - 클럽 미소속 유저까지 포함
+// 검색(부분 일치)이 아니라 이메일 "정확 일치"만 허용 — 타 클럽 유저 목록 노출 방지
+playersRoutes.get('/admin/lookup-user', authMiddleware('ADMIN'), rateLimit(20, 60000), async (c) => {
+  const email = (c.req.query('email') || '').trim().toLowerCase()
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽 정보가 없습니다.' }, 403)
+  if (!email) return c.json({ error: '이메일을 입력해주세요.' }, 400)
+
+  const user = await c.env.DB.prepare(
+    'SELECT id, email, username, created_at FROM users WHERE lower(email) = ?'
+  ).bind(email).first<{ id: string; email: string; username: string; created_at: number }>()
+
+  if (!user) {
+    return c.json({ error: '해당 이메일로 가입된 계정이 없습니다.' }, 404)
+  }
+
+  const membership = await c.env.DB.prepare(
+    'SELECT role FROM club_members WHERE user_id = ? AND club_id = ?'
+  ).bind(user.id, clubId).first<{ role: string }>()
+
+  // 이 클럽에서 이미 선수와 연동되어 있는지
+  const player = await c.env.DB.prepare(
+    'SELECT id, name FROM players WHERE user_id = ? AND club_id = ?'
+  ).bind(user.id, clubId).first<{ id: number; name: string }>()
+
+  return c.json({
+    user: {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      createdAt: user.created_at,
+      isMember: !!membership,
+      clubRole: membership?.role ?? null,
+      playerId: player?.id ?? null,
+      playerName: player?.name ?? null,
+    },
+  })
+})
+
+// 유저를 내 클럽 멤버로 추가 (관리자)
+playersRoutes.post('/admin/club-members', authMiddleware('ADMIN'), async (c) => {
+  const body = await c.req.json()
+  const userId = body?.userId
+  const clubId = (c as any).clubId
+  if (!clubId) return c.json({ error: '클럽 정보가 없습니다.' }, 403)
+  if (!userId || typeof userId !== 'string') {
+    return c.json({ error: 'userId가 필요합니다.' }, 400)
+  }
+
+  const user = await c.env.DB.prepare(
+    'SELECT id, username FROM users WHERE id = ?'
+  ).bind(userId).first<{ id: string; username: string }>()
+
+  if (!user) {
+    return c.json({ error: '사용자를 찾을 수 없습니다.' }, 404)
+  }
+
+  const existing = await c.env.DB.prepare(
+    'SELECT id FROM club_members WHERE club_id = ? AND user_id = ?'
+  ).bind(clubId, userId).first()
+
+  if (existing) {
+    return c.json({ error: '이미 해당 클럽의 멤버입니다.' }, 400)
+  }
+
+  const now = Math.floor(Date.now() / 1000)
+  await c.env.DB.prepare(
+    `INSERT INTO club_members (club_id, user_id, role, joined_at) VALUES (?, ?, 'member', ?)`
+  ).bind(clubId, userId, now).run()
+
+  return c.json({ message: `@${user.username}이(가) 클럽에 추가되었습니다.` })
 })
 
 // 유저 계정 삭제 (관리자)

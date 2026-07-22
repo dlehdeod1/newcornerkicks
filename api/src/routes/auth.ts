@@ -505,7 +505,7 @@ authRoutes.post('/reset-password', async (c) => {
 // ─── Google OAuth 로그인 ───
 authRoutes.post('/google', async (c) => {
   try {
-    const { idToken } = await c.req.json()
+    const { idToken, inviteCode } = await c.req.json()
     if (!idToken) return c.json({ error: 'idToken이 필요합니다.' }, 400)
 
     // Google 토큰 검증 (JWKS)
@@ -549,6 +549,29 @@ authRoutes.post('/google', async (c) => {
       `).bind(userId, email, username, googleId, now, now).run()
 
       user = await db.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first<any>()
+    }
+
+    // 초대 코드가 있으면 클럽 가입 (신규/기존 유저 모두)
+    // 이게 없으면 구글로 가입한 유저는 club_members 행이 없어
+    // 관리자 화면의 유저 검색에 아예 안 잡힘
+    if (inviteCode) {
+      const club = await db.prepare(
+        'SELECT id FROM clubs WHERE invite_code = ?'
+      ).bind(String(inviteCode).toUpperCase()).first<{ id: number }>()
+
+      if (!club) {
+        return c.json({ error: '유효하지 않은 초대 코드입니다.' }, 400)
+      }
+
+      const existing = await db.prepare(
+        'SELECT id FROM club_members WHERE club_id = ? AND user_id = ?'
+      ).bind(club.id, user.id).first()
+
+      if (!existing) {
+        await db.prepare(
+          `INSERT INTO club_members (club_id, user_id, role, joined_at) VALUES (?, ?, 'member', ?)`
+        ).bind(club.id, user.id, now).run()
+      }
     }
 
     // 전체 클럽 목록 조회

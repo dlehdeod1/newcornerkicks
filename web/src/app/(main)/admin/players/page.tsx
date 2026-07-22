@@ -34,6 +34,7 @@ export default function AdminPlayersPage() {
   const [userSearch, setUserSearch] = useState('')
   const [allUsers, setAllUsers] = useState<any[]>([])
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
+  const [isLookingUp, setIsLookingUp] = useState(false)
 
   // ✅ 모든 hooks는 조건부 return 전에 선언해야 합니다 (React Rules of Hooks)
   const { data, isLoading } = useQuery({
@@ -137,6 +138,30 @@ export default function AdminPlayersPage() {
       loadAllUsers()
     }
   }, [relinkModal, loadAllUsers])
+
+  // 클럽 미소속 계정을 이메일 정확 일치로 찾아 클럽에 추가
+  const lookupAndAddMember = useCallback(async () => {
+    const email = userSearch.trim()
+    if (!token || !email) return
+    setIsLookingUp(true)
+    try {
+      const res = await adminApi.lookupUserByEmail(email, token)
+      const u = res.user
+      if (u.isMember) {
+        toast.info(`@${u.username}은(는) 이미 클럽 멤버입니다.`)
+      } else if (confirm(`@${u.username}(${u.email}) 계정을 클럽 멤버로 추가하시겠습니까?`)) {
+        await adminApi.addClubMember(u.id, token)
+        toast.success(`@${u.username}이(가) 클럽에 추가되었습니다.`)
+      } else {
+        return
+      }
+      await loadAllUsers()
+    } catch (error: any) {
+      toast.error(error.message || '계정을 찾을 수 없습니다.')
+    } finally {
+      setIsLookingUp(false)
+    }
+  }, [token, userSearch, loadAllUsers])
 
   // 클라이언트 사이드 필터링
   const filteredUsers = userSearch.trim().length === 0
@@ -404,7 +429,24 @@ export default function AdminPlayersPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-slate-400 text-center py-3 mb-4">검색 결과가 없습니다.</p>
+              <div className="text-center py-3 mb-4">
+                <p className="text-sm text-slate-400">클럽 멤버 중 검색 결과가 없습니다.</p>
+                {userSearch.includes('@') && (
+                  <>
+                    <p className="text-xs text-slate-400 mt-1">
+                      가입은 했지만 아직 클럽에 소속되지 않은 계정일 수 있습니다.
+                    </p>
+                    <button
+                      onClick={lookupAndAddMember}
+                      disabled={isLookingUp}
+                      className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+                    >
+                      <Search className="w-4 h-4" />
+                      {isLookingUp ? '조회 중...' : '이 이메일로 계정 찾아 클럽에 추가'}
+                    </button>
+                  </>
+                )}
+              </div>
             )}
 
             {relinkModal.currentUserId && (
