@@ -24,7 +24,7 @@ exportRoutes.get('/:type', authMiddleware('ADMIN'), async (c) => {
 
   if (type === 'rankings') {
     const cache = await c.env.DB.prepare(
-      'SELECT data FROM rankings_cache WHERE club_id = ? AND year = ?'
+      "SELECT data FROM rankings_cache WHERE club_id = ? AND year = ? AND period = 'full'"
     ).bind(clubId, year).first<any>()
 
     if (cache?.data) {
