@@ -23,6 +23,8 @@
 0021_defense_detail_events.sql ← TACKLE/INTERCEPTION/CLEARANCE 컬럼
 0022_attack_gk_events.sql    ← DRIBBLE/SHOT_ON/SHOT_OFF 컬럼
 0023_rankings_expansion.sql  ← clubs.mvp_weights
+0024_default_stats.sql       ← 기본 통계
 0025_phase2_gamification.sql ← 배지/시즌어워드/반응/댓글수정/라이브공유/출석UNIQUE
 0026_player_substitutions.sql ← 선수 교체 기록
+0027_rankings_period.sql     ← rankings_cache.period ('full'|'h1'|'h2') + UNIQUE(club_id,year,period)
 ```
