@@ -50,12 +50,12 @@ export default function AdminRankingsPage() {
   // hooks는 조건부 return 전에 모두 선언 (React hooks 규칙)
   const { data, isLoading } = useQuery({
     queryKey: ['rankings', selectedYear],
-    queryFn: () => rankingsApi.get(selectedYear, token ?? undefined),
+    queryFn: () => rankingsApi.get(selectedYear, 'full', token ?? undefined),
     enabled: hydrated && isLoggedIn && isAdmin,
   })
 
   const refreshMutation = useMutation({
-    mutationFn: () => rankingsApi.refresh(selectedYear, token!),
+    mutationFn: () => rankingsApi.refresh(selectedYear, 'full', token!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rankings', selectedYear] })
     },

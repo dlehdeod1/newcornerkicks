@@ -26,7 +26,7 @@ export default function PlayerStatsPage({ params }: { params: Promise<{ id: stri
 
   const { data: rankingsData } = useQuery({
     queryKey: ['rankings', currentYear],
-    queryFn: () => rankingsApi.get(currentYear, token ?? undefined),
+    queryFn: () => rankingsApi.get(currentYear, 'full', token ?? undefined),
   })
 
   const { data: logsData, isLoading: logsLoading } = useQuery({

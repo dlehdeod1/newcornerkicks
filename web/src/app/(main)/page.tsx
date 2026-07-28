@@ -41,7 +41,7 @@ export default function HomePage() {
   // 랭킹 Top 5
   const { data: rankingData } = useQuery({
     queryKey: ['rankings', 'dashboard', token],
-    queryFn: () => rankingsApi.get(undefined, token ?? undefined),
+    queryFn: () => rankingsApi.get(undefined, 'full', token ?? undefined),
     enabled: isLoggedIn,
   })
 

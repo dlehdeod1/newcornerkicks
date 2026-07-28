@@ -41,7 +41,7 @@ export default function StatsPage() {
 
   const { data: rankingsData, isLoading: rankingsLoading } = useQuery({
     queryKey: ['rankings', selectedYear, token],
-    queryFn: () => rankingsApi.get(selectedYear, token ?? undefined),
+    queryFn: () => rankingsApi.get(selectedYear, 'full', token ?? undefined),
   })
 
   const { data: settlementData, isLoading: settlementLoading } = useQuery({

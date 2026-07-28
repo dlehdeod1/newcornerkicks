@@ -227,13 +227,15 @@ export const settlementsApi = {
     api(`/settlements/summary${year ? `?year=${year}` : ''}`, token ? { token } : {}),
 }
 
+export type RankingPeriod = 'full' | 'h1' | 'h2'
+
 // Rankings API
 export const rankingsApi = {
-  get: (year?: number, token?: string) =>
-    api(`/rankings${year ? `?year=${year}` : ''}`, token ? { token } : {}),
+  get: (year?: number, period?: RankingPeriod, token?: string) =>
+    api(`/rankings?${year ? `year=${year}&` : ''}period=${period ?? 'full'}`, token ? { token } : {}),
 
-  refresh: (year: number, token: string) =>
-    api(`/rankings/refresh?year=${year}`, { method: 'POST', token }),
+  refresh: (year: number, period: RankingPeriod, token: string) =>
+    api(`/rankings/refresh?year=${year}&period=${period}`, { method: 'POST', token }),
 
   hallOfFame: (token?: string) =>
     api('/rankings/hall-of-fame', token ? { token } : {}),

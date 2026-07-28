@@ -46,7 +46,7 @@ export default function ClubPage() {
 
   const { data: rankingsData } = useQuery({
     queryKey: ['rankings', currentYear],
-    queryFn: () => rankingsApi.get(currentYear, token ?? undefined),
+    queryFn: () => rankingsApi.get(currentYear, 'full', token ?? undefined),
     enabled: !!player?.id,
   })
 
