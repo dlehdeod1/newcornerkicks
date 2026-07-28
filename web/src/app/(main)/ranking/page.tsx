@@ -5,10 +5,17 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { Trophy, Target, Handshake, Shield, ChevronDown, Search, ChevronRight, ChevronUp, Crown, Award, List, TableProperties, Medal } from 'lucide-react'
-import { rankingsApi, exportApi, awardsApi } from '@/lib/api'
+import { rankingsApi, exportApi, awardsApi, type RankingPeriod } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import { SortChips, type SortChip } from '@/components/ui/sort-chips'
 import { CompactPlayerList } from '@/components/ranking/compact-player-list'
+import { PeriodAwards } from '@/components/ranking/period-awards'
+
+const PERIOD_OPTIONS: { value: RankingPeriod; label: string }[] = [
+  { value: 'full', label: '연간' },
+  { value: 'h1', label: '상반기' },
+  { value: 'h2', label: '하반기' },
+]
 
 type SortKey = 'mvpCount' | 'goals' | 'assists' | 'attackPoints' | 'defenses' | 'games' | 'sessionWins' | 'sessionLosses' | 'contribution' | 'winRate' | 'tackles' | 'interceptions' | 'clearances' | 'saves' | 'keyPasses' | 'dribbles' | 'shotsOn' | 'shotsOff' | 'mvpScore'
 type SortOrder = 'asc' | 'desc'
@@ -25,6 +32,7 @@ export default function RankingPage() {
   const { token, club } = useAuthStore()
   const currentYear = getCurrentSeasonYear(club?.seasonStartMonth ?? 1)
   const [selectedYear, setSelectedYear] = useState(currentYear)
+  const [selectedPeriod, setSelectedPeriod] = useState<RankingPeriod>('full')
   const [sortBy, setSortBy] = useState<SortKey>('mvpCount')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [search, setSearch] = useState('')
@@ -45,8 +53,8 @@ export default function RankingPage() {
   }, [viewMode])
 
   const { data, isLoading } = useQuery({
-    queryKey: ['rankings', selectedYear, token],
-    queryFn: () => rankingsApi.get(selectedYear, token ?? undefined),
+    queryKey: ['rankings', selectedYear, selectedPeriod, token],
+    queryFn: () => rankingsApi.get(selectedYear, selectedPeriod, token ?? undefined),
     enabled: !!token,
   })
 
@@ -135,11 +143,11 @@ export default function RankingPage() {
               선수 / 랭킹
             </h1>
             <p className="text-slate-600 dark:text-slate-400 mt-1 text-sm">
-              {selectedYear}년 시즌 &bull; {getSortLabel()} 순
+              {selectedYear}년 {PERIOD_OPTIONS.find(p => p.value === selectedPeriod)?.label} &bull; {getSortLabel()} 순
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {club?.isPro && (
+            {club?.isPro && selectedPeriod === 'full' && (
               <button
                 onClick={() => exportApi.download(token!, 'rankings', selectedYear)}
                 className="text-xs text-primary hover:text-primary-hover"
@@ -162,6 +170,24 @@ export default function RankingPage() {
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
           </div>
+        </div>
+
+        {/* 기간 세그먼트 */}
+        <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-0.5 mb-4">
+          {PERIOD_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setSelectedPeriod(opt.value)}
+              className={cn(
+                'px-3 py-1.5 text-xs font-semibold rounded-md transition-colors',
+                selectedPeriod === opt.value
+                  ? 'bg-primary text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-primary'
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
 
         {/* 검색 */}
@@ -195,6 +221,17 @@ export default function RankingPage() {
           {!search && topThree.length >= 3 && (
             <div className="mb-8">
               <Podium topThree={topThree} sortBy={sortBy} />
+            </div>
+          )}
+
+          {/* 기간 결산 TOP3 */}
+          {!search && (
+            <div className="mb-8">
+              <PeriodAwards
+                data={data?.data}
+                enabledEvents={enabledEvents}
+                periodLabel={`${selectedYear}년 ${PERIOD_OPTIONS.find(p => p.value === selectedPeriod)?.label}`}
+              />
             </div>
           )}
 
@@ -310,8 +347,8 @@ export default function RankingPage() {
             </div>
           )}
 
-          {/* Season Awards */}
-          <SeasonAwards data={awardsData} year={selectedYear} />
+          {/* Season Awards — 연 단위 데이터라 연간 선택 시에만 표시 */}
+          {selectedPeriod === 'full' && <SeasonAwards data={awardsData} year={selectedYear} />}
         </>
       )}
     </div>
