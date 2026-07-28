@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import type { Env } from '../index'
 import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth'
 
-import { getSeasonDateRange, getClubSeasonStartMonth } from '../utils/season'
+import { getSeasonDateRange, getClubSeasonStartMonth, getPeriodDateRange, isRankingPeriod, type RankingPeriod } from '../utils/season'
 import { refreshChemistryCache } from '../utils/chemistry'
 import { getSeasonSummaryStats } from '../utils/seasonStats'
 
@@ -11,6 +11,11 @@ const rankingsRoutes = new Hono<{ Bindings: Env }>()
 // 랭킹 조회 (캐시) + 통계 데이터 포함
 rankingsRoutes.get('/', optionalAuthMiddleware, async (c) => {
   const year = Number(c.req.query('year')) || new Date().getFullYear()
+  const periodParam = c.req.query('period') || 'full'
+  if (!isRankingPeriod(periodParam)) {
+    return c.json({ error: '올바르지 않은 기간입니다. (full/h1/h2)' }, 400)
+  }
+  const period: RankingPeriod = periodParam
   const clubId = (c as any).clubId
 
   if (!clubId) {
@@ -18,18 +23,18 @@ rankingsRoutes.get('/', optionalAuthMiddleware, async (c) => {
   }
 
   const seasonStartMonth = await getClubSeasonStartMonth(c.env.DB, clubId)
-  const { yearStart, yearEnd } = getSeasonDateRange(year, seasonStartMonth)
+  const { yearStart, yearEnd } = getPeriodDateRange(year, period, seasonStartMonth)
 
   // 캐시된 랭킹 데이터 (클럽별) — 없으면 자동 계산
   let cache = await c.env.DB.prepare(`
-    SELECT * FROM rankings_cache WHERE year = ? AND club_id = ?
-  `).bind(year, clubId).first()
+    SELECT * FROM rankings_cache WHERE year = ? AND club_id = ? AND period = ?
+  `).bind(year, clubId, period).first()
 
   if (!cache) {
-    await buildAndCacheRankings(c.env.DB, clubId, year, yearStart, yearEnd, 'auto')
+    await buildAndCacheRankings(c.env.DB, clubId, year, yearStart, yearEnd, 'auto', period)
     cache = await c.env.DB.prepare(`
-      SELECT * FROM rankings_cache WHERE year = ? AND club_id = ?
-    `).bind(year, clubId).first()
+      SELECT * FROM rankings_cache WHERE year = ? AND club_id = ? AND period = ?
+    `).bind(year, clubId, period).first()
   }
 
   let rankings: any[] = []
@@ -79,6 +84,11 @@ rankingsRoutes.get('/', optionalAuthMiddleware, async (c) => {
 // 랭킹 새로고침 (관리자)
 rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
   const year = Number(c.req.query('year')) || new Date().getFullYear()
+  const periodParam = c.req.query('period') || 'full'
+  if (!isRankingPeriod(periodParam)) {
+    return c.json({ error: '올바르지 않은 기간입니다. (full/h1/h2)' }, 400)
+  }
+  const period: RankingPeriod = periodParam
   const userId = (c as any).userId
   const clubId = (c as any).clubId
 
@@ -87,7 +97,7 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
   }
 
   const seasonStartMonth = await getClubSeasonStartMonth(c.env.DB, clubId)
-  const { yearStart, yearEnd } = getSeasonDateRange(year, seasonStartMonth)
+  const { yearStart, yearEnd } = getPeriodDateRange(year, period, seasonStartMonth)
 
   // ─── MVP 전체 재계산 (현재 DB 데이터 기준) ───
   try {
@@ -113,7 +123,7 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
     console.error('MVP recalculation error (ignored):', err)
   }
 
-  const enrichedRankings = await buildAndCacheRankings(c.env.DB, clubId, year, yearStart, yearEnd, userId || 'admin')
+  const enrichedRankings = await buildAndCacheRankings(c.env.DB, clubId, year, yearStart, yearEnd, userId || 'admin', period)
 
   // 케미 캐시도 함께 갱신
   await refreshChemistryCache(c.env.DB, clubId)
@@ -168,7 +178,7 @@ rankingsRoutes.get('/hall-of-fame', optionalAuthMiddleware, async (c) => {
 
   // 시즌별로 25세션 이상 참석 + 각 지표 1등 조회
   const years = await c.env.DB.prepare(`
-    SELECT DISTINCT year FROM rankings_cache WHERE club_id = ? ORDER BY year DESC
+    SELECT DISTINCT year FROM rankings_cache WHERE club_id = ? AND period = 'full' ORDER BY year DESC
   `).bind(clubId).all()
 
   const hallOfFame = []
@@ -176,7 +186,7 @@ rankingsRoutes.get('/hall-of-fame', optionalAuthMiddleware, async (c) => {
   for (const yearRow of years.results as any[]) {
     const year = yearRow.year
     const cache = await c.env.DB.prepare(`
-      SELECT data FROM rankings_cache WHERE year = ? AND club_id = ?
+      SELECT data FROM rankings_cache WHERE year = ? AND club_id = ? AND period = 'full'
     `).bind(year, clubId).first()
 
     if (!cache) continue
@@ -554,7 +564,7 @@ async function autoBackfillMvp(db: D1Database, sessionId: number, yearStart: str
 }
 
 // 랭킹 통계 계산 + 캐시 저장 공통 함수
-async function buildAndCacheRankings(db: D1Database, clubId: number, year: number, yearStart: string, yearEnd: string, updatedBy: string): Promise<any[]> {
+async function buildAndCacheRankings(db: D1Database, clubId: number, year: number, yearStart: string, yearEnd: string, updatedBy: string, period: RankingPeriod = 'full'): Promise<any[]> {
 
   const rankings = await db.prepare(`
     SELECT
@@ -675,9 +685,12 @@ async function buildAndCacheRankings(db: D1Database, clubId: number, year: numbe
   enrichedRankings.sort((a, b) => b.mvpScore - a.mvpScore)
 
   const now = new Date().toISOString()
-  const cacheId = clubId * 10000 + year
-  await db.prepare(`INSERT OR REPLACE INTO rankings_cache (id, club_id, data, updated_at, updated_by, year) VALUES (?, ?, ?, ?, ?, ?)`)
-    .bind(cacheId, clubId, JSON.stringify(enrichedRankings), now, updatedBy, year).run()
+  // full은 기존 id 규칙 유지(기존 행 덮어쓰기), 반기는 충돌 없는 새 규칙
+  const cacheId = period === 'full'
+    ? clubId * 10000 + year
+    : clubId * 100000 + year * 10 + (period === 'h1' ? 1 : 2)
+  await db.prepare(`INSERT OR REPLACE INTO rankings_cache (id, club_id, data, updated_at, updated_by, year, period) VALUES (?, ?, ?, ?, ?, ?, ?)`)
+    .bind(cacheId, clubId, JSON.stringify(enrichedRankings), now, updatedBy, year, period).run()
 
   return enrichedRankings
 }
