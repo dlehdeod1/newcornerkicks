@@ -495,10 +495,10 @@ async function recalculateMatchStats(db: D1Database, matchId: number) {
   // 기존 스탯 삭제
   await db.prepare('DELETE FROM player_match_stats WHERE match_id = ?').bind(matchId).run()
 
-  // 이벤트 기반 재계산
+  // 이벤트 기반 재계산 — 득점자가 용병(player_id NULL)이어도 assister 집계를 위해 행을 유지
   const events = await db.prepare(`
     SELECT player_id, event_type, assister_id FROM match_events
-    WHERE match_id = ? AND player_id IS NOT NULL
+    WHERE match_id = ? AND (player_id IS NOT NULL OR assister_id IS NOT NULL)
   `).bind(matchId).all()
 
   const empty = () => ({ goals: 0, assists: 0, blocks: 0, tackles: 0, interceptions: 0, clearances: 0, saves: 0, keyPasses: 0, dribbles: 0, shotsOn: 0, shotsOff: 0 })
@@ -516,9 +516,11 @@ async function recalculateMatchStats(db: D1Database, matchId: number) {
   }
 
   for (const event of events.results as any[]) {
-    const s = getOrCreate(event.player_id)
-    const f = fieldMap[event.event_type]
-    if (f) (s as any)[f]++
+    if (event.player_id) {
+      const s = getOrCreate(event.player_id)
+      const f = fieldMap[event.event_type]
+      if (f) (s as any)[f]++
+    }
 
     if (event.assister_id) {
       getOrCreate(event.assister_id).assists++

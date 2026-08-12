@@ -525,6 +525,15 @@ async function autoBackfillMvp(db: D1Database, sessionId: number, yearStart: str
   for (const match of matches.results as any[]) {
     const events = await db.prepare(`SELECT * FROM match_events WHERE match_id = ?`).bind(match.id).all()
     for (const event of events.results as any[]) {
+      // 도움 점수는 득점자가 용병이어도 부여해야 하므로 용병 skip보다 먼저 처리
+      if (event.assister_id && event.event_type === 'GOAL' && !event.assister_guest_name) {
+        if (!playerStats.has(event.assister_id)) {
+          const assister = await db.prepare(`SELECT name FROM players WHERE id = ?`).bind(event.assister_id).first()
+          playerStats.set(event.assister_id, { id: event.assister_id, name: (assister as any)?.name || 'Unknown', mvpScore: 0 })
+        }
+        playerStats.get(event.assister_id)!.mvpScore += weights.ASSIST
+      }
+
       if (!event.player_id || event.guest_name) continue
       if (!playerStats.has(event.player_id)) {
         const player = await db.prepare(`SELECT name FROM players WHERE id = ?`).bind(event.player_id).first()
@@ -541,14 +550,6 @@ async function autoBackfillMvp(db: D1Database, sessionId: number, yearStart: str
       else if (event.event_type === 'DRIBBLE') stats.mvpScore += weights.DRIBBLE
       else if (event.event_type === 'SHOT_ON') stats.mvpScore += weights.SHOT_ON
       else if (event.event_type === 'SHOT_OFF') stats.mvpScore += weights.SHOT_OFF
-
-      if (event.assister_id && event.event_type === 'GOAL' && !event.assister_guest_name) {
-        if (!playerStats.has(event.assister_id)) {
-          const assister = await db.prepare(`SELECT name FROM players WHERE id = ?`).bind(event.assister_id).first()
-          playerStats.set(event.assister_id, { id: event.assister_id, name: (assister as any)?.name || 'Unknown', mvpScore: 0 })
-        }
-        playerStats.get(event.assister_id)!.mvpScore += weights.ASSIST
-      }
     }
   }
 
