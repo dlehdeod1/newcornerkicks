@@ -146,16 +146,21 @@ class ApiService {
       }, token: token);
 
   // Rankings
-  Future<dynamic> getRankings({int? year, String? token}) =>
-      request('/rankings${year != null ? '?year=$year' : ''}', token: token);
+  Future<dynamic> getRankings({int? year, String? period, String? token}) {
+    final params = <String>[];
+    if (year != null) params.add('year=$year');
+    if (period != null) params.add('period=$period');
+    final query = params.isNotEmpty ? '?${params.join('&')}' : '';
+    return request('/rankings$query', token: token);
+  }
 
   Future<dynamic> getHallOfFame(String token) => request('/rankings/hall-of-fame', token: token);
 
   Future<dynamic> getFunStats({int? year, String? token}) =>
       request('/rankings/fun-stats${year != null ? '?year=$year' : ''}', token: token);
 
-  Future<dynamic> refreshRankings(int year, String token) =>
-      request('/rankings/refresh?year=$year', method: 'POST', token: token);
+  Future<dynamic> refreshRankings(int year, String token, {String? period}) =>
+      request('/rankings/refresh?year=$year${period != null ? '&period=$period' : ''}', method: 'POST', token: token);
 
   // Players
   Future<dynamic> createPlayer(String name, {String? nickname, required String token}) =>

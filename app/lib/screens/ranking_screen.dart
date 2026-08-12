@@ -28,6 +28,7 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
   bool _refreshing = false;
   String _sortBy = 'mvpScore';
   int _selectedYear = DateTime.now().year;
+  String _selectedPeriod = 'full'; // full | h1 | h2
   String? _lastLoadedToken;
 
   // 통계 데이터
@@ -125,7 +126,7 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
   Future<void> _loadRankings() async {
     final token = context.read<AuthService>().token;
     try {
-      final res = await _api.getRankings(year: _selectedYear, token: token);
+      final res = await _api.getRankings(year: _selectedYear, period: _selectedPeriod, token: token);
       if (mounted) {
         setState(() {
           _rankings = (res['data']?['rankings'] as List?) ?? [];
@@ -276,6 +277,8 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
               ),
             ),
           ),
+          const SizedBox(width: 8),
+          _buildPeriodSegment(),
           const Spacer(),
           if (context.read<AuthService>().isAdmin)
             Material(
@@ -285,7 +288,7 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
                 onTap: _refreshing ? null : () async {
                   setState(() => _refreshing = true);
                   try {
-                    await _api.refreshRankings(_selectedYear, context.read<AuthService>().token!);
+                    await _api.refreshRankings(_selectedYear, context.read<AuthService>().token!, period: _selectedPeriod);
                     await _loadRankings();
                     _funStats = null; // 통계도 갱신 필요
                   } catch (_) {} finally {
@@ -306,6 +309,58 @@ class _RankingScreenState extends State<RankingScreen> with SingleTickerProvider
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodSegment() {
+    const periods = [
+      {'key': 'full', 'label': '연간'},
+      {'key': 'h1', 'label': '상반기'},
+      {'key': 'h2', 'label': '하반기'},
+    ];
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceBorder,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: AppColors.surfaceTint),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: periods.map((p) {
+          final isActive = _selectedPeriod == p['key'];
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd - 3),
+              onTap: () {
+                if (_selectedPeriod == p['key']) return;
+                setState(() {
+                  _selectedPeriod = p['key']!;
+                  _loading = true;
+                });
+                _loadRankings();
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isActive ? AppColors.primary.withAlpha(30) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd - 3),
+                ),
+                child: Text(
+                  p['label']!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                    color: isActive ? AppColors.primary : Colors.white54,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
