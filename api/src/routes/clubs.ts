@@ -488,42 +488,56 @@ clubsRoutes.delete('/me', authMiddleware(), async (c) => {
       return c.json({ error: '클럽 소유자만 삭제할 수 있습니다.' }, 403)
     }
 
-    // 관련 데이터 삭제 (순서 중요 - FK 의존성)
-    const tables = [
-      'player_ratings', 'player_preferences', 'match_events', 'player_match_stats',
-      'team_members', 'teams', 'matches', 'attendance', 'session_payments',
-      'sessions', 'rankings_cache', 'club_members', 'players',
-    ]
-    for (const table of tables) {
-      if (['player_ratings', 'player_preferences', 'player_match_stats'].includes(table)) {
-        await c.env.DB.prepare(
-          `DELETE FROM ${table} WHERE player_id IN (SELECT id FROM players WHERE club_id = ?)`
-        ).bind(clubId).run()
-      } else if (['match_events'].includes(table)) {
-        await c.env.DB.prepare(
-          `DELETE FROM ${table} WHERE match_id IN (SELECT m.id FROM matches m JOIN sessions s ON m.session_id = s.id WHERE s.club_id = ?)`
-        ).bind(clubId).run()
-      } else if (['team_members'].includes(table)) {
-        await c.env.DB.prepare(
-          `DELETE FROM ${table} WHERE team_id IN (SELECT t.id FROM teams t JOIN sessions s ON t.session_id = s.id WHERE s.club_id = ?)`
-        ).bind(clubId).run()
-      } else if (['teams', 'matches'].includes(table)) {
-        await c.env.DB.prepare(
-          `DELETE FROM ${table} WHERE session_id IN (SELECT id FROM sessions WHERE club_id = ?)`
-        ).bind(clubId).run()
-      } else if (['attendance', 'session_payments', 'sessions'].includes(table)) {
-        await c.env.DB.prepare(
-          `DELETE FROM ${table} WHERE ${table === 'sessions' ? 'club_id' : 'session_id IN (SELECT id FROM sessions WHERE club_id'} = ?${table === 'sessions' ? '' : ')'}`
-        ).bind(clubId).run()
-      } else if (table === 'rankings_cache') {
-        await c.env.DB.prepare('DELETE FROM rankings_cache WHERE club_id = ?').bind(clubId).run()
-      } else {
-        await c.env.DB.prepare(`DELETE FROM ${table} WHERE club_id = ?`).bind(clubId).run()
-      }
-    }
+    // 관련 데이터 삭제 — FK 자식 → 부모 순서. batch = 단일 트랜잭션 (중간 실패 시 전체 롤백)
+    const sessionsOf = 'SELECT id FROM sessions WHERE club_id = ?1'
+    const playersOf = 'SELECT id FROM players WHERE club_id = ?1'
+    const matchesOf = `SELECT id FROM matches WHERE session_id IN (${sessionsOf})`
+    const teamsOf = `SELECT id FROM teams WHERE session_id IN (${sessionsOf})`
+    const settlementsOf = `SELECT id FROM settlements WHERE session_id IN (${sessionsOf})`
 
-    // 클럽 삭제
-    await c.env.DB.prepare('DELETE FROM clubs WHERE id = ?').bind(clubId).run()
+    const statements = [
+      // 1) match 하위
+      `DELETE FROM match_events WHERE match_id IN (${matchesOf})`,
+      `DELETE FROM player_match_stats WHERE match_id IN (${matchesOf})`,
+      `DELETE FROM player_substitutions WHERE match_id IN (${matchesOf})`,
+      // 2) matches — team1_id/team2_id가 teams를 참조하므로 teams보다 먼저
+      `DELETE FROM matches WHERE session_id IN (${sessionsOf})`,
+      // 3) team/settlement 하위 → teams/settlements
+      `DELETE FROM team_members WHERE team_id IN (${teamsOf})`,
+      `DELETE FROM team_settlements WHERE settlement_id IN (${settlementsOf})`,
+      `DELETE FROM teams WHERE session_id IN (${sessionsOf})`,
+      `DELETE FROM player_settlements WHERE settlement_id IN (${settlementsOf})`,
+      `DELETE FROM session_payments WHERE session_id IN (${sessionsOf})`,
+      `DELETE FROM settlements WHERE session_id IN (${sessionsOf})`,
+      // 4) session 하위 → sessions
+      `DELETE FROM attendance WHERE session_id IN (${sessionsOf})`,
+      `DELETE FROM player_ratings WHERE session_id IN (${sessionsOf}) OR player_id IN (${playersOf})`,
+      `DELETE FROM session_rsvp WHERE session_id IN (${sessionsOf})`,
+      `DELETE FROM session_mvp WHERE session_id IN (${sessionsOf})`,
+      `DELETE FROM session_mvp_votes WHERE session_id IN (${sessionsOf})`,
+      `DELETE FROM session_mvp_results WHERE session_id IN (${sessionsOf})`,
+      'DELETE FROM sessions WHERE club_id = ?1',
+      // 5) player 하위 → players
+      `DELETE FROM player_preferences WHERE player_id IN (${playersOf}) OR target_player_id IN (${playersOf})`,
+      `DELETE FROM player_tag_votes WHERE player_id IN (${playersOf})`,
+      'DELETE FROM player_chemistry_cache WHERE club_id = ?1',
+      `DELETE FROM chemistry_edges WHERE player_a_id IN (${playersOf}) OR player_b_id IN (${playersOf})`,
+      `DELETE FROM stat_changes WHERE player_id IN (${playersOf})`,
+      `DELETE FROM player_badges WHERE player_id IN (${playersOf})`,
+      'DELETE FROM season_awards WHERE club_id = ?1',
+      'DELETE FROM players WHERE club_id = ?1',
+      // 6) club 하위 → clubs (posts/announcements의 자식은 ON DELETE CASCADE)
+      'DELETE FROM posts WHERE club_id = ?1',
+      'DELETE FROM announcements WHERE club_id = ?1',
+      'UPDATE community_posts SET club_id = NULL WHERE club_id = ?1', // 전체 커뮤니티 글은 보존
+      'DELETE FROM club_reviews WHERE club_id = ?1',
+      'DELETE FROM membership_payments WHERE club_id = ?1',
+      'DELETE FROM subscriptions WHERE club_id = ?1',
+      'DELETE FROM club_members WHERE club_id = ?1',
+      'DELETE FROM rankings_cache WHERE club_id = ?1',
+      'DELETE FROM clubs WHERE id = ?1',
+    ]
+    await c.env.DB.batch(statements.map((sql) => c.env.DB.prepare(sql).bind(clubId)))
 
     return c.json({ message: '클럽이 삭제되었습니다.' })
   } catch (err: any) {
