@@ -125,6 +125,11 @@ rankingsRoutes.post('/refresh', authMiddleware('ADMIN'), async (c) => {
 
   const enrichedRankings = await buildAndCacheRankings(c.env.DB, clubId, year, yearStart, yearEnd, userId || 'admin', period)
 
+  // 다른 기간 캐시 무효화 — 스테일 방지, 다음 조회 시 자동 재계산됨
+  await c.env.DB.prepare(
+    `DELETE FROM rankings_cache WHERE club_id = ? AND year = ? AND period != ?`
+  ).bind(clubId, year, period).run()
+
   // 케미 캐시도 함께 갱신
   await refreshChemistryCache(c.env.DB, clubId)
 
@@ -592,7 +597,7 @@ async function buildAndCacheRankings(db: D1Database, clubId: number, year: numbe
     LEFT JOIN sessions s ON m.session_id = s.id
     WHERE p.is_guest = 0
       AND p.club_id = ?
-      AND (s.session_date IS NULL OR (s.session_date BETWEEN ? AND ? AND s.status IN ('completed', 'closed')))
+      AND (s.session_date IS NULL OR (s.session_date BETWEEN ? AND ? AND m.status = 'completed'))
     GROUP BY p.id
     ORDER BY goals DESC, assists DESC, defenses DESC
   `).bind(yearStart, yearEnd, clubId, clubId, yearStart, yearEnd).all()

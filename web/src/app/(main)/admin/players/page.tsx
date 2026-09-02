@@ -36,6 +36,12 @@ export default function AdminPlayersPage() {
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
   const [isLookingUp, setIsLookingUp] = useState(false)
 
+  // URL ?filter= 초기값 반영 (대시보드 '승인하기' 링크 진입 경로)
+  useEffect(() => {
+    const f = new URLSearchParams(window.location.search).get('filter')
+    if (f && ['pending', 'linked', 'unlinked', 'guest', 'dummy'].includes(f)) setFilter(f)
+  }, [])
+
   // ✅ 모든 hooks는 조건부 return 전에 선언해야 합니다 (React Rules of Hooks)
   const { data, isLoading } = useQuery({
     queryKey: ['players', 'all'],

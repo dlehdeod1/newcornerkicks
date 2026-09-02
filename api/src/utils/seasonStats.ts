@@ -33,31 +33,31 @@ export async function getSeasonSummaryStats(
       WHERE s.session_date BETWEEN ? AND ? AND s.club_id = ?
     `).bind(yearStart, yearEnd, clubId).first(),
 
-    // 총 골 (completed/closed만)
+    // 총 골 (완료된 경기만)
     db.prepare(`
       SELECT COALESCE(SUM(pms.goals), 0) as total FROM player_match_stats pms
       JOIN matches m ON pms.match_id = m.id
       JOIN sessions s ON m.session_id = s.id
       WHERE s.session_date BETWEEN ? AND ? AND s.club_id = ?
-        AND s.status IN ('completed', 'closed')
+        AND m.status = 'completed'
     `).bind(yearStart, yearEnd, clubId).first(),
 
-    // 총 어시스트 (completed/closed만)
+    // 총 어시스트 (완료된 경기만)
     db.prepare(`
       SELECT COALESCE(SUM(pms.assists), 0) as total FROM player_match_stats pms
       JOIN matches m ON pms.match_id = m.id
       JOIN sessions s ON m.session_id = s.id
       WHERE s.session_date BETWEEN ? AND ? AND s.club_id = ?
-        AND s.status IN ('completed', 'closed')
+        AND m.status = 'completed'
     `).bind(yearStart, yearEnd, clubId).first(),
 
-    // 총 수비 (completed/closed만)
+    // 총 수비 (완료된 경기만)
     db.prepare(`
       SELECT COALESCE(SUM(pms.blocks), 0) as total FROM player_match_stats pms
       JOIN matches m ON pms.match_id = m.id
       JOIN sessions s ON m.session_id = s.id
       WHERE s.session_date BETWEEN ? AND ? AND s.club_id = ?
-        AND s.status IN ('completed', 'closed')
+        AND m.status = 'completed'
     `).bind(yearStart, yearEnd, clubId).first(),
 
     // 세션당 평균 참석자 수

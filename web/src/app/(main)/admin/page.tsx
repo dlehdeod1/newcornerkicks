@@ -134,7 +134,7 @@ export default function AdminDashboardPage() {
                   {player.name}
                 </span>
                 <Link
-                  href={`/admin/players/${player.id}`}
+                  href="/admin/players?filter=pending"
                   className="text-sm text-amber-600 dark:text-amber-400 hover:underline"
                 >
                   승인하기
