@@ -140,11 +140,18 @@ async function autoTransitionSessions(env: Env) {
   }
 
   // 2. ended/completed인데 settlement 없는 세션 보강
+  // 팀/참가자 없는 세션은 autoSettleSession이 settlement을 만들지 않아
+  // 10분마다 무한 재시도됨 (D1 read 한도 초과 원인) → 정산 가능한 세션만 선별
   const missingSettlement = await env.DB.prepare(`
     SELECT s.id FROM sessions s
     LEFT JOIN settlements st ON st.session_id = s.id
     WHERE s.status IN ('ended', 'completed')
       AND st.id IS NULL
+      AND EXISTS (
+        SELECT 1 FROM teams t
+        JOIN team_members tm ON tm.team_id = t.id
+        WHERE t.session_id = s.id
+      )
   `).all()
 
   for (const session of missingSettlement.results as any[]) {

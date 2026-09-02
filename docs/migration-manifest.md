@@ -27,4 +27,5 @@
 0025_phase2_gamification.sql ← 배지/시즌어워드/반응/댓글수정/라이브공유/출석UNIQUE
 0026_player_substitutions.sql ← 선수 교체 기록
 0027_rankings_period.sql     ← rankings_cache.period ('full'|'h1'|'h2') + UNIQUE(club_id,year,period)
+0028_perf_indexes.sql        ← 성능 인덱스 12종 (D1 read 한도 초과 장애 대응)
 ```
