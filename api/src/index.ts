@@ -110,6 +110,25 @@ app.onError((err, c) => {
 })
 
 // 매시간 실행: 경기 종료 시간 지난 세션 → 'ended' 로 전환
+// 0028 잔여 인덱스 self-heal: read 한도(2026-09-03 장애)에 막혀 수동 적용 실패한 5개를
+// cron마다 시도 — 생성 후엔 IF NOT EXISTS no-op. 전부 적용 확인되면 이 함수 제거할 것.
+async function ensurePerfIndexes(env: Env) {
+  const stmts = [
+    'CREATE INDEX IF NOT EXISTS idx_attendance_session ON attendance(session_id)',
+    'CREATE INDEX IF NOT EXISTS idx_player_match_stats_match ON player_match_stats(match_id)',
+    'CREATE INDEX IF NOT EXISTS idx_player_match_stats_player ON player_match_stats(player_id)',
+    'CREATE INDEX IF NOT EXISTS idx_sessions_club ON sessions(club_id)',
+    'CREATE INDEX IF NOT EXISTS idx_players_club ON players(club_id)',
+  ]
+  for (const s of stmts) {
+    try {
+      await env.DB.prepare(s).run()
+    } catch {
+      // read 한도 등으로 실패 시 다음 cron에서 재시도
+    }
+  }
+}
+
 async function autoTransitionSessions(env: Env) {
   const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000)
   const todayKST = kstNow.toISOString().split('T')[0]
@@ -288,6 +307,7 @@ async function sendSessionDayReminders(env: Env) {
 export default {
   fetch: app.fetch.bind(app),
   async scheduled(_event: any, env: Env, _ctx: any) {
+    await ensurePerfIndexes(env)
     await autoTransitionSessions(env)
     await expireSubscriptions(env)
     await finalizeMvpVotes(env)
